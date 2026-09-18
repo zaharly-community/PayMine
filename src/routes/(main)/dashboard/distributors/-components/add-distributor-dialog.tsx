@@ -3,6 +3,7 @@ import * as React from "react";
 import {
   BadgeDollarSign,
   Check,
+  ChevronDown,
   ImagePlus,
   KeyRound,
   Plus,
@@ -14,6 +15,7 @@ import {
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +41,8 @@ import type {
   ProcessingScope,
 } from "./data";
 
+type CommissionTransactions = "Deposits" | "Withdrawals" | "Deposits & Withdrawals";
+
 type FormState = {
   role: DistributorType;
   name: string;
@@ -46,12 +50,17 @@ type FormState = {
   password: string;
   avatarUrl: string;
   processingScope: ProcessingScope;
+  accountOpeningMethods: string[];
   paymentMethods: DistributorPaymentMethod[];
+  agentDefaultRequestLimit: string;
+  agentDefaultAmountLimit: string;
+  agentDefaultAmountPeriod: FixedFeePeriod;
   feeMode: CompensationMode;
   fixedFee: string;
   fixedFeePeriod: FixedFeePeriod;
-  commissionTransactions: "Deposits" | "Withdrawals" | "Deposits & Withdrawals";
-  defaultCommissionRate: string;
+  commissionTransactions: CommissionTransactions;
+  defaultDepositCommissionRate: string;
+  defaultWithdrawalCommissionRate: string;
   perCompletedOperationFee: string;
 };
 
@@ -61,10 +70,7 @@ type AddDistributorDialogProps = {
   onCreate: (distributor: DistributorRow) => void;
 };
 
-const ownerPaymentMethods: Array<{
-  name: string;
-  category: PaymentMethodCategory;
-}> = [
+const ownerPaymentMethods: Array<{ name: string; category: PaymentMethodCategory }> = [
   { name: "Flouci", category: "Wallet" },
   { name: "D17", category: "Wallet" },
   { name: "Kashy", category: "Wallet" },
@@ -77,23 +83,29 @@ const systemDefaults = {
   requestLimit: 50,
   amountLimit: 10000,
   amountLimitPeriod: "Daily" as FixedFeePeriod,
-  commissionRate: 5,
+  depositCommissionRate: 5,
+  withdrawalCommissionRate: 3,
   fixedFee: 25,
   fixedFeePeriod: "Monthly" as FixedFeePeriod,
   perCompletedOperationFee: 1.5,
 };
 
-function createOwnerMethods(enabledCount = 2): DistributorPaymentMethod[] {
-  return ownerPaymentMethods.map((method, index) => ({
-    id: "owner-" + method.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+function makeMethodId(name: string) {
+  return "method-" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
+
+function createSupervisorMethods(): DistributorPaymentMethod[] {
+  return ownerPaymentMethods.map((method) => ({
+    id: makeMethodId(method.name),
     name: method.name,
     category: method.category,
-    enabled: index < enabledCount,
+    enabled: false,
     limitMode: "Requests & Amount",
     requestLimit: systemDefaults.requestLimit,
     amountLimit: systemDefaults.amountLimit,
     amountLimitPeriod: systemDefaults.amountLimitPeriod,
-    commissionRate: systemDefaults.commissionRate,
+    depositCommissionRate: systemDefaults.depositCommissionRate,
+    withdrawalCommissionRate: systemDefaults.withdrawalCommissionRate,
   }));
 }
 
@@ -105,46 +117,19 @@ function createInitialForm(): FormState {
     password: "",
     avatarUrl: "",
     processingScope: "Deposits & Withdrawals",
+    accountOpeningMethods: [],
     paymentMethods: [],
+    agentDefaultRequestLimit: String(systemDefaults.requestLimit),
+    agentDefaultAmountLimit: String(systemDefaults.amountLimit),
+    agentDefaultAmountPeriod: systemDefaults.amountLimitPeriod,
     feeMode: "Commission",
     fixedFee: String(systemDefaults.fixedFee),
     fixedFeePeriod: systemDefaults.fixedFeePeriod,
     commissionTransactions: "Deposits & Withdrawals",
-    defaultCommissionRate: String(systemDefaults.commissionRate),
+    defaultDepositCommissionRate: String(systemDefaults.depositCommissionRate),
+    defaultWithdrawalCommissionRate: String(systemDefaults.withdrawalCommissionRate),
     perCompletedOperationFee: String(systemDefaults.perCompletedOperationFee),
   };
-}
-
-function Section({
-  step,
-  icon,
-  title,
-  description,
-  children,
-}: {
-  step: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-xl border bg-background shadow-xs">
-      <div className="flex items-start gap-3 border-b px-4 py-3">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-          <span className="font-semibold text-muted-foreground text-[11px]">{step}</span>
-        </div>
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          {icon}
-        </div>
-        <div className="min-w-0">
-          <h3 className="font-semibold text-sm">{title}</h3>
-          <p className="mt-0.5 text-muted-foreground text-xs leading-5">{description}</p>
-        </div>
-      </div>
-      <div className="p-4">{children}</div>
-    </section>
-  );
 }
 
 function Field({
@@ -162,34 +147,236 @@ function Field({
     <div className="space-y-1.5">
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
-      {hint ? <p className="text-muted-foreground text-[11px] leading-4">{hint}</p> : null}
+      {hint ? <p className="text-[11px] leading-4 text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }
 
-function MethodBadge({ category }: { category: PaymentMethodCategory }) {
+function SectionHeader({
+  step,
+  icon,
+  title,
+  description,
+}: {
+  step: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
   return (
-    <span className="rounded-full border bg-muted/50 px-2 py-0.5 text-muted-foreground text-[10px] font-medium">
-      {category}
-    </span>
+    <div className="border-b pb-3">
+      <div className="flex items-center gap-2">
+        <span className="text-[11px] font-semibold tracking-wide text-muted-foreground">{step}</span>
+        <span className="text-primary">{icon}</span>
+        <h3 className="font-semibold text-sm">{title}</h3>
+      </div>
+      <p className="mt-1 pl-7 text-xs leading-5 text-muted-foreground">{description}</p>
+    </div>
   );
 }
 
-export function AddDistributorDialog({
+function CategoryLabel({ children }: { children: React.ReactNode }) {
+  return <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{children}</p>;
+}
+
+function MethodRow({
+  method,
   open,
   onOpenChange,
-  onCreate,
-}: AddDistributorDialogProps) {
+  onToggle,
+  onUpdate,
+  onRemove,
+  showSwitch,
+  commissionEnabled,
+}: {
+  method: DistributorPaymentMethod;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onToggle: () => void;
+  onUpdate: (update: (method: DistributorPaymentMethod) => DistributorPaymentMethod) => void;
+  onRemove?: () => void;
+  showSwitch: boolean;
+  commissionEnabled: boolean;
+}) {
+  return (
+    <Collapsible open={open} onOpenChange={onOpenChange} className="border-b last:border-b-0">
+      <div className="flex items-center gap-3 py-3">
+        <CollapsibleTrigger
+          render={<button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" />}
+        >
+          <ChevronDown
+            className={"size-4 shrink-0 text-muted-foreground transition-transform " + (open ? "rotate-180" : "")}
+          />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="truncate font-medium text-sm">{method.name}</span>
+              <span className="rounded-full border bg-muted/40 px-2 py-0.5 text-[10px] text-muted-foreground">
+                {method.category}
+              </span>
+            </div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              {method.enabled ? "Processing enabled" : "Processing disabled"}
+            </p>
+          </div>
+        </CollapsibleTrigger>
+        <div className="flex items-center gap-2">
+          {onRemove ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="text-muted-foreground hover:text-destructive"
+              onClick={onRemove}
+              aria-label={"Remove " + method.name}
+            >
+              <Trash2 className="size-3.5" />
+            </Button>
+          ) : null}
+          {showSwitch ? <Switch checked={method.enabled} onCheckedChange={onToggle} /> : null}
+        </div>
+      </div>
+
+      <CollapsibleContent className="pb-4 pl-7">
+        <div className="grid gap-4 rounded-lg bg-muted/25 p-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Field label="Limit type">
+            <Select
+              value={method.limitMode}
+              onValueChange={(value) =>
+                onUpdate((current) => ({ ...current, limitMode: value as MethodLimitMode }))
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="Requests">Requests only</SelectItem>
+                  <SelectItem value="Amount">Amount only</SelectItem>
+                  <SelectItem value="Requests & Amount">Requests & Amount</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Field>
+
+          {method.limitMode !== "Amount" ? (
+            <Field label="Max requests / day">
+              <Input
+                type="number"
+                min="0"
+                value={method.requestLimit ?? systemDefaults.requestLimit}
+                onChange={(event) =>
+                  onUpdate((current) => ({
+                    ...current,
+                    requestLimit: Number(event.target.value) || 0,
+                  }))
+                }
+              />
+            </Field>
+          ) : null}
+
+          {method.limitMode !== "Requests" ? (
+            <Field label="Max total amount">
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={method.amountLimit ?? systemDefaults.amountLimit}
+                onChange={(event) =>
+                  onUpdate((current) => ({
+                    ...current,
+                    amountLimit: Number(event.target.value) || 0,
+                  }))
+                }
+              />
+            </Field>
+          ) : null}
+
+          {method.limitMode !== "Requests" ? (
+            <Field label="Amount period">
+              <Select
+                value={method.amountLimitPeriod ?? systemDefaults.amountLimitPeriod}
+                onValueChange={(value) =>
+                  onUpdate((current) => ({
+                    ...current,
+                    amountLimitPeriod: value as FixedFeePeriod,
+                  }))
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="Daily">Daily</SelectItem>
+                    <SelectItem value="Monthly">Monthly</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+          ) : null}
+
+          {commissionEnabled ? (
+            <>
+              <Field label="Deposit commission">
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    className="pr-8"
+                    value={method.depositCommissionRate ?? systemDefaults.depositCommissionRate}
+                    onChange={(event) =>
+                      onUpdate((current) => ({
+                        ...current,
+                        depositCommissionRate: Number(event.target.value) || 0,
+                      }))
+                    }
+                  />
+                  <span className="absolute top-1/2 right-2.5 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                </div>
+              </Field>
+
+              <Field label="Withdrawal commission">
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    className="pr-8"
+                    value={method.withdrawalCommissionRate ?? systemDefaults.withdrawalCommissionRate}
+                    onChange={(event) =>
+                      onUpdate((current) => ({
+                        ...current,
+                        withdrawalCommissionRate: Number(event.target.value) || 0,
+                      }))
+                    }
+                  />
+                  <span className="absolute top-1/2 right-2.5 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                </div>
+              </Field>
+            </>
+          ) : null}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistributorDialogProps) {
   const [form, setForm] = React.useState<FormState>(createInitialForm);
   const [avatarPreview, setAvatarPreview] = React.useState("");
   const [newMethodName, setNewMethodName] = React.useState("");
   const [newMethodCategory, setNewMethodCategory] = React.useState<PaymentMethodCategory>("Wallet");
+  const [openMethodId, setOpenMethodId] = React.useState<string | null>(null);
 
   const reset = React.useCallback(() => {
     setForm(createInitialForm());
     setAvatarPreview("");
     setNewMethodName("");
     setNewMethodCategory("Wallet");
+    setOpenMethodId(null);
   }, []);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -198,12 +385,12 @@ export function AddDistributorDialog({
 
   const updatePaymentMethod = (
     id: string,
-    updateMethod: (method: DistributorPaymentMethod) => DistributorPaymentMethod,
+    transform: (method: DistributorPaymentMethod) => DistributorPaymentMethod,
   ) => {
     setForm((current) => ({
       ...current,
       paymentMethods: current.paymentMethods.map((method) =>
-        method.id === id ? updateMethod(method) : method,
+        method.id === id ? transform(method) : method,
       ),
     }));
   };
@@ -212,21 +399,31 @@ export function AddDistributorDialog({
     updatePaymentMethod(id, (method) => ({ ...method, enabled: !method.enabled }));
   };
 
+  const toggleAccountOpeningMethod = (name: string) => {
+    setForm((current) => ({
+      ...current,
+      accountOpeningMethods: current.accountOpeningMethods.includes(name)
+        ? current.accountOpeningMethods.filter((item) => item !== name)
+        : [...current.accountOpeningMethods, name],
+    }));
+  };
+
   const addAgentPaymentMethod = () => {
     const name = newMethodName.trim();
     if (!name) return;
 
-    const id = "agent-" + Date.now();
     const method: DistributorPaymentMethod = {
-      id,
+      id: "agent-" + Date.now(),
       name,
       category: newMethodCategory,
       enabled: true,
       limitMode: "Requests & Amount",
-      requestLimit: systemDefaults.requestLimit,
-      amountLimit: systemDefaults.amountLimit,
-      amountLimitPeriod: systemDefaults.amountLimitPeriod,
-      commissionRate: Number(form.defaultCommissionRate) || systemDefaults.commissionRate,
+      requestLimit: Number(form.agentDefaultRequestLimit) || systemDefaults.requestLimit,
+      amountLimit: Number(form.agentDefaultAmountLimit) || systemDefaults.amountLimit,
+      amountLimitPeriod: form.agentDefaultAmountPeriod,
+      depositCommissionRate: Number(form.defaultDepositCommissionRate) || systemDefaults.depositCommissionRate,
+      withdrawalCommissionRate:
+        Number(form.defaultWithdrawalCommissionRate) || systemDefaults.withdrawalCommissionRate,
     };
 
     setForm((current) => ({
@@ -234,6 +431,7 @@ export function AddDistributorDialog({
       paymentMethods: [...current.paymentMethods, method],
     }));
     setNewMethodName("");
+    setOpenMethodId(method.id);
   };
 
   const removePaymentMethod = (id: string) => {
@@ -241,22 +439,7 @@ export function AddDistributorDialog({
       ...current,
       paymentMethods: current.paymentMethods.filter((method) => method.id !== id),
     }));
-  };
-
-  const handleDefaultCommissionChange = (value: string) => {
-    setForm((current) => {
-      const previousDefault = Number(current.defaultCommissionRate) || 0;
-      const nextDefault = value;
-      return {
-        ...current,
-        defaultCommissionRate: nextDefault,
-        paymentMethods: current.paymentMethods.map((method) =>
-          method.commissionRate === previousDefault
-            ? { ...method, commissionRate: Number(nextDefault) || 0 }
-            : method,
-        ),
-      };
-    });
+    setOpenMethodId((current) => (current === id ? null : current));
   };
 
   const handleAvatar = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -271,9 +454,10 @@ export function AddDistributorDialog({
     setForm((current) => ({
       ...current,
       role,
-      paymentMethods: role === "Supervisor" ? createOwnerMethods() : [],
+      accountOpeningMethods: [],
+      paymentMethods: role === "Supervisor" ? createSupervisorMethods() : [],
     }));
-    setNewMethodName("");
+    setOpenMethodId(null);
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -286,16 +470,23 @@ export function AddDistributorDialog({
 
     const configuration: DistributorConfiguration = {
       processingScope: form.processingScope,
-      paymentMethods: form.paymentMethods,
+      accountOpeningMethods: form.accountOpeningMethods,
+      paymentMethods: form.role === "Supervisor" ? form.paymentMethods.filter((method) => method.enabled) : form.paymentMethods,
+      defaultRequestLimit:
+        form.role === "Agent" ? Number(form.agentDefaultRequestLimit) || 0 : undefined,
+      defaultAmountLimit:
+        form.role === "Agent" ? Number(form.agentDefaultAmountLimit) || 0 : undefined,
+      defaultAmountLimitPeriod:
+        form.role === "Agent" ? form.agentDefaultAmountPeriod : undefined,
       feeMode: form.feeMode,
       fixedFeeAmount: form.feeMode === "Fixed" ? Number(form.fixedFee) || 0 : undefined,
       fixedFeePeriod: form.feeMode === "Fixed" ? form.fixedFeePeriod : undefined,
       commissionTransactions:
         form.feeMode === "Commission" ? form.commissionTransactions : undefined,
-      defaultCommissionRate:
-        form.feeMode === "Commission"
-          ? Number(form.defaultCommissionRate) || 0
-          : undefined,
+      defaultDepositCommissionRate:
+        form.feeMode === "Commission" ? Number(form.defaultDepositCommissionRate) || 0 : undefined,
+      defaultWithdrawalCommissionRate:
+        form.feeMode === "Commission" ? Number(form.defaultWithdrawalCommissionRate) || 0 : undefined,
       perCompletedOperationFee:
         form.feeMode === "Per completed operation"
           ? Number(form.perCompletedOperationFee) || 0
@@ -326,7 +517,7 @@ export function AddDistributorDialog({
     onOpenChange(false);
   };
 
-  const enabledMethods = form.paymentMethods.filter((method) => method.enabled);
+  const isCommission = form.feeMode === "Commission";
 
   return (
     <Dialog
@@ -336,7 +527,7 @@ export function AddDistributorDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className="max-w-6xl gap-0 overflow-hidden p-0 sm:max-w-6xl" showCloseButton>
+      <DialogContent className="max-w-5xl gap-0 overflow-hidden p-0 sm:max-w-5xl" showCloseButton>
         <DialogHeader className="border-b bg-background px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -345,31 +536,31 @@ export function AddDistributorDialog({
             <div className="min-w-0">
               <DialogTitle>Add Distributor</DialogTitle>
               <DialogDescription>
-                Create a {form.role} account, define processing access, payment methods, limits, and compensation.
+                Configure the {form.role.toLowerCase()} account, processing access, payment permissions, limits, and compensation.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-col">
-          <div className="max-h-[calc(90vh-145px)] space-y-4 overflow-y-auto bg-muted/20 p-5">
-            <Section
-              step="01"
-              icon={<ShieldCheck className="size-4" />}
-              title="Account"
-              description="Basic identity, credentials, and role."
-            >
-              <div className="grid gap-5 sm:grid-cols-[140px_1fr]">
+          <div className="max-h-[calc(90vh-145px)] overflow-y-auto bg-background px-5">
+            <div className="border-b py-5">
+              <SectionHeader
+                step="01"
+                icon={<ShieldCheck className="size-4" />}
+                title="Account"
+                description="Create the credentials used by this distributor to access the dashboard."
+              />
+
+              <div className="mt-4 grid gap-5 sm:grid-cols-[120px_1fr]">
                 <div className="flex flex-col items-center gap-2">
                   <Avatar size="lg" className="size-20 rounded-2xl">
-                    {avatarPreview ? (
-                      <AvatarImage src={avatarPreview} alt={form.name || "Distributor"} />
-                    ) : null}
+                    {avatarPreview ? <AvatarImage src={avatarPreview} alt={form.name || "Distributor"} /> : null}
                     <AvatarFallback className="rounded-2xl">
                       {form.name ? form.name.slice(0, 2).toUpperCase() : <ImagePlus className="size-5" />}
                     </AvatarFallback>
                   </Avatar>
-                  <label className="cursor-pointer text-primary text-xs font-semibold">
+                  <label className="cursor-pointer text-xs font-semibold text-primary">
                     Upload photo
                     <input type="file" accept="image/*" className="hidden" onChange={handleAvatar} />
                   </label>
@@ -391,24 +582,11 @@ export function AddDistributorDialog({
                   </Field>
 
                   <Field label="Full name" htmlFor="distributor-name">
-                    <Input
-                      id="distributor-name"
-                      required
-                      value={form.name}
-                      onChange={(event) => update("name", event.target.value)}
-                      placeholder="e.g. Ahmed Ben Salem"
-                    />
+                    <Input id="distributor-name" required value={form.name} onChange={(event) => update("name", event.target.value)} />
                   </Field>
 
                   <Field label="Email" htmlFor="distributor-email">
-                    <Input
-                      id="distributor-email"
-                      required
-                      type="email"
-                      value={form.email}
-                      onChange={(event) => update("email", event.target.value)}
-                      placeholder="name@example.com"
-                    />
+                    <Input id="distributor-email" required type="email" value={form.email} onChange={(event) => update("email", event.target.value)} />
                   </Field>
 
                   <Field label="Password" htmlFor="distributor-password" hint="Minimum 8 characters.">
@@ -422,301 +600,235 @@ export function AddDistributorDialog({
                         className="pl-8"
                         value={form.password}
                         onChange={(event) => update("password", event.target.value)}
-                        placeholder="••••••••"
                       />
                     </div>
                   </Field>
                 </div>
               </div>
-            </Section>
+            </div>
 
-            <Section
-              step="02"
-              icon={<WalletCards className="size-4" />}
-              title="Processing access"
-              description="Choose whether this account can handle deposits only or both deposits and withdrawals."
-            >
-              <Field label="Processing scope">
-                <Select
-                  value={form.processingScope}
-                  onValueChange={(value) => update("processingScope", value as ProcessingScope)}
-                >
-                  <SelectTrigger className="w-full sm:max-w-md">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="Deposits">Deposits only</SelectItem>
-                      <SelectItem value="Deposits & Withdrawals">Deposits & Withdrawals</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </Field>
-            </Section>
+            <div className="border-b py-5">
+              <SectionHeader
+                step="02"
+                icon={<WalletCards className="size-4" />}
+                title="Processing access"
+                description="Define the transaction types this account is allowed to process."
+              />
 
-            <Section
-              step="03"
-              icon={<WalletCards className="size-4" />}
-              title="Payment methods & limits"
-              description={
-                form.role === "Supervisor"
-                  ? "Supervisor uses the project owner's payment methods. Select which owner methods this Supervisor may process."
-                  : "Agent uses its own payment methods. Add the methods it will manage from its dedicated payment-methods panel."
-              }
-            >
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {([
+                  ["Deposits", "Deposit processing only", "The distributor can process deposit requests."],
+                  ["Deposits & Withdrawals", "Deposits + withdrawals", "The distributor can process both transaction flows."],
+                ] as const).map(([value, title, description]) => {
+                  const selected = form.processingScope === value;
+                  return (
+                    <button
+                      type="button"
+                      key={value}
+                      onClick={() => update("processingScope", value)}
+                      className={
+                        "flex items-start gap-3 border px-4 py-3 text-left transition-colors " +
+                        (selected
+                          ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                          : "border-border hover:bg-muted/40")
+                      }
+                    >
+                      <span
+                        className={
+                          "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border " +
+                          (selected ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/40")
+                        }
+                      >
+                        {selected ? <Check className="size-2.5" /> : null}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block font-medium text-sm">{title}</span>
+                        <span className="mt-1 block text-xs leading-4 text-muted-foreground">{description}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="border-b py-5">
+              <SectionHeader
+                step="03"
+                icon={<WalletCards className="size-4" />}
+                title="Payment methods & limits"
+                description={
+                  form.role === "Supervisor"
+                    ? "Use only payment methods supplied by the project owner. Select the methods this Supervisor may process, then open each row to configure its limits."
+                    : "The Agent will add and manage its own payment methods from its dashboard. The project owner only controls which owner methods the Agent may use for account opening."
+                }
+              />
+
               {form.role === "Agent" ? (
-                <div className="mb-5 rounded-lg border border-dashed bg-muted/20 p-4">
-                  <div className="mb-3">
-                    <p className="font-medium text-sm">Add Agent payment method</p>
-                    <p className="text-muted-foreground text-xs">
-                      These methods belong to the Agent and are not copied from the project owner's methods.
+                <div className="mt-4 space-y-5">
+                  <div>
+                    <CategoryLabel>Owner methods allowed for account opening</CategoryLabel>
+                    <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+                      {ownerPaymentMethods.map((method) => {
+                        const selected = form.accountOpeningMethods.includes(method.name);
+                        return (
+                          <label key={method.name} className="flex cursor-pointer items-center justify-between border-b py-2.5">
+                            <span className="flex items-center gap-2">
+                              <span className="text-sm">{method.name}</span>
+                              <span className="text-[10px] text-muted-foreground">{method.category}</span>
+                            </span>
+                            <Switch
+                              checked={selected}
+                              onCheckedChange={() => toggleAccountOpeningMethod(method.name)}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
+                      These are permission gates only. They do not become the Agent's payment methods.
                     </p>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-[1fr_180px_auto]">
-                    <Field label="Method name" htmlFor="agent-method-name">
-                      <Input
-                        id="agent-method-name"
-                        value={newMethodName}
-                        onChange={(event) => setNewMethodName(event.target.value)}
-                        placeholder="e.g. Agent Wallet"
-                      />
-                    </Field>
-                    <Field label="Category">
-                      <Select
-                        value={newMethodCategory}
-                        onValueChange={(value) => setNewMethodCategory(value as PaymentMethodCategory)}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectItem value="Wallet">Wallet</SelectItem>
-                            <SelectItem value="Top-ups Cards">Top-ups Cards</SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <div className="flex items-end">
-                      <Button type="button" className="w-full sm:w-auto" onClick={addAgentPaymentMethod}>
-                        <Plus className="size-3.5" />
-                        Add method
-                      </Button>
+
+                  <div className="border-t pt-4">
+                    <CategoryLabel>Defaults for Agent-owned payment methods</CategoryLabel>
+                    <p className="mb-3 text-xs text-muted-foreground">
+                      These defaults are applied when the Agent adds its own payment methods later. Method-specific settings can be changed from the Agent dashboard.
+                    </p>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <Field label="Max requests / day">
+                        <Input
+                          type="number"
+                          min="0"
+                          value={form.agentDefaultRequestLimit}
+                          onChange={(event) => update("agentDefaultRequestLimit", event.target.value)}
+                        />
+                      </Field>
+                      <Field label="Max total amount">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={form.agentDefaultAmountLimit}
+                          onChange={(event) => update("agentDefaultAmountLimit", event.target.value)}
+                        />
+                      </Field>
+                      <Field label="Amount period">
+                        <Select
+                          value={form.agentDefaultAmountPeriod}
+                          onValueChange={(value) => update("agentDefaultAmountPeriod", value as FixedFeePeriod)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectItem value="Daily">Daily</SelectItem>
+                              <SelectItem value="Monthly">Monthly</SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </Field>
                     </div>
                   </div>
                 </div>
-              ) : null}
-
-              {form.paymentMethods.length === 0 ? (
-                <div className="rounded-lg border border-dashed bg-background px-4 py-8 text-center">
-                  <p className="font-medium text-sm">No payment methods added yet</p>
-                  <p className="mt-1 text-muted-foreground text-xs">
-                    Add at least one Agent payment method to configure its limits and commission rate.
+              ) : (
+                <div className="mt-4">
+                  <CategoryLabel>Owner payment methods</CategoryLabel>
+                  <div className="divide-y">
+                    {form.paymentMethods.map((method) => (
+                      <MethodRow
+                        key={method.id}
+                        method={method}
+                        open={openMethodId === method.id}
+                        onOpenChange={(next) => setOpenMethodId(next ? method.id : null)}
+                        onToggle={() => togglePaymentMethod(method.id)}
+                        onUpdate={(transform) => updatePaymentMethod(method.id, transform)}
+                        showSwitch
+                        commissionEnabled={isCommission}
+                      />
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
+                    Enable a method to grant this Supervisor permission to process it. The arrow opens its request, amount, and commission settings.
                   </p>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {form.role === "Supervisor" ? (
-                    <div className="mb-4 grid gap-2 sm:grid-cols-2">
-                      {form.paymentMethods.map((method) => (
-                        <div
-                          key={method.id}
-                          className="flex items-center justify-between rounded-lg border bg-background px-3 py-2.5"
-                        >
-                          <div className="flex min-w-0 items-center gap-2">
-                            <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted">
-                              <WalletCards className="size-3.5" />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="truncate font-medium text-sm">{method.name}</span>
-                                <MethodBadge category={method.category} />
-                              </div>
-                              <p className="text-muted-foreground text-[11px]">
-                                {method.enabled ? "Allowed to process" : "Not assigned"}
-                              </p>
-                            </div>
-                          </div>
-                          <Switch checked={method.enabled} onCheckedChange={() => togglePaymentMethod(method.id)} />
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  {enabledMethods.length > 0 ? (
-                    <div className="space-y-3">
-                      {enabledMethods.map((method) => (
-                        <div key={method.id} className="rounded-lg border bg-background p-4">
-                          <div className="mb-4 flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="font-semibold text-sm">{method.name}</span>
-                                <MethodBadge category={method.category} />
-                              </div>
-                              <p className="mt-1 text-muted-foreground text-xs">
-                                {form.role === "Supervisor"
-                                  ? "Owner-provided method"
-                                  : "Agent-owned method"}
-                              </p>
-                            </div>
-                            {form.role === "Agent" ? (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-sm"
-                                className="text-muted-foreground hover:text-destructive"
-                                aria-label={"Remove " + method.name}
-                                onClick={() => removePaymentMethod(method.id)}
-                              >
-                                <Trash2 className="size-3.5" />
-                              </Button>
-                            ) : null}
-                          </div>
-
-                          <div className="grid gap-4 lg:grid-cols-4">
-                            <Field label="Limit type">
-                              <Select
-                                value={method.limitMode}
-                                onValueChange={(value) =>
-                                  updatePaymentMethod(method.id, (current) => ({
-                                    ...current,
-                                    limitMode: value as MethodLimitMode,
-                                  }))
-                                }
-                              >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectGroup>
-                                    <SelectItem value="Requests">Requests only</SelectItem>
-                                    <SelectItem value="Amount">Amount only</SelectItem>
-                                    <SelectItem value="Requests & Amount">Requests & Amount</SelectItem>
-                                  </SelectGroup>
-                                </SelectContent>
-                              </Select>
-                            </Field>
-
-                            {method.limitMode !== "Amount" ? (
-                              <Field
-                                label="Max requests / day"
-                                htmlFor={"requests-" + method.id}
-                              >
-                                <Input
-                                  id={"requests-" + method.id}
-                                  type="number"
-                                  min="0"
-                                  value={method.requestLimit ?? systemDefaults.requestLimit}
-                                  onChange={(event) =>
-                                    updatePaymentMethod(method.id, (current) => ({
-                                      ...current,
-                                      requestLimit: Number(event.target.value) || 0,
-                                    }))
-                                  }
-                                />
-                              </Field>
-                            ) : null}
-
-                            {method.limitMode !== "Requests" ? (
-                              <>
-                                <Field
-                                  label="Max total amount"
-                                  htmlFor={"amount-" + method.id}
-                                >
-                                  <Input
-                                    id={"amount-" + method.id}
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={method.amountLimit ?? systemDefaults.amountLimit}
-                                    onChange={(event) =>
-                                      updatePaymentMethod(method.id, (current) => ({
-                                        ...current,
-                                        amountLimit: Number(event.target.value) || 0,
-                                      }))
-                                    }
-                                  />
-                                </Field>
-                                <Field label="Amount period">
-                                  <Select
-                                    value={method.amountLimitPeriod ?? systemDefaults.amountLimitPeriod}
-                                    onValueChange={(value) =>
-                                      updatePaymentMethod(method.id, (current) => ({
-                                        ...current,
-                                        amountLimitPeriod: value as FixedFeePeriod,
-                                      }))
-                                    }
-                                  >
-                                    <SelectTrigger className="w-full">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectGroup>
-                                        <SelectItem value="Daily">Daily</SelectItem>
-                                        <SelectItem value="Monthly">Monthly</SelectItem>
-                                      </SelectGroup>
-                                    </SelectContent>
-                                  </Select>
-                                </Field>
-                              </>
-                            ) : null}
-
-                            {form.feeMode === "Commission" ? (
-                              <Field
-                                label="Commission"
-                                hint={"System default: " + form.defaultCommissionRate + "%"}
-                              >
-                                <div className="relative">
-                                  <Input
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    step="0.01"
-                                    className="pr-8"
-                                    value={method.commissionRate ?? (Number(form.defaultCommissionRate) || 0)}
-                                    onChange={(event) =>
-                                      updatePaymentMethod(method.id, (current) => ({
-                                        ...current,
-                                        commissionRate: Number(event.target.value) || 0,
-                                      }))
-                                    }
-                                  />
-                                  <span className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground text-xs">
-                                    %
-                                  </span>
-                                </div>
-                              </Field>
-                            ) : null}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  {form.role === "Supervisor" && enabledMethods.length === 0 ? (
-                    <div className="rounded-lg border border-dashed bg-background px-4 py-8 text-center">
-                      <p className="font-medium text-sm">No owner methods selected</p>
-                      <p className="mt-1 text-muted-foreground text-xs">
-                        Enable the payment methods this Supervisor is allowed to process.
-                      </p>
-                    </div>
-                  ) : null}
-                </div>
               )}
-            </Section>
+            </div>
 
-            <Section
-              step="04"
-              icon={<BadgeDollarSign className="size-4" />}
-              title="Compensation"
-              description="Choose how this distributor is paid. System defaults can be overridden during creation and changed later."
-            >
-              <div className="grid gap-4 lg:grid-cols-3">
+            {form.role === "Agent" ? (
+              <div className="border-b py-5">
+                <SectionHeader
+                  step="04"
+                  icon={<WalletCards className="size-4" />}
+                  title="Agent-owned payment methods"
+                  description="Add a payment method here only when defining its initial configuration. In production, the Agent owns and manages these methods from its own dashboard."
+                />
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_190px_auto]">
+                  <Field label="Method name" htmlFor="agent-method-name">
+                    <Input
+                      id="agent-method-name"
+                      value={newMethodName}
+                      onChange={(event) => setNewMethodName(event.target.value)}
+                      placeholder="e.g. Agent Wallet"
+                    />
+                  </Field>
+                  <Field label="Category">
+                    <Select value={newMethodCategory} onValueChange={(value) => setNewMethodCategory(value as PaymentMethodCategory)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="Wallet">Wallet</SelectItem>
+                          <SelectItem value="Top-ups Cards">Top-ups Cards</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <div className="flex items-end">
+                    <Button type="button" onClick={addAgentPaymentMethod}>
+                      <Plus className="size-3.5" />
+                      Add method
+                    </Button>
+                  </div>
+                </div>
+
+                {form.paymentMethods.length ? (
+                  <div className="mt-4 divide-y border-y">
+                    {form.paymentMethods.map((method) => (
+                      <MethodRow
+                        key={method.id}
+                        method={method}
+                        open={openMethodId === method.id}
+                        onOpenChange={(next) => setOpenMethodId(next ? method.id : null)}
+                        onToggle={() => togglePaymentMethod(method.id)}
+                        onUpdate={(transform) => updatePaymentMethod(method.id, transform)}
+                        onRemove={() => removePaymentMethod(method.id)}
+                        showSwitch
+                        commissionEnabled={isCommission}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-4 border-y border-dashed py-5 text-center text-xs text-muted-foreground">
+                    No Agent-owned methods added in this setup.
+                  </div>
+                )}
+              </div>
+            ) : null}
+
+            <div className="border-b py-5">
+              <SectionHeader
+                step={form.role === "Agent" ? "05" : "04"}
+                icon={<BadgeDollarSign className="size-4" />}
+                title="Compensation"
+                description="Set the earning model. System defaults are editable here and can be changed later."
+              />
+
+              <div className="mt-4 grid gap-4 lg:grid-cols-3">
                 <Field label="Compensation type">
-                  <Select
-                    value={form.feeMode}
-                    onValueChange={(value) => update("feeMode", value as CompensationMode)}
-                  >
+                  <Select value={form.feeMode} onValueChange={(value) => update("feeMode", value as CompensationMode)}>
                     <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
@@ -732,9 +844,8 @@ export function AddDistributorDialog({
 
                 {form.feeMode === "Fixed" ? (
                   <>
-                    <Field label="Fixed fee amount" htmlFor="fixed-fee">
+                    <Field label="Fixed fee amount">
                       <Input
-                        id="fixed-fee"
                         type="number"
                         min="0"
                         step="0.01"
@@ -743,10 +854,7 @@ export function AddDistributorDialog({
                       />
                     </Field>
                     <Field label="Fee period">
-                      <Select
-                        value={form.fixedFeePeriod}
-                        onValueChange={(value) => update("fixedFeePeriod", value as FixedFeePeriod)}
-                      >
+                      <Select value={form.fixedFeePeriod} onValueChange={(value) => update("fixedFeePeriod", value as FixedFeePeriod)}>
                         <SelectTrigger className="w-full">
                           <SelectValue />
                         </SelectTrigger>
@@ -761,17 +869,12 @@ export function AddDistributorDialog({
                   </>
                 ) : null}
 
-                {form.feeMode === "Commission" ? (
+                {isCommission ? (
                   <>
                     <Field label="Commission applies to">
                       <Select
                         value={form.commissionTransactions}
-                        onValueChange={(value) =>
-                          update(
-                            "commissionTransactions",
-                            value as FormState["commissionTransactions"],
-                          )
-                        }
+                        onValueChange={(value) => update("commissionTransactions", value as CommissionTransactions)}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue />
@@ -785,38 +888,42 @@ export function AddDistributorDialog({
                         </SelectContent>
                       </Select>
                     </Field>
-                    <Field
-                      label="System default commission"
-                      htmlFor="default-commission-rate"
-                      hint="Applied as the starting rate for new payment methods."
-                    >
+
+                    <Field label="Deposit commission">
                       <div className="relative">
                         <Input
-                          id="default-commission-rate"
                           type="number"
                           min="0"
                           max="100"
                           step="0.01"
                           className="pr-8"
-                          value={form.defaultCommissionRate}
-                          onChange={(event) => handleDefaultCommissionChange(event.target.value)}
+                          value={form.defaultDepositCommissionRate}
+                          onChange={(event) => update("defaultDepositCommissionRate", event.target.value)}
                         />
-                        <span className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground text-xs">
-                          %
-                        </span>
+                        <span className="absolute top-1/2 right-2.5 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                      </div>
+                    </Field>
+
+                    <Field label="Withdrawal commission">
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          className="pr-8"
+                          value={form.defaultWithdrawalCommissionRate}
+                          onChange={(event) => update("defaultWithdrawalCommissionRate", event.target.value)}
+                        />
+                        <span className="absolute top-1/2 right-2.5 -translate-y-1/2 text-xs text-muted-foreground">%</span>
                       </div>
                     </Field>
                   </>
                 ) : null}
 
                 {form.feeMode === "Per completed operation" ? (
-                  <Field
-                    label="Fee per completed operation"
-                    htmlFor="completed-operation-fee"
-                    hint="Fixed amount paid for every successfully completed transaction."
-                  >
+                  <Field label="Fee per completed operation">
                     <Input
-                      id="completed-operation-fee"
                       type="number"
                       min="0"
                       step="0.01"
@@ -827,41 +934,22 @@ export function AddDistributorDialog({
                 ) : null}
               </div>
 
-              {form.feeMode === "Commission" && form.paymentMethods.length === 0 ? (
-                <div className="mt-4 rounded-lg border border-dashed bg-muted/20 px-4 py-3 text-muted-foreground text-xs">
-                  Add payment methods above to set a different commission percentage for each method.
-                </div>
-              ) : null}
-
-              {form.feeMode === "Commission" ? (
-                <div className="mt-4 rounded-lg border bg-muted/20 px-4 py-3 text-xs">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-foreground">Method-level commission</p>
-                      <p className="mt-0.5 text-muted-foreground">
-                        Each enabled method can override the system default independently.
-                      </p>
-                    </div>
-                    <span className="rounded-full border bg-background px-2.5 py-1 font-semibold text-foreground">
-                      {enabledMethods.length} enabled
-                    </span>
-                  </div>
-                </div>
-              ) : null}
-            </Section>
-
-            <div className="rounded-xl border border-dashed bg-background px-4 py-3 text-xs">
-              <div className="flex items-start gap-3">
-                <Check className="mt-0.5 size-3.5 shrink-0 text-emerald-600" />
-                <p className="text-muted-foreground leading-5">
-                  <strong className="font-medium text-foreground">
-                    {form.role === "Supervisor" ? "Supervisor setup:" : "Agent setup:"}
-                  </strong>{" "}
-                  {form.role === "Supervisor"
-                    ? "uses only payment methods supplied by the project owner, with individual processing permissions, limits, and commission rates."
-                    : "uses payment methods owned and managed by the Agent; owner payment methods are never assigned to the Agent."}
-                </p>
+              <div className="mt-4 border-t pt-3 text-[11px] leading-4 text-muted-foreground">
+                {isCommission
+                  ? "The deposit and withdrawal percentages are the system defaults for the distributor. Payment-method rows can override these values where applicable."
+                  : form.feeMode === "Fixed"
+                    ? "The fixed fee is paid on the selected daily or monthly schedule."
+                    : "The fixed amount is paid only for successfully completed operations."}
               </div>
+            </div>
+
+            <div className="py-4 text-xs leading-5 text-muted-foreground">
+              <strong className="font-medium text-foreground">
+                {form.role === "Supervisor" ? "Supervisor:" : "Agent:"}
+              </strong>{" "}
+              {form.role === "Supervisor"
+                ? "processes only the project owner's selected payment methods."
+                : "owns and manages its payment methods in its own dashboard; owner-controlled methods here are only account-opening permissions."}
             </div>
           </div>
 
