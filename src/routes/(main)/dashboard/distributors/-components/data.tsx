@@ -1,4 +1,5 @@
 export type DistributorType = "Agent" | "Supervisor";
+export type DistributorProgramMode = "Program" | "Custom Program";
 export type DistributorStatus = "Active" | "Pending invite" | "Suspended" | "Deactivated";
 export type ProcessingScope = "Deposits" | "Deposits & Withdrawals";
 export type MethodLimitMode = "Requests" | "Amount" | "Requests & Amount";
@@ -20,7 +21,21 @@ export type DistributorPaymentMethod = {
   withdrawalCommissionRate?: number;
 };
 
+export type DistributorProgram = {
+  id: string;
+  name: string;
+  description: string;
+  role: DistributorType;
+  processingScope: ProcessingScope;
+  feeMode: CompensationMode;
+  feeSummary: string;
+};
+
 export type DistributorConfiguration = {
+  programMode?: DistributorProgramMode;
+  programId?: string;
+  programName?: string;
+
   processingScope?: ProcessingScope;
   accountOpeningMethods?: string[];
   paymentMethods?: DistributorPaymentMethod[];
