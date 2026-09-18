@@ -4,7 +4,6 @@ import {
   Banknote,
   Calendar,
   ChartBar,
-  CircleAlert,
   CheckSquare,
   Fingerprint,
   FolderOpen,
@@ -91,12 +90,6 @@ export const sidebarItems: NavGroup[] = [
         title: "Distributors",
         url: "/dashboard/distributors",
         icon: Network,
-      },
-      {
-        id: "issues",
-        title: "Issues & Investigations",
-        url: "/dashboard/issues/",
-        icon: CircleAlert,
       },
       {
         id: "deposits",
