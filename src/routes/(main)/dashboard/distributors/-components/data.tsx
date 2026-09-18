@@ -223,6 +223,25 @@ function distributorUsername(name: string) {
   return name.toLowerCase().trim().replace(/\s+/g, ".").replace(/[^a-z0-9.]/g, "");
 }
 
+function createSeedSupervisorMethods(index: number): DistributorPaymentMethod[] {
+  const selectedAccounts = treasuryAccounts.filter((_, accountIndex) => (accountIndex + index) % 3 !== 2);
+
+  return selectedAccounts.map((account) => ({
+    id: account.id,
+    name: account.name,
+    category: account.category,
+    enabled: true,
+    accessGranted: true,
+    providerAccountRef: account.id,
+    limitMode: "Requests & Amount",
+    requestLimit: 50,
+    amountLimit: 10000,
+    amountLimitPeriod: "Daily",
+    depositCommissionRate: 5,
+    withdrawalCommissionRate: 3,
+  }));
+}
+
 export const distributors: DistributorRow[] = distributorSeedData.map((row, index) => ({
   ...row,
   username: row.username ?? distributorUsername(row.name),
@@ -230,6 +249,14 @@ export const distributors: DistributorRow[] = distributorSeedData.map((row, inde
   verified: verifiedDistributorNames.has(row.name),
   status: row.status === "Suspended" ? "Suspended" : "Active",
   walletModel: row.type === "Agent" ? "Prefunded fee wallet" : "Transaction ledger",
+  configuration:
+    row.type === "Supervisor"
+      ? {
+          ...(row.configuration ?? {}),
+          processingScope: "Deposits & Withdrawals",
+          paymentMethods: createSeedSupervisorMethods(index),
+        }
+      : row.configuration,
 }));
 
 const distributorTypes: DistributorType[] = ["Agent", "Supervisor"];
