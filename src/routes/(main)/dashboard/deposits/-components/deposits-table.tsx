@@ -42,7 +42,7 @@ function ProcessingLockOverlay({ name, colSpan }: { name: string; colSpan: numbe
   return (
     <TableCell
       colSpan={colSpan}
-      className="absolute inset-0 z-[60] h-full w-full border-0! bg-background/40 p-0! backdrop-blur-[4px]"
+      className="absolute inset-0 z-30 h-full w-full border-0! bg-background/35 p-0! backdrop-blur-[4px]"
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
