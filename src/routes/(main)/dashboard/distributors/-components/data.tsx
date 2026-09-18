@@ -15,22 +15,94 @@ export type DistributorWalletAuditEntry = {
 };
 
 
+export type TreasuryReconciliationStatus = "Reconciled" | "Mismatch" | "Pending check";
+
 export type TreasuryAccount = {
   id: string;
   name: string;
   category: PaymentMethodCategory;
   currency: string;
   balance: number;
+  reservedBalance: number;
+  actualBalance: number;
+  lastReconciledAt: string;
+  reconciliationStatus: TreasuryReconciliationStatus;
   shared: boolean;
 };
 
 export const treasuryAccounts: TreasuryAccount[] = [
-  { id: "treasury-flouci", name: "Flouci", category: "Wallet", currency: "USD", balance: 18420, shared: true },
-  { id: "treasury-d17", name: "D17", category: "Wallet", currency: "USD", balance: 12950, shared: true },
-  { id: "treasury-kashy", name: "Kashy", category: "Wallet", currency: "USD", balance: 8640, shared: true },
-  { id: "treasury-visa", name: "Visa", category: "Top-ups Cards", currency: "USD", balance: 42300, shared: true },
-  { id: "treasury-mastercard", name: "Mastercard", category: "Top-ups Cards", currency: "USD", balance: 27580, shared: true },
-  { id: "treasury-e-dinar", name: "e-Dinar", category: "Top-ups Cards", currency: "USD", balance: 6750, shared: true },
+  {
+    id: "treasury-flouci",
+    name: "Flouci",
+    category: "Wallet",
+    currency: "USD",
+    balance: 18420,
+    reservedBalance: 820,
+    actualBalance: 18420,
+    lastReconciledAt: "18 Sep 2026, 04:40 PM",
+    reconciliationStatus: "Reconciled",
+    shared: true,
+  },
+  {
+    id: "treasury-d17",
+    name: "D17",
+    category: "Wallet",
+    currency: "USD",
+    balance: 12950,
+    reservedBalance: 950,
+    actualBalance: 11875,
+    lastReconciledAt: "18 Sep 2026, 04:32 PM",
+    reconciliationStatus: "Mismatch",
+    shared: true,
+  },
+  {
+    id: "treasury-kashy",
+    name: "Kashy",
+    category: "Wallet",
+    currency: "USD",
+    balance: 8640,
+    reservedBalance: 640,
+    actualBalance: 8640,
+    lastReconciledAt: "18 Sep 2026, 04:37 PM",
+    reconciliationStatus: "Reconciled",
+    shared: true,
+  },
+  {
+    id: "treasury-visa",
+    name: "Visa",
+    category: "Top-ups Cards",
+    currency: "USD",
+    balance: 42300,
+    reservedBalance: 2300,
+    actualBalance: 41950,
+    lastReconciledAt: "18 Sep 2026, 04:21 PM",
+    reconciliationStatus: "Mismatch",
+    shared: true,
+  },
+  {
+    id: "treasury-mastercard",
+    name: "Mastercard",
+    category: "Top-ups Cards",
+    currency: "USD",
+    balance: 27580,
+    reservedBalance: 1180,
+    actualBalance: 27580,
+    lastReconciledAt: "18 Sep 2026, 04:25 PM",
+    reconciliationStatus: "Reconciled",
+    shared: true,
+  },
+  {
+    id: "treasury-e-dinar",
+    name: "e-Dinar",
+    category: "Top-ups Cards",
+    currency: "USD",
+    balance: 6750,
+    reservedBalance: 450,
+    actualBalance: 6750,
+    lastReconciledAt: "18 Sep 2026, 04:18 PM",
+    reconciliationStatus: "Reconciled",
+    shared: true,
+  },
 ];
 
 export const ownerPaymentMethods = treasuryAccounts.map(({ name, category }) => ({ name, category }));
@@ -96,7 +168,7 @@ export type DistributorRow = {
   joinedDate: string;
   lastActive: number;
   id: string;
-  walletModel: DistributorWalletModel;
+  walletModel?: DistributorWalletModel;
   walletAudit?: DistributorWalletAuditEntry[];
   configuration?: DistributorConfiguration;
 };
