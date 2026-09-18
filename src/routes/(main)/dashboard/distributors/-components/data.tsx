@@ -114,7 +114,7 @@ const verifiedDistributorNames = new Set([
 ]);
 
 function distributorUsername(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, ".").replace(/^\\.|\\.$/g, "");
+  return name.toLowerCase().trim().replace(/\s+/g, ".").replace(/[^a-z0-9.]/g, "");
 }
 
 export const distributors: DistributorRow[] = distributorSeedData.map((row, index) => ({
@@ -126,7 +126,7 @@ export const distributors: DistributorRow[] = distributorSeedData.map((row, inde
 }));
 
 const distributorTypes: DistributorType[] = ["Agent", "Supervisor"];
-const statuses: DistributorStatus[] = ["Active", "Pending invite", "Suspended", "Deactivated"];
+const statuses: DistributorStatus[] = ["Active", "Suspended"];
 
 export const filters = {
   type: ["All", ...distributorTypes],
