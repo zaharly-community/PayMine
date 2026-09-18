@@ -41,7 +41,6 @@ import { Route as mainDashboardDepositsIndexRouteImport } from './routes/(main)/
 import { Route as mainDashboardWithdrawlsRouteRouteImport } from './routes/(main)/dashboard/withdrawls/route'
 import { Route as mainDashboardPlayersRouteRouteImport } from './routes/(main)/dashboard/players/route'
 import { Route as mainDashboardDistributorsRouteRouteImport } from './routes/(main)/dashboard/distributors/route'
-import { Route as mainDashboardIssuesIndexRouteImport } from './routes/(main)/dashboard/issues/index'
 import { Route as mainAuthV1LoginRouteRouteImport } from './routes/(main)/auth/v1/login/route'
 import { Route as mainAuthV1RegisterRouteRouteImport } from './routes/(main)/auth/v1/register/route'
 import { Route as mainAuthV2LoginRouteRouteImport } from './routes/(main)/auth/v2/login/route'
@@ -222,11 +221,6 @@ const mainDashboardPlayersRouteRoute = mainDashboardPlayersRouteRouteImport.upda
 const mainDashboardDistributorsRouteRoute = mainDashboardDistributorsRouteRouteImport.update({
   id: '/distributors',
   path: '/distributors',
-  getParentRoute: () => mainDashboardRouteRoute,
-} as any)
-const mainDashboardIssuesIndexRoute = mainDashboardIssuesIndexRouteImport.update({
-  id: '/issues/',
-  path: '/issues/',
   getParentRoute: () => mainDashboardRouteRoute,
 } as any)
 const mainAuthV1LoginRouteRoute = mainAuthV1LoginRouteRouteImport.update({
@@ -430,7 +424,6 @@ export interface FileRouteTypes {
     | '/dashboard/withdrawls'
     | '/dashboard/players'
     | '/dashboard/distributors'
-    | '/dashboard/issues/'
     | '/dashboard/$'
     | '/dashboard/'
     | '/auth/v1/login'
@@ -755,13 +748,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDistributorsRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
-    '/(main)/dashboard/issues/': {
-      id: '/(main)/dashboard/issues/'
-      path: '/issues/'
-      fullPath: '/dashboard/issues/'
-      preLoaderRoute: typeof mainDashboardIssuesIndexRouteImport
-      parentRoute: typeof mainDashboardRouteRoute
-    }
     '/(main)/auth/v1/login': {
       id: '/(main)/auth/v1/login'
       path: '/auth/v1/login'
@@ -857,7 +843,6 @@ interface mainDashboardRouteRouteChildren {
   mainDashboardWithdrawlsRouteRoute: typeof mainDashboardWithdrawlsRouteRoute
   mainDashboardPlayersRouteRoute: typeof mainDashboardPlayersRouteRoute
   mainDashboardDistributorsRouteRoute: typeof mainDashboardDistributorsRouteRoute
-  mainDashboardIssuesIndexRoute: typeof mainDashboardIssuesIndexRoute
   mainDashboardSplatRoute: typeof mainDashboardSplatRoute
   mainDashboardIndexRoute: typeof mainDashboardIndexRoute
   mainDashboardlegacyAnalyticsV1RouteRoute: typeof mainDashboardlegacyAnalyticsV1RouteRoute
@@ -889,7 +874,6 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardWithdrawlsRouteRoute: mainDashboardWithdrawlsRouteRoute,
   mainDashboardPlayersRouteRoute: mainDashboardPlayersRouteRoute,
   mainDashboardDistributorsRouteRoute: mainDashboardDistributorsRouteRoute,
-  mainDashboardIssuesIndexRoute: mainDashboardIssuesIndexRoute,
   mainDashboardSplatRoute: mainDashboardSplatRoute,
   mainDashboardIndexRoute: mainDashboardIndexRoute,
   mainDashboardlegacyAnalyticsV1RouteRoute:
