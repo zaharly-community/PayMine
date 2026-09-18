@@ -1,4 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
+import { parse } from "date-fns";
 import {
   CheckCircle2,
   Clock3,
@@ -164,7 +165,7 @@ export const depositsColumns: ColumnDef<DataTableFeatures, DepositRow>[] = [
   },
   {
     id: "date",
-    accessorKey: "date",
+    accessorFn: (row) => parse(row.date, "dd MMM yyyy, hh:mm a", new Date()).getTime(),
     header: "Date",
     cell: ({ row }) => <div className="whitespace-nowrap text-sm tabular-nums">{row.original.date}</div>,
   },
