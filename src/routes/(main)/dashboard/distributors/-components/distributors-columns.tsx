@@ -580,7 +580,6 @@ export function createDistributorsColumns(actions: DistributorColumnActions): Co
       cell: ({ row }) => (
         <DistributorActions
           distributor={row.original}
-          treasury={actions.treasury}
           onSuspend={actions.onSuspend}
           onDelete={actions.onDelete}
           onWalletAdjust={actions.onWalletAdjust}
