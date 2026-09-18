@@ -64,6 +64,12 @@ function DepositCell({ deposit }: { deposit: DepositRow }) {
 
 export const depositsColumns: ColumnDef<DataTableFeatures, DepositRow>[] = [
   {
+    id: "search",
+    accessorFn: (row) => `${row.name} ${row.email}`,
+    filterFn: "includesString",
+    enableHiding: true,
+  },
+  {
     accessorKey: "name",
     header: "Deposit",
     cell: ({ row }) => <DepositCell deposit={row.original} />,
