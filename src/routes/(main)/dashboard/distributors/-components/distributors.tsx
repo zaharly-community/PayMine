@@ -35,27 +35,6 @@ export function Distributors({ distributors: initialDistributors }: { distributo
     pageSize: 25,
   });
 
-  const table = useTable({
-    features: dataTableFeatures,
-    data: distributors,
-    columns: distributorsColumns,
-    state: {
-      rowSelection,
-      sorting,
-      columnFilters,
-      columnVisibility,
-      pagination,
-    },
-    getRowId: (row) => row.id,
-    autoResetPageIndex: false,
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    onPaginationChange: setPagination,
-  });
-
   const handleSuspend = React.useCallback((distributorId: string) => {
     setDistributors((current) =>
       current.map((distributor) =>
@@ -89,6 +68,27 @@ export function Distributors({ distributors: initialDistributors }: { distributo
       }),
     [handleSuspend, handleDelete, handleWalletAdjust],
   );
+
+  const table = useTable({
+    features: dataTableFeatures,
+    data: distributors,
+    columns: distributorsColumns,
+    state: {
+      rowSelection,
+      sorting,
+      columnFilters,
+      columnVisibility,
+      pagination,
+    },
+    getRowId: (row) => row.id,
+    autoResetPageIndex: false,
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
+  });
 
   const searchQuery = (table.getColumn("search")?.getFilterValue() as string | undefined) ?? "";
 
