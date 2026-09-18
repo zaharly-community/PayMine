@@ -735,8 +735,8 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
               <SectionHeader
                 step="02"
                 icon={<Layers3 className="size-4" />}
-                title="Configuration mode"
-                description="Apply a predefined program or configure this distributor manually."
+                title="Program"
+                description="Choose a predefined program or switch to Custom Program for full manual configuration."
               />
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -836,7 +836,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
             {form.programMode === "Custom Program" ? (
             <div className="border-b py-5">
               <SectionHeader
-                step="05"
+                step="03"
                 icon={<WalletCards className="size-4" />}
                 title="Processing access"
                 description="Define the transaction types this account is allowed to process."
@@ -880,7 +880,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
 
             <div className="border-b py-5">
               <SectionHeader
-                step="03"
+                step="04"
                 icon={<WalletCards className="size-4" />}
                 title="Payment methods & limits"
                 description={
@@ -984,7 +984,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
 
             <div className="border-b py-5">
               <SectionHeader
-                step={form.role === "Agent" ? "05" : "04"}
+                step="05"
                 icon={<BadgeDollarSign className="size-4" />}
                 title="Compensation"
                 description="Set the earning model. System defaults are editable here and can be changed later."
