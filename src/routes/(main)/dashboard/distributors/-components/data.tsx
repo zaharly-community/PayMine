@@ -1,26 +1,32 @@
 export type DistributorType = "Agent" | "Supervisor";
 export type DistributorStatus = "Active" | "Pending invite" | "Suspended" | "Deactivated";
 export type ProcessingScope = "Deposits" | "Deposits & Withdrawals";
-export type LimitMode = "Requests" | "Amount" | "Requests & Amount";
+export type MethodLimitMode = "Requests" | "Amount" | "Requests & Amount";
+export type PaymentMethodCategory = "Wallet" | "Top-ups Cards";
 export type CompensationMode = "Fixed" | "Commission" | "Per completed operation";
 export type FixedFeePeriod = "Daily" | "Monthly";
 export type CommissionTransactions = "Deposits" | "Withdrawals" | "Deposits & Withdrawals";
 
-export type DistributorConfiguration = {
-  processingScope?: ProcessingScope;
-  dailyRequestsLimit?: number;
+export type DistributorPaymentMethod = {
+  id: string;
+  name: string;
+  category: PaymentMethodCategory;
+  enabled: boolean;
+  limitMode: MethodLimitMode;
+  requestLimit?: number;
   amountLimit?: number;
   amountLimitPeriod?: FixedFeePeriod;
-  limitMode?: LimitMode;
-  permittedPaymentMethods?: string[];
-  perMethodRequestLimits?: Record<string, number>;
-  perMethodAmountLimits?: Record<string, number>;
+  commissionRate?: number;
+};
+
+export type DistributorConfiguration = {
+  processingScope?: ProcessingScope;
+  paymentMethods?: DistributorPaymentMethod[];
   feeMode?: CompensationMode;
   fixedFeeAmount?: number;
   fixedFeePeriod?: FixedFeePeriod;
   commissionTransactions?: CommissionTransactions;
   defaultCommissionRate?: number;
-  commissionByPaymentMethod?: Record<string, number>;
   perCompletedOperationFee?: number;
 };
 
