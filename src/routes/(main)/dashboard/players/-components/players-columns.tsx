@@ -64,6 +64,12 @@ function PlayerCell({ player }: { player: PlayerRow }) {
 
 export const playersColumns: ColumnDef<DataTableFeatures, PlayerRow>[] = [
   {
+    id: "search",
+    accessorFn: (row) => `${row.name} ${row.email}`,
+    filterFn: "includesString",
+    enableHiding: true,
+  },
+  {
     accessorKey: "name",
     header: "Player",
     cell: ({ row }) => <PlayerCell player={row.original} />,
