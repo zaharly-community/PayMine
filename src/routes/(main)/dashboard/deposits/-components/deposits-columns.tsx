@@ -239,8 +239,7 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
         </Button>
 
         <Link
-          to="/dashboard/deposits/$depositId"
-          params={{ depositId: deposit.id }}
+          to="/dashboard/deposits/transaction-detail"
           aria-label={`Open deposit ${deposit.id} for processing`}
           title="Open deposit"
           className="inline-flex size-7 items-center justify-center rounded-[min(var(--radius-md),12px)] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
