@@ -268,6 +268,24 @@ export function AddDistributorDialog({
       limitMode: form.limitMode,
       permittedPaymentMethods:
         form.role === "Supervisor" ? form.permittedPaymentMethods : undefined,
+      perMethodRequestLimits:
+        form.role === "Supervisor"
+          ? Object.fromEntries(
+              form.permittedPaymentMethods.map((method) => [
+                method,
+                Number(form.perMethodRequestLimits[method]) || 0,
+              ]),
+            )
+          : undefined,
+      perMethodAmountLimits:
+        form.role === "Supervisor"
+          ? Object.fromEntries(
+              form.permittedPaymentMethods.map((method) => [
+                method,
+                Number(form.perMethodAmountLimits[method]) || 0,
+              ]),
+            )
+          : undefined,
       feeMode: form.feeMode,
       fixedFeeAmount: form.feeMode === "Fixed" ? Number(form.fixedFee) || 0 : undefined,
       fixedFeePeriod: form.feeMode === "Fixed" ? form.fixedFeePeriod : undefined,
