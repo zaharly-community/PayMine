@@ -192,10 +192,8 @@ export function AddDistributorDialog({
       {methods.map((method) => {
         const enabled = form.paymentMethods.includes(method);
         return (
-          <button
-            type="button"
+          <div
             key={method}
-            onClick={() => togglePaymentMethod(method)}
             className="flex items-center justify-between rounded-md border px-3 py-2 text-left transition-colors hover:bg-muted/50"
           >
             <span className="flex items-center gap-2">
@@ -207,7 +205,7 @@ export function AddDistributorDialog({
               <span className="text-sm">{method}</span>
             </span>
             <Switch checked={enabled} onCheckedChange={() => togglePaymentMethod(method)} />
-          </button>
+          </div>
         );
       })}
     </div>
