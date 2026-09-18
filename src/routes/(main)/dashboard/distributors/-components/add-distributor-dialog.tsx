@@ -926,7 +926,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                 title="Payment methods & limits"
                 description={
                   form.role === "Supervisor"
-                    ? "Use only payment methods supplied by the project owner. Select the methods this Supervisor may process, then open each row to configure its limits."
+                    ? "Select the project-owned provider accounts this Supervisor may access. An enabled method grants processing and login access; keep provider credentials unique to each authorized user."
                     : "The Agent will add and manage its own payment methods from its dashboard. The project owner only controls which owner methods the Agent may use for account opening."
                 }
               />
@@ -1017,7 +1017,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                     ))}
                   </div>
                   <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
-                    Enable a method to grant this Supervisor permission to process it. The arrow opens its request, amount, and commission settings.
+                    Enable a method to grant this Supervisor processing and login access. The arrow opens its request, amount, and commission settings. Provider credentials should never be shared across supervisors when the provider supports individual users or sub-accounts.
                   </p>
                 </div>
               )}
