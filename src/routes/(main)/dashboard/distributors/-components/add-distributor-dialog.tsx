@@ -397,8 +397,7 @@ function MethodRow({
                     ...current,
                     amountLimit: Number(event.target.value) || 0,
                   }))
-                }
-              />
+                }              />
             </Field>
           ) : null}
 
@@ -771,7 +770,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                 description="Choose a predefined program or switch to Custom Program for full manual configuration."
               />
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {([
                   ["Program", "Apply a Program", "Use a predefined setup for this role. Processing, limits, payment permissions, and compensation come from the selected program."],
                   ["Custom Program", "Build a Custom Program", "Open the full configuration below and define every setting for this account."],
@@ -783,10 +782,10 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                       key={mode}
                       onClick={() => setProgramMode(mode)}
                       className={
-                        "flex items-start gap-3 rounded-lg border px-4 py-3 text-left transition-colors " +
+                        "flex items-start gap-3 rounded-xl border px-4 py-3.5 text-left transition-all " +
                         (selected
-                          ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                          : "border-border hover:bg-muted/40")
+                          ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/15"
+                          : "border-border bg-background hover:border-primary/40 hover:bg-muted/20")
                       }
                     >
                       <span
@@ -801,7 +800,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                       </span>
                       <span className="min-w-0">
                         <span className="block font-medium text-sm">{title}</span>
-                        <span className="mt-1 block text-xs leading-4 text-muted-foreground">{description}</span>
+                        <span className="mt-1 block text-xs leading-5 text-muted-foreground">{description}</span>
                       </span>
                     </button>
                   );
@@ -820,7 +819,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                     />
                   </div>
 
-                  <div className="mt-3 space-y-2">
+                  <div className="mt-3 space-y-2.5">
                     {filteredPrograms.length > 0 ? (
                       filteredPrograms.map((program) => {
                         const selected = program.id === form.programId;
@@ -836,12 +835,12 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                                 : "border-border bg-background hover:border-primary/40 hover:bg-muted/20")
                             }
                           >
-                            <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center justify-between gap-4">
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
                                   <span className="truncate text-sm font-semibold">{program.name}</span>
                                   {selected ? (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
                                       <Check className="size-3" />
                                       Selected
                                     </span>
@@ -851,7 +850,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                                   {program.description}
                                 </p>
                               </div>
-                              <div className="grid shrink-0 grid-cols-2 gap-2 text-right text-[10px] sm:flex sm:items-center">
+                              <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 text-[10px] text-muted-foreground">
                                 <span className="rounded-md bg-muted/50 px-2 py-1">
                                   {program.processingScope}
                                 </span>
@@ -877,9 +876,6 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                   ) : null}
                 </div>
               ) : null}
-                  </div>
-                </div>
-              ) : null}
             </div>
 
             {form.programMode === "Custom Program" ? (
@@ -891,7 +887,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                 description="Define the transaction types this account is allowed to process."
               />
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 {([
                   ["Deposits", "Deposit processing only", "The distributor can process deposit requests."],
                   ["Withdrawals", "Withdrawal processing only", "The distributor can process withdrawal requests."],
