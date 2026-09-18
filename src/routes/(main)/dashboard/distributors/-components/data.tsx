@@ -233,10 +233,10 @@ function createSeedSupervisorMethods(index: number): DistributorPaymentMethod[] 
     enabled: true,
     accessGranted: true,
     providerAccountRef: account.id,
-    limitMode: "Requests & Amount",
+    limitMode: "Requests & Amount" as MethodLimitMode,
     requestLimit: 50,
     amountLimit: 10000,
-    amountLimitPeriod: "Daily",
+    amountLimitPeriod: "Daily" as FixedFeePeriod,
     depositCommissionRate: 5,
     withdrawalCommissionRate: 3,
   }));
