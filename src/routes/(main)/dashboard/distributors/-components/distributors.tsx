@@ -11,6 +11,8 @@ import {
 import { Cog, Download, Plus, Search, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+
+import { AddDistributorDialog } from "./add-distributor-dialog";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Kbd } from "@/components/ui/kbd";
 import { dataTableFeatures } from "@/lib/data-table-features";
@@ -19,7 +21,9 @@ import type { DistributorRow } from "./data";
 import { distributorsColumns } from "./distributors-columns";
 import { DistributorsTable } from "./distributors-table";
 
-export function Distributors({ distributors }: { distributors: DistributorRow[] }) {
+export function Distributors({ distributors: initialDistributors }: { distributors: DistributorRow[] }) {
+  const [distributors, setDistributors] = React.useState(initialDistributors);
+  const [addDistributorOpen, setAddDistributorOpen] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "lastActive", desc: true }]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -90,7 +94,7 @@ export function Distributors({ distributors }: { distributors: DistributorRow[] 
           <Button variant="outline" size="sm">
             <Download /> Export
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setAddDistributorOpen(true)}>
             <Plus /> Add Distributor
           </Button>
         </div>
@@ -99,6 +103,12 @@ export function Distributors({ distributors }: { distributors: DistributorRow[] 
       <div className="min-w-0 flex-1">
         <DistributorsTable table={table} />
       </div>
+
+      <AddDistributorDialog
+        open={addDistributorOpen}
+        onOpenChange={setAddDistributorOpen}
+        onCreate={(distributor) => setDistributors((current) => [distributor, ...current])}
+      />
     </section>
   );
 }
