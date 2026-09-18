@@ -60,11 +60,11 @@ export function PlayersTable({ table }: { table: ReactTable<DataTableFeatures, P
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="h-7 border-border/60 transition-colors hover:bg-muted/35"
+                  className="h-8 border-border/60 transition-colors hover:bg-muted/35 [&>td]:h-8"
                   data-state={table.state.rowSelection[row.id] && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-0 align-middle leading-none">
+                    <TableCell key={cell.id} className="!px-4 !py-0 align-middle leading-none">
                       <table.FlexRender cell={cell} />
                     </TableCell>
                   ))}
