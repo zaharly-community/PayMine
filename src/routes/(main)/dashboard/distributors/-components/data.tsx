@@ -4,6 +4,27 @@ export type DistributorStatus = "Active" | "Pending invite" | "Suspended" | "Dea
 export type ProcessingScope = "Deposits" | "Withdrawals" | "Deposits & Withdrawals";
 export type MethodLimitMode = "Requests" | "Amount" | "Requests & Amount";
 export type PaymentMethodCategory = "Wallet" | "Top-ups Cards";
+
+
+export type TreasuryAccount = {
+  id: string;
+  name: string;
+  category: PaymentMethodCategory;
+  currency: string;
+  balance: number;
+  shared: boolean;
+};
+
+export const treasuryAccounts: TreasuryAccount[] = [
+  { id: "treasury-flouci", name: "Flouci", category: "Wallet", currency: "USD", balance: 18420, shared: true },
+  { id: "treasury-d17", name: "D17", category: "Wallet", currency: "USD", balance: 12950, shared: true },
+  { id: "treasury-kashy", name: "Kashy", category: "Wallet", currency: "USD", balance: 8640, shared: true },
+  { id: "treasury-visa", name: "Visa", category: "Top-ups Cards", currency: "USD", balance: 42300, shared: true },
+  { id: "treasury-mastercard", name: "Mastercard", category: "Top-ups Cards", currency: "USD", balance: 27580, shared: true },
+  { id: "treasury-e-dinar", name: "e-Dinar", category: "Top-ups Cards", currency: "USD", balance: 6750, shared: true },
+];
+
+export const ownerPaymentMethods = treasuryAccounts.map(({ name, category }) => ({ name, category }));
 export type CompensationMode = "Fixed" | "Commission" | "Per completed operation";
 export type FixedFeePeriod = "Daily" | "Monthly";
 export type CommissionTransactions = "Deposits" | "Withdrawals" | "Deposits & Withdrawals";
