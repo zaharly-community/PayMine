@@ -1,14 +1,11 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { Subscribe } from "@tanstack/react-table";
+import { parse } from "date-fns";
+import { MoreHorizontal } from "lucide-react";
 
 import { cn } from "cn";
-import { parse } from "date-fns";
-import { Check, Clock, MoreHorizontal, X } from "lucide-react";
 
-import { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, AvatarGroupCount } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,190 +15,107 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { DataTableFeatures } from "@/lib/data-table-features";
-import { getInitials } from "@/lib/utils";
+import { formatCurrency, getInitials } from "@/lib/utils";
 
-import { statusMeta, type PlayerRow } from "./data";
+import type { PlayerRow } from "./data";
 
-function RoleCell({ role, team }: { role: string; team: string }) {
-  return (
-    <div className="grid gap-0.5">
-      <span className="whitespace-nowrap">{role}</span>
-      <span className="text-muted-foreground text-xs">{team}</span>
-    </div>
-  );
-}
+const locations = [
+  "5559 Wuckert Expressway, West Lenna, NY 53554",
+  "592 Cordie Oval, Lancaster, ID 57534-0209",
+  "295 Woodside Road, Gorczanyberg, LA 29992",
+  "378 Lambert Branch, South Franco, MO 77683",
+  "447 Stanley View, New Gina, CA 21361",
+  "800 Muller Road, West Fletcher, SC 49730-5632",
+  "565 Summer Heights, Dubuque, MS 44690",
+  "53571 Abner Crest, Willys­mouth, TX 55146-3625",
+  "823 Park View, North Mabelleboro, AR 35965",
+  "1368 South Street, East Johnnietown, AR 86049-3338",
+  "5901 Schamberger Prairie, Racine, SC 45518",
+  "27665 Cedar Grove, Lake Amanda­berg, ND 74115-3302",
+  "65389 Murray Prairie, West Clifforside, MS 13932-5376",
+];
 
-function StatusBadge({ status }: { status: PlayerRow["status"] }) {
-  const meta = statusMeta[status];
-
-  return (
-    <Badge className={cn("gap-1.5 border px-2 py-1 font-medium", meta.badgeClass)} variant="outline">
-      <span className={cn("size-1.5 rounded-full", meta.dotClass)} />
-      {status}
-    </Badge>
-  );
-}
-
-function getAvatarTone(name: string) {
-  const tones = [
-    "[&_[data-slot=avatar-fallback]]:bg-amber-100 [&_[data-slot=avatar-fallback]]:text-amber-700 after:border-amber-200 dark:[&_[data-slot=avatar-fallback]]:bg-amber-500/15 dark:[&_[data-slot=avatar-fallback]]:text-amber-300 dark:after:border-amber-500/20",
-    "[&_[data-slot=avatar-fallback]]:bg-orange-100 [&_[data-slot=avatar-fallback]]:text-orange-700 after:border-orange-200 dark:[&_[data-slot=avatar-fallback]]:bg-orange-500/15 dark:[&_[data-slot=avatar-fallback]]:text-orange-300 dark:after:border-orange-500/20",
-    "[&_[data-slot=avatar-fallback]]:bg-rose-100 [&_[data-slot=avatar-fallback]]:text-rose-700 after:border-rose-200 dark:[&_[data-slot=avatar-fallback]]:bg-rose-500/15 dark:[&_[data-slot=avatar-fallback]]:text-rose-300 dark:after:border-rose-500/20",
-    "[&_[data-slot=avatar-fallback]]:bg-pink-100 [&_[data-slot=avatar-fallback]]:text-pink-700 after:border-pink-200 dark:[&_[data-slot=avatar-fallback]]:bg-pink-500/15 dark:[&_[data-slot=avatar-fallback]]:text-pink-300 dark:after:border-pink-500/20",
-    "[&_[data-slot=avatar-fallback]]:bg-fuchsia-100 [&_[data-slot=avatar-fallback]]:text-fuchsia-700 after:border-fuchsia-200 dark:[&_[data-slot=avatar-fallback]]:bg-fuchsia-500/15 dark:[&_[data-slot=avatar-fallback]]:text-fuchsia-300 dark:after:border-fuchsia-500/20",
-    "[&_[data-slot=avatar-fallback]]:bg-purple-100 [&_[data-slot=avatar-fallback]]:text-purple-700 after:border-purple-200 dark:[&_[data-slot=avatar-fallback]]:bg-purple-500/15 dark:[&_[data-slot=avatar-fallback]]:text-purple-300 dark:after:border-purple-500/20",
-    "[&_[data-slot=avatar-fallback]]:bg-violet-100 [&_[data-slot=avatar-fallback]]:text-violet-700 after:border-violet-200 dark:[&_[data-slot=avatar-fallback]]:bg-violet-500/15 dark:[&_[data-slot=avatar-fallback]]:text-violet-300 dark:after:border-violet-500/20",
-    "[&_[data-slot=avatar-fallback]]:bg-indigo-100 [&_[data-slot=avatar-fallback]]:text-indigo-700 after:border-indigo-200 dark:[&_[data-slot=avatar-fallback]]:bg-indigo-500/15 dark:[&_[data-slot=avatar-fallback]]:text-indigo-300 dark:after:border-indigo-500/20",
-    "[&_[data-slot=avatar-fallback]]:bg-sky-100 [&_[data-slot=avatar-fallback]]:text-sky-700 after:border-sky-200 dark:[&_[data-slot=avatar-fallback]]:bg-sky-500/15 dark:[&_[data-slot=avatar-fallback]]:text-sky-300 dark:after:border-sky-500/20",
-    "[&_[data-slot=avatar-fallback]]:bg-emerald-100 [&_[data-slot=avatar-fallback]]:text-emerald-700 after:border-emerald-200 dark:[&_[data-slot=avatar-fallback]]:bg-emerald-500/15 dark:[&_[data-slot=avatar-fallback]]:text-emerald-300 dark:after:border-emerald-500/20",
-  ];
-
-  return tones[name.length % tones.length];
-}
-
-function getLastActiveBadge(lastActive: number) {
-  if (lastActive < 1) {
-    return {
-      className: "bg-green-600 text-green-950 [&>svg]:text-white",
-      icon: Check,
-    };
-  }
-
-  if (lastActive < 4 * 60) {
-    return {
-      className: "bg-amber-500 text-amber-950",
-      icon: Clock,
-    };
-  }
-
-  if (lastActive < 7 * 24 * 60) {
-    return {
-      className: "bg-destructive",
-      icon: null,
-    };
-  }
+function getPlayerMeta(player: PlayerRow) {
+  let seed = 0;
+  for (const char of player.email) seed += char.charCodeAt(0);
 
   return {
-    className: "bg-muted-foreground text-muted",
-    icon: X,
+    bets: 1 + (seed % 12),
+    balance: 32.5 + (seed % 65000) + ((seed % 100) / 100),
+    location: locations[seed % locations.length] ?? locations[0],
+    id: `PLR${player.email.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase()}`,
   };
 }
 
-function AvatarCell({ lastActive, name }: { lastActive: number; name: string }) {
-  const badge = getLastActiveBadge(lastActive);
-  const BadgeIcon = badge.icon;
-
+function PlayerCell({ player }: { player: PlayerRow }) {
   return (
-    <Avatar size="lg" className={cn("font-medium", getAvatarTone(name))}>
-      <AvatarFallback>{getInitials(name)}</AvatarFallback>
-      <AvatarBadge className={badge.className}>{BadgeIcon ? <BadgeIcon /> : null}</AvatarBadge>
-    </Avatar>
-  );
-}
-
-function WorkspaceCell({ workspaces }: { workspaces: string[] }) {
-  const [firstWorkspace, ...remainingWorkspaces] = workspaces;
-  const remainingCount = remainingWorkspaces.length;
-
-  return (
-    <AvatarGroup className="*:data-[slot=avatar]:ring-0">
-      {firstWorkspace ? (
-        <Avatar className="after:rounded-sm">
-          <AvatarFallback className="rounded-sm ring-0">{getInitials(firstWorkspace)}</AvatarFallback>
-        </Avatar>
-      ) : null}
-      {remainingCount > 0 ? (
-        <AvatarGroupCount className="rounded-sm border ring-card">+{remainingCount}</AvatarGroupCount>
-      ) : null}
-    </AvatarGroup>
+    <div className="flex min-w-55 items-center gap-3">
+      <Avatar size="sm" className="shrink-0">
+        <AvatarFallback className="bg-muted text-[10px] font-medium">
+          {getInitials(player.name)}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0">
+        <div className="truncate font-medium text-foreground text-sm">{player.name}</div>
+        <div className="truncate text-muted-foreground text-xs">{player.email}</div>
+      </div>
+    </div>
   );
 }
 
 export const playersColumns: ColumnDef<DataTableFeatures, PlayerRow>[] = [
   {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Subscribe source={table.atoms.rowSelection}>
-          {() => (
-            <Checkbox
-              aria-label="Select all players"
-              checked={table.getIsAllPageRowsSelected()}
-              indeterminate={!table.getIsAllPageRowsSelected() && table.getIsSomePageRowsSelected()}
-              onCheckedChange={(value) => table.toggleAllPageRowsSelected(value)}
-            />
-          )}
-        </Subscribe>
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Subscribe source={row.table.atoms.rowSelection} selector={(selection) => Boolean(selection?.[row.id])}>
-          {(checked) => (
-            <Checkbox
-              aria-label={`Select ${row.original.name}`}
-              checked={checked}
-              onCheckedChange={(value) => row.toggleSelected(value)}
-            />
-          )}
-        </Subscribe>
-      </div>
-    ),
-    enableHiding: false,
-    enableSorting: false,
-  },
-  {
-    id: "search",
-    accessorFn: (row) => `${row.name} ${row.email}`,
-    filterFn: "includesString",
-    enableHiding: true,
-  },
-  {
     accessorKey: "name",
     header: "Player",
+    cell: ({ row }) => <PlayerCell player={row.original} />,
+  },
+  {
+    id: "bets",
+    accessorFn: (row) => getPlayerMeta(row).bets,
+    header: () => <div className="text-right">Bets</div>,
+    cell: ({ row }) => {
+      const { bets } = getPlayerMeta(row.original);
+      return <div className="pr-2 text-right text-sm tabular-nums">{bets}</div>;
+    },
+  },
+  {
+    id: "lastActivity",
+    accessorFn: (row) => parse(row.joinedDate, "dd MMM yyyy, h:mm a", new Date()).getTime(),
+    header: "Last activity",
+    cell: ({ row }) => <div className="whitespace-nowrap text-sm tabular-nums">{row.original.joinedDate}</div>,
+  },
+  {
+    id: "balance",
+    accessorFn: (row) => getPlayerMeta(row).balance,
+    header: () => <div className="text-right">Balance</div>,
+    cell: ({ row }) => {
+      const { balance } = getPlayerMeta(row.original);
+      return <div className="pr-2 text-right font-medium text-sm tabular-nums">{formatCurrency(balance)}</div>;
+    },
+  },
+  {
+    id: "location",
+    accessorFn: (row) => getPlayerMeta(row).location,
+    header: "Location",
     cell: ({ row }) => (
-      <div className="flex items-center gap-3">
-        <AvatarCell name={row.original.name} lastActive={row.original.lastActive} />
-        <div className="min-w-0">
-          <div className="truncate font-medium text-foreground text-sm">{row.original.name}</div>
-          <div className="truncate text-muted-foreground text-sm">{row.original.email}</div>
-        </div>
+      <div className="max-w-95 truncate text-muted-foreground text-sm" title={getPlayerMeta(row.original).location}>
+        {getPlayerMeta(row.original).location}
       </div>
     ),
   },
   {
-    accessorKey: "role",
-    header: "Role / Team",
-    filterFn: "equalsString",
-    cell: ({ row }) => <RoleCell role={row.original.role} team={row.original.team} />,
-  },
-  {
-    accessorKey: "team",
-    header: "Team",
-    filterFn: "equalsString",
-    cell: ({ row }) => <div className="text-sm">{row.original.team}</div>,
-  },
-  {
-    accessorKey: "workspace",
-    header: "Workspace",
-    filterFn: "arrIncludes",
-    cell: ({ row }) => <WorkspaceCell workspaces={row.original.workspace} />,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    filterFn: "equalsString",
-    cell: ({ row }) => <StatusBadge status={row.original.status} />,
-  },
-  {
-    id: "joinedDate",
-    accessorFn: (row) => parse(row.joinedDate, "dd MMM yyyy, h:mm a", new Date()).getTime(),
-    header: "Joined date",
-    cell: ({ row }) => <div className="text-foreground text-sm">{row.original.joinedDate}</div>,
+    id: "playerId",
+    accessorFn: (row) => getPlayerMeta(row).id,
+    header: "Player ID",
+    cell: ({ row }) => (
+      <div className="font-mono text-foreground text-xs tracking-wide">
+        {getPlayerMeta(row.original).id}
+      </div>
+    ),
   },
   {
     id: "actions",
-    header: () => <div className="text-right">Actions</div>,
+    header: () => <div className="text-right"> </div>,
     cell: ({ row }) => (
       <div className="text-right">
         <DropdownMenu>
@@ -209,7 +123,7 @@ export const playersColumns: ColumnDef<DataTableFeatures, PlayerRow>[] = [
             render={
               <Button
                 aria-label={`Open actions for ${row.original.name}`}
-                className="size-8 rounded-md text-muted-foreground hover:bg-muted/50"
+                className={cn("size-8 rounded-md text-muted-foreground hover:bg-muted/50")}
                 size="icon-sm"
                 variant="ghost"
               />
@@ -219,14 +133,14 @@ export const playersColumns: ColumnDef<DataTableFeatures, PlayerRow>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuGroup>
-              <DropdownMenuItem>View profile</DropdownMenuItem>
+              <DropdownMenuItem>View player</DropdownMenuItem>
               <DropdownMenuItem>Edit player</DropdownMenuItem>
-              <DropdownMenuItem>Manage team</DropdownMenuItem>
-              <DropdownMenuItem>Resend invite</DropdownMenuItem>
+              <DropdownMenuItem>View transactions</DropdownMenuItem>
+              <DropdownMenuItem>Manage player</DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem variant="destructive">Deactivate player</DropdownMenuItem>
+              <DropdownMenuItem variant="destructive">Suspend player</DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
