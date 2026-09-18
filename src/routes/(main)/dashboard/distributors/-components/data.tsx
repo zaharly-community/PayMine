@@ -4,6 +4,15 @@ export type DistributorStatus = "Active" | "Pending invite" | "Suspended" | "Dea
 export type ProcessingScope = "Deposits" | "Withdrawals" | "Deposits & Withdrawals";
 export type MethodLimitMode = "Requests" | "Amount" | "Requests & Amount";
 export type PaymentMethodCategory = "Wallet" | "Top-ups Cards";
+export type DistributorWalletModel = "Prefunded fee wallet" | "Transaction ledger";
+
+export type DistributorWalletAuditEntry = {
+  id: string;
+  action: "Credit" | "Debit";
+  amount: number;
+  reason: string;
+  createdAt: string;
+};
 
 
 export type TreasuryAccount = {
@@ -40,6 +49,8 @@ export type DistributorPaymentMethod = {
   amountLimitPeriod?: FixedFeePeriod;
   depositCommissionRate?: number;
   withdrawalCommissionRate?: number;
+  accessGranted?: boolean;
+  providerAccountRef?: string;
 };
 
 export type DistributorProgram = {
@@ -85,6 +96,8 @@ export type DistributorRow = {
   joinedDate: string;
   lastActive: number;
   id: string;
+  walletModel: DistributorWalletModel;
+  walletAudit?: DistributorWalletAuditEntry[];
   configuration?: DistributorConfiguration;
 };
 
@@ -144,6 +157,7 @@ export const distributors: DistributorRow[] = distributorSeedData.map((row, inde
   avatarUrl: row.avatarUrl ?? processorAvatarImages[index % processorAvatarImages.length],
   verified: verifiedDistributorNames.has(row.name),
   status: row.status === "Suspended" ? "Suspended" : "Active",
+  walletModel: row.type === "Agent" ? "Prefunded fee wallet" : "Transaction ledger",
 }));
 
 const distributorTypes: DistributorType[] = ["Agent", "Supervisor"];
