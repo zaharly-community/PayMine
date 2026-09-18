@@ -64,6 +64,12 @@ function WithdrawlCell({ withdrawl }: { withdrawl: WithdrawlRow }) {
 
 export const withdrawlsColumns: ColumnDef<DataTableFeatures, WithdrawlRow>[] = [
   {
+    id: "search",
+    accessorFn: (row) => `${row.name} ${row.email}`,
+    filterFn: "includesString",
+    enableHiding: true,
+  },
+  {
     accessorKey: "name",
     header: "Withdrawl",
     cell: ({ row }) => <WithdrawlCell withdrawl={row.original} />,
