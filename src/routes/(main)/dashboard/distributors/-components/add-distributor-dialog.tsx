@@ -29,19 +29,19 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 
-import type {
-  CompensationMode,
-  DistributorConfiguration,
-  DistributorProgram,
-  DistributorProgramMode,
-  DistributorPaymentMethod,
-  DistributorRow,
-  DistributorType,
-  FixedFeePeriod,
-  MethodLimitMode,
-  ProcessingScope,
+import {
+  ownerPaymentMethods,
+  type CompensationMode,
+  type DistributorConfiguration,
+  type DistributorProgram,
+  type DistributorProgramMode,
+  type DistributorPaymentMethod,
+  type DistributorRow,
+  type DistributorType,
+  type FixedFeePeriod,
+  type MethodLimitMode,
+  type ProcessingScope,
 } from "./data";
-import { ownerPaymentMethods } from "./data";
 
 type CommissionTransactions = "Deposits" | "Withdrawals" | "Deposits & Withdrawals";
 
