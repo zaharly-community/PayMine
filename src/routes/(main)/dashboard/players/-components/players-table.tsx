@@ -60,7 +60,7 @@ export function PlayersTable({ table }: { table: ReactTable<DataTableFeatures, P
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="border-border/60 hover:bg-white/2.5"
+                  className="h-12 border-border/60 transition-colors hover:bg-muted/35"
                   data-state={table.state.rowSelection[row.id] && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
