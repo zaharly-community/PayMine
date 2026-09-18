@@ -8,6 +8,7 @@ import {
   KeyRound,
   Layers3,
   ShieldCheck,
+  Trash2,
   UserPlus,
   WalletCards,
 } from "lucide-react";
@@ -397,8 +398,7 @@ function MethodRow({
                     <SelectItem value="Monthly">Monthly</SelectItem>
                   </SelectGroup>
                 </SelectContent>
-              </Select>            </Field>
-          ) : null}
+              </Select>            </Field>          ) : null}
 
           {commissionEnabled ? (
             <>
@@ -797,8 +797,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
 
                     {selectedProgram ? (
                       <div className="rounded-lg border bg-background px-4 py-3">                        <div className="flex items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="font-semibold text-sm">{selectedProgram.name}</p>
+                          <div className="min-w-0">                            <p className="font-semibold text-sm">{selectedProgram.name}</p>
                             <p className="mt-1 text-xs leading-4 text-muted-foreground">
                               {selectedProgram.description}
                             </p>
