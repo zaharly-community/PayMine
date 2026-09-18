@@ -121,7 +121,15 @@ function ProcessingMaskLayer({
         <div
           key={mask.id}
           aria-label={`Deposit processing is locked. Processing by ${mask.name}`}
-          className="pointer-events-none absolute z-40 flex items-center justify-center overflow-hidden border border-border/50 bg-background/80 px-4 text-center shadow-sm backdrop-blur-[1px] select-none"
+          className="absolute z-50 flex cursor-not-allowed items-center justify-center overflow-hidden border border-border/60 bg-background/90 px-4 text-center shadow-sm backdrop-blur-[2px] select-none"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
           style={{
             left: mask.left,
             top: mask.top,
@@ -129,7 +137,7 @@ function ProcessingMaskLayer({
             height: mask.height,
           }}
         >
-          <span className="flex items-center justify-center gap-2 text-xs font-medium leading-none text-muted-foreground">
+          <span className="flex items-center justify-center gap-2 text-sm font-medium leading-none text-muted-foreground">
             <LockKeyhole className="size-3.5 shrink-0" />
             <span>Processing by {mask.name}</span>
           </span>
@@ -180,7 +188,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
                   key={row.id}
                   data-deposit-row-id={row.original.id}
                   className={`h-7 border-border/60 transition-colors hover:bg-muted/35 ${getDepositRowIndicator(row.original.depositStatus)} ${
-                    processingLockedRows.has(row.original.id) ? "[&>*]:blur-[3px] [&>*]:opacity-55" : ""
+                    processingLockedRows.has(row.original.id) ? "blur-[3px] opacity-60" : ""
                   }`}
                   data-state={table.state.rowSelection[row.id] && "selected"}
                 >
