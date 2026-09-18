@@ -402,6 +402,38 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
     }));
   };
 
+  const handleDefaultDepositCommissionChange = (value: string) => {
+    setForm((current) => {
+      const previous = Number(current.defaultDepositCommissionRate) || 0;
+      const next = Number(value) || 0;
+      return {
+        ...current,
+        defaultDepositCommissionRate: value,
+        paymentMethods: current.paymentMethods.map((method) =>
+          method.depositCommissionRate === previous
+            ? { ...method, depositCommissionRate: next }
+            : method,
+        ),
+      };
+    });
+  };
+
+  const handleDefaultWithdrawalCommissionChange = (value: string) => {
+    setForm((current) => {
+      const previous = Number(current.defaultWithdrawalCommissionRate) || 0;
+      const next = Number(value) || 0;
+      return {
+        ...current,
+        defaultWithdrawalCommissionRate: value,
+        paymentMethods: current.paymentMethods.map((method) =>
+          method.withdrawalCommissionRate === previous
+            ? { ...method, withdrawalCommissionRate: next }
+            : method,
+        ),
+      };
+    });
+  };
+
   const handleAvatar = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -795,7 +827,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                           step="0.01"
                           className="pr-8"
                           value={form.defaultDepositCommissionRate}
-                          onChange={(event) => update("defaultDepositCommissionRate", event.target.value)}
+                          onChange={(event) => handleDefaultDepositCommissionChange(event.target.value)}
                         />
                         <span className="absolute top-1/2 right-2.5 -translate-y-1/2 text-xs text-muted-foreground">%</span>
                       </div>
@@ -810,7 +842,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                           step="0.01"
                           className="pr-8"
                           value={form.defaultWithdrawalCommissionRate}
-                          onChange={(event) => update("defaultWithdrawalCommissionRate", event.target.value)}
+                          onChange={(event) => handleDefaultWithdrawalCommissionChange(event.target.value)}
                         />
                         <span className="absolute top-1/2 right-2.5 -translate-y-1/2 text-xs text-muted-foreground">%</span>
                       </div>
