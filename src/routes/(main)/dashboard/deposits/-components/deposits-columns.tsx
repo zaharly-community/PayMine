@@ -3,13 +3,13 @@ import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { parse } from "date-fns";
 import {
-  CheckCircle2,
-  Clock3,
-  LoaderCircle,
   Ban,
   Check,
+  CheckCircle2,
+  Clock3,
   Download,
   Eye,
+  LoaderCircle,
   PencilLine,
   RotateCcw,
   XCircle,
@@ -17,12 +17,20 @@ import {
 
 import { cn } from "cn";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
-rom "@/components/ui/dropdown-menu";
 import type { DataTableFeatures } from "@/lib/data-table-features";
 import { formatCurrency, getInitials } from "@/lib/utils";
 
@@ -87,29 +95,47 @@ function VerificationBadge({ status }: { status: VerificationStatus }) {
   const { icon: Icon, className } = config[status];
 
   return (
-    <Badge variant="outline" className={cn("h-5 gap-1 rounded-4xl px-1.5 py-0.5 font-medium", className)}>
-      <Icon className={cn("size-3!", status === "Processing" || status === "In Process" ? "animate-spin" : "")} />
+    <Badge
+      variant="outline"
+      className={cn(
+        "h-5 gap-1 rounded-4xl px-1.5 py-0.5 font-medium",
+        className,
+      )}
+    >
+      <Icon
+        className={cn(
+          "size-3!",
+          status === "Processing" || status === "In Process" ? "animate-spin" : "",
+        )}
+      />
       {status}
     </Badge>
   );
 }
 
 function DepositStatusBadge({ status }: { status: DepositStatus }) {
-  const config: Record<DepositStatus, { className: string; icon: typeof Clock3 }> = {
+  const config: Record<
+    DepositStatus,
+    { className: string; icon: typeof Clock3 }
+  > = {
     Pending: {
-      className: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+      className:
+        "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400",
       icon: Clock3,
     },
     Processing: {
-      className: "border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-400",
+      className:
+        "border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-400",
       icon: LoaderCircle,
     },
     Completed: {
-      className: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+      className:
+        "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
       icon: CheckCircle2,
     },
     Canceled: {
-      className: "border-destructive/20 bg-destructive/10 text-destructive",
+      className:
+        "border-destructive/20 bg-destructive/10 text-destructive",
       icon: XCircle,
     },
   };
@@ -117,18 +143,37 @@ function DepositStatusBadge({ status }: { status: DepositStatus }) {
   const { className, icon: Icon } = config[status];
 
   return (
-    <Badge variant="outline" className={cn("h-5 rounded-sm px-1.5 py-0.5 font-medium", className)}>
-      <Icon className={cn("size-3!", status === "Processing" ? "animate-spin" : "")} />
+    <Badge
+      variant="outline"
+      className={cn(
+        "h-5 rounded-sm px-1.5 py-0.5 font-medium",
+        className,
+      )}
+    >
+      <Icon
+        className={cn(
+          "size-3!",
+          status === "Processing" ? "animate-spin" : "",
+        )}
+      />
       {status}
     </Badge>
   );
 }
 
-function ProcessorCell({ processor }: { processor: DepositRow["processedBy"] }) {
+function ProcessorCell({
+  processor,
+}: {
+  processor: DepositRow["processedBy"];
+}) {
   return (
     <div className="flex min-w-42 items-center gap-2">
       <Avatar size="sm" className="shrink-0">
-        <AvatarImage src={processor.image} alt="" referrerPolicy="no-referrer" />
+        <AvatarImage
+          src={processor.image}
+          alt=""
+          referrerPolicy="no-referrer"
+        />
         <AvatarFallback className="bg-muted text-[10px] font-medium">
           {getInitials(processor.name)}
         </AvatarFallback>
@@ -138,77 +183,12 @@ function ProcessorCell({ processor }: { processor: DepositRow["processedBy"] }) 
   );
 }
 
-export const depositsColumns: ColumnDef<DataTableFeatures, DepositRow>[] = [
-  {
-    id: "search",
-    accessorFn: (row) => `${row.name} ${row.email} ${row.id} ${row.paymentMethod}`,
-    filterFn: "includesString",
-    enableHiding: true,
-  },
-  {
-    id: "depositId",
-    accessorKey: "id",
-    header: "Deposit ID",
-    cell: ({ row }) => (
-      <div className="font-mono text-foreground text-xs tracking-wide">{row.original.id}</div>
-    ),
-  },
-  {
-    accessorKey: "name",
-    header: "Player",
-    cell: ({ row }) => (
-      <div className="flex min-w-36 items-center gap-2.5">
-        <Avatar size="sm" className="shrink-0">
-          <AvatarFallback className="bg-muted text-[10px] font-medium">
-            {getInitials(row.original.name)}
-          </AvatarFallback>
-        </Avatar>
-        <span className="truncate font-medium text-sm">{row.original.name}</span>
-      </div>
-    ),
-  },
-  {
-    accessorKey: "paymentMethod",
-    header: "Payment Method",
-    cell: ({ row }) => <PaymentMethodCell deposit={row.original} />,
-  },
-  {
-    id: "date",
-    accessorFn: (row) => parse(row.date, "dd MMM yyyy, hh:mm a", new Date()).getTime(),
-    header: "Date",
-    cell: ({ row }) => <div className="whitespace-nowrap text-sm tabular-nums">{row.original.date}</div>,
-  },
-  {
-    accessorKey: "verificationStatus",
-    header: "Verification Status",
-    cell: ({ row }) => <VerificationBadge status={row.original.verificationStatus} />,
-  },
-  {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => <div className="pr-2 text-right font-medium text-sm tabular-nums">{formatCurrency(row.original.amount)}</div>,
-  },
-  {
-    id: "fees",
-    accessorFn: (row) => row.feeAmount,
-    header: "Fees",
-    cell: ({ row }) => <div className="whitespace-nowrap text-muted-foreground text-sm tabular-nums">{row.original.feePercent > 0 ? `${row.original.feePercent}% - ${formatCurrency(row.original.feeAmount)}` : "Not concerned"}</div>,
-  },
-  {
-    accessorKey: "depositStatus",
-    header: "Deposit status",
-    cell: ({ row }) => <DepositStatusBadge status={row.original.depositStatus} />,
-  },
-  {
-    id: "processedBy",
-    accessorFn: (row) => row.processedBy.name,
-    header: "Processed By",
-    cell: ({ row }) => <ProcessorCell processor={row.original.processedBy} />,
-  },
 function DepositActions({ deposit }: { deposit: DepositRow }) {
   const [cancelOpen, setCancelOpen] = React.useState(false);
   const [confirmation, setConfirmation] = React.useState("");
-  const [canceled, setCanceled] = React.useState(deposit.depositStatus === "Canceled");
+  const [canceled, setCanceled] = React.useState(
+    deposit.depositStatus === "Canceled",
+  );
 
   const canConfirmCancel = confirmation === deposit.id;
 
@@ -217,9 +197,33 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
     if (!open) setConfirmation("");
   };
 
+  const downloadReceipt = () => {
+    const receipt = [
+      "Deposit Receipt",
+      `Transaction: ${deposit.id}`,
+      `Player: ${deposit.name}`,
+      `Payment Method: ${deposit.paymentMethod}`,
+      `Date: ${deposit.date}`,
+      `Amount: ${formatCurrency(deposit.amount)}`,
+      `Fees: ${deposit.feePercent > 0 ? `${deposit.feePercent}% - ${formatCurrency(deposit.feeAmount)}` : "Not concerned"}`,
+      `Status: ${canceled ? "Canceled" : deposit.depositStatus}`,
+    ].join("\n");
+
+    const blob = new Blob([receipt], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+
+    anchor.href = url;
+    anchor.download = `${deposit.id}-receipt.txt`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <>
-      <div className="flex items-center justify-end gap-1">
+      <div className="flex items-center justify-end gap-0.5">
         <Button
           type="button"
           aria-label={`Download receipt for ${deposit.id}`}
@@ -227,26 +231,7 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
           className="size-7 rounded-[min(var(--radius-md),12px)] text-muted-foreground hover:bg-muted hover:text-foreground"
           size="icon-sm"
           variant="ghost"
-          onClick={() => {
-            const receipt = [
-              `Deposit Receipt`,
-              `Transaction: ${deposit.id}`,
-              `Player: ${deposit.name}`,
-              `Payment Method: ${deposit.paymentMethod}`,
-              `Date: ${deposit.date}`,
-              `Amount: ${formatCurrency(deposit.amount)}`,
-              `Fees: ${deposit.feePercent > 0 ? `${deposit.feePercent}% - ${formatCurrency(deposit.feeAmount)}` : "Not concerned"}`,
-              `Status: ${deposit.depositStatus}`,
-            ].join("\\n");
-
-            const blob = new Blob([receipt], { type: "text/plain;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            const anchor = document.createElement("a");
-            anchor.href = url;
-            anchor.download = `${deposit.id}-receipt.txt`;
-            anchor.click();
-            URL.revokeObjectURL(url);
-          }}
+          onClick={downloadReceipt}
         >
           <Download className="size-3.5" />
         </Button>
@@ -294,13 +279,16 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel deposit?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will <strong>cancel</strong> the deposit. It will not delete the transaction.
-              To confirm, enter the transaction number exactly as shown below.
+              This action will <strong>cancel</strong> the deposit. It will not
+              delete the transaction. Re-enter the transaction number to
+              confirm.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="space-y-2">
-            <div className="rounded-md border bg-muted/40 px-3 py-2 font-mono text-xs">{deposit.id}</div>
+            <div className="rounded-md border bg-muted/40 px-3 py-2 font-mono text-xs">
+              {deposit.id}
+            </div>
             <Input
               value={confirmation}
               onChange={(event) => setConfirmation(event.target.value)}
@@ -310,7 +298,9 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setConfirmation("")}>Keep deposit</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setConfirmation("")}>
+              Keep deposit
+            </AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={!canConfirmCancel}
@@ -330,6 +320,99 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
   );
 }
 
+export const depositsColumns: ColumnDef<DataTableFeatures, DepositRow>[] = [
+  {
+    id: "search",
+    accessorFn: (row) =>
+      `${row.name} ${row.email} ${row.id} ${row.paymentMethod}`,
+    filterFn: "includesString",
+    enableHiding: true,
+  },
+  {
+    id: "depositId",
+    accessorKey: "id",
+    header: "Deposit ID",
+    cell: ({ row }) => (
+      <div className="font-mono text-foreground text-xs tracking-wide">
+        {row.original.id}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "name",
+    header: "Player",
+    cell: ({ row }) => (
+      <div className="flex min-w-36 items-center gap-2.5">
+        <Avatar size="sm" className="shrink-0">
+          <AvatarFallback className="bg-muted text-[10px] font-medium">
+            {getInitials(row.original.name)}
+          </AvatarFallback>
+        </Avatar>
+        <span className="truncate font-medium text-sm">
+          {row.original.name}
+        </span>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "paymentMethod",
+    header: "Payment Method",
+    cell: ({ row }) => <PaymentMethodCell deposit={row.original} />,
+  },
+  {
+    id: "date",
+    accessorFn: (row) =>
+      parse(row.date, "dd MMM yyyy, hh:mm a", new Date()).getTime(),
+    header: "Date",
+    cell: ({ row }) => (
+      <div className="whitespace-nowrap text-sm tabular-nums">
+        {row.original.date}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "verificationStatus",
+    header: "Verification Status",
+    cell: ({ row }) => (
+      <VerificationBadge status={row.original.verificationStatus} />
+    ),
+  },
+  {
+    accessorKey: "amount",
+    header: () => <div className="text-right">Amount</div>,
+    cell: ({ row }) => (
+      <div className="pr-2 text-right font-medium text-sm tabular-nums">
+        {formatCurrency(row.original.amount)}
+      </div>
+    ),
+  },
+  {
+    id: "fees",
+    accessorFn: (row) => row.feeAmount,
+    header: "Fees",
+    cell: ({ row }) => (
+      <div className="whitespace-nowrap text-muted-foreground text-sm tabular-nums">
+        {row.original.feePercent > 0
+          ? `${row.original.feePercent}% - ${formatCurrency(row.original.feeAmount)}`
+          : "Not concerned"}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "depositStatus",
+    header: "Deposit status",
+    cell: ({ row }) => (
+      <DepositStatusBadge status={row.original.depositStatus} />
+    ),
+  },
+  {
+    id: "processedBy",
+    accessorFn: (row) => row.processedBy.name,
+    header: "Processed By",
+    cell: ({ row }) => (
+      <ProcessorCell processor={row.original.processedBy} />
+    ),
+  },
   {
     id: "actions",
     header: () => <div className="text-right"> </div>,
