@@ -28,7 +28,8 @@ import type { DistributorRow } from "./data";
 type DistributorColumnActions = {
   onSuspend: (distributorId: string) => void;
   onDelete: (distributorId: string) => void;
-  onWalletAdjust: (distributorId: string, delta: number) => void;
+  treasury: import("./data").TreasuryAccount[];
+  onWalletAdjust: (distributorId: string, paymentMethodId: string, delta: number) => void;
 };
 
 function getAvatarTone(name: string) {
@@ -49,7 +50,7 @@ function getAvatarTone(name: string) {
 function DistributorCell({ distributor }: { distributor: DistributorRow }) {
   return (
     <div className="flex min-w-52 items-center gap-3">
-      <Avatar size="lg" className={cn("shrink-0 font-medium", getAvatarTone(distributor.name))}>
+      <Avatar size="default" className={cn("shrink-0 font-medium", getAvatarTone(distributor.name))}>
         <AvatarImage
           src={distributor.avatarUrl || undefined}
           alt=""
@@ -137,6 +138,7 @@ function IconButton({
 
 function DistributorActions({
   distributor,
+  treasury,
   onSuspend,
   onDelete,
   onWalletAdjust,
@@ -147,12 +149,24 @@ function DistributorActions({
   const [walletOpen, setWalletOpen] = React.useState(false);
   const [walletMode, setWalletMode] = React.useState<"add" | "withdraw">("add");
   const [walletAmount, setWalletAmount] = React.useState("");
+  const [paymentMethodId, setPaymentMethodId] = React.useState(treasury[0]?.id ?? "");
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [confirmation, setConfirmation] = React.useState("");
 
-  const isDelete = distributor.status === "Suspended";
+  const selectedTreasury = treasury.find((account) => account.id === paymentMethodId) ?? treasury[0];
   const amount = Number(walletAmount);
-  const canApplyWallet = Number.isFinite(amount) && amount > 0 && (walletMode === "add" || amount <= distributor.balance);
+  const paymentMethodBalance = selectedTreasury?.balance ?? 0;
+  const maxAmount = walletMode === "add" ? paymentMethodBalance : distributor.balance;
+  const canApplyWallet =
+    Boolean(selectedTreasury) &&
+    Number.isFinite(amount) &&
+    amount > 0 &&
+    amount <= maxAmount;
+
+  const signedDelta = walletMode === "add" ? amount : -amount;
+  const distributorAfter = distributor.balance + (Number.isFinite(amount) ? signedDelta : 0);
+  const treasuryAfter = paymentMethodBalance - (Number.isFinite(amount) ? signedDelta : 0);
+  const isDelete = distributor.status === "Suspended";
   const canConfirmAction = confirmation === distributor.id;
 
   const closeConfirm = (open: boolean) => {
@@ -165,7 +179,15 @@ function DistributorActions({
     if (!open) {
       setWalletAmount("");
       setWalletMode("add");
+      setPaymentMethodId(treasury[0]?.id ?? "");
     }
+  };
+
+  const handleWalletOpen = () => {
+    setPaymentMethodId((current) =>
+      treasury.some((account) => account.id === current) ? current : (treasury[0]?.id ?? ""),
+    );
+    setWalletOpen(true);
   };
 
   return (
@@ -175,7 +197,7 @@ function DistributorActions({
           <Eye className="size-3.5" />
         </IconButton>
 
-        <IconButton label={"Adjust wallet for " + distributor.name} onClick={() => setWalletOpen(true)}>
+        <IconButton label={"Adjust wallet for " + distributor.name} onClick={handleWalletOpen}>
           <WalletCards className="size-3.5" />
         </IconButton>
 
@@ -230,19 +252,20 @@ function DistributorActions({
       </Dialog>
 
       <Dialog open={walletOpen} onOpenChange={closeWallet}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Adjust wallet balance</DialogTitle>
+            <DialogTitle>Control wallet balance</DialogTitle>
             <DialogDescription>
-              {distributor.name} · Current balance {formatCurrency(distributor.balance)}
+              Every adjustment moves value between the distributor wallet and a shared owner treasury account.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4">
-            <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-5">
+            <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted/35 p-1">
               <Button
                 type="button"
-                variant={walletMode === "add" ? "default" : "outline"}
+                size="sm"
+                variant={walletMode === "add" ? "default" : "ghost"}
                 onClick={() => setWalletMode("add")}
               >
                 <Plus />
@@ -250,18 +273,81 @@ function DistributorActions({
               </Button>
               <Button
                 type="button"
-                variant={walletMode === "withdraw" ? "default" : "outline"}
+                size="sm"
+                variant={walletMode === "withdraw" ? "default" : "ghost"}
                 onClick={() => setWalletMode("withdraw")}
               >
                 <Minus />
-                Withdraw balance
+                Deduct balance
               </Button>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium" htmlFor={"wallet-amount-" + distributor.id}>
-                Amount
-              </label>
+            <div className="space-y-2.5">
+              <div>
+                <p className="text-sm font-medium">{walletMode === "add" ? "Funding method" : "Destination method"}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {walletMode === "add"
+                    ? "Choose the shared payment method that will fund this distributor."
+                    : "Choose the shared payment method that will receive the recovered balance."}
+                </p>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                {treasury.map((account) => {
+                  const selected = account.id === selectedTreasury?.id;
+                  return (
+                    <button
+                      key={account.id}
+                      type="button"
+                      onClick={() => setPaymentMethodId(account.id)}
+                      className={cn(
+                        "flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors",
+                        selected
+                          ? "border-primary bg-primary/5 ring-1 ring-primary/15"
+                          : "border-border hover:bg-muted/40",
+                      )}
+                    >
+                      <span className="min-w-0">
+                        <span className="flex items-center gap-2">
+                          <span className="truncate text-sm font-medium">{account.name}</span>
+                          {account.shared ? (
+                            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                              Shared
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="mt-0.5 block text-[11px] text-muted-foreground">{account.category}</span>
+                      </span>
+                      <span className="shrink-0 text-right">
+                        <span className="block text-sm font-medium tabular-nums">
+                          {formatCurrency(account.balance)}
+                        </span>
+                        <span className="block text-[10px] text-muted-foreground">
+                          {walletMode === "add" ? "available" : "destination"}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-[11px] leading-4 text-muted-foreground">
+                Shared payment methods are treasury accounts. To empty or settle a payment method, use a separate Treasury
+                Settlement flow rather than changing an individual distributor wallet.
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between gap-3">
+                <label className="text-sm font-medium" htmlFor={"wallet-amount-" + distributor.id}>
+                  Amount
+                </label>
+                <span className="text-xs text-muted-foreground">
+                  {walletMode === "add" ? "Available" : "Current wallet"}{" "}
+                  <strong className="font-medium text-foreground">{formatCurrency(maxAmount)}</strong>
+                </span>
+              </div>
+
               <Input
                 id={"wallet-amount-" + distributor.id}
                 type="number"
@@ -271,26 +357,79 @@ function DistributorActions({
                 onChange={(event) => setWalletAmount(event.target.value)}
                 placeholder="0.00"
               />
-              {walletMode === "withdraw" && amount > distributor.balance ? (
-                <p className="text-xs text-destructive">Amount cannot exceed the current wallet balance.</p>
+
+              <div className="flex flex-wrap gap-1.5">
+                {[50, 100, 500, 1000].map((quickAmount) => (
+                  <Button
+                    key={quickAmount}
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2.5 text-xs"
+                    disabled={quickAmount > maxAmount}
+                    onClick={() => setWalletAmount(String(quickAmount))}
+                  >
+                    {quickAmount.toLocaleString()}
+                  </Button>
+                ))}
+              </div>
+
+              {!selectedTreasury ? (
+                <p className="text-xs text-destructive">No treasury payment method is configured.</p>
+              ) : walletMode === "add" && amount > paymentMethodBalance ? (
+                <p className="text-xs text-destructive">
+                  Amount exceeds the available {selectedTreasury.name} balance of {formatCurrency(paymentMethodBalance)}.
+                </p>
+              ) : walletMode === "withdraw" && amount > distributor.balance ? (
+                <p className="text-xs text-destructive">
+                  Amount exceeds the current distributor wallet balance of {formatCurrency(distributor.balance)}.
+                </p>
               ) : null}
             </div>
 
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => closeWallet(false)}>
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                disabled={!canApplyWallet}
-                onClick={() => {
-                  onWalletAdjust(distributor.id, walletMode === "add" ? amount : -amount);
-                  closeWallet(false);
-                }}
-              >
-                {walletMode === "add" ? "Add funds" : "Withdraw funds"}
-              </Button>
+            <div className="grid grid-cols-3 items-center gap-3 rounded-lg border bg-muted/20 px-3 py-3">
+              <div className="min-w-0">
+                <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">Wallet</span>
+                <span className="mt-0.5 block truncate text-sm font-medium tabular-nums">
+                  {formatCurrency(distributor.balance)}
+                </span>
+              </div>
+              <div className="text-center text-muted-foreground text-lg">→</div>
+              <div className="min-w-0 text-right">
+                <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">After</span>
+                <span className="mt-0.5 block truncate text-sm font-semibold tabular-nums">
+                  {formatCurrency(distributorAfter)}
+                </span>
+              </div>
+              <div className="col-span-3 border-t pt-2 text-[11px] text-muted-foreground">
+                {selectedTreasury ? (
+                  <>
+                    {walletMode === "add" ? "Treasury source" : "Treasury destination"}:{" "}
+                    <span className="font-medium text-foreground">{selectedTreasury.name}</span> · current{" "}
+                    {formatCurrency(paymentMethodBalance)} → after {formatCurrency(treasuryAfter)}
+                  </>
+                ) : (
+                  "Select a treasury payment method to continue."
+                )}
+              </div>
             </div>
+          </div>
+
+          <div className="flex justify-end gap-2 border-t pt-4">
+            <Button type="button" variant="outline" onClick={() => closeWallet(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={!canApplyWallet}
+              onClick={() => {
+                if (!selectedTreasury) return;
+                onWalletAdjust(distributor.id, selectedTreasury.id, signedDelta);
+                closeWallet(false);
+              }}
+            >
+              {walletMode === "add" ? "Add funds" : "Deduct funds"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -405,6 +544,7 @@ export function createDistributorsColumns(actions: DistributorColumnActions): Co
       cell: ({ row }) => (
         <DistributorActions
           distributor={row.original}
+          treasury={actions.treasury}
           onSuspend={actions.onSuspend}
           onDelete={actions.onDelete}
           onWalletAdjust={actions.onWalletAdjust}
