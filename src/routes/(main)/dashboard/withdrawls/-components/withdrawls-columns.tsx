@@ -179,18 +179,6 @@ export const withdrawlsColumns: ColumnDef<DataTableFeatures, WithdrawlRow>[] = [
     ),
   },
   {
-    id: "commission",
-    accessorFn: (row) => row.commissionAmount,
-    header: "Commission",
-    cell: ({ row }) => (
-      <div className="whitespace-nowrap font-medium text-emerald-600 text-sm tabular-nums dark:text-emerald-400">
-        {row.original.commissionPercent > 0
-          ? `${row.original.commissionPercent}% - ${formatCurrency(row.original.commissionAmount)}`
-          : "No commission"}
-      </div>
-    ),
-  },
-  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => <StatusBadge status={row.original.status} />,
