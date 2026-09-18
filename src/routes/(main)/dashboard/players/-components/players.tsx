@@ -19,8 +19,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { dataTableFeatures } from "@/lib/data-table-features";
 
 import { filters, type PlayerRow } from "./data";
-import { playersColumns } from "./users-columns";
-import { PlayersTable } from "./users-table";
+import { playersColumns } from "./players-columns";
+import { PlayersTable } from "./players-table";
 
 const playerFilterItems = {
   role: filters.role.map((option) => ({ value: option, label: option })),
@@ -79,9 +79,9 @@ export function Players({ players }: { players: PlayerRow[] }) {
   return (
     <Card>
       <CardHeader className="border-b has-data-[slot=card-action]:grid-cols-1 md:has-data-[slot=card-action]:grid-cols-[1fr_auto]">
-        <CardTitle className="text-xl leading-none">Users</CardTitle>
+        <CardTitle className="text-xl leading-none">Players</CardTitle>
         <CardDescription className="max-w-sm leading-snug">
-          Manage your organization members and their access.
+          Manage your players and player access.
         </CardDescription>
         <CardAction className="col-start-1 row-start-auto flex w-full flex-wrap justify-start gap-2 justify-self-stretch md:col-start-2 md:row-span-2 md:row-start-1 md:w-auto md:flex-nowrap md:justify-end md:justify-self-end">
           <InputGroup className="h-7 w-full md:w-64">
