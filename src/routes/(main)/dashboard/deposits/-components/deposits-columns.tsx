@@ -1,11 +1,17 @@
+import * as React from "react";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { parse } from "date-fns";
 import {
   CheckCircle2,
   Clock3,
   LoaderCircle,
-  MoreHorizontal,
+  Ban,
+  Check,
+  Download,
+  Eye,
   PencilLine,
+  RotateCcw,
   XCircle,
 } from "lucide-react";
 
@@ -14,14 +20,9 @@ import { cn } from "cn";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+rom "@/components/ui/dropdown-menu";
 import type { DataTableFeatures } from "@/lib/data-table-features";
 import { formatCurrency, getInitials } from "@/lib/utils";
 
@@ -204,39 +205,135 @@ export const depositsColumns: ColumnDef<DataTableFeatures, DepositRow>[] = [
     header: "Processed By",
     cell: ({ row }) => <ProcessorCell processor={row.original.processedBy} />,
   },
+function DepositActions({ deposit }: { deposit: DepositRow }) {
+  const [cancelOpen, setCancelOpen] = React.useState(false);
+  const [confirmation, setConfirmation] = React.useState("");
+  const [canceled, setCanceled] = React.useState(deposit.depositStatus === "Canceled");
+
+  const canConfirmCancel = confirmation === deposit.id;
+
+  const closeCancelDialog = (open: boolean) => {
+    setCancelOpen(open);
+    if (!open) setConfirmation("");
+  };
+
+  return (
+    <>
+      <div className="flex items-center justify-end gap-1">
+        <Button
+          type="button"
+          aria-label={`Download receipt for ${deposit.id}`}
+          title="Download receipt"
+          className="size-7 rounded-[min(var(--radius-md),12px)] text-muted-foreground hover:bg-muted hover:text-foreground"
+          size="icon-sm"
+          variant="ghost"
+          onClick={() => {
+            const receipt = [
+              `Deposit Receipt`,
+              `Transaction: ${deposit.id}`,
+              `Player: ${deposit.name}`,
+              `Payment Method: ${deposit.paymentMethod}`,
+              `Date: ${deposit.date}`,
+              `Amount: ${formatCurrency(deposit.amount)}`,
+              `Fees: ${deposit.feePercent > 0 ? `${deposit.feePercent}% - ${formatCurrency(deposit.feeAmount)}` : "Not concerned"}`,
+              `Status: ${deposit.depositStatus}`,
+            ].join("\\n");
+
+            const blob = new Blob([receipt], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement("a");
+            anchor.href = url;
+            anchor.download = `${deposit.id}-receipt.txt`;
+            anchor.click();
+            URL.revokeObjectURL(url);
+          }}
+        >
+          <Download className="size-3.5" />
+        </Button>
+
+        <Button
+          type="button"
+          aria-label={`Open deposit ${deposit.id} for processing`}
+          title="Open deposit"
+          className="size-7 rounded-[min(var(--radius-md),12px)] text-muted-foreground hover:bg-muted hover:text-foreground"
+          size="icon-sm"
+          variant="ghost"
+        >
+          <Eye className="size-3.5" />
+        </Button>
+
+        {canceled ? (
+          <Button
+            type="button"
+            aria-label={`Enable deposit ${deposit.id}`}
+            title="Enable deposit"
+            className="size-7 rounded-[min(var(--radius-md),12px)] text-muted-foreground hover:bg-muted hover:text-foreground"
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => setCanceled(false)}
+          >
+            <RotateCcw className="size-3.5" />
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            aria-label={`Cancel deposit ${deposit.id}`}
+            title="Cancel deposit"
+            className="size-7 rounded-[min(var(--radius-md),12px)] text-red-500 hover:bg-red-500/10 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => setCancelOpen(true)}
+          >
+            <Ban className="size-3.5" />
+          </Button>
+        )}
+      </div>
+
+      <AlertDialog open={cancelOpen} onOpenChange={closeCancelDialog}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel deposit?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will <strong>cancel</strong> the deposit. It will not delete the transaction.
+              To confirm, enter the transaction number exactly as shown below.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-2">
+            <div className="rounded-md border bg-muted/40 px-3 py-2 font-mono text-xs">{deposit.id}</div>
+            <Input
+              value={confirmation}
+              onChange={(event) => setConfirmation(event.target.value)}
+              placeholder="Re-enter transaction number"
+              autoComplete="off"
+            />
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmation("")}>Keep deposit</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={!canConfirmCancel}
+              onClick={() => {
+                setCanceled(true);
+                setConfirmation("");
+                setCancelOpen(false);
+              }}
+            >
+              <Check />
+              Confirm cancellation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
   {
     id: "actions",
     header: () => <div className="text-right"> </div>,
-    cell: ({ row }) => (
-      <div className="text-right">
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                aria-label={`Open actions for ${row.original.id}`}
-                className="size-8 rounded-md text-muted-foreground hover:bg-muted/50"
-                size="icon-sm"
-                variant="ghost"
-              />
-            }
-          >
-            <MoreHorizontal className="size-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuGroup>
-              <DropdownMenuItem>View deposit</DropdownMenuItem>
-              <DropdownMenuItem>View player</DropdownMenuItem>
-              <DropdownMenuItem>View payment method</DropdownMenuItem>
-              <DropdownMenuItem>View verification</DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem variant="destructive">Cancel deposit</DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    ),
+    cell: ({ row }) => <DepositActions deposit={row.original} />,
     enableHiding: false,
     enableSorting: false,
   },
