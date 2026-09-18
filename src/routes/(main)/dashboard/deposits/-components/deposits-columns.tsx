@@ -1,5 +1,7 @@
 import * as React from "react";
 
+import { Link } from "@tanstack/react-router";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { parse } from "date-fns";
 import {
@@ -236,16 +238,15 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
           <Download className="size-3.5" />
         </Button>
 
-        <Button
-          type="button"
+        <Link
+          to="/dashboard/deposits/$depositId"
+          params={{ depositId: deposit.id }}
           aria-label={`Open deposit ${deposit.id} for processing`}
           title="Open deposit"
-          className="size-7 rounded-[min(var(--radius-md),12px)] text-muted-foreground hover:bg-muted hover:text-foreground"
-          size="icon-sm"
-          variant="ghost"
+          className="inline-flex size-7 items-center justify-center rounded-[min(var(--radius-md),12px)] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <Eye className="size-3.5" />
-        </Button>
+        </Link>
 
         {canceled ? (
           <Button
