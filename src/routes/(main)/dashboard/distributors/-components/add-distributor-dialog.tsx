@@ -656,7 +656,7 @@ export function AddDistributorDialog({
                                     max="100"
                                     step="0.01"
                                     className="pr-8"
-                                    value={method.commissionRate ?? Number(form.defaultCommissionRate) || 0}
+                                    value={method.commissionRate ?? (Number(form.defaultCommissionRate) || 0)}
                                     onChange={(event) =>
                                       updatePaymentMethod(method.id, (current) => ({
                                         ...current,
