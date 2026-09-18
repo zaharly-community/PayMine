@@ -22,18 +22,16 @@ function preventPaginationNavigation(event: MouseEvent<HTMLAnchorElement>) {
   event.preventDefault();
 }
 
-function getDepositRowIndicator(status: DepositRow["status"]) {
+function getDepositRowIndicator(status: DepositRow["depositStatus"]) {
   switch (status) {
-    case "Active":
+    case "Completed":
       return "shadow-[inset_5px_0_0_var(--color-emerald-500)]";
-    case "Pending invite":
+    case "Pending":
+    case "Processing":
       return "shadow-[inset_5px_0_0_var(--color-amber-400)]";
-    case "Locked":
-    case "Suspended":
-      return "shadow-[inset_5px_0_0_var(--color-red-500)]";
-    case "Deactivated":
+    case "Canceled":
     default:
-      return "shadow-[inset_5px_0_0_var(--color-muted-foreground)]";
+      return "shadow-[inset_5px_0_0_var(--color-red-500)]";
   }
 }
 
