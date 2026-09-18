@@ -6,9 +6,7 @@ import {
   ChevronDown,
   ImagePlus,
   KeyRound,
-  Plus,
   ShieldCheck,
-  Trash2,
   UserPlus,
   WalletCards,
 } from "lucide-react";
@@ -402,14 +400,6 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
         ? current.accountOpeningMethods.filter((item) => item !== name)
         : [...current.accountOpeningMethods, name],
     }));
-  };
-
-  const removePaymentMethod = (id: string) => {
-    setForm((current) => ({
-      ...current,
-      paymentMethods: current.paymentMethods.filter((method) => method.id !== id),
-    }));
-    setOpenMethodId((current) => (current === id ? null : current));
   };
 
   const handleAvatar = (event: React.ChangeEvent<HTMLInputElement>) => {
