@@ -16,17 +16,23 @@ export type DistributorPaymentMethod = {
   requestLimit?: number;
   amountLimit?: number;
   amountLimitPeriod?: FixedFeePeriod;
-  commissionRate?: number;
+  depositCommissionRate?: number;
+  withdrawalCommissionRate?: number;
 };
 
 export type DistributorConfiguration = {
   processingScope?: ProcessingScope;
+  accountOpeningMethods?: string[];
   paymentMethods?: DistributorPaymentMethod[];
+  defaultRequestLimit?: number;
+  defaultAmountLimit?: number;
+  defaultAmountLimitPeriod?: FixedFeePeriod;
   feeMode?: CompensationMode;
   fixedFeeAmount?: number;
   fixedFeePeriod?: FixedFeePeriod;
   commissionTransactions?: CommissionTransactions;
-  defaultCommissionRate?: number;
+  defaultDepositCommissionRate?: number;
+  defaultWithdrawalCommissionRate?: number;
   perCompletedOperationFee?: number;
 };
 
