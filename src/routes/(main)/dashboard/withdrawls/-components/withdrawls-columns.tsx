@@ -2,7 +2,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { parse } from "date-fns";
 import {
   Check,
-  CircleHelp,
+  SkipForward,
   Clock3,
   Eye,
   LoaderCircle,
@@ -116,7 +116,7 @@ function Actions({ withdrawl }: { withdrawl: WithdrawlRow }) {
         variant="ghost"
         className="size-7 rounded-[min(var(--radius-md),12px)] text-muted-foreground hover:bg-muted hover:text-foreground"
       >
-        <CircleHelp className="size-3.5" />
+        <SkipForward className="size-3.5" />
       </Button>
     </div>
   );
