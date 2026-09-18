@@ -1,318 +1,182 @@
-export type WithdrawlStatus = "Active" | "Pending invite" | "Deactivated" | "Locked" | "Suspended";
+export type WithdrawlStatus = "Pending" | "Completed" | "Waiting Correction";
 
-const teamValues = [
-  "Platform",
-  "Growth",
-  "Revenue",
-  "Customer Ops",
-  "Internal Tools",
-  "Compliance",
-  "People Ops",
-  "Finance",
-] as const;
+export type WithdrawlMethod = "Flouci" | "D17" | "Kashy" | "Bank Transfer";
 
-export type WithdrawlTeam = (typeof teamValues)[number];
-
-export type WithdrawlRow = {
-  email: string;
-  joinedDate: string;
-  lastActive: number;
+export type WithdrawlProcessor = {
   name: string;
-  role: string;
-  status: WithdrawlStatus;
-  team: WithdrawlTeam;
-  workspace: string[];
+  image: string;
 };
 
-export const withdrawls: WithdrawlRow[] = [
-  {
-    name: "Olivia Rhye",
-    email: "olivia.rhye@weblabs.studio",
-    role: "Workspace Owner",
-    status: "Active",
-    team: "Platform",
-    workspace: ["Weblabs Studio", "Internal Tools"],
-    joinedDate: "24 Jun 2024, 9:23 AM",
-    lastActive: 0,
-  },
-  {
-    name: "Phoenix Baker",
-    email: "phoenix.baker@weblabs.studio",
-    role: "Admin",
-    status: "Active",
-    team: "Growth",
-    workspace: ["Weblabs Studio"],
-    joinedDate: "15 Mar 2023, 2:45 PM",
-    lastActive: 5,
-  },
-  {
-    name: "Lana Steiner",
-    email: "lana.steiner@acme.inc",
-    role: "Billing Admin",
-    status: "Active",
-    team: "Revenue",
-    workspace: ["Acme Inc."],
-    joinedDate: "10 Apr 2022, 11:30 AM",
-    lastActive: 14 * 24 * 60,
-  },
-  {
-    name: "Demi Wilkinson",
-    email: "demi.wilkinson@weblabs.studio",
-    role: "Security Admin",
-    status: "Locked",
-    team: "Internal Tools",
-    workspace: ["Weblabs Studio", "Internal Tools"],
-    joinedDate: "28 Feb 2023, 6:15 PM",
-    lastActive: 60,
-  },
-  {
-    name: "Candice Wu",
-    email: "candice.wu@sandbox.dev",
-    role: "Team Lead",
-    status: "Active",
-    team: "Customer Ops",
-    workspace: ["Sandbox"],
-    joinedDate: "19 May 2024, 7:55 AM",
-    lastActive: 2 * 60,
-  },
-  {
-    name: "Natali Craig",
-    email: "natali.craig@weblabs.studio",
-    role: "Contributor",
-    status: "Pending invite",
-    team: "Compliance",
-    workspace: ["Weblabs Studio"],
-    joinedDate: "03 Jan 2024, 12:05 PM",
-    lastActive: 90 * 24 * 60,
-  },
-  {
-    name: "Drew Cano",
-    email: "drew.cano@internal.tools",
-    role: "Guest",
-    status: "Active",
-    team: "Internal Tools",
-    workspace: ["Internal Tools"],
-    joinedDate: "21 Jul 2023, 8:40 PM",
-    lastActive: 3 * 60,
-  },
-  {
-    name: "Orlando Diggs",
-    email: "orlando.diggs@acme.inc",
-    role: "Read-only",
-    status: "Deactivated",
-    team: "Revenue",
-    workspace: ["Acme Inc."],
-    joinedDate: "16 Sep 2023, 3:25 PM",
-    lastActive: 6,
-  },
-  {
-    name: "Andi Lane",
-    email: "andi.lane@weblabs.studio",
-    role: "Contributor",
-    status: "Active",
-    team: "People Ops",
-    workspace: ["Weblabs Studio", "Sandbox"],
-    joinedDate: "04 Nov 2022, 9:50 AM",
-    lastActive: 12,
-  },
-  {
-    name: "Kate Morrison",
-    email: "kate.morrison@weblabs.studio",
-    role: "Admin",
-    status: "Active",
-    team: "Platform",
-    workspace: ["Weblabs Studio"],
-    joinedDate: "30 Dec 2023, 4:35 PM",
-    lastActive: 30,
-  },
-  {
-    name: "Alec Whitten",
-    email: "alec.whitten@internal.tools",
-    role: "Team Lead",
-    status: "Suspended",
-    team: "Internal Tools",
-    workspace: ["Internal Tools"],
-    joinedDate: "12 Feb 2024, 10:20 AM",
-    lastActive: 8 * 24 * 60,
-  },
-  {
-    name: "Ariana Decker",
-    email: "ariana.decker@weblabs.studio",
-    role: "Contributor",
-    status: "Active",
-    team: "Growth",
-    workspace: ["Weblabs Studio"],
-    joinedDate: "08 Aug 2023, 1:10 PM",
-    lastActive: 24 * 60,
-  },
-  {
-    name: "Steven Tey",
-    email: "steven.tey@sandbox.dev",
-    role: "Guest",
-    status: "Pending invite",
-    team: "Customer Ops",
-    workspace: ["Sandbox"],
-    joinedDate: "17 Jan 2024, 5:45 PM",
-    lastActive: 90 * 24 * 60,
-  },
-  {
-    name: "Lori Bryson",
-    email: "lori.bryson@acme.inc",
-    role: "Billing Admin",
-    status: "Active",
-    team: "Finance",
-    workspace: ["Acme Inc."],
-    joinedDate: "02 Oct 2023, 11:15 AM",
-    lastActive: 45,
-  },
+export type WithdrawlRow = {
+  id: string;
+  name: string;
+  email: string;
+  date: string;
+  withdrawlMethod: WithdrawlMethod;
+  withdrawlMethodImage: string;
+  amount: number;
+  commissionPercent: number;
+  commissionAmount: number;
+  status: WithdrawlStatus;
+  processedBy: WithdrawlProcessor;
+};
+
+const processors: WithdrawlProcessor[] = [
   {
     name: "Koray Okumus",
-    email: "koray.okumus@weblabs.studio",
-    role: "Security Admin",
-    status: "Active",
-    team: "Internal Tools",
-    workspace: ["Weblabs Studio", "Internal Tools"],
-    joinedDate: "22 May 2024, 8:30 AM",
-    lastActive: 10,
+    image:
+      "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/6dfc72b9-8c86-438a-aada-8d3530e13a68/d2c9cgs-69217879-a8d4-438a-b98d-baa29baf98d8.jpg/v1/fill/w_900,h_1126,q_75,strp/this_random_guy_by_inxonic_d2c9cgs-fullview.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5OTkyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi82ZGZjNzJiOS04Yzg2LTQzOGEtYWFkYS04ZDM1MzBlMTNhNjgvZDJjOWNncy02OTIxNzg3OS1hOGQ0LTQzOGEtYjk4ZC1iYWEyOWJhZjk4ZDguanBnIiwiaGVpZ2h0IjoiPD0xMTI2Iiwid2lkdGgiOiI8PTkwMCJ9XV0sInVybCI6WyJ1cm46c2VydmljZTppbWFnZS53aXRlcnBtYXJrIl19.oLUUOQ0Apg_6Gq1gPPuVu9DXt6494FP4rbUTeN4h-wA",
   },
   {
-    name: "Josh Miller",
-    email: "josh.miller@internal.tools",
-    role: "Read-only",
-    status: "Active",
-    team: "Compliance",
-    workspace: ["Internal Tools"],
-    joinedDate: "14 Jul 2023, 6:05 PM",
-    lastActive: 4 * 60,
+    name: "Nicolas Martin",
+    image:
+      "https://plus.unsplash.com/premium_photo-1689530775582-83b8abdb5020?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cmFuZG9tJTIwcGVyc29ufGVufDB8fDB8fHww",
   },
   {
-    name: "Mollie Hall",
-    email: "mollie.hall@weblabs.studio",
-    role: "Contributor",
-    status: "Deactivated",
-    team: "Platform",
-    workspace: ["Weblabs Studio"],
-    joinedDate: "26 Nov 2022, 3:40 PM",
-    lastActive: 21 * 24 * 60,
+    name: "Sami Ben Salah",
+    image:
+      "https://img.magnific.com/free-photo/close-up-portrait-curly-handsome-european-male_176532-8133.jpg?semt=ais_hybrid&w=740&q=80",
   },
   {
-    name: "Rene Wells",
-    email: "rene.wells@acme.inc",
-    role: "Team Lead",
-    status: "Active",
-    team: "Revenue",
-    workspace: ["Acme Inc."],
-    joinedDate: "11 Apr 2024, 9:05 AM",
-    lastActive: 18,
-  },
-  {
-    name: "Rylee Howard",
-    email: "rylee.howard@sandbox.dev",
-    role: "Guest",
-    status: "Locked",
-    team: "Growth",
-    workspace: ["Sandbox"],
-    joinedDate: "09 Sep 2023, 12:25 PM",
-    lastActive: 2 * 24 * 60,
-  },
-  {
-    name: "Sienna Hewitt",
-    email: "sienna.hewitt@weblabs.studio",
-    role: "Admin",
-    status: "Active",
-    team: "Internal Tools",
-    workspace: ["Weblabs Studio", "Internal Tools"],
-    joinedDate: "05 Dec 2023, 2:15 PM",
-    lastActive: 0,
-  },
-  {
-    name: "Noah Pierre",
-    email: "noah.pierre@weblabs.studio",
-    role: "Contributor",
-    status: "Active",
-    team: "Platform",
-    workspace: ["Weblabs Studio"],
-    joinedDate: "18 Jun 2024, 4:50 PM",
-    lastActive: 7,
-  },
-  {
-    name: "Eve Lechner",
-    email: "eve.lechner@acme.inc",
-    role: "Read-only",
-    status: "Suspended",
-    team: "Finance",
-    workspace: ["Acme Inc."],
-    joinedDate: "01 Mar 2023, 10:10 AM",
-    lastActive: 30 * 24 * 60,
-  },
-  {
-    name: "Zahir McClure",
-    email: "zahir.mcclure@internal.tools",
-    role: "Security Admin",
-    status: "Active",
-    team: "Internal Tools",
-    workspace: ["Internal Tools"],
-    joinedDate: "07 Feb 2024, 7:20 PM",
-    lastActive: 60,
-  },
-  {
-    name: "Mia Romberg",
-    email: "mia.romberg@weblabs.studio",
-    role: "Billing Admin",
-    status: "Pending invite",
-    team: "Finance",
-    workspace: ["Weblabs Studio"],
-    joinedDate: "29 Apr 2024, 11:55 AM",
-    lastActive: 90 * 24 * 60,
-  },
-  {
-    name: "Nico Arendt",
-    email: "nico.arendt@sandbox.dev",
-    role: "Contributor",
-    status: "Active",
-    team: "Customer Ops",
-    workspace: ["Sandbox", "Internal Tools"],
-    joinedDate: "13 May 2024, 6:35 PM",
-    lastActive: 25,
+    name: "Youssef Trabelsi",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHy922UMR9X9MNgNutdRRnbRe0eklCXLAe_nagnpquGQ&s",
   },
 ];
 
-export const filters = {
-  role: [
-    "All",
-    "Workspace Owner",
-    "Admin",
-    "Billing Admin",
-    "Security Admin",
-    "Team Lead",
-    "Contributor",
-    "Guest",
-    "Read-only",
-  ],
-  team: ["All", ...teamValues],
-  status: ["All", "Active", "Pending invite", "Deactivated", "Locked", "Suspended"],
-  workspace: ["All", "Weblabs Studio", "Sandbox", "Internal Tools", "Acme Inc."],
+const methodImages: Record<WithdrawlMethod, string> = {
+  Flouci:
+    "https://play-lh.googleusercontent.com/7mMIDBQ-DsWB5GZluLfTwMXROjPTiJDS1LyQDPKRS8G20dW3LD8GGTU68FZ1hhbwM7-5jqe5QNMiDjQrIoDV",
+  D17:
+    "https://play-lh.googleusercontent.com/eKwfMMr86vhBxUG6cGGVwXYR_fZqzLIJCTFXTI_JDD6VsBfYvvUHSuz-M9BC8Oy1cU5AXq4PkLre0bre3rmY",
+  Kashy:
+    "https://play-lh.googleusercontent.com/pTtXnbOlZa8LXuvgdkvNb00J34wEPpDOHcEnBQiJYPV8zN5OQUBezMlosM0iO_KX5pLIbml45uvH-5MyUy1LQqI=w240-h480-rw",
+  "Bank Transfer":
+    "https://cdn-icons-png.flaticon.com/512/2830/2830284.png",
 };
 
-export const statusMeta: Record<WithdrawlStatus, { badgeClass: string; dotClass: string }> = {
-  Active: {
-    badgeClass: "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    dotClass: "bg-emerald-500",
-  },
-  "Pending invite": {
-    badgeClass: "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400",
-    dotClass: "bg-amber-500",
-  },
-  Deactivated: {
-    badgeClass: "border-border bg-muted/50 text-muted-foreground",
-    dotClass: "bg-muted-foreground",
-  },
-  Locked: {
-    badgeClass: "border-destructive/20 bg-destructive/10 text-destructive",
-    dotClass: "bg-destructive",
-  },
-  Suspended: {
-    badgeClass: "border-orange-500/20 bg-orange-500/10 text-orange-600 dark:text-orange-400",
-    dotClass: "bg-orange-500",
-  },
+const players = [
+  "Olivia Rhye",
+  "Phoenix Baker",
+  "Lana Steiner",
+  "Demi Wilkinson",
+  "Candice Wu",
+  "Natali Craig",
+  "Drew Cano",
+  "Orlando Diggs",
+  "Andi Lane",
+  "Kate Morrison",
+  "Alec Whitten",
+  "Ariana Decker",
+  "Steven Tey",
+  "Lori Bryson",
+  "Koray Okumus",
+  "Josh Miller",
+  "Mollie Hall",
+  "Rene Wells",
+  "Rylee Howard",
+  "Sienna Hewitt",
+  "Noah Pierre",
+  "Eve Lechner",
+  "Zahir McClure",
+  "Mia Romberg",
+  "Nico Arendt",
+] as const;
+
+const dates = [
+  "18 Sep 2026, 10:12 AM",
+  "18 Sep 2026, 09:47 AM",
+  "18 Sep 2026, 08:38 AM",
+  "18 Sep 2026, 07:52 AM",
+  "18 Sep 2026, 07:15 AM",
+  "18 Sep 2026, 06:41 AM",
+  "18 Sep 2026, 05:28 AM",
+  "18 Sep 2026, 04:55 AM",
+  "18 Sep 2026, 03:47 AM",
+  "18 Sep 2026, 02:36 AM",
+  "18 Sep 2026, 01:58 AM",
+  "17 Sep 2026, 11:44 PM",
+  "17 Sep 2026, 10:57 PM",
+  "17 Sep 2026, 09:36 PM",
+  "17 Sep 2026, 08:42 PM",
+  "17 Sep 2026, 07:25 PM",
+  "17 Sep 2026, 06:18 PM",
+  "17 Sep 2026, 05:06 PM",
+  "17 Sep 2026, 04:22 PM",
+  "17 Sep 2026, 03:14 PM",
+  "17 Sep 2026, 02:09 PM",
+  "17 Sep 2026, 01:03 PM",
+  "17 Sep 2026, 11:48 AM",
+  "17 Sep 2026, 10:32 AM",
+  "17 Sep 2026, 09:17 AM",
+] as const;
+
+const methods: WithdrawlMethod[] = [
+  "Flouci",
+  "D17",
+  "Kashy",
+  "Bank Transfer",
+];
+
+const amounts = [
+  185.23, 42.45, 298.65, 533.79, 103.38, 432.51, 165.05, 206.47, 352.67,
+  143.54, 734.53, 248.17, 301.23, 138.13, 573.18, 274.07, 154.26, 354.51,
+  177.88, 414.26, 763.99, 455.07, 299.25, 425.5, 189.99,
+];
+
+const statuses: WithdrawlStatus[] = [
+  "Completed",
+  "Pending",
+  "Pending",
+  "Completed",
+  "Waiting Correction",
+  "Completed",
+  "Pending",
+  "Completed",
+  "Completed",
+  "Waiting Correction",
+  "Completed",
+  "Pending",
+  "Completed",
+  "Completed",
+  "Pending",
+  "Completed",
+  "Waiting Correction",
+  "Completed",
+  "Pending",
+  "Completed",
+  "Completed",
+  "Pending",
+  "Completed",
+  "Waiting Correction",
+  "Completed",
+];
+
+const commissionPercents = [
+  1, 0.5, 1.5, 1, 0, 1, 2, 0.75, 1, 1.5, 0.5, 1, 1.25, 0, 1.5, 1, 2, 0.5, 1, 1.5,
+  0, 1, 0.75, 1.25, 0,
+];
+
+export const withdrawls: WithdrawlRow[] = players.map((name, index) => {
+  const amount = amounts[index] ?? 100;
+  const commissionPercent = commissionPercents[index] ?? 1;
+
+  return {
+    id: `WDL-02026${String(index + 1).padStart(3, "0")}`,
+    name,
+    email: `${name.toLowerCase().replaceAll(" ", ".")}@example.com`,
+    date: dates[index] ?? dates[0],
+    withdrawlMethod: methods[index % methods.length] ?? "Flouci",
+    withdrawlMethodImage: methodImages[methods[index % methods.length] ?? "Flouci"],
+    amount,
+    commissionPercent,
+    commissionAmount: Number(((amount * commissionPercent) / 100).toFixed(2)),
+    status: statuses[index] ?? "Pending",
+    processedBy: processors[index % processors.length] ?? processors[0],
+  };
+});
+
+export const filters = {
+  withdrawlMethod: ["All", ...methods] as const,
+  status: ["All", "Pending", "Completed", "Waiting Correction"] as const,
 };
