@@ -1,9 +1,11 @@
 import type { ColumnDef } from "@tanstack/react-table";
+import type * as React from "react";
 import { parse } from "date-fns";
 import {
   CheckCircle2,
   Clock3,
   LoaderCircle,
+  LockKeyhole,
   MoreHorizontal,
   PencilLine,
   XCircle,
@@ -26,6 +28,50 @@ import type { DataTableFeatures } from "@/lib/data-table-features";
 import { formatCurrency, getInitials } from "@/lib/utils";
 
 import type { DepositRow, DepositStatus, VerificationStatus } from "./data";
+
+const processingLockedColumns = new Set([
+  "paymentMethod",
+  "verificationStatus",
+  "amount",
+  "fees",
+  "depositStatus",
+]);
+
+const processingLockedRows = new Set([
+  "DEP-02026003",
+  "DEP-02026007",
+  "DEP-02026011",
+  "DEP-02026016",
+  "DEP-02026022",
+]);
+
+function isProcessingLocked(deposit: DepositRow, columnId: string) {
+  return processingLockedRows.has(deposit.id) && processingLockedColumns.has(columnId);
+}
+
+function ProcessingLockCell({
+  deposit,
+  children,
+}: {
+  deposit: DepositRow;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="relative flex min-h-7 min-w-0 items-center justify-center overflow-hidden">
+      <div className="w-full blur-[3px] opacity-55 select-none" aria-hidden="true">
+        {children}
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center bg-background/60 px-1 text-center backdrop-blur-[1px]">
+        <span className="flex max-w-full items-center justify-center gap-1 text-[9px] font-medium leading-tight text-muted-foreground">
+          <LockKeyhole className="size-3 shrink-0" />
+          <span className="truncate">
+            Processing by {deposit.processedBy.name}
+          </span>
+        </span>
+      </div>
+    </div>
+  );
+}
 
 function PaymentMethodCell({ deposit }: { deposit: DepositRow }) {
   return (
@@ -161,7 +207,7 @@ export const depositsColumns: ColumnDef<DataTableFeatures, DepositRow>[] = [
   {
     accessorKey: "paymentMethod",
     header: "Payment Method",
-    cell: ({ row }) => <PaymentMethodCell deposit={row.original} />,
+    cell: ({ row }) => isProcessingLocked(row.original, "paymentMethod") ? <ProcessingLockCell deposit={row.original}><PaymentMethodCell deposit={row.original} /></ProcessingLockCell> : <PaymentMethodCell deposit={row.original} />,
   },
   {
     id: "date",
@@ -172,31 +218,29 @@ export const depositsColumns: ColumnDef<DataTableFeatures, DepositRow>[] = [
   {
     accessorKey: "verificationStatus",
     header: "Verification Status",
-    cell: ({ row }) => <VerificationBadge status={row.original.verificationStatus} />,
+    cell: ({ row }) => isProcessingLocked(row.original, "verificationStatus") ? <ProcessingLockCell deposit={row.original}><VerificationBadge status={row.original.verificationStatus} /></ProcessingLockCell> : <VerificationBadge status={row.original.verificationStatus} />,
   },
   {
     accessorKey: "amount",
     header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => (
-      <div className="pr-2 text-right font-medium text-sm tabular-nums">{formatCurrency(row.original.amount)}</div>
-    ),
+    cell: ({ row }) => {
+      const content = <div className="pr-2 text-right font-medium text-sm tabular-nums">{formatCurrency(row.original.amount)}</div>;
+      return isProcessingLocked(row.original, "amount") ? <ProcessingLockCell deposit={row.original}>{content}</ProcessingLockCell> : content;
+    },
   },
   {
     id: "fees",
     accessorFn: (row) => row.feeAmount,
     header: "Fees",
-    cell: ({ row }) => (
-      <div className="whitespace-nowrap text-muted-foreground text-sm tabular-nums">
-        {row.original.feePercent > 0
-          ? `${row.original.feePercent}% - ${formatCurrency(row.original.feeAmount)}`
-          : "Not concerned"}
-      </div>
-    ),
+    cell: ({ row }) => {
+      const content = <div className="whitespace-nowrap text-muted-foreground text-sm tabular-nums">{row.original.feePercent > 0 ? `${row.original.feePercent}% - ${formatCurrency(row.original.feeAmount)}` : "Not concerned"}</div>;
+      return isProcessingLocked(row.original, "fees") ? <ProcessingLockCell deposit={row.original}>{content}</ProcessingLockCell> : content;
+    },
   },
   {
     accessorKey: "depositStatus",
     header: "Deposit status",
-    cell: ({ row }) => <DepositStatusBadge status={row.original.depositStatus} />,
+    cell: ({ row }) => isProcessingLocked(row.original, "depositStatus") ? <ProcessingLockCell deposit={row.original}><DepositStatusBadge status={row.original.depositStatus} /></ProcessingLockCell> : <DepositStatusBadge status={row.original.depositStatus} />,
   },
   {
     id: "processedBy",
