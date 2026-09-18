@@ -607,6 +607,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
     const now = new Date();
     const sequence = Math.floor(100000 + Math.random() * 899999);
     const id = form.role === "Agent" ? "AGT-" + sequence : "SUP-" + sequence;
+    const username = form.name.trim().toLowerCase().replace(/\s+/g, ".").replace(/[^a-z0-9.]/g, "");
 
     const customConfiguration: DistributorConfiguration = {
       processingScope: form.processingScope,
@@ -654,6 +655,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
     onCreate({
       avatarUrl: form.avatarUrl || undefined,
       name: form.name.trim(),
+      username,
       email: form.email.trim(),
       type: form.role,
       status: "Active",
