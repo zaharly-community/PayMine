@@ -10,7 +10,8 @@ import { users } from "@/data/users";
 import { getDashboardLayout } from "@/server/server-actions";
 
 import { AccountSwitcher } from "./-components/header/account-switcher";
-import { GitHubRepositoriesMenu } from "./-components/header/github-repositories-menu";
+import { NotificationsMenu } from "./-components/header/notifications-menu";
+import { WalletMenu } from "./-components/header/wallet-menu";
 import { LayoutControls } from "./-components/header/layout-controls";
 import { SearchDialog } from "./-components/header/search-dialog";
 import { ThemeSwitcher } from "./-components/header/theme-switcher";
@@ -63,7 +64,8 @@ function DashboardLayout() {
             <div className="flex items-center gap-2">
               <LayoutControls />
               <ThemeSwitcher />
-              <GitHubRepositoriesMenu />
+              <NotificationsMenu />
+              <WalletMenu />
               <AccountSwitcher users={users} />
             </div>
           </div>
