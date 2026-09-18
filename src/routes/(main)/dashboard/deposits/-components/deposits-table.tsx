@@ -1,5 +1,5 @@
 import type { MouseEvent } from "react";
-import { useLayoutEffect, useRef, useState } from "react";
+
 
 import type { ReactTable } from "@tanstack/react-table";
 import { LockKeyhole } from "lucide-react";
@@ -38,102 +38,31 @@ function getDepositRowIndicator(status: DepositRow["depositStatus"]) {
   }
 }
 
-type ProcessingMask = {
-  id: string;
-  name: string;
-  top: number;
-  height: number;
-};
-
-function ProcessingMaskLayer({
-  table,
-  containerRef,
-}: {
-  table: ReactTable<DataTableFeatures, DepositRow>;
-  containerRef: { current: HTMLDivElement | null };
-}) {
-  const [masks, setMasks] = useState<ProcessingMask[]>([]);
-  const visibleRows = table.getRowModel().rows;
-  const lockedRows = visibleRows.filter((row) => processingLockedRows.has(row.original.id));
-  const lockedSignature = lockedRows.map((row) => row.original.id).join("|");
-
-  useLayoutEffect(() => {
-    const updateMasks = () => {
-      const container = containerRef.current;
-      if (!container) return;
-
-      const containerRect = container.getBoundingClientRect();
-      const nextMasks: ProcessingMask[] = [];
-
-      for (const row of lockedRows) {
-        const rowElement = container.querySelector(
-          `[data-deposit-row-id="${row.original.id}"]`,
-        );
-        if (!rowElement) continue;
-
-        const rowRect = rowElement.getBoundingClientRect();
-
-        nextMasks.push({
-          id: row.original.id,
-          name: row.original.processedBy.name,
-          top: rowRect.top - containerRect.top,
-          height: rowRect.height,
-        });
-      }
-
-      setMasks(nextMasks);
-    };
-
-    updateMasks();
-
-    const container = containerRef.current;
-    if (!container) return;
-
-    const resizeObserver = new ResizeObserver(updateMasks);
-    resizeObserver.observe(container);
-
-    const handleScroll = () => updateMasks();
-    window.addEventListener("scroll", handleScroll, true);
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener("scroll", handleScroll, true);
-    };
-  }, [containerRef, lockedSignature]);
-
-  if (!masks.length) return null;
-
+function ProcessingLockOverlay({ name }: { name: string }) {
   return (
-    <>
-      {masks.map((mask) => (
-        <div
-          key={mask.id}
-          aria-label={`Deposit processing is locked. Processing by ${mask.name}`}
-          className="absolute inset-x-0 z-[60] flex cursor-not-allowed items-center justify-center border-y border-border/60 bg-background/40 px-4 text-center shadow-sm backdrop-blur-[4px] select-none"
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-          }}
-          onMouseDown={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-          }}
-          onPointerDown={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-          }}
-          style={{
-            top: mask.top,
-            height: mask.height,
-          }}
-        >
-          <span className="flex items-center justify-center gap-2 text-sm font-medium leading-none text-muted-foreground">
-            <LockKeyhole className="size-4 shrink-0" />
-            <span>Processing by {mask.name}</span>
-          </span>
-        </div>
-      ))}
-    </>
+    <TableCell
+      colSpan={1}
+      className="absolute inset-0 z-[60] h-full w-full border-0! bg-background/40 p-0! backdrop-blur-[4px]"
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+      onMouseDown={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+      onPointerDown={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+    >
+      <div className="flex h-full w-full cursor-not-allowed items-center justify-center">
+        <span className="flex items-center justify-center gap-2 text-sm font-medium leading-none text-muted-foreground">
+          <LockKeyhole className="size-4 shrink-0" />
+          <span>Processing by {name}</span>
+        </span>
+      </div>
+    </TableCell>
   );
 }
 
@@ -153,11 +82,10 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
   const currentPage = Math.min(table.state.pagination.pageIndex + 1, pageCount);
   const pageNumbers = getPageNumbers(currentPage, pageCount);
   const rowsPerPage = `${table.state.pagination.pageSize}`;
-  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div ref={tableContainerRef} className="relative isolate">
+      <div>
         <Table className="w-full border-collapse **:data-[slot='table-cell']:border-b **:data-[slot='table-cell']:border-border/70 **:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:border-b **:data-[slot='table-head']:border-border/70 **:data-[slot='table-head']:px-4">
           <TableHeader className="[&_tr]:border-t">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -177,7 +105,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
                 <TableRow
                   key={row.id}
                   data-deposit-row-id={row.original.id}
-                  className={`h-7 border-border/60 transition-colors hover:bg-muted/35 ${getDepositRowIndicator(row.original.depositStatus)}`}
+                  className={`relative h-7 border-border/60 transition-colors hover:bg-muted/35 ${getDepositRowIndicator(row.original.depositStatus)}`}
                   data-state={table.state.rowSelection[row.id] && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -185,6 +113,9 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
                       <table.FlexRender cell={cell} />
                     </TableCell>
                   ))}
+                  {processingLockedRows.has(row.original.id) ? (
+                    <ProcessingLockOverlay name={row.original.processedBy.name} />
+                  ) : null}
                 </TableRow>
               ))
             ) : (
@@ -196,7 +127,6 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
             )}
           </TableBody>
         </Table>
-        <ProcessingMaskLayer table={table} containerRef={tableContainerRef} />
       </div>
 
       <Separator />
