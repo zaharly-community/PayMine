@@ -18,6 +18,7 @@ import {
   type LucideIcon,
   Mail,
   MessageSquare,
+  Network,
   ReceiptText,
   Server,
   ShoppingBag,
@@ -83,6 +84,12 @@ export const sidebarItems: NavGroup[] = [
         title: "Players",
         url: "/dashboard/players",
         icon: Users,
+      },
+      {
+        id: "distributors",
+        title: "Distributors",
+        url: "/dashboard/distributors",
+        icon: Network,
       },
       {
         id: "deposits",
