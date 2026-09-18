@@ -8,14 +8,14 @@ import {
   useTable,
 } from "@tanstack/react-table";
 
-import { Download, Plus, Search } from "lucide-react";
+import { Cog, Download, Plus, Search, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Kbd } from "@/components/ui/kbd";
 import { dataTableFeatures } from "@/lib/data-table-features";
 
-import { filters, type PlayerRow } from "./data";
+import type { PlayerRow } from "./data";
 import { playersColumns } from "./players-columns";
 import { PlayersTable } from "./players-table";
 
@@ -83,10 +83,10 @@ export function Players({ players }: { players: PlayerRow[] }) {
           </InputGroup>
 
           <Button variant="outline" size="sm">
-            Hide
+            <SlidersHorizontal /> Hide
           </Button>
           <Button variant="outline" size="sm">
-            Customize
+            <Cog /> Customize
           </Button>
           <Button variant="outline" size="sm">
             <Download /> Export
