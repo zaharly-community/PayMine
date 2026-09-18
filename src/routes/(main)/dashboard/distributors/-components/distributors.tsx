@@ -17,12 +17,13 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Kbd } from "@/components/ui/kbd";
 import { dataTableFeatures } from "@/lib/data-table-features";
 
-import type { DistributorRow } from "./data";
+import { treasuryAccounts, type DistributorRow } from "./data";
 import { createDistributorsColumns } from "./distributors-columns";
 import { DistributorsTable } from "./distributors-table";
 
 export function Distributors({ distributors: initialDistributors }: { distributors: DistributorRow[] }) {
   const [distributors, setDistributors] = React.useState(initialDistributors);
+  const [treasury, setTreasury] = React.useState(treasuryAccounts);
   const [addDistributorOpen, setAddDistributorOpen] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -49,24 +50,36 @@ export function Distributors({ distributors: initialDistributors }: { distributo
     setDistributors((current) => current.filter((distributor) => distributor.id !== distributorId));
   }, []);
 
-  const handleWalletAdjust = React.useCallback((distributorId: string, delta: number) => {
-    setDistributors((current) =>
-      current.map((distributor) =>
-        distributor.id === distributorId
-          ? { ...distributor, balance: Math.max(0, distributor.balance + delta) }
-          : distributor,
-      ),
-    );
-  }, []);
+  const handleWalletAdjust = React.useCallback(
+    (distributorId: string, paymentMethodId: string, delta: number) => {
+      setDistributors((current) =>
+        current.map((distributor) =>
+          distributor.id === distributorId
+            ? { ...distributor, balance: Math.max(0, distributor.balance + delta) }
+            : distributor,
+        ),
+      );
+
+      setTreasury((current) =>
+        current.map((account) =>
+          account.id === paymentMethodId
+            ? { ...account, balance: Math.max(0, account.balance - delta) }
+            : account,
+        ),
+      );
+    },
+    [],
+  );
 
   const distributorsColumns = React.useMemo(
     () =>
       createDistributorsColumns({
+        treasury,
         onSuspend: handleSuspend,
         onDelete: handleDelete,
         onWalletAdjust: handleWalletAdjust,
       }),
-    [handleSuspend, handleDelete, handleWalletAdjust],
+    [treasury, handleSuspend, handleDelete, handleWalletAdjust],
   );
 
   const table = useTable({
