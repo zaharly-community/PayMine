@@ -53,6 +53,8 @@ export type DistributorConfiguration = {
 
 export type DistributorRow = {
   avatarUrl?: string;
+  verified?: boolean;
+  username?: string;
   name: string;
   email: string;
   type: DistributorType;
@@ -65,7 +67,7 @@ export type DistributorRow = {
   configuration?: DistributorConfiguration;
 };
 
-export const distributors: DistributorRow[] = [
+const distributorSeedData: DistributorRow[] = [
   { name: "Ahmed Ben Salem", email: "ahmed.bensalem@paymine.tn", type: "Supervisor", status: "Active", players: 184, balance: 28450.75, joinedDate: "12 Jun 2024, 9:15 AM", lastActive: 2, id: "SUP-000184" },
   { name: "Yassine Trabelsi", email: "yassine.trabelsi@paymine.tn", type: "Agent", status: "Active", players: 76, balance: 12680.4, joinedDate: "18 Jun 2024, 11:20 AM", lastActive: 8, id: "AGT-000276" },
   { name: "Mohamed Gharbi", email: "mohamed.gharbi@paymine.tn", type: "Agent", status: "Active", players: 54, balance: 8425.25, joinedDate: "24 Jun 2024, 3:05 PM", lastActive: 15, id: "AGT-000291" },
@@ -92,6 +94,36 @@ export const distributors: DistributorRow[] = [
   { name: "Tarek Baccouche", email: "tarek.baccouche@paymine.tn", type: "Agent", status: "Active", players: 61, balance: 7925.9, joinedDate: "24 Oct 2024, 6:20 PM", lastActive: 510, id: "AGT-000463" },
   { name: "Salah Jlassi", email: "salah.jlassi@paymine.tn", type: "Supervisor", status: "Active", players: 223, balance: 34550.1, joinedDate: "29 Oct 2024, 10:20 AM", lastActive: 600, id: "SUP-000296" },
 ];
+
+const processorAvatarImages = [
+  "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/6dfc72b9-8c86-438a-aada-8d3530e13a68/d2c9cgs-69217879-a8d4-438a-b98d-baa29baf98d8.jpg/v1/fill/w_900,h_1126,q_75,strp/this_random_guy_by_inxonic_d2c9cgs-fullview.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi82ZGZjNzJiOS04Yzg2LTQzOGEtYWFkYS04ZDM1MzBlMTNhNjgvZDJjOWNncy02OTIxNzg3OS1hOGQ0LTQzOGEtYjk4ZC1iYWEyOWJhZjk4ZDguanBnIiwiaGVpZ2h0IjoiPD0xMTI2Iiwid2lkdGgiOiI8PTkwMCJ9XV0sImF1ZCI6WyJ1cm46c2VydmljZTppbWFnZS53YXRlcm1hcmsiLCJvd20iOnsicGF0aCI6Ii93bS82ZGZjNzJiOS04Yzg2LTQzOGEtYWFkYS04ZDM1MzBlMTNhNjgvZ2V0Iiwib3BhY2l0eSI6OTV9fX0.oLUUOQ0Apg_6Gq1gPPuVu9DXt6494FP4rbUTeN4h-wA",
+  "https://plus.unsplash.com/premium_photo-1689530775582-83b8abdb5020?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cmFuZG9tJTIwcGVyc29ufGVufDB8fDB8fHww",
+  "https://img.magnific.com/free-photo/close-up-portrait-curly-handsome-european-male_176532-8133.jpg?semt=ais_hybrid&w=740&q=80",
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHy922UMR9X9MNgNutdRRnbRe0eklCXLAe_nagnpquGQ&s",
+] as const;
+
+const verifiedDistributorNames = new Set([
+  "Ahmed Ben Salem",
+  "Yassine Trabelsi",
+  "Sami Jaziri",
+  "Hatem Chaabane",
+  "Anis Mansour",
+  "Oussama Dridi",
+  "Aymen Rekik",
+  "Sofiane Khemiri",
+]);
+
+function distributorUsername(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, ".").replace(/^\\.|\\.$/g, "");
+}
+
+export const distributors: DistributorRow[] = distributorSeedData.map((row, index) => ({
+  ...row,
+  username: row.username ?? distributorUsername(row.name),
+  avatarUrl: row.avatarUrl ?? processorAvatarImages[index % processorAvatarImages.length],
+  verified: verifiedDistributorNames.has(row.name),
+  status: row.status === "Suspended" ? "Suspended" : "Active",
+}));
 
 const distributorTypes: DistributorType[] = ["Agent", "Supervisor"];
 const statuses: DistributorStatus[] = ["Active", "Pending invite", "Suspended", "Deactivated"];
