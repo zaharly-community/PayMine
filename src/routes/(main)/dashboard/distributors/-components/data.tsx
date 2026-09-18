@@ -31,6 +31,7 @@ export type DistributorConfiguration = {
 };
 
 export type DistributorRow = {
+  avatarUrl?: string;
   name: string;
   email: string;
   type: DistributorType;
