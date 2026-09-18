@@ -243,6 +243,22 @@ export function AddDistributorDialog({
     }));
   };
 
+  const handleDefaultCommissionChange = (value: string) => {
+    setForm((current) => {
+      const previousDefault = Number(current.defaultCommissionRate) || 0;
+      const nextDefault = value;
+      return {
+        ...current,
+        defaultCommissionRate: nextDefault,
+        paymentMethods: current.paymentMethods.map((method) =>
+          method.commissionRate === previousDefault
+            ? { ...method, commissionRate: Number(nextDefault) || 0 }
+            : method,
+        ),
+      };
+    });
+  };
+
   const handleAvatar = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -783,7 +799,7 @@ export function AddDistributorDialog({
                           step="0.01"
                           className="pr-8"
                           value={form.defaultCommissionRate}
-                          onChange={(event) => update("defaultCommissionRate", event.target.value)}
+                          onChange={(event) => handleDefaultCommissionChange(event.target.value)}
                         />
                         <span className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground text-xs">
                           %
