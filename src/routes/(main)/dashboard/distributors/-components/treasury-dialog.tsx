@@ -1,11 +1,8 @@
 import * as React from "react";
 
-import { Link } from "@tanstack/react-router";
-
 import {
   AlertTriangle,
   ArrowDownLeft,
-  ArrowRight,
   ArrowUpRight,
   CheckCircle2,
   Clock3,
@@ -271,13 +268,6 @@ export function TreasuryDialog({ open, onOpenChange, distributors }: TreasuryDia
                         <Badge variant="secondary">
                           Reserved {selected.reservedBalance.toLocaleString("en-US", { style: "currency", currency: selected.currency })}
                         </Badge>
-                        <Link
-                          to="/dashboard/issues/"
-                          className="inline-flex h-7 items-center gap-1.5 rounded-md border border-red-500/20 bg-background px-2.5 text-[11px] font-medium text-red-600 transition-colors hover:bg-red-500/5 dark:text-red-400"
-                        >
-                          Investigate issue
-                          <ArrowRight className="size-3.5" />
-                        </Link>
                       </div>
                     </div>
                   </div>
