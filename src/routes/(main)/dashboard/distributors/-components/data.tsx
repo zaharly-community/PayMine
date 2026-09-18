@@ -13,6 +13,8 @@ export type DistributorConfiguration = {
   amountLimitPeriod?: FixedFeePeriod;
   limitMode?: LimitMode;
   permittedPaymentMethods?: string[];
+  perMethodRequestLimits?: Record<string, number>;
+  perMethodAmountLimits?: Record<string, number>;
   feeMode?: CompensationMode;
   fixedFeeAmount?: number;
   fixedFeePeriod?: FixedFeePeriod;
