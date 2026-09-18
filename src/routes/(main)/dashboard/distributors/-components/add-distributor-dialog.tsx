@@ -116,9 +116,88 @@ function createSupervisorMethods(): DistributorPaymentMethod[] {
   }));
 }
 
+const programTemplates: ProgramTemplate[] = [
+  {
+    id: "agent-standard",
+    name: "Standard Agent",
+    description: "Balanced limits and system commission defaults. Payment methods remain Agent-owned.",
+    role: "Agent",
+    processingScope: "Deposits & Withdrawals",
+    feeMode: "Commission",
+    feeSummary: "5% deposit · 3% withdrawal",
+    configuration: {
+      processingScope: "Deposits & Withdrawals",
+      accountOpeningMethods: ["Flouci", "D17"],
+      defaultRequestLimit: 50,
+      defaultAmountLimit: 10000,
+      defaultAmountLimitPeriod: "Daily",
+      feeMode: "Commission",
+      commissionTransactions: "Deposits & Withdrawals",
+      defaultDepositCommissionRate: 5,
+      defaultWithdrawalCommissionRate: 3,
+    },
+  },
+  {
+    id: "agent-deposit-only",
+    name: "Deposit Agent",
+    description: "Deposit-only processing using the system defaults. Payment methods remain Agent-owned.",
+    role: "Agent",
+    processingScope: "Deposits",
+    feeMode: "Commission",
+    feeSummary: "5% deposit · withdrawals disabled",
+    configuration: {
+      processingScope: "Deposits",
+      accountOpeningMethods: ["Flouci", "D17"],
+      defaultRequestLimit: 50,
+      defaultAmountLimit: 10000,
+      defaultAmountLimitPeriod: "Daily",
+      feeMode: "Commission",
+      commissionTransactions: "Deposits",
+      defaultDepositCommissionRate: 5,
+      defaultWithdrawalCommissionRate: 0,
+    },
+  },
+  {
+    id: "supervisor-standard",
+    name: "Standard Supervisor",
+    description: "Owner-provided payment methods with balanced processing permissions.",
+    role: "Supervisor",
+    processingScope: "Deposits & Withdrawals",
+    feeMode: "Commission",
+    feeSummary: "5% deposit · 3% withdrawal",
+    configuration: {
+      processingScope: "Deposits & Withdrawals",
+      paymentMethods: createSupervisorMethods(),
+      feeMode: "Commission",
+      commissionTransactions: "Deposits & Withdrawals",
+      defaultDepositCommissionRate: 5,
+      defaultWithdrawalCommissionRate: 3,
+    },
+  },
+  {
+    id: "supervisor-deposit-only",
+    name: "Deposit Supervisor",
+    description: "Supervisor limited to deposit processing using owner-provided methods.",
+    role: "Supervisor",
+    processingScope: "Deposits",
+    feeMode: "Commission",
+    feeSummary: "5% deposit · withdrawals disabled",
+    configuration: {
+      processingScope: "Deposits",
+      paymentMethods: createSupervisorMethods(),
+      feeMode: "Commission",
+      commissionTransactions: "Deposits",
+      defaultDepositCommissionRate: 5,
+      defaultWithdrawalCommissionRate: 0,
+    },
+  },
+];
+
 function createInitialForm(): FormState {
   return {
     role: "Agent",
+    programMode: "Program",
+    programId: "agent-standard",
     name: "",
     email: "",
     password: "",
