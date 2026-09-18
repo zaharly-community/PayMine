@@ -1,4 +1,6 @@
 import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
   Banknote,
   Calendar,
   ChartBar,
@@ -81,6 +83,18 @@ export const sidebarItems: NavGroup[] = [
         title: "Players",
         url: "/dashboard/players",
         icon: Users,
+      },
+      {
+        id: "deposits",
+        title: "Deposits",
+        url: "/dashboard/deposits",
+        icon: ArrowDownToLine,
+      },
+      {
+        id: "withdrawls",
+        title: "Withdrawls",
+        url: "/dashboard/withdrawls",
+        icon: ArrowUpFromLine,
       },
       {
         id: "default",
