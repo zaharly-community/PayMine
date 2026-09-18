@@ -35,6 +35,8 @@ import { Route as mainDashboardProductivityRouteRouteImport } from './routes/(ma
 import { Route as mainDashboardRolesRouteRouteImport } from './routes/(main)/dashboard/roles/route'
 import { Route as mainDashboardTasksRouteRouteImport } from './routes/(main)/dashboard/tasks/route'
 import { Route as mainDashboardUsersRouteRouteImport } from './routes/(main)/dashboard/users/route'
+import { Route as mainDashboardDepositsRouteRouteImport } from './routes/(main)/dashboard/deposits/route'
+import { Route as mainDashboardWithdrawlsRouteRouteImport } from './routes/(main)/dashboard/withdrawls/route'
 import { Route as mainDashboardPlayersRouteRouteImport } from './routes/(main)/dashboard/players/route'
 import { Route as mainAuthV1LoginRouteRouteImport } from './routes/(main)/auth/v1/login/route'
 import { Route as mainAuthV1RegisterRouteRouteImport } from './routes/(main)/auth/v1/register/route'
@@ -187,6 +189,16 @@ const mainDashboardUsersRouteRoute = mainDashboardUsersRouteRouteImport.update({
   path: '/users',
   getParentRoute: () => mainDashboardRouteRoute,
 } as any)
+const mainDashboardDepositsRouteRoute = mainDashboardDepositsRouteRouteImport.update({
+  id: '/deposits',
+  path: '/deposits',
+  getParentRoute: () => mainDashboardRouteRoute,
+} as any)
+const mainDashboardWithdrawlsRouteRoute = mainDashboardWithdrawlsRouteRouteImport.update({
+  id: '/withdrawls',
+  path: '/withdrawls',
+  getParentRoute: () => mainDashboardRouteRoute,
+} as any)
 const mainDashboardPlayersRouteRoute = mainDashboardPlayersRouteRouteImport.update({
   id: '/players',
   path: '/players',
@@ -262,6 +274,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/dashboard/tasks': typeof mainDashboardTasksRouteRoute
   '/dashboard/users': typeof mainDashboardUsersRouteRoute
+  '/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
+  '/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/dashboard/$': typeof mainDashboardSplatRoute
@@ -336,6 +350,8 @@ export interface FileRoutesById {
   '/(main)/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/(main)/dashboard/tasks': typeof mainDashboardTasksRouteRoute
   '/(main)/dashboard/users': typeof mainDashboardUsersRouteRoute
+  '/(main)/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
+  '/(main)/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/$': typeof mainDashboardSplatRoute
   '/(main)/dashboard/': typeof mainDashboardIndexRoute
@@ -375,6 +391,10 @@ export interface FileRouteTypes {
     | '/dashboard/roles'
     | '/dashboard/tasks'
     | '/dashboard/users'
+    | '/dashboard/deposits'
+    | '/dashboard/withdrawls'
+    | '/dashboard/deposits'
+    | '/dashboard/withdrawls'
     | '/dashboard/players'
     | '/dashboard/players'
     | '/dashboard/$'
@@ -448,6 +468,8 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/roles'
     | '/(main)/dashboard/tasks'
     | '/(main)/dashboard/users'
+    | '/(main)/dashboard/deposits'
+    | '/(main)/dashboard/withdrawls'
     | '/(main)/dashboard/players'
     | '/(main)/dashboard/$'
     | '/(main)/dashboard/'
@@ -656,6 +678,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardUsersRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
+    '/(main)/dashboard/deposits': {
+      id: '/(main)/dashboard/deposits'
+      path: '/deposits'
+      fullPath: '/dashboard/deposits'
+      preLoaderRoute: typeof mainDashboardDepositsRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
+    '/(main)/dashboard/withdrawls': {
+      id: '/(main)/dashboard/withdrawls'
+      path: '/withdrawls'
+      fullPath: '/dashboard/withdrawls'
+      preLoaderRoute: typeof mainDashboardWithdrawlsRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
     '/(main)/dashboard/players': {
       id: '/(main)/dashboard/players'
       path: '/players'
@@ -741,6 +777,8 @@ interface mainDashboardRouteRouteChildren {
   mainDashboardRolesRouteRoute: typeof mainDashboardRolesRouteRoute
   mainDashboardTasksRouteRoute: typeof mainDashboardTasksRouteRoute
   mainDashboardUsersRouteRoute: typeof mainDashboardUsersRouteRoute
+  mainDashboardDepositsRouteRoute: typeof mainDashboardDepositsRouteRoute
+  mainDashboardWithdrawlsRouteRoute: typeof mainDashboardWithdrawlsRouteRoute
   mainDashboardPlayersRouteRoute: typeof mainDashboardPlayersRouteRoute
   mainDashboardSplatRoute: typeof mainDashboardSplatRoute
   mainDashboardIndexRoute: typeof mainDashboardIndexRoute
@@ -769,6 +807,8 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardRolesRouteRoute: mainDashboardRolesRouteRoute,
   mainDashboardTasksRouteRoute: mainDashboardTasksRouteRoute,
   mainDashboardUsersRouteRoute: mainDashboardUsersRouteRoute,
+  mainDashboardDepositsRouteRoute: mainDashboardDepositsRouteRoute,
+  mainDashboardWithdrawlsRouteRoute: mainDashboardWithdrawlsRouteRoute,
   mainDashboardPlayersRouteRoute: mainDashboardPlayersRouteRoute,
   mainDashboardSplatRoute: mainDashboardSplatRoute,
   mainDashboardIndexRoute: mainDashboardIndexRoute,
