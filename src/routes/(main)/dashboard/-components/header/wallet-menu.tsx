@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -38,12 +39,14 @@ export function WalletMenu() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel>
-          <div className="space-y-1">
-            <div className="text-xs font-normal text-muted-foreground">Wallet</div>
-            <div className="text-2xl font-semibold tabular-nums">-$2,450.75</div>
-          </div>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>
+            <div className="space-y-1">
+              <div className="text-xs font-normal text-muted-foreground">Wallet</div>
+              <div className="text-2xl font-semibold tabular-nums">-$2,450.75</div>
+            </div>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
 
         <div className="px-2 pb-2">
           <div className="mb-2 flex items-center justify-between text-xs">
