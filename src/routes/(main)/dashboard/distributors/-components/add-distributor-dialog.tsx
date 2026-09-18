@@ -481,6 +481,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
     setForm(createInitialForm());
     setAvatarPreview("");
     setOpenMethodId(null);
+    setProgramSearch("");
   }, []);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
