@@ -287,6 +287,7 @@ export function AddDistributorDialog({
     };
 
     onCreate({
+      avatarUrl: form.avatarUrl || undefined,
       name: form.name.trim(),
       email: form.email.trim(),
       type: form.role,
