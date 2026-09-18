@@ -199,7 +199,7 @@ function MethodRow({
   commissionEnabled: boolean;
 }) {
   return (
-    <Collapsible open={open} onOpenChange={onOpenChange} className="border-b last:border-b-0">
+    <Collapsible open={open} onOpenChange={onOpenChange} className="overflow-hidden rounded-lg border bg-background">
       <div className="flex items-center gap-3 py-3">
         <CollapsibleTrigger
           render={<button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" />}
@@ -367,15 +367,11 @@ function MethodRow({
 export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistributorDialogProps) {
   const [form, setForm] = React.useState<FormState>(createInitialForm);
   const [avatarPreview, setAvatarPreview] = React.useState("");
-  const [newMethodName, setNewMethodName] = React.useState("");
-  const [newMethodCategory, setNewMethodCategory] = React.useState<PaymentMethodCategory>("Wallet");
   const [openMethodId, setOpenMethodId] = React.useState<string | null>(null);
 
   const reset = React.useCallback(() => {
     setForm(createInitialForm());
     setAvatarPreview("");
-    setNewMethodName("");
-    setNewMethodCategory("Wallet");
     setOpenMethodId(null);
   }, []);
 
@@ -406,32 +402,6 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
         ? current.accountOpeningMethods.filter((item) => item !== name)
         : [...current.accountOpeningMethods, name],
     }));
-  };
-
-  const addAgentPaymentMethod = () => {
-    const name = newMethodName.trim();
-    if (!name) return;
-
-    const method: DistributorPaymentMethod = {
-      id: "agent-" + Date.now(),
-      name,
-      category: newMethodCategory,
-      enabled: true,
-      limitMode: "Requests & Amount",
-      requestLimit: Number(form.agentDefaultRequestLimit) || systemDefaults.requestLimit,
-      amountLimit: Number(form.agentDefaultAmountLimit) || systemDefaults.amountLimit,
-      amountLimitPeriod: form.agentDefaultAmountPeriod,
-      depositCommissionRate: Number(form.defaultDepositCommissionRate) || systemDefaults.depositCommissionRate,
-      withdrawalCommissionRate:
-        Number(form.defaultWithdrawalCommissionRate) || systemDefaults.withdrawalCommissionRate,
-    };
-
-    setForm((current) => ({
-      ...current,
-      paymentMethods: [...current.paymentMethods, method],
-    }));
-    setNewMethodName("");
-    setOpenMethodId(method.id);
   };
 
   const removePaymentMethod = (id: string) => {
@@ -754,69 +724,6 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                 </div>
               )}
             </div>
-
-            {form.role === "Agent" ? (
-              <div className="border-b py-5">
-                <SectionHeader
-                  step="04"
-                  icon={<WalletCards className="size-4" />}
-                  title="Agent-owned payment methods"
-                  description="Add a payment method here only when defining its initial configuration. In production, the Agent owns and manages these methods from its own dashboard."
-                />
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_190px_auto]">
-                  <Field label="Method name" htmlFor="agent-method-name">
-                    <Input
-                      id="agent-method-name"
-                      value={newMethodName}
-                      onChange={(event) => setNewMethodName(event.target.value)}
-                      placeholder="e.g. Agent Wallet"
-                    />
-                  </Field>
-                  <Field label="Category">
-                    <Select value={newMethodCategory} onValueChange={(value) => setNewMethodCategory(value as PaymentMethodCategory)}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="Wallet">Wallet</SelectItem>
-                          <SelectItem value="Top-ups Cards">Top-ups Cards</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <div className="flex items-end">
-                    <Button type="button" onClick={addAgentPaymentMethod}>
-                      <Plus className="size-3.5" />
-                      Add method
-                    </Button>
-                  </div>
-                </div>
-
-                {form.paymentMethods.length ? (
-                  <div className="mt-4 divide-y border-y">
-                    {form.paymentMethods.map((method) => (
-                      <MethodRow
-                        key={method.id}
-                        method={method}
-                        open={openMethodId === method.id}
-                        onOpenChange={(next) => setOpenMethodId(next ? method.id : null)}
-                        onToggle={() => togglePaymentMethod(method.id)}
-                        onUpdate={(transform) => updatePaymentMethod(method.id, transform)}
-                        onRemove={() => removePaymentMethod(method.id)}
-                        showSwitch
-                        commissionEnabled={isCommission}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="mt-4 border-y border-dashed py-5 text-center text-xs text-muted-foreground">
-                    No Agent-owned methods added in this setup.
-                  </div>
-                )}
-              </div>
-            ) : null}
 
             <div className="border-b py-5">
               <SectionHeader
