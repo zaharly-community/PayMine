@@ -22,6 +22,21 @@ function preventPaginationNavigation(event: MouseEvent<HTMLAnchorElement>) {
   event.preventDefault();
 }
 
+function getDepositRowIndicator(status: DepositRow["status"]) {
+  switch (status) {
+    case "Active":
+      return "border-l-2 border-l-emerald-500";
+    case "Pending invite":
+      return "border-l-2 border-l-amber-400";
+    case "Locked":
+    case "Suspended":
+      return "border-l-2 border-l-red-500";
+    case "Deactivated":
+    default:
+      return "border-l-2 border-l-muted-foreground/40";
+  }
+}
+
 function getPageNumbers(currentPage: number, pageCount: number) {
   if (pageCount <= 3) {
     return Array.from({ length: pageCount }, (_, index) => index + 1);
@@ -60,7 +75,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="h-7 border-border/60 transition-colors hover:bg-muted/35"
+                  className={`h-7 border-border/60 transition-colors hover:bg-muted/35 ${getDepositRowIndicator(row.original.status)}`}
                   data-state={table.state.rowSelection[row.id] && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
