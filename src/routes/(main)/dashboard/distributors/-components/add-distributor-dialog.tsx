@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ImagePlus,
   KeyRound,
+  Layers3,
   ShieldCheck,
   UserPlus,
   WalletCards,
@@ -30,6 +31,8 @@ import { Switch } from "@/components/ui/switch";
 import type {
   CompensationMode,
   DistributorConfiguration,
+  DistributorProgram,
+  DistributorProgramMode,
   DistributorPaymentMethod,
   DistributorRow,
   DistributorType,
@@ -41,8 +44,14 @@ import type {
 
 type CommissionTransactions = "Deposits" | "Withdrawals" | "Deposits & Withdrawals";
 
+type ProgramTemplate = DistributorProgram & {
+  configuration: Omit<DistributorConfiguration, "programMode" | "programId" | "programName">;
+};
+
 type FormState = {
   role: DistributorType;
+  programMode: DistributorProgramMode;
+  programId: string;
   name: string;
   email: string;
   password: string;
