@@ -29,7 +29,7 @@ export function Players({ players }: { players: PlayerRow[] }) {
   });
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 20,
+    pageSize: 25,
   });
 
   const table = useTable({
