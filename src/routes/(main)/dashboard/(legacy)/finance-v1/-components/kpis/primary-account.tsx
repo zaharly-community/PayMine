@@ -128,7 +128,6 @@ export function PrimaryAccount() {
                   variant={operation === "agent-add" ? "default" : "ghost"}
                   onClick={() => openOperation("agent-add")}
                 >
-                  <ArrowDownToLine />
                   Add balance
                 </Button>
                 <Button
@@ -137,7 +136,6 @@ export function PrimaryAccount() {
                   variant={operation === "agent-deduct" ? "default" : "ghost"}
                   onClick={() => openOperation("agent-deduct")}
                 >
-                  <ArrowUpFromLine />
                   Deduct balance
                 </Button>
               </div>
