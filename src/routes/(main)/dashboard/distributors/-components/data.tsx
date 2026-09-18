@@ -1,7 +1,7 @@
 export type DistributorType = "Agent" | "Supervisor";
 export type DistributorProgramMode = "Program" | "Custom Program";
 export type DistributorStatus = "Active" | "Pending invite" | "Suspended" | "Deactivated";
-export type ProcessingScope = "Deposits" | "Deposits & Withdrawals";
+export type ProcessingScope = "Deposits" | "Withdrawals" | "Deposits & Withdrawals";
 export type MethodLimitMode = "Requests" | "Amount" | "Requests & Amount";
 export type PaymentMethodCategory = "Wallet" | "Top-ups Cards";
 export type CompensationMode = "Fixed" | "Commission" | "Per completed operation";
