@@ -75,7 +75,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className={`h-7 border-border/60 transition-colors hover:bg-muted/35 ${getDepositRowIndicator(row.original.status)}`}
+                  className={`h-7 border-border/60 transition-colors hover:bg-muted/35 ${getDepositRowIndicator(row.original.depositStatus)}`}
                   data-state={table.state.rowSelection[row.id] && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
