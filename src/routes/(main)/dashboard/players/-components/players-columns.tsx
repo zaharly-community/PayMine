@@ -57,7 +57,6 @@ function PlayerCell({ player }: { player: PlayerRow }) {
       </Avatar>
       <div className="min-w-0">
         <div className="truncate font-medium text-foreground text-sm">{player.name}</div>
-        <div className="truncate text-muted-foreground text-xs">{player.email}</div>
       </div>
     </div>
   );
