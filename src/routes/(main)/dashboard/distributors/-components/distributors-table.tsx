@@ -37,8 +37,8 @@ export function DistributorsTable({ table }: { table: ReactTable<DataTableFeatur
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div>
-        <Table className="w-full border-collapse **:data-[slot='table-cell']:border-b **:data-[slot='table-cell']:border-border/70 **:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:border-b **:data-[slot='table-head']:border-border/70 **:data-[slot='table-head']:px-4">
+      <div className="min-w-0 overflow-x-auto">
+        <Table className="w-full min-w-[1180px] border-collapse **:data-[slot='table-cell']:border-b **:data-[slot='table-cell']:border-border/70 **:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:border-b **:data-[slot='table-head']:border-border/70 **:data-[slot='table-head']:px-4">
           <TableHeader className="[&_tr]:border-t">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent">
@@ -55,11 +55,11 @@ export function DistributorsTable({ table }: { table: ReactTable<DataTableFeatur
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="h-8 border-border/60 transition-colors hover:bg-muted/35 [&>td]:h-8"
+                  className="h-12 border-border/60 transition-colors hover:bg-muted/35 [&>td]:h-12"
                   data-state={table.state.rowSelection[row.id] && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="!px-4 !py-0 align-middle leading-none">
+                    <TableCell key={cell.id} className="!px-4 !py-1 align-middle leading-none">
                       <table.FlexRender cell={cell} />
                     </TableCell>
                   ))}
