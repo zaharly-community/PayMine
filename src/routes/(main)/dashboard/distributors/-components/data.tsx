@@ -1,5 +1,26 @@
 export type DistributorType = "Agent" | "Supervisor";
 export type DistributorStatus = "Active" | "Pending invite" | "Suspended" | "Deactivated";
+export type ProcessingScope = "Deposits" | "Deposits & Withdrawals";
+export type LimitMode = "Requests" | "Amount" | "Requests & Amount";
+export type CompensationMode = "Fixed" | "Commission" | "Per completed operation";
+export type FixedFeePeriod = "Daily" | "Monthly";
+export type CommissionTransactions = "Deposits" | "Withdrawals" | "Deposits & Withdrawals";
+
+export type DistributorConfiguration = {
+  processingScope?: ProcessingScope;
+  dailyRequestsLimit?: number;
+  amountLimit?: number;
+  amountLimitPeriod?: FixedFeePeriod;
+  limitMode?: LimitMode;
+  permittedPaymentMethods?: string[];
+  feeMode?: CompensationMode;
+  fixedFeeAmount?: number;
+  fixedFeePeriod?: FixedFeePeriod;
+  commissionTransactions?: CommissionTransactions;
+  defaultCommissionRate?: number;
+  commissionByPaymentMethod?: Record<string, number>;
+  perCompletedOperationFee?: number;
+};
 
 export type DistributorRow = {
   name: string;
@@ -11,6 +32,7 @@ export type DistributorRow = {
   joinedDate: string;
   lastActive: number;
   id: string;
+  configuration?: DistributorConfiguration;
 };
 
 export const distributors: DistributorRow[] = [
