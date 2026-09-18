@@ -17,13 +17,12 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Kbd } from "@/components/ui/kbd";
 import { dataTableFeatures } from "@/lib/data-table-features";
 
-import { treasuryAccounts, type DistributorRow } from "./data";
+import type { DistributorRow } from "./data";
 import { createDistributorsColumns } from "./distributors-columns";
 import { DistributorsTable } from "./distributors-table";
 
 export function Distributors({ distributors: initialDistributors }: { distributors: DistributorRow[] }) {
   const [distributors, setDistributors] = React.useState(initialDistributors);
-  const [treasury, setTreasury] = React.useState(treasuryAccounts);
   const [addDistributorOpen, setAddDistributorOpen] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -50,36 +49,47 @@ export function Distributors({ distributors: initialDistributors }: { distributo
     setDistributors((current) => current.filter((distributor) => distributor.id !== distributorId));
   }, []);
 
-  const handleWalletAdjust = React.useCallback(
-    (distributorId: string, paymentMethodId: string, delta: number) => {
-      setDistributors((current) =>
-        current.map((distributor) =>
-          distributor.id === distributorId
-            ? { ...distributor, balance: Math.max(0, distributor.balance + delta) }
-            : distributor,
-        ),
-      );
+  const handleWalletAdjust = React.useCallback((distributorId: string, delta: number, reason: string) => {
+    const now = new Date();
+    const auditId = "WAL-" + now.getTime();
 
-      setTreasury((current) =>
-        current.map((account) =>
-          account.id === paymentMethodId
-            ? { ...account, balance: Math.max(0, account.balance - delta) }
-            : account,
-        ),
-      );
-    },
-    [],
-  );
+    setDistributors((current) =>
+      current.map((distributor) => {
+        if (distributor.id !== distributorId) return distributor;
+        if (distributor.type !== "Agent") return distributor;
+
+        return {
+          ...distributor,
+          balance: Math.max(0, distributor.balance + delta),
+          walletAudit: [
+            {
+              id: auditId,
+              action: delta >= 0 ? "Credit" : "Debit",
+              amount: Math.abs(delta),
+              reason,
+              createdAt: now.toLocaleString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            },
+            ...(distributor.walletAudit ?? []),
+          ],
+        };
+      }),
+    );
+  }, []);
 
   const distributorsColumns = React.useMemo(
     () =>
       createDistributorsColumns({
-        treasury,
         onSuspend: handleSuspend,
         onDelete: handleDelete,
         onWalletAdjust: handleWalletAdjust,
       }),
-    [treasury, handleSuspend, handleDelete, handleWalletAdjust],
+    [handleSuspend, handleDelete, handleWalletAdjust],
   );
 
   const table = useTable({
