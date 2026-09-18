@@ -39,9 +39,9 @@ import type {
   DistributorType,
   FixedFeePeriod,
   MethodLimitMode,
-  PaymentMethodCategory,
   ProcessingScope,
 } from "./data";
+import { ownerPaymentMethods } from "./data";
 
 type CommissionTransactions = "Deposits" | "Withdrawals" | "Deposits & Withdrawals";
 
@@ -77,16 +77,6 @@ type AddDistributorDialogProps = {
   onOpenChange: (open: boolean) => void;
   onCreate: (distributor: DistributorRow) => void;
 };
-
-const ownerPaymentMethods: Array<{ name: string; category: PaymentMethodCategory }> = [
-  { name: "Flouci", category: "Wallet" },
-  { name: "D17", category: "Wallet" },
-  { name: "Kashy", category: "Wallet" },
-  { name: "Visa", category: "Top-ups Cards" },
-  { name: "Mastercard", category: "Top-ups Cards" },
-  { name: "e-Dinar", category: "Top-ups Cards" },
-];
-
 const systemDefaults = {
   requestLimit: 50,
   amountLimit: 10000,
