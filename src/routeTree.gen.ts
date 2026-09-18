@@ -198,8 +198,8 @@ const mainDashboardDepositsRouteRoute = mainDashboardDepositsRouteRouteImport.up
 const mainDashboardDepositsDepositIdRouteRoute =
   mainDashboardDepositsDepositIdRouteRouteImport.update({
     id: '/deposits/$depositId',
-    path: '/deposits/$depositId',
-    getParentRoute: () => mainDashboardRouteRoute,
+    path: '/$depositId',
+    getParentRoute: () => mainDashboardDepositsRouteRoute,
   } as any)
 const mainDashboardWithdrawlsRouteRoute = mainDashboardWithdrawlsRouteRouteImport.update({
   id: '/withdrawls',
@@ -780,6 +780,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface mainDashboardDepositsRouteRouteChildren {
+  mainDashboardDepositsDepositIdRouteRoute: typeof mainDashboardDepositsDepositIdRouteRoute
+}
+
+const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
+  mainDashboardDepositsDepositIdRouteRoute: mainDashboardDepositsDepositIdRouteRoute,
+}
+
+const mainDashboardDepositsRouteRouteWithChildren =
+  mainDashboardDepositsRouteRoute._addFileChildren(mainDashboardDepositsRouteRouteChildren)
+
 interface mainDashboardRouteRouteChildren {
   mainDashboardAcademyRouteRoute: typeof mainDashboardAcademyRouteRoute
   mainDashboardAnalyticsRouteRoute: typeof mainDashboardAnalyticsRouteRoute
@@ -800,7 +811,6 @@ interface mainDashboardRouteRouteChildren {
   mainDashboardTasksRouteRoute: typeof mainDashboardTasksRouteRoute
   mainDashboardUsersRouteRoute: typeof mainDashboardUsersRouteRoute
   mainDashboardDepositsRouteRoute: typeof mainDashboardDepositsRouteRoute
-  mainDashboardDepositsDepositIdRouteRoute: typeof mainDashboardDepositsDepositIdRouteRoute
   mainDashboardWithdrawlsRouteRoute: typeof mainDashboardWithdrawlsRouteRoute
   mainDashboardPlayersRouteRoute: typeof mainDashboardPlayersRouteRoute
   mainDashboardSplatRoute: typeof mainDashboardSplatRoute
@@ -830,8 +840,7 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardRolesRouteRoute: mainDashboardRolesRouteRoute,
   mainDashboardTasksRouteRoute: mainDashboardTasksRouteRoute,
   mainDashboardUsersRouteRoute: mainDashboardUsersRouteRoute,
-  mainDashboardDepositsRouteRoute: mainDashboardDepositsRouteRoute,
-  mainDashboardDepositsDepositIdRouteRoute: mainDashboardDepositsDepositIdRouteRoute,
+  mainDashboardDepositsRouteRoute: mainDashboardDepositsRouteRouteWithChildren,
   mainDashboardWithdrawlsRouteRoute: mainDashboardWithdrawlsRouteRoute,
   mainDashboardPlayersRouteRoute: mainDashboardPlayersRouteRoute,
   mainDashboardSplatRoute: mainDashboardSplatRoute,
