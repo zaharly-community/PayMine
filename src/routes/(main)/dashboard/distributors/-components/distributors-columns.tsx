@@ -3,7 +3,7 @@ import { MoreHorizontal } from "lucide-react";
 
 import { cn } from "cn";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,6 +22,7 @@ function DistributorCell({ distributor }: { distributor: DistributorRow }) {
   return (
     <div className="flex min-w-55 items-center gap-3">
       <Avatar size="sm" className="shrink-0">
+        <AvatarImage src={distributor.avatarUrl || undefined} alt={distributor.name} />
         <AvatarFallback className="bg-muted text-[10px] font-medium">
           {getInitials(distributor.name)}
         </AvatarFallback>
