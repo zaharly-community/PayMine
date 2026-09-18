@@ -42,12 +42,12 @@ export function PlayersTable({ table }: { table: ReactTable<DataTableFeatures, P
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div>
-        <Table className="**:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:px-4">
+        <Table className="w-full border-collapse **:data-[slot='table-cell']:border-b **:data-[slot='table-cell']:border-border/70 **:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:border-b **:data-[slot='table-head']:border-border/70 **:data-[slot='table-head']:px-4">
           <TableHeader className="[&_tr]:border-t">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="py-4 font-normal">
+                  <TableHead key={header.id} className="h-10 py-2.5 font-medium text-muted-foreground text-xs">
                     {header.isPlaceholder ? null : <table.FlexRender header={header} />}
                   </TableHead>
                 ))}
@@ -64,7 +64,7 @@ export function PlayersTable({ table }: { table: ReactTable<DataTableFeatures, P
                   data-state={table.state.rowSelection[row.id] && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-3 py-4 align-middle">
+                    <TableCell key={cell.id} className="px-4 py-2.5 align-middle">
                       <table.FlexRender cell={cell} />
                     </TableCell>
                   ))}
