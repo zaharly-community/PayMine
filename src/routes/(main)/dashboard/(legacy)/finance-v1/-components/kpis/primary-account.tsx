@@ -4,7 +4,6 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   Landmark,
-  ShieldAlert,
   WalletMinimal,
 } from "lucide-react";
 
@@ -20,10 +19,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 
-import { distributors, treasuryAccounts } from "../../../../distributors/-components/data";
+import { distributors } from "../../../../distributors/-components/data";
 
 export function PrimaryAccount() {
-  const [operation, setOperation] = React.useState<"agent-fund" | "agent-recover" | "supervisor-settle" | null>(null);
+  const [operation, setOperation] = React.useState<"agent-add" | "agent-deduct" | "supervisor-settle" | null>(null);
   const [selectedDistributorId, setSelectedDistributorId] = React.useState(distributors[0]?.id ?? "");
   const [amount, setAmount] = React.useState("");
 
@@ -31,16 +30,14 @@ export function PrimaryAccount() {
   const supervisors = distributors.filter(
     (distributor) => distributor.type === "Supervisor" && distributor.status === "Active",
   );
-  const mismatches = treasuryAccounts.filter((account) => account.reconciliationStatus === "Mismatch");
-
   const selectedDistributor =
     distributors.find((distributor) => distributor.id === selectedDistributorId) ??
     (operation === "supervisor-settle" ? supervisors[0] : agents[0]);
 
-  const isAgent = operation === "agent-fund" || operation === "agent-recover";
+  const isAgent = operation === "agent-add" || operation === "agent-deduct";
   const numericAmount = Number(amount);
   const maxAmount =
-    operation === "agent-recover" || operation === "supervisor-settle"
+    operation === "agent-deduct" || operation === "supervisor-settle"
       ? selectedDistributor?.balance ?? 0
       : Infinity;
 
@@ -87,33 +84,9 @@ export function PrimaryAccount() {
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <div className="rounded-lg border bg-muted/20 px-2.5 py-2">
-              <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">Agent funding</span>
-              <span className="mt-0.5 block text-sm font-semibold tabular-nums">
-                {formatCurrency(12450, { noDecimals: true })}
-              </span>
-            </div>
-            <div className="rounded-lg border bg-muted/20 px-2.5 py-2">
-              <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">Supervisor ledger</span>
-              <span className="mt-0.5 block text-sm font-semibold tabular-nums">
-                {formatCurrency(30230, { noDecimals: true })}
-              </span>
-            </div>
-          </div>
-
-          {mismatches.length > 0 ? (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-2.5 py-2 text-[11px] text-red-600 dark:text-red-400">
-              <ShieldAlert className="size-3.5 shrink-0" />
-              <span className="truncate">
-                {mismatches.length} provider account{mismatches.length > 1 ? "s" : ""} need reconciliation
-              </span>
-            </div>
-          ) : null}
-
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <Button className="flex-1" size="sm" onClick={() => openOperation("agent-fund")}>
+            <Button className="flex-1" size="sm" onClick={() => openOperation("agent-add")}>
               <ArrowDownToLine />
-              Fund Agent
+              Add balance
             </Button>
             <Button className="flex-1" size="sm" variant="outline" onClick={() => openOperation("supervisor-settle")}>
               <ArrowUpFromLine />
@@ -132,41 +105,41 @@ export function PrimaryAccount() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {operation === "agent-fund"
-                ? "Fund Agent wallet"
-                : operation === "agent-recover"
-                  ? "Recover Agent funds"
+              {operation === "agent-add"
+                ? "Add balance"
+                : operation === "agent-deduct"
+                  ? "Deduct balance"
                   : "Settle Supervisor earnings"}
             </DialogTitle>
             <DialogDescription>
-              {operation === "agent-fund"
+              {operation === "agent-add"
                 ? "Add funds to an Agent's pre-funded fee wallet. This is separate from shared provider accounts."
-                : operation === "agent-recover"
-                  ? "Recover available funds from an Agent's pre-funded wallet with an auditable adjustment."
+                : operation === "agent-deduct"
+                  ? "Deduct funds from an Agent's pre-funded fee wallet with an auditable adjustment."
                   : "Settle an amount from a Supervisor's transaction ledger without changing the underlying provider account balance."}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            {operation === "agent-fund" || operation === "agent-recover" ? (
-              <div className="grid grid-cols-2 gap-2">
+            {operation === "agent-add" || operation === "agent-deduct" ? (
+              <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted/35 p-1">
                 <Button
                   type="button"
                   size="sm"
-                  variant={operation === "agent-fund" ? "default" : "outline"}
-                  onClick={() => openOperation("agent-fund")}
+                  variant={operation === "agent-add" ? "default" : "ghost"}
+                  onClick={() => openOperation("agent-add")}
                 >
                   <ArrowDownToLine />
-                  Fund Agent
+                  Add balance
                 </Button>
                 <Button
                   type="button"
                   size="sm"
-                  variant={operation === "agent-recover" ? "default" : "outline"}
-                  onClick={() => openOperation("agent-recover")}
+                  variant={operation === "agent-deduct" ? "default" : "ghost"}
+                  onClick={() => openOperation("agent-deduct")}
                 >
                   <ArrowUpFromLine />
-                  Recover
+                  Deduct balance
                 </Button>
               </div>
             ) : null}
@@ -203,10 +176,10 @@ export function PrimaryAccount() {
                   Operation
                 </span>
                 <span className="mt-1 block text-sm font-semibold">
-                  {operation === "agent-fund"
-                    ? "Credit"
-                    : operation === "agent-recover"
-                      ? "Debit"
+                  {operation === "agent-add"
+                    ? "Add balance"
+                    : operation === "agent-deduct"
+                      ? "Deduct balance"
                       : "Settlement"}
                 </span>
               </div>
@@ -225,7 +198,7 @@ export function PrimaryAccount() {
                 onChange={(event) => setAmount(event.target.value)}
                 placeholder="0.00"
               />
-              {(operation === "agent-recover" || operation === "supervisor-settle") && selectedDistributor ? (
+              {(operation === "agent-deduct" || operation === "supervisor-settle") && selectedDistributor ? (
                 <p className="text-[11px] text-muted-foreground">
                   Maximum available: {formatCurrency(selectedDistributor.balance)}
                 </p>
@@ -246,10 +219,10 @@ export function PrimaryAccount() {
                   Cancel
                 </Button>
                 <Button type="button" size="sm" disabled={!canSubmit} onClick={() => closeOperation(false)}>
-                  {operation === "agent-fund"
+                  {operation === "agent-add"
                     ? "Record funding"
-                    : operation === "agent-recover"
-                      ? "Record recovery"
+                    : operation === "agent-deduct"
+                      ? "Record deduction"
                       : "Record settlement"}
                 </Button>
               </div>
