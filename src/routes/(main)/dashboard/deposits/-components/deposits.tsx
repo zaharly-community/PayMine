@@ -21,11 +21,10 @@ import { DepositsTable } from "./deposits-table";
 
 export function Deposits({ deposits }: { deposits: DepositRow[] }) {
   const [rowSelection, setRowSelection] = React.useState({});
-  const [sorting, setSorting] = React.useState<SortingState>([{ id: "lastActivity", desc: true }]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: "date", desc: true }]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<ColumnVisibilityState>({
     search: false,
-    team: false,
   });
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
@@ -43,7 +42,7 @@ export function Deposits({ deposits }: { deposits: DepositRow[] }) {
       columnVisibility,
       pagination,
     },
-    getRowId: (row) => row.email,
+    getRowId: (row) => row.id,
     autoResetPageIndex: false,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
@@ -60,7 +59,7 @@ export function Deposits({ deposits }: { deposits: DepositRow[] }) {
       <div className="flex items-start justify-between gap-4 border-b px-4 py-3">
         <div className="min-w-0">
           <h1 className="text-xl font-semibold tracking-tight">Deposits</h1>
-          <p className="text-muted-foreground text-sm">Manage your deposits and player access.</p>
+          <p className="text-muted-foreground text-sm">Manage player deposit transactions and payment processing.</p>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
