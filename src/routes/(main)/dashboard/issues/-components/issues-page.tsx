@@ -2,7 +2,6 @@ import * as React from "react";
 
 import {
   AlertTriangle,
-  ArrowDownLeft,
   ArrowRight,
   ArrowUpRight,
   Check,
@@ -20,12 +19,10 @@ import {
   UserCheck,
   Users,
   WalletCards,
-  XCircle,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "cn";
 
@@ -891,14 +888,6 @@ export function IssuesPage() {
         ) : null}
       </div>
 
-      <Dialog open={false} onOpenChange={() => undefined}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Review queue</DialogTitle>
-            <DialogDescription>Review queue is represented directly on this page in the frontend template.</DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
     </section>
   );
 }
