@@ -38,10 +38,10 @@ function getDepositRowIndicator(status: DepositRow["depositStatus"]) {
   }
 }
 
-function ProcessingLockOverlay({ name }: { name: string }) {
+function ProcessingLockOverlay({ name, colSpan }: { name: string; colSpan: number }) {
   return (
     <TableCell
-      colSpan={1}
+      colSpan={colSpan}
       className="absolute inset-0 z-[60] h-full w-full border-0! bg-background/40 p-0! backdrop-blur-[4px]"
       onClick={(event) => {
         event.preventDefault();
@@ -114,7 +114,10 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
                     </TableCell>
                   ))}
                   {processingLockedRows.has(row.original.id) ? (
-                    <ProcessingLockOverlay name={row.original.processedBy.name} />
+                    <ProcessingLockOverlay
+                      name={row.original.processedBy.name}
+                      colSpan={row.getVisibleCells().length}
+                    />
                   ) : null}
                 </TableRow>
               ))
