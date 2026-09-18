@@ -41,9 +41,7 @@ function getDepositRowIndicator(status: DepositRow["depositStatus"]) {
 type ProcessingMask = {
   id: string;
   name: string;
-  left: number;
   top: number;
-  width: number;
   height: number;
 };
 
@@ -78,22 +76,12 @@ function ProcessingMaskLayer({
         nextMasks.push({
           id: row.original.id,
           name: row.original.processedBy.name,
-          left: rowRect.left - containerRect.left,
           top: rowRect.top - containerRect.top,
-          width: rowRect.width,
           height: rowRect.height,
         });
       }
 
-      setMasks((previous) => {
-        const signature = (items: ProcessingMask[]) =>
-          items
-            .map((mask) =>
-              `${mask.id}:${mask.left.toFixed(1)}:${mask.top.toFixed(1)}:${mask.width.toFixed(1)}:${mask.height.toFixed(1)}`,
-            )
-            .join("|");
-        return signature(previous) === signature(nextMasks) ? previous : nextMasks;
-      });
+      setMasks(nextMasks);
     };
 
     updateMasks();
@@ -121,7 +109,7 @@ function ProcessingMaskLayer({
         <div
           key={mask.id}
           aria-label={`Deposit processing is locked. Processing by ${mask.name}`}
-          className="absolute z-50 flex cursor-not-allowed items-center justify-center overflow-hidden border border-border/60 bg-background/90 px-4 text-center shadow-sm backdrop-blur-[2px] select-none"
+          className="absolute inset-x-0 z-[60] flex cursor-not-allowed items-center justify-center border-y border-border/60 bg-background/40 px-4 text-center shadow-sm backdrop-blur-[4px] select-none"
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -130,15 +118,17 @@ function ProcessingMaskLayer({
             event.preventDefault();
             event.stopPropagation();
           }}
+          onPointerDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
           style={{
-            left: mask.left,
             top: mask.top,
-            width: mask.width,
             height: mask.height,
           }}
         >
           <span className="flex items-center justify-center gap-2 text-sm font-medium leading-none text-muted-foreground">
-            <LockKeyhole className="size-3.5 shrink-0" />
+            <LockKeyhole className="size-4 shrink-0" />
             <span>Processing by {mask.name}</span>
           </span>
         </div>
@@ -167,7 +157,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div ref={tableContainerRef} className="relative">
+      <div ref={tableContainerRef} className="relative isolate">
         <Table className="w-full border-collapse **:data-[slot='table-cell']:border-b **:data-[slot='table-cell']:border-border/70 **:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:border-b **:data-[slot='table-head']:border-border/70 **:data-[slot='table-head']:px-4">
           <TableHeader className="[&_tr]:border-t">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -187,9 +177,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
                 <TableRow
                   key={row.id}
                   data-deposit-row-id={row.original.id}
-                  className={`h-7 border-border/60 transition-colors hover:bg-muted/35 ${getDepositRowIndicator(row.original.depositStatus)} ${
-                    processingLockedRows.has(row.original.id) ? "blur-[3px] opacity-60" : ""
-                  }`}
+                  className={`h-7 border-border/60 transition-colors hover:bg-muted/35 ${getDepositRowIndicator(row.original.depositStatus)}`}
                   data-state={table.state.rowSelection[row.id] && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
