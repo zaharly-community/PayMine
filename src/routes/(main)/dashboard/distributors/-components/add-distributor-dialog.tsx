@@ -98,6 +98,7 @@ function createSupervisorMethods(enabledNames: string[] = []): DistributorPaymen
     name: method.name,
     category: method.category,
     enabled: enabledNames.includes(method.name),
+    accessGranted: enabledNames.includes(method.name),
     limitMode: "Requests & Amount",
     requestLimit: systemDefaults.requestLimit,
     amountLimit: systemDefaults.amountLimit,
@@ -660,6 +661,8 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
       }),
       lastActive: 0,
       id,
+      walletModel: form.role === "Agent" ? "Prefunded fee wallet" : "Transaction ledger",
+      walletAudit: [],
       configuration,
     });
 
