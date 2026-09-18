@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -52,13 +53,14 @@ export function NotificationsMenu() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel className="flex items-center justify-between gap-3">
-          <span>Notifications</span>
-          <span className="text-xs font-normal text-muted-foreground">3 new</span>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="flex items-center justify-between gap-3">
+            <span>Notifications</span>
+            <span className="text-xs font-normal text-muted-foreground">3 new</span>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
 
-        {notifications.map((notification) => {
+          {notifications.map((notification) => {
           const Icon = notification.icon;
 
           return (
@@ -82,7 +84,8 @@ export function NotificationsMenu() {
               </span>
             </DropdownMenuItem>
           );
-        })}
+          })}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
