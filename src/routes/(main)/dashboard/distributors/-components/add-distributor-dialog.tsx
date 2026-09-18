@@ -734,6 +734,109 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
             <div className="border-b py-5">
               <SectionHeader
                 step="02"
+                icon={<Layers3 className="size-4" />}
+                title="Configuration mode"
+                description="Apply a predefined program or configure this distributor manually."
+              />
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {([
+                  ["Program", "Apply a Program", "Use a predefined setup for this role. Processing, limits, payment permissions, and compensation come from the selected program."],
+                  ["Custom Program", "Build a Custom Program", "Open the full configuration below and define every setting for this account."],
+                ] as const).map(([mode, title, description]) => {
+                  const selected = form.programMode === mode;
+                  return (
+                    <button
+                      type="button"
+                      key={mode}
+                      onClick={() => setProgramMode(mode)}
+                      className={
+                        "flex items-start gap-3 rounded-lg border px-4 py-3 text-left transition-colors " +
+                        (selected
+                          ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                          : "border-border hover:bg-muted/40")
+                      }
+                    >
+                      <span
+                        className={
+                          "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border " +
+                          (selected
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-muted-foreground/40")
+                        }
+                      >
+                        {selected ? <Check className="size-2.5" /> : null}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block font-medium text-sm">{title}</span>
+                        <span className="mt-1 block text-xs leading-4 text-muted-foreground">{description}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {form.programMode === "Program" ? (
+                <div className="mt-4 rounded-lg border bg-muted/20 p-4">
+                  <div className="grid gap-4 sm:grid-cols-[1fr_1.5fr]">
+                    <Field label="Program">
+                      <Select value={form.programId} onValueChange={selectProgram}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select program" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            {availablePrograms.map((program) => (
+                              <SelectItem key={program.id} value={program.id}>
+                                {program.name}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+
+                    {selectedProgram ? (
+                      <div className="rounded-lg border bg-background px-4 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm">{selectedProgram.name}</p>
+                            <p className="mt-1 text-xs leading-4 text-muted-foreground">
+                              {selectedProgram.description}
+                            </p>
+                          </div>
+                          <span className="shrink-0 rounded-full border bg-muted/40 px-2 py-1 text-[10px] font-medium">
+                            {selectedProgram.role}
+                          </span>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
+                          <div className="rounded-md bg-muted/40 px-2.5 py-2">
+                            <span className="block text-muted-foreground">Processing</span>
+                            <span className="font-medium">{selectedProgram.processingScope}</span>
+                          </div>
+                          <div className="rounded-md bg-muted/40 px-2.5 py-2">
+                            <span className="block text-muted-foreground">Compensation</span>
+                            <span className="font-medium">{selectedProgram.feeMode}</span>
+                          </div>
+                          <div className="rounded-md bg-muted/40 px-2.5 py-2 col-span-2 sm:col-span-1">
+                            <span className="block text-muted-foreground">Rates</span>
+                            <span className="font-medium">{selectedProgram.feeSummary}</span>
+                          </div>
+                        </div>
+                        <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
+                          The selected program will be stored on the distributor account and its configuration will be applied at creation.
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {form.programMode === "Custom Program" ? (
+            <div className="border-b py-5">
+              <SectionHeader
+                step="05"
                 icon={<WalletCards className="size-4" />}
                 title="Processing access"
                 description="Define the transaction types this account is allowed to process."
@@ -1003,6 +1106,8 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
                     : "The fixed amount is paid only for successfully completed operations."}
               </div>
             </div>
+
+            ) : null}
 
             <div className="py-4 text-xs leading-5 text-muted-foreground">
               <strong className="font-medium text-foreground">
