@@ -18,14 +18,14 @@ import { Kbd } from "@/components/ui/kbd";
 import { dataTableFeatures } from "@/lib/data-table-features";
 
 import type { DistributorRow } from "./data";
-import { distributorsColumns } from "./distributors-columns";
+import { createDistributorsColumns } from "./distributors-columns";
 import { DistributorsTable } from "./distributors-table";
 
 export function Distributors({ distributors: initialDistributors }: { distributors: DistributorRow[] }) {
   const [distributors, setDistributors] = React.useState(initialDistributors);
   const [addDistributorOpen, setAddDistributorOpen] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
-  const [sorting, setSorting] = React.useState<SortingState>([{ id: "lastActive", desc: true }]);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<ColumnVisibilityState>({
     search: false,
@@ -55,6 +55,40 @@ export function Distributors({ distributors: initialDistributors }: { distributo
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
   });
+
+  const handleSuspend = React.useCallback((distributorId: string) => {
+    setDistributors((current) =>
+      current.map((distributor) =>
+        distributor.id === distributorId
+          ? { ...distributor, status: "Suspended" as const }
+          : distributor,
+      ),
+    );
+  }, []);
+
+  const handleDelete = React.useCallback((distributorId: string) => {
+    setDistributors((current) => current.filter((distributor) => distributor.id !== distributorId));
+  }, []);
+
+  const handleWalletAdjust = React.useCallback((distributorId: string, delta: number) => {
+    setDistributors((current) =>
+      current.map((distributor) =>
+        distributor.id === distributorId
+          ? { ...distributor, balance: Math.max(0, distributor.balance + delta) }
+          : distributor,
+      ),
+    );
+  }, []);
+
+  const distributorsColumns = React.useMemo(
+    () =>
+      createDistributorsColumns({
+        onSuspend: handleSuspend,
+        onDelete: handleDelete,
+        onWalletAdjust: handleWalletAdjust,
+      }),
+    [handleSuspend, handleDelete, handleWalletAdjust],
+  );
 
   const searchQuery = (table.getColumn("search")?.getFilterValue() as string | undefined) ?? "";
 
