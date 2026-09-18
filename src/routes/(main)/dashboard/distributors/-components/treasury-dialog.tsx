@@ -1,8 +1,11 @@
 import * as React from "react";
 
+import { Link } from "@tanstack/react-router";
+
 import {
   AlertTriangle,
   ArrowDownLeft,
+  ArrowRight,
   ArrowUpRight,
   CheckCircle2,
   Clock3,
@@ -261,11 +264,20 @@ export function TreasuryDialog({ open, onOpenChange, distributors }: TreasuryDia
                       <p className="mt-1 text-xs leading-5 text-muted-foreground">
                         The provider balance is lower than the expected internal balance. Settlement is blocked until the difference is reviewed.
                       </p>
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
                         <Badge variant="outline" className="border-red-500/20 text-red-600 dark:text-red-400">
                           Gap {gap.toLocaleString("en-US", { style: "currency", currency: selected.currency })}
                         </Badge>
-                        <Badge variant="secondary">Reserved {selected.reservedBalance.toLocaleString("en-US", { style: "currency", currency: selected.currency })}</Badge>
+                        <Badge variant="secondary">
+                          Reserved {selected.reservedBalance.toLocaleString("en-US", { style: "currency", currency: selected.currency })}
+                        </Badge>
+                        <Link
+                          to="/dashboard/issues/"
+                          className="inline-flex h-7 items-center gap-1.5 rounded-md border border-red-500/20 bg-background px-2.5 text-[11px] font-medium text-red-600 transition-colors hover:bg-red-500/5 dark:text-red-400"
+                        >
+                          Investigate issue
+                          <ArrowRight className="size-3.5" />
+                        </Link>
                       </div>
                     </div>
                   </div>
