@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import type { DataTableFeatures } from "@/lib/data-table-features";
 
 import type { DepositRow } from "./data";
-import { isProcessingLocked, processingLockedColumns, processingLockedRows } from "./deposits-columns";
+import { processingLockedRows } from "./deposits-columns";
 
 function preventPaginationNavigation(event: MouseEvent<HTMLAnchorElement>) {
   event.preventDefault();
@@ -58,7 +58,6 @@ function ProcessingMaskLayer({
   const visibleRows = table.getRowModel().rows;
   const lockedRows = visibleRows.filter((row) => processingLockedRows.has(row.original.id));
   const lockedSignature = lockedRows.map((row) => row.original.id).join("|");
-  const lockedColumnIds = Array.from(processingLockedColumns);
 
   useLayoutEffect(() => {
     const updateMasks = () => {
@@ -74,22 +73,15 @@ function ProcessingMaskLayer({
         );
         if (!rowElement) continue;
 
-        const cells = lockedColumnIds
-          .map((columnId) => rowElement.querySelector(`[data-column-id="${columnId}"]`))
-          .filter((cell): cell is Element => Boolean(cell));
-
-        if (cells.length !== lockedColumnIds.length) continue;
-
-        const firstRect = cells[0].getBoundingClientRect();
-        const lastRect = cells[cells.length - 1].getBoundingClientRect();
+        const rowRect = rowElement.getBoundingClientRect();
 
         nextMasks.push({
           id: row.original.id,
           name: row.original.processedBy.name,
-          left: firstRect.left - containerRect.left,
-          top: firstRect.top - containerRect.top,
-          width: lastRect.right - firstRect.left,
-          height: firstRect.height,
+          left: rowRect.left - containerRect.left,
+          top: rowRect.top - containerRect.top,
+          width: rowRect.width,
+          height: rowRect.height,
         });
       }
 
@@ -129,7 +121,7 @@ function ProcessingMaskLayer({
         <div
           key={mask.id}
           aria-label={`Deposit processing is locked. Processing by ${mask.name}`}
-          className="pointer-events-none absolute z-40 flex items-center justify-center overflow-hidden rounded-sm border border-border/50 bg-background/80 px-3 text-center shadow-sm backdrop-blur-[1px] select-none"
+          className="pointer-events-none absolute z-40 flex items-center justify-center overflow-hidden border border-border/50 bg-background/80 px-4 text-center shadow-sm backdrop-blur-[1px] select-none"
           style={{
             left: mask.left,
             top: mask.top,
@@ -137,9 +129,9 @@ function ProcessingMaskLayer({
             height: mask.height,
           }}
         >
-          <span className="flex max-w-full items-center justify-center gap-1.5 truncate text-xs font-medium leading-none text-muted-foreground">
+          <span className="flex items-center justify-center gap-2 text-xs font-medium leading-none text-muted-foreground">
             <LockKeyhole className="size-3.5 shrink-0" />
-            <span className="truncate">Processing by {mask.name}</span>
+            <span>Processing by {mask.name}</span>
           </span>
         </div>
       ))}
@@ -187,22 +179,16 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
                 <TableRow
                   key={row.id}
                   data-deposit-row-id={row.original.id}
-                  className={`h-7 border-border/60 transition-colors hover:bg-muted/35 ${getDepositRowIndicator(row.original.depositStatus)}`}
+                  className={`h-7 border-border/60 transition-colors hover:bg-muted/35 ${getDepositRowIndicator(row.original.depositStatus)} ${
+                    processingLockedRows.has(row.original.id) ? "[&>*]:blur-[3px] [&>*]:opacity-55" : ""
+                  }`}
                   data-state={table.state.rowSelection[row.id] && "selected"}
                 >
-                  {row.getVisibleCells().map((cell) => {
-                    const locked = isProcessingLocked(row.original, cell.column.id);
-
-                    return (
-                      <TableCell
-                        key={cell.id}
-                        data-column-id={cell.column.id}
-                        className={`px-4 py-0 align-middle leading-none ${locked ? "[&>*]:blur-[3px] [&>*]:opacity-55" : ""}`}
-                      >
-                        <table.FlexRender cell={cell} />
-                      </TableCell>
-                    );
-                  })}
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="px-4 py-0 align-middle leading-none">
+                      <table.FlexRender cell={cell} />
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))
             ) : (
