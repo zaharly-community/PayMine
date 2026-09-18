@@ -99,6 +99,7 @@ function createSupervisorMethods(enabledNames: string[] = []): DistributorPaymen
     category: method.category,
     enabled: enabledNames.includes(method.name),
     accessGranted: enabledNames.includes(method.name),
+    providerAccountRef: "treasury-" + method.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     limitMode: "Requests & Amount",
     requestLimit: systemDefaults.requestLimit,
     amountLimit: systemDefaults.amountLimit,
