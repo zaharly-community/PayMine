@@ -7,8 +7,8 @@ import {
   ImagePlus,
   KeyRound,
   Layers3,
+  Search,
   ShieldCheck,
-  Trash2,
   UserPlus,
   WalletCards,
 } from "lucide-react";
@@ -159,6 +159,26 @@ const programTemplates: ProgramTemplate[] = [
     },
   },
   {
+    id: "agent-withdrawal-only",
+    name: "Withdrawal Agent",
+    description: "Withdrawal-only processing using the system defaults. Payment methods remain Agent-owned.",
+    role: "Agent",
+    processingScope: "Withdrawals",
+    feeMode: "Commission",
+    feeSummary: "3% withdrawal · deposits disabled",
+    configuration: {
+      processingScope: "Withdrawals",
+      accountOpeningMethods: ["Flouci", "D17"],
+      defaultRequestLimit: 50,
+      defaultAmountLimit: 10000,
+      defaultAmountLimitPeriod: "Daily",
+      feeMode: "Commission",
+      commissionTransactions: "Withdrawals",
+      defaultDepositCommissionRate: 0,
+      defaultWithdrawalCommissionRate: 3,
+    },
+  },
+  {
     id: "supervisor-standard",
     name: "Standard Supervisor",
     description: "Owner-provided payment methods with balanced processing permissions.",
@@ -172,6 +192,23 @@ const programTemplates: ProgramTemplate[] = [
       feeMode: "Commission",
       commissionTransactions: "Deposits & Withdrawals",
       defaultDepositCommissionRate: 5,
+      defaultWithdrawalCommissionRate: 3,
+    },
+  },
+  {
+    id: "supervisor-withdrawal-only",
+    name: "Withdrawal Supervisor",
+    description: "Supervisor limited to withdrawal processing using owner-provided methods.",
+    role: "Supervisor",
+    processingScope: "Withdrawals",
+    feeMode: "Commission",
+    feeSummary: "3% withdrawal · deposits disabled",
+    configuration: {
+      processingScope: "Withdrawals",
+      paymentMethods: createSupervisorMethods(ownerPaymentMethods.map((method) => method.name)),
+      feeMode: "Commission",
+      commissionTransactions: "Withdrawals",
+      defaultDepositCommissionRate: 0,
       defaultWithdrawalCommissionRate: 3,
     },
   },
@@ -240,12 +277,10 @@ function Field({
 }
 
 function SectionHeader({
-  step,
   icon,
   title,
   description,
 }: {
-  step: string;
   icon: React.ReactNode;
   title: string;
   description: string;
@@ -253,11 +288,10 @@ function SectionHeader({
   return (
     <div className="border-b pb-3">
       <div className="flex items-center gap-2">
-        <span className="text-[11px] font-semibold tracking-wide text-muted-foreground">{step}</span>
         <span className="text-primary">{icon}</span>
         <h3 className="font-semibold text-sm">{title}</h3>
       </div>
-      <p className="mt-1 pl-7 text-xs leading-5 text-muted-foreground">{description}</p>
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
     </div>
   );
 }
@@ -272,7 +306,6 @@ function MethodRow({
   onOpenChange,
   onToggle,
   onUpdate,
-  onRemove,
   showSwitch,
   commissionEnabled,
 }: {
@@ -281,13 +314,16 @@ function MethodRow({
   onOpenChange: (open: boolean) => void;
   onToggle: () => void;
   onUpdate: (update: (method: DistributorPaymentMethod) => DistributorPaymentMethod) => void;
-  onRemove?: () => void;
   showSwitch: boolean;
   commissionEnabled: boolean;
 }) {
   return (
-    <Collapsible open={open} onOpenChange={onOpenChange} className="overflow-hidden rounded-lg border bg-background">
-      <div className="flex items-center gap-3 py-3">
+    <Collapsible
+      open={open}
+      onOpenChange={onOpenChange}
+      className="overflow-hidden rounded-xl border bg-background transition-shadow hover:shadow-sm data-[open]:shadow-sm"
+    >
+      <div className="flex items-center gap-3 px-3.5 py-3.5">
         <CollapsibleTrigger
           render={<button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" />}
         >
@@ -295,7 +331,7 @@ function MethodRow({
             className={"size-4 shrink-0 text-muted-foreground transition-transform " + (open ? "rotate-180" : "")}
           />
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 pr-0.5">
               <span className="truncate font-medium text-sm">{method.name}</span>
               <span className="rounded-full border bg-muted/40 px-2 py-0.5 text-[10px] text-muted-foreground">
                 {method.category}
@@ -307,24 +343,12 @@ function MethodRow({
           </div>
         </CollapsibleTrigger>
         <div className="flex items-center gap-2">
-          {onRemove ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="text-muted-foreground hover:text-destructive"
-              onClick={onRemove}
-              aria-label={"Remove " + method.name}
-            >
-              <Trash2 className="size-3.5" />
-            </Button>
-          ) : null}
           {showSwitch ? <Switch checked={method.enabled} onCheckedChange={onToggle} /> : null}
         </div>
       </div>
 
-      <CollapsibleContent className="pb-4 pl-7">
-        <div className="grid gap-4 rounded-lg bg-muted/25 p-3 sm:grid-cols-2 lg:grid-cols-4">
+      <CollapsibleContent className="border-t bg-muted/20 px-3.5 py-3.5">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Limit type">
             <Select
               value={method.limitMode}
@@ -397,8 +421,7 @@ function MethodRow({
                     <SelectItem value="Daily">Daily</SelectItem>
                     <SelectItem value="Monthly">Monthly</SelectItem>
                   </SelectGroup>
-                </SelectContent>
-              </Select>            </Field>          ) : null}
+                </SelectContent>              </Select>            </Field>          ) : null}
 
           {commissionEnabled ? (
             <>
@@ -453,6 +476,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
   const [form, setForm] = React.useState<FormState>(createInitialForm);
   const [avatarPreview, setAvatarPreview] = React.useState("");
   const [openMethodId, setOpenMethodId] = React.useState<string | null>(null);
+  const [programSearch, setProgramSearch] = React.useState("");
 
   const reset = React.useCallback(() => {
     setForm(createInitialForm());
@@ -485,6 +509,15 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
     [form.role],
   );
   const selectedProgram = availablePrograms.find((program) => program.id === form.programId) ?? availablePrograms[0];
+  const filteredPrograms = React.useMemo(() => {
+    const query = programSearch.trim().toLowerCase();
+    if (!query) return availablePrograms;
+    return availablePrograms.filter((program) =>
+      [program.name, program.description, program.feeSummary].some((value) =>
+        value.toLowerCase().includes(query),
+      ),
+    );
+  }, [availablePrograms, programSearch]);
 
   const setProgramMode = (mode: DistributorProgramMode) => {
     setForm((current) => ({
@@ -493,6 +526,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
       programId: availablePrograms[0]?.id ?? current.programId,
     }));
     setOpenMethodId(null);
+    setProgramSearch("");
   };
 
   const selectProgram = (programId: string) => {
@@ -563,6 +597,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
         : [],
     }));
     setOpenMethodId(null);
+    setProgramSearch("");
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -669,7 +704,6 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
           <div className="max-h-[calc(90vh-145px)] overflow-y-auto bg-background px-5">
             <div className="border-b py-5">
               <SectionHeader
-                step="01"
                 icon={<ShieldCheck className="size-4" />}
                 title="Account"
                 description="Create the credentials used by this distributor to access the dashboard."
@@ -732,13 +766,12 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
 
             <div className="border-b py-5">
               <SectionHeader
-                step="02"
                 icon={<Layers3 className="size-4" />}
                 title="Program"
                 description="Choose a predefined program or switch to Custom Program for full manual configuration."
               />
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 {([
                   ["Program", "Apply a Program", "Use a predefined setup for this role. Processing, limits, payment permissions, and compensation come from the selected program."],
                   ["Custom Program", "Build a Custom Program", "Open the full configuration below and define every setting for this account."],
@@ -776,55 +809,74 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
               </div>
 
               {form.programMode === "Program" ? (
-                <div className="mt-4 rounded-lg border bg-muted/20 p-4">
-                  <div className="grid gap-4 sm:grid-cols-[1fr_1.5fr]">
-                    <Field label="Program">
-                      <Select value={form.programId} onValueChange={selectProgram}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select program" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {availablePrograms.map((program) => (
-                              <SelectItem key={program.id} value={program.id}>
-                                {program.name}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </Field>
+                <div className="mt-4">
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={programSearch}
+                      onChange={(event) => setProgramSearch(event.target.value)}
+                      placeholder={"Search " + form.role.toLowerCase() + " programs..."}
+                      className="h-9 pl-9"
+                    />
+                  </div>
 
-                    {selectedProgram ? (
-                      <div className="rounded-lg border bg-background px-4 py-3">                        <div className="flex items-center justify-between gap-3">
-                          <div className="min-w-0">                            <p className="font-semibold text-sm">{selectedProgram.name}</p>
-                            <p className="mt-1 text-xs leading-4 text-muted-foreground">
-                              {selectedProgram.description}
-                            </p>
-                          </div>
-                          <span className="shrink-0 rounded-full border bg-muted/40 px-2 py-1 text-[10px] font-medium">
-                            {selectedProgram.role}
-                          </span>
-                        </div>
-                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
-                          <div className="rounded-md bg-muted/40 px-2.5 py-2">
-                            <span className="block text-muted-foreground">Processing</span>
-                            <span className="font-medium">{selectedProgram.processingScope}</span>
-                          </div>
-                          <div className="rounded-md bg-muted/40 px-2.5 py-2">
-                            <span className="block text-muted-foreground">Compensation</span>
-                            <span className="font-medium">{selectedProgram.feeMode}</span>
-                          </div>
-                          <div className="rounded-md bg-muted/40 px-2.5 py-2 col-span-2 sm:col-span-1">
-                            <span className="block text-muted-foreground">Rates</span>
-                            <span className="font-medium">{selectedProgram.feeSummary}</span>
-                          </div>
-                        </div>
-                        <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
-                          The selected program will be stored on the distributor account and its configuration will be applied at creation.
-                        </p>
+                  <div className="mt-3 space-y-2">
+                    {filteredPrograms.length > 0 ? (
+                      filteredPrograms.map((program) => {
+                        const selected = program.id === form.programId;
+                        return (
+                          <button
+                            key={program.id}
+                            type="button"
+                            onClick={() => selectProgram(program.id)}
+                            className={
+                              "w-full rounded-xl border px-4 py-3 text-left transition-all " +
+                              (selected
+                                ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/15"
+                                : "border-border bg-background hover:border-primary/40 hover:bg-muted/20")
+                            }
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="truncate text-sm font-semibold">{program.name}</span>
+                                  {selected ? (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                                      <Check className="size-3" />
+                                      Selected
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                                  {program.description}
+                                </p>
+                              </div>
+                              <div className="grid shrink-0 grid-cols-2 gap-2 text-right text-[10px] sm:flex sm:items-center">
+                                <span className="rounded-md bg-muted/50 px-2 py-1">
+                                  {program.processingScope}
+                                </span>
+                                <span className="rounded-md bg-muted/50 px-2 py-1">
+                                  {program.feeSummary}
+                                </span>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className="rounded-xl border border-dashed px-4 py-8 text-center text-xs text-muted-foreground">
+                        No {form.role.toLowerCase()} programs match your search.
                       </div>
-                    ) : null}
+                    )}
+                  </div>
+
+                  {selectedProgram ? (
+                    <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
+                      The selected program will be stored on the distributor account and its configuration will be applied at creation.
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
                   </div>
                 </div>
               ) : null}
@@ -834,7 +886,6 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
             <>
             <div className="border-b py-5">
               <SectionHeader
-                step="03"
                 icon={<WalletCards className="size-4" />}
                 title="Processing access"
                 description="Define the transaction types this account is allowed to process."
@@ -843,6 +894,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {([
                   ["Deposits", "Deposit processing only", "The distributor can process deposit requests."],
+                  ["Withdrawals", "Withdrawal processing only", "The distributor can process withdrawal requests."],
                   ["Deposits & Withdrawals", "Deposits + withdrawals", "The distributor can process both transaction flows."],
                 ] as const).map(([value, title, description]) => {
                   const selected = form.processingScope === value;
@@ -878,7 +930,6 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
 
             <div className="border-b py-5">
               <SectionHeader
-                step="04"
                 icon={<WalletCards className="size-4" />}
                 title="Payment methods & limits"
                 description={
@@ -959,7 +1010,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
               ) : (
                 <div className="mt-4">
                   <CategoryLabel>Owner payment methods</CategoryLabel>
-                  <div className="divide-y">
+                  <div className="space-y-2.5">
                     {form.paymentMethods.map((method) => (
                       <MethodRow
                         key={method.id}
@@ -982,7 +1033,6 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
 
             <div className="border-b py-5">
               <SectionHeader
-                step="05"
                 icon={<BadgeDollarSign className="size-4" />}
                 title="Compensation"
                 description="Set the earning model. System defaults are editable here and can be changed later."
