@@ -8,7 +8,7 @@ import {
   useTable,
 } from "@tanstack/react-table";
 
-import { Cog, Download, Plus, Search, SlidersHorizontal } from "lucide-react";
+import { Cog, Download, Landmark, Plus, Search, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -20,10 +20,12 @@ import { dataTableFeatures } from "@/lib/data-table-features";
 import type { DistributorRow } from "./data";
 import { createDistributorsColumns } from "./distributors-columns";
 import { DistributorsTable } from "./distributors-table";
+import { TreasuryDialog } from "./treasury-dialog";
 
 export function Distributors({ distributors: initialDistributors }: { distributors: DistributorRow[] }) {
   const [distributors, setDistributors] = React.useState(initialDistributors);
   const [addDistributorOpen, setAddDistributorOpen] = React.useState(false);
+  const [treasuryOpen, setTreasuryOpen] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -142,6 +144,9 @@ export function Distributors({ distributors: initialDistributors }: { distributo
             </InputGroupAddon>
           </InputGroup>
 
+          <Button variant="outline" size="sm" onClick={() => setTreasuryOpen(true)}>
+            <Landmark /> Treasury
+          </Button>
           <Button variant="outline" size="sm">
             <SlidersHorizontal /> Hide
           </Button>
@@ -165,6 +170,12 @@ export function Distributors({ distributors: initialDistributors }: { distributo
         open={addDistributorOpen}
         onOpenChange={setAddDistributorOpen}
         onCreate={(distributor) => setDistributors((current) => [distributor, ...current])}
+      />
+
+      <TreasuryDialog
+        open={treasuryOpen}
+        onOpenChange={setTreasuryOpen}
+        distributors={distributors}
       />
     </section>
   );
