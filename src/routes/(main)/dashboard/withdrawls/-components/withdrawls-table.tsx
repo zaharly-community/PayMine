@@ -22,6 +22,18 @@ function preventPaginationNavigation(event: MouseEvent<HTMLAnchorElement>) {
   event.preventDefault();
 }
 
+function getWithdrawlRowIndicator(status: WithdrawlRow["status"]) {
+  switch (status) {
+    case "Completed":
+      return "shadow-[inset_5px_0_0_var(--color-emerald-500)]";
+    case "Pending":
+    case "Waiting Correction":
+      return "shadow-[inset_5px_0_0_var(--color-amber-400)]";
+    default:
+      return "";
+  }
+}
+
 function getPageNumbers(currentPage: number, pageCount: number) {
   if (pageCount <= 3) {
     return Array.from({ length: pageCount }, (_, index) => index + 1);
@@ -60,7 +72,7 @@ export function WithdrawlsTable({ table }: { table: ReactTable<DataTableFeatures
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="h-7 border-border/60 transition-colors hover:bg-muted/35"
+                  className={`h-7 border-border/60 transition-colors hover:bg-muted/35 ${getWithdrawlRowIndicator(row.original.status)}`}
                   data-state={table.state.rowSelection[row.id] && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
