@@ -25,15 +25,15 @@ function preventPaginationNavigation(event: MouseEvent<HTMLAnchorElement>) {
 function getDepositRowIndicator(status: DepositRow["status"]) {
   switch (status) {
     case "Active":
-      return "shadow-[inset_7px_0_0_var(--color-emerald-500)]";
+      return "shadow-[inset_5px_0_0_var(--color-emerald-500)]";
     case "Pending invite":
-      return "shadow-[inset_7px_0_0_var(--color-amber-400)]";
+      return "shadow-[inset_5px_0_0_var(--color-amber-400)]";
     case "Locked":
     case "Suspended":
-      return "shadow-[inset_7px_0_0_var(--color-red-500)]";
+      return "shadow-[inset_5px_0_0_var(--color-red-500)]";
     case "Deactivated":
     default:
-      return "shadow-[inset_7px_0_0_var(--color-muted-foreground)]";
+      return "shadow-[inset_5px_0_0_var(--color-muted-foreground)]";
   }
 }
 
