@@ -101,12 +101,12 @@ function makeMethodId(name: string) {
   return "method-" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
 
-function createSupervisorMethods(): DistributorPaymentMethod[] {
+function createSupervisorMethods(enabledNames: string[] = []): DistributorPaymentMethod[] {
   return ownerPaymentMethods.map((method) => ({
     id: makeMethodId(method.name),
     name: method.name,
     category: method.category,
-    enabled: false,
+    enabled: enabledNames.includes(method.name),
     limitMode: "Requests & Amount",
     requestLimit: systemDefaults.requestLimit,
     amountLimit: systemDefaults.amountLimit,
@@ -167,7 +167,7 @@ const programTemplates: ProgramTemplate[] = [
     feeSummary: "5% deposit · 3% withdrawal",
     configuration: {
       processingScope: "Deposits & Withdrawals",
-      paymentMethods: createSupervisorMethods(),
+      paymentMethods: createSupervisorMethods(ownerPaymentMethods.map((method) => method.name)),
       feeMode: "Commission",
       commissionTransactions: "Deposits & Withdrawals",
       defaultDepositCommissionRate: 5,
@@ -481,6 +481,28 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
     updatePaymentMethod(id, (method) => ({ ...method, enabled: !method.enabled }));
   };
 
+  const availablePrograms = React.useMemo(
+    () => programTemplates.filter((program) => program.role === form.role),
+    [form.role],
+  );
+  const selectedProgram = availablePrograms.find((program) => program.id === form.programId) ?? availablePrograms[0];
+
+  const setProgramMode = (mode: DistributorProgramMode) => {
+    setForm((current) => ({
+      ...current,
+      programMode: mode,
+      programId: availablePrograms[0]?.id ?? current.programId,
+    }));
+    setOpenMethodId(null);
+  };
+
+  const selectProgram = (programId: string) => {
+    setForm((current) => ({
+      ...current,
+      programId,
+    }));
+  };
+
   const toggleAccountOpeningMethod = (name: string) => {
     setForm((current) => ({
       ...current,
@@ -534,8 +556,12 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
     setForm((current) => ({
       ...current,
       role,
+      programMode: "Program",
+      programId: role === "Agent" ? "agent-standard" : "supervisor-standard",
       accountOpeningMethods: [],
-      paymentMethods: role === "Supervisor" ? createSupervisorMethods() : [],
+      paymentMethods: role === "Supervisor"
+        ? createSupervisorMethods(ownerPaymentMethods.map((method) => method.name))
+        : [],
     }));
     setOpenMethodId(null);
   };
@@ -548,10 +574,13 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
     const sequence = Math.floor(100000 + Math.random() * 899999);
     const id = form.role === "Agent" ? "AGT-" + sequence : "SUP-" + sequence;
 
-    const configuration: DistributorConfiguration = {
+    const customConfiguration: DistributorConfiguration = {
       processingScope: form.processingScope,
       accountOpeningMethods: form.accountOpeningMethods,
-      paymentMethods: form.role === "Supervisor" ? form.paymentMethods.filter((method) => method.enabled) : form.paymentMethods,
+      paymentMethods:
+        form.role === "Supervisor"
+          ? form.paymentMethods.filter((method) => method.enabled)
+          : undefined,
       defaultRequestLimit:
         form.role === "Agent" ? Number(form.agentDefaultRequestLimit) || 0 : undefined,
       defaultAmountLimit:
@@ -571,6 +600,21 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
         form.feeMode === "Per completed operation"
           ? Number(form.perCompletedOperationFee) || 0
           : undefined,
+    };
+
+    const baseProgramConfiguration = selectedProgram?.configuration ?? {};
+    const configuration: DistributorConfiguration = {
+      ...(form.programMode === "Program" ? baseProgramConfiguration : customConfiguration),
+      programMode: form.programMode,
+      ...(form.programMode === "Program" && selectedProgram
+        ? {
+            programId: selectedProgram.id,
+            programName: selectedProgram.name,
+          }
+        : {
+            programId: undefined,
+            programName: undefined,
+          }),
     };
 
     onCreate({
