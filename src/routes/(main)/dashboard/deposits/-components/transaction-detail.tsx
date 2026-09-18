@@ -1,9 +1,9 @@
+import type { ReactNode } from "react";
+
 import {
   AlertTriangle,
   ArrowLeft,
   Check,
-  CheckCircle2,
-  Circle,
   Copy,
   Download,
   FileText,
@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { DepositRow } from "./data";
 
-function SectionHeading({ children }: { children: React.ReactNode }) {
+function SectionHeading({ children }: { children: ReactNode }) {
   return (
     <div className="flex items-center gap-3">
       <h2 className="shrink-0 text-lg font-semibold tracking-tight">{children}</h2>
@@ -435,12 +435,13 @@ export function TransactionDetail({ deposit }: { deposit: DepositRow }) {
 
       <div className="border-t px-6 py-4">
         <div className="mx-auto max-w-[1500px]">
-          <Button asChild variant="ghost" size="sm">
-            <a href="/dashboard/deposits">
-              <ArrowLeft />
-              Back to deposits
-            </a>
-          </Button>
+          <a
+            href="/dashboard/deposits"
+            className="inline-flex h-7 items-center justify-center gap-1.5 rounded-[min(var(--radius-md),12px)] px-2.5 text-sm font-medium transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <ArrowLeft className="size-3.5" />
+            Back to deposits
+          </a>
         </div>
       </div>
     </section>
