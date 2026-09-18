@@ -27,14 +27,6 @@ import { formatCurrency, getInitials } from "@/lib/utils";
 
 import type { DepositRow, DepositStatus, VerificationStatus } from "./data";
 
-export const processingLockedColumns = new Set([
-  "paymentMethod",
-  "verificationStatus",
-  "amount",
-  "fees",
-  "depositStatus",
-]);
-
 export const processingLockedRows = new Set([
   "DEP-02026003",
   "DEP-02026007",
@@ -42,10 +34,6 @@ export const processingLockedRows = new Set([
   "DEP-02026016",
   "DEP-02026022",
 ]);
-
-export function isProcessingLocked(deposit: DepositRow, columnId: string) {
-  return processingLockedRows.has(deposit.id) && processingLockedColumns.has(columnId);
-}
 
 function PaymentMethodCell({ deposit }: { deposit: DepositRow }) {
   return (
