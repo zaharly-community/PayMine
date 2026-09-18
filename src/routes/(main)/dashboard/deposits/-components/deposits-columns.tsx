@@ -1,10 +1,17 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { parse } from "date-fns";
-import { MoreHorizontal } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock3,
+  LoaderCircle,
+  MoreHorizontal,
+  PencilLine,
+  XCircle,
+} from "lucide-react";
 
 import { cn } from "cn";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,47 +24,106 @@ import {
 import type { DataTableFeatures } from "@/lib/data-table-features";
 import { formatCurrency, getInitials } from "@/lib/utils";
 
-import type { DepositRow } from "./data";
+import type { DepositRow, DepositStatus, VerificationStatus } from "./data";
 
-const locations = [
-  "5559 Wuckert Expressway, West Lenna, NY 53554",
-  "592 Cordie Oval, Lancaster, ID 57534-0209",
-  "295 Woodside Road, Gorczanyberg, LA 29992",
-  "378 Lambert Branch, South Franco, MO 77683",
-  "447 Stanley View, New Gina, CA 21361",
-  "800 Muller Road, West Fletcher, SC 49730-5632",
-  "565 Summer Heights, Dubuque, MS 44690",
-  "53571 Abner Crest, Willys­mouth, TX 55146-3625",
-  "823 Park View, North Mabelleboro, AR 35965",
-  "1368 South Street, East Johnnietown, AR 86049-3338",
-  "5901 Schamberger Prairie, Racine, SC 45518",
-  "27665 Cedar Grove, Lake Amanda­berg, ND 74115-3302",
-  "65389 Murray Prairie, West Clifforside, MS 13932-5376",
-];
-
-function getDepositMeta(deposit: DepositRow) {
-  let seed = 0;
-  for (const char of deposit.email) seed += char.charCodeAt(0);
-
-  return {
-    bets: 1 + (seed % 12),
-    balance: 32.5 + (seed % 65000) + ((seed % 100) / 100),
-    location: locations[seed % locations.length] ?? locations[0],
-    id: `PLR${deposit.email.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase()}`,
-  };
+function PaymentMethodCell({ deposit }: { deposit: DepositRow }) {
+  return (
+    <div className="flex min-w-34 items-center gap-2">
+      <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-xs border bg-background">
+        <img
+          src={deposit.paymentMethodImage}
+          alt=""
+          className="size-full object-contain p-0.5"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
+      </span>
+      <span className="truncate text-sm">{deposit.paymentMethod}</span>
+    </div>
+  );
 }
 
-function DepositCell({ deposit }: { deposit: DepositRow }) {
+function VerificationBadge({ status }: { status: VerificationStatus }) {
+  const config: Record<
+    VerificationStatus,
+    { icon: typeof Clock3; className: string }
+  > = {
+    Pending: {
+      icon: Clock3,
+      className: "border-border bg-muted/40 text-muted-foreground",
+    },
+    Processing: {
+      icon: LoaderCircle,
+      className: "border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    },
+    Approved: {
+      icon: CheckCircle2,
+      className: "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    },
+    Canceled: {
+      icon: XCircle,
+      className: "border-destructive/20 bg-destructive/10 text-destructive",
+    },
+    "Waiting Correction": {
+      icon: PencilLine,
+      className: "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    },
+    "In Process": {
+      icon: LoaderCircle,
+      className: "border-violet-500/20 bg-violet-500/10 text-violet-600 dark:text-violet-400",
+    },
+  };
+
+  const { icon: Icon, className } = config[status];
+
   return (
-    <div className="flex min-w-55 items-center gap-3">
+    <Badge variant="outline" className={cn("h-5 gap-1 rounded-4xl px-1.5 py-0.5 font-medium", className)}>
+      <Icon className={cn("size-3!", status === "Processing" || status === "In Process" ? "animate-spin" : "")} />
+      {status}
+    </Badge>
+  );
+}
+
+function DepositStatusBadge({ status }: { status: DepositStatus }) {
+  const config: Record<DepositStatus, { className: string; icon: typeof Clock3 }> = {
+    Pending: {
+      className: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+      icon: Clock3,
+    },
+    Processing: {
+      className: "border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-400",
+      icon: LoaderCircle,
+    },
+    Completed: {
+      className: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+      icon: CheckCircle2,
+    },
+    Canceled: {
+      className: "border-destructive/20 bg-destructive/10 text-destructive",
+      icon: XCircle,
+    },
+  };
+
+  const { className, icon: Icon } = config[status];
+
+  return (
+    <Badge variant="outline" className={cn("h-5 rounded-sm px-1.5 py-0.5 font-medium", className)}>
+      <Icon className={cn("size-3!", status === "Processing" ? "animate-spin" : "")} />
+      {status}
+    </Badge>
+  );
+}
+
+function ProcessorCell({ processor }: { processor: DepositRow["processedBy"] }) {
+  return (
+    <div className="flex min-w-42 items-center gap-2">
       <Avatar size="sm" className="shrink-0">
+        <AvatarImage src={processor.image} alt="" referrerPolicy="no-referrer" />
         <AvatarFallback className="bg-muted text-[10px] font-medium">
-          {getInitials(deposit.name)}
+          {getInitials(processor.name)}
         </AvatarFallback>
       </Avatar>
-      <div className="min-w-0">
-        <div className="truncate font-medium text-foreground text-sm">{deposit.name}</div>
-      </div>
+      <span className="truncate font-medium text-sm">{processor.name}</span>
     </div>
   );
 }
@@ -65,58 +131,77 @@ function DepositCell({ deposit }: { deposit: DepositRow }) {
 export const depositsColumns: ColumnDef<DataTableFeatures, DepositRow>[] = [
   {
     id: "search",
-    accessorFn: (row) => `${row.name} ${row.email}`,
+    accessorFn: (row) => `${row.name} ${row.email} ${row.id} ${row.paymentMethod}`,
     filterFn: "includesString",
     enableHiding: true,
   },
   {
-    accessorKey: "name",
-    header: "Deposit",
-    cell: ({ row }) => <DepositCell deposit={row.original} />,
-  },
-  {
-    id: "bets",
-    accessorFn: (row) => getDepositMeta(row).bets,
-    header: () => <div className="text-right">Bets</div>,
-    cell: ({ row }) => {
-      const { bets } = getDepositMeta(row.original);
-      return <div className="pr-2 text-right text-sm tabular-nums">{bets}</div>;
-    },
-  },
-  {
-    id: "lastActivity",
-    accessorFn: (row) => parse(row.joinedDate, "dd MMM yyyy, h:mm a", new Date()).getTime(),
-    header: "Last activity",
-    cell: ({ row }) => <div className="whitespace-nowrap text-sm tabular-nums">{row.original.joinedDate}</div>,
-  },
-  {
-    id: "balance",
-    accessorFn: (row) => getDepositMeta(row).balance,
-    header: () => <div className="text-right">Balance</div>,
-    cell: ({ row }) => {
-      const { balance } = getDepositMeta(row.original);
-      return <div className="pr-2 text-right font-medium text-sm tabular-nums">{formatCurrency(balance)}</div>;
-    },
-  },
-  {
-    id: "location",
-    accessorFn: (row) => getDepositMeta(row).location,
-    header: "Location",
-    cell: ({ row }) => (
-      <div className="max-w-95 truncate text-muted-foreground text-sm" title={getDepositMeta(row.original).location}>
-        {getDepositMeta(row.original).location}
-      </div>
-    ),
-  },
-  {
     id: "depositId",
-    accessorFn: (row) => getDepositMeta(row).id,
+    accessorKey: "id",
     header: "Deposit ID",
     cell: ({ row }) => (
-      <div className="font-mono text-foreground text-xs tracking-wide">
-        {getDepositMeta(row.original).id}
+      <div className="font-mono text-foreground text-xs tracking-wide">{row.original.id}</div>
+    ),
+  },
+  {
+    accessorKey: "name",
+    header: "Player",
+    cell: ({ row }) => (
+      <div className="flex min-w-36 items-center gap-2.5">
+        <Avatar size="sm" className="shrink-0">
+          <AvatarFallback className="bg-muted text-[10px] font-medium">
+            {getInitials(row.original.name)}
+          </AvatarFallback>
+        </Avatar>
+        <span className="truncate font-medium text-sm">{row.original.name}</span>
       </div>
     ),
+  },
+  {
+    accessorKey: "paymentMethod",
+    header: "Payment Method",
+    cell: ({ row }) => <PaymentMethodCell deposit={row.original} />,
+  },
+  {
+    id: "date",
+    accessorKey: "date",
+    header: "Date",
+    cell: ({ row }) => <div className="whitespace-nowrap text-sm tabular-nums">{row.original.date}</div>,
+  },
+  {
+    accessorKey: "verificationStatus",
+    header: "Verification Status",
+    cell: ({ row }) => <VerificationBadge status={row.original.verificationStatus} />,
+  },
+  {
+    accessorKey: "amount",
+    header: () => <div className="text-right">Amount</div>,
+    cell: ({ row }) => (
+      <div className="pr-2 text-right font-medium text-sm tabular-nums">{formatCurrency(row.original.amount)}</div>
+    ),
+  },
+  {
+    id: "fees",
+    accessorFn: (row) => row.feeAmount,
+    header: "Fees",
+    cell: ({ row }) => (
+      <div className="whitespace-nowrap text-muted-foreground text-sm tabular-nums">
+        {row.original.feePercent > 0
+          ? `${row.original.feePercent}% - ${formatCurrency(row.original.feeAmount)}`
+          : "Not concerned"}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "depositStatus",
+    header: "Deposit status",
+    cell: ({ row }) => <DepositStatusBadge status={row.original.depositStatus} />,
+  },
+  {
+    id: "processedBy",
+    accessorFn: (row) => row.processedBy.name,
+    header: "Processed By",
+    cell: ({ row }) => <ProcessorCell processor={row.original.processedBy} />,
   },
   {
     id: "actions",
@@ -127,8 +212,8 @@ export const depositsColumns: ColumnDef<DataTableFeatures, DepositRow>[] = [
           <DropdownMenuTrigger
             render={
               <Button
-                aria-label={`Open actions for ${row.original.name}`}
-                className={cn("size-8 rounded-md text-muted-foreground hover:bg-muted/50")}
+                aria-label={`Open actions for ${row.original.id}`}
+                className="size-8 rounded-md text-muted-foreground hover:bg-muted/50"
                 size="icon-sm"
                 variant="ghost"
               />
@@ -139,13 +224,13 @@ export const depositsColumns: ColumnDef<DataTableFeatures, DepositRow>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuGroup>
               <DropdownMenuItem>View deposit</DropdownMenuItem>
-              <DropdownMenuItem>Edit deposit</DropdownMenuItem>
-              <DropdownMenuItem>View transactions</DropdownMenuItem>
-              <DropdownMenuItem>Manage deposit</DropdownMenuItem>
+              <DropdownMenuItem>View player</DropdownMenuItem>
+              <DropdownMenuItem>View payment method</DropdownMenuItem>
+              <DropdownMenuItem>View verification</DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem variant="destructive">Suspend deposit</DropdownMenuItem>
+              <DropdownMenuItem variant="destructive">Cancel deposit</DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
