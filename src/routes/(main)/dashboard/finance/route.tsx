@@ -1,5 +1,5 @@
-import { ArrowRight, BarChart3, CircleDollarSign, Landmark, ReceiptText, WalletCards } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, BarChart3, CircleDollarSign, Landmark, ReceiptText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const operations = [
@@ -19,8 +19,6 @@ const kpis = [
 export const Route = createFileRoute("/(main)/dashboard/finance")({
   component: Page,
 });
-
-import { createFileRoute } from "@tanstack/react-router";
 
 function Page() {
   return (
