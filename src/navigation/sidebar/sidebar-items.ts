@@ -153,16 +153,8 @@ export const sidebarItems: NavGroup[] = [
       {
         id: "settings",
         title: "Settings",
+        url: "/dashboard/settings/general",
         icon: Settings2,
-        subItems: [
-          { id: "settings-general", title: "General", url: "/dashboard/settings/general", icon: Settings2 },
-          { id: "settings-languages", title: "Languages", url: "/dashboard/settings/languages", icon: Languages },
-          { id: "settings-security", title: "Security", url: "/dashboard/settings/security", icon: LockKeyhole },
-          { id: "settings-notifications", title: "Notifications", url: "/dashboard/settings/notifications", icon: Bell },
-          { id: "settings-audit-log", title: "Audit log", url: "/dashboard/settings/audit-log", icon: FileClock },
-          { id: "settings-billing", title: "Billing", url: "/dashboard/settings/billing", icon: CreditCard },
-          { id: "settings-features", title: "Features", url: "/dashboard/settings/features", icon: SlidersHorizontal },
-        ],
       },
       {
         id: "integrations",
