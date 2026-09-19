@@ -554,7 +554,7 @@ export interface FileRoutesByTo {
   '/dashboard/users': typeof mainDashboardUsersRouteRoute
   '/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
   '/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/dashboard/players/$playerId': typeof mainDashboardPlayersProfileRouteRoute
@@ -569,7 +569,7 @@ export interface FileRoutesByTo {
   '/dashboard/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/dashboard/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1329,7 +1329,7 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
@@ -1545,7 +1545,7 @@ declare module '@tanstack/react-start' {
   '/dashboard/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/dashboard/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1575,7 +1575,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/users': typeof mainDashboardUsersRouteRoute
   '/(main)/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/(main)/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/(main)/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/(main)/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
   '/(main)/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/$': typeof mainDashboardSplatRoute
@@ -1618,7 +1618,7 @@ export interface FileRouteTypes {
     | '/dashboard/users'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
-    | '/dashboard/deposits/transaction-detail'
+    | '/dashboard/deposits/depoist-details'
         | '/dashboard/withdrawls'
     | '/dashboard/deposits'
     | '/dashboard/withdrawls'
@@ -1919,11 +1919,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -2002,12 +2002,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -2155,7 +2155,7 @@ export interface FileRouteTypes {
     | '/dashboard/users'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
-    | '/dashboard/deposits/transaction-detail'
+    | '/dashboard/deposits/depoist-details'
         | '/dashboard/withdrawls'
     | '/dashboard/deposits'
     | '/dashboard/withdrawls'
@@ -2456,11 +2456,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -2539,12 +2539,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -2663,7 +2663,7 @@ declare module '@tanstack/react-start' {
   '/dashboard/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/dashboard/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -2693,7 +2693,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/users': typeof mainDashboardUsersRouteRoute
   '/(main)/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/(main)/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/(main)/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/(main)/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
   '/(main)/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/$': typeof mainDashboardSplatRoute
@@ -2736,7 +2736,7 @@ export interface FileRouteTypes {
     | '/dashboard/users'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
-    | '/dashboard/deposits/transaction-detail'
+    | '/dashboard/deposits/depoist-details'
         | '/dashboard/withdrawls'
     | '/dashboard/deposits'
     | '/dashboard/withdrawls'
@@ -3037,11 +3037,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -3120,12 +3120,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -3493,11 +3493,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -3576,12 +3576,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -3700,7 +3700,7 @@ declare module '@tanstack/react-start' {
   '/dashboard/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/dashboard/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -3730,7 +3730,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/users': typeof mainDashboardUsersRouteRoute
   '/(main)/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/(main)/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/(main)/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/(main)/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
   '/(main)/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/$': typeof mainDashboardSplatRoute
@@ -3773,7 +3773,7 @@ export interface FileRouteTypes {
     | '/dashboard/users'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
-    | '/dashboard/deposits/transaction-detail'
+    | '/dashboard/deposits/depoist-details'
         | '/dashboard/withdrawls'
     | '/dashboard/deposits'
     | '/dashboard/withdrawls'
@@ -4074,11 +4074,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -4157,12 +4157,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -4310,7 +4310,7 @@ export interface FileRouteTypes {
     | '/dashboard/users'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
-    | '/dashboard/deposits/transaction-detail'
+    | '/dashboard/deposits/depoist-details'
         | '/dashboard/withdrawls'
     | '/dashboard/deposits'
     | '/dashboard/withdrawls'
@@ -4611,11 +4611,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -4694,12 +4694,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -4818,7 +4818,7 @@ declare module '@tanstack/react-start' {
   '/dashboard/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/dashboard/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -4848,7 +4848,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/users': typeof mainDashboardUsersRouteRoute
   '/(main)/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/(main)/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/(main)/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/(main)/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
   '/(main)/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/$': typeof mainDashboardSplatRoute
@@ -4891,7 +4891,7 @@ export interface FileRouteTypes {
     | '/dashboard/users'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
-    | '/dashboard/deposits/transaction-detail'
+    | '/dashboard/deposits/depoist-details'
         | '/dashboard/withdrawls'
     | '/dashboard/deposits'
     | '/dashboard/withdrawls'
@@ -5192,11 +5192,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -5275,12 +5275,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -5609,11 +5609,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -5692,12 +5692,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -5816,7 +5816,7 @@ declare module '@tanstack/react-start' {
   '/dashboard/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/dashboard/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -5846,7 +5846,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/users': typeof mainDashboardUsersRouteRoute
   '/(main)/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/(main)/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/(main)/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/(main)/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
   '/(main)/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/$': typeof mainDashboardSplatRoute
@@ -5889,7 +5889,7 @@ export interface FileRouteTypes {
     | '/dashboard/users'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
-    | '/dashboard/deposits/transaction-detail'
+    | '/dashboard/deposits/depoist-details'
         | '/dashboard/withdrawls'
     | '/dashboard/deposits'
     | '/dashboard/withdrawls'
@@ -6190,11 +6190,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -6273,12 +6273,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -6426,7 +6426,7 @@ export interface FileRouteTypes {
     | '/dashboard/users'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
-    | '/dashboard/deposits/transaction-detail'
+    | '/dashboard/deposits/depoist-details'
         | '/dashboard/withdrawls'
     | '/dashboard/deposits'
     | '/dashboard/withdrawls'
@@ -6727,11 +6727,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -6810,12 +6810,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -6934,7 +6934,7 @@ declare module '@tanstack/react-start' {
   '/dashboard/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/dashboard/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -6964,7 +6964,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/users': typeof mainDashboardUsersRouteRoute
   '/(main)/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/(main)/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/(main)/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/(main)/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
   '/(main)/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/$': typeof mainDashboardSplatRoute
@@ -7007,7 +7007,7 @@ export interface FileRouteTypes {
     | '/dashboard/users'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
-    | '/dashboard/deposits/transaction-detail'
+    | '/dashboard/deposits/depoist-details'
         | '/dashboard/withdrawls'
     | '/dashboard/deposits'
     | '/dashboard/withdrawls'
@@ -7308,11 +7308,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -7391,12 +7391,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -7764,11 +7764,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -7847,12 +7847,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -7971,7 +7971,7 @@ declare module '@tanstack/react-start' {
   '/dashboard/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/dashboard/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -8001,7 +8001,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/users': typeof mainDashboardUsersRouteRoute
   '/(main)/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/(main)/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/(main)/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/(main)/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
   '/(main)/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/$': typeof mainDashboardSplatRoute
@@ -8044,7 +8044,7 @@ export interface FileRouteTypes {
     | '/dashboard/users'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
-    | '/dashboard/deposits/transaction-detail'
+    | '/dashboard/deposits/depoist-details'
         | '/dashboard/withdrawls'
     | '/dashboard/deposits'
     | '/dashboard/withdrawls'
@@ -8345,11 +8345,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -8428,12 +8428,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -8581,7 +8581,7 @@ export interface FileRouteTypes {
     | '/dashboard/users'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
-    | '/dashboard/deposits/transaction-detail'
+    | '/dashboard/deposits/depoist-details'
         | '/dashboard/withdrawls'
     | '/dashboard/deposits'
     | '/dashboard/withdrawls'
@@ -8882,11 +8882,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -8965,12 +8965,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
@@ -9089,7 +9089,7 @@ declare module '@tanstack/react-start' {
   '/dashboard/default-v1': typeof mainDashboardlegacyDefaultV1RouteRoute
   '/dashboard/finance-v1': typeof mainDashboardlegacyFinanceV1RouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -9119,7 +9119,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/users': typeof mainDashboardUsersRouteRoute
   '/(main)/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/(main)/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
-  '/(main)/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/(main)/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
   '/(main)/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/$': typeof mainDashboardSplatRoute
@@ -9162,7 +9162,7 @@ export interface FileRouteTypes {
     | '/dashboard/users'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
-    | '/dashboard/deposits/transaction-detail'
+    | '/dashboard/deposits/depoist-details'
         | '/dashboard/withdrawls'
     | '/dashboard/deposits'
     | '/dashboard/withdrawls'
@@ -9463,11 +9463,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDepositsIndexRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
-    '/(main)/dashboard/deposits/transaction-detail': {
-      id: '/(main)/dashboard/deposits/transaction-detail'
-      path: '/transaction-detail'
-      fullPath: '/dashboard/deposits/transaction-detail'
-      preLoaderRoute: typeof mainDashboardDepositsTransactionDetailRouteRouteImport
+    '/(main)/dashboard/deposits/depoist-details': {
+      id: '/(main)/dashboard/deposits/depoist-details'
+      path: '/depoist-details'
+      fullPath: '/dashboard/deposits/depoist-details'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
     }
 
@@ -9546,12 +9546,12 @@ declare module '@tanstack/react-router' {
 
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsTransactionDetailRouteRoute: typeof mainDashboardDepositsTransactionDetailRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsTransactionDetailRouteRoute: mainDashboardDepositsTransactionDetailRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
