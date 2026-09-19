@@ -30,6 +30,7 @@ import {
   SquareArrowUpRight,
   UserRound,
   Users,
+  WalletCards,
 } from "lucide-react";
 
 import type { FileRoutesByTo } from "@/routeTree.gen";
@@ -161,6 +162,12 @@ export const sidebarItems: NavGroup[] = [
         title: "Portal",
         url: "/dashboard/portal",
         icon: PanelsTopLeft,
+      },
+      {
+        id: "accounts",
+        title: "Accounts",
+        url: "/dashboard/accounts",
+        icon: WalletCards,
       },
       {
         id: "dashboard-pages",
