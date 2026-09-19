@@ -171,12 +171,6 @@ export const sidebarItems: NavGroup[] = [
         icon: PlugZap,
       },
       {
-        id: "analytics",
-        title: "Analytics",
-        url: "/dashboard/analytics",
-        icon: Gauge,
-      },
-      {
         id: "portal",
         title: "Portal",
         url: "/dashboard/portal",
