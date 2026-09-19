@@ -80,7 +80,6 @@ function PlayerActions({ player, meta, status, onSuspend, onDelete }: { player: 
 
 export const createPlayersColumns = (actions: PlayerColumnActions): ColumnDef<DataTableFeatures, PlayerRow>[] => [
   { id: "search", accessorFn: (row) => row.name + " " + row.email + " " + getPlayerMeta(row).identifier + " " + getPlayerMeta(row).playerId, filterFn: "includesString", enableHiding: true },
-  { id: "player", accessorFn: (row) => row.name, header: "Player", cell: ({ row }) => <PlayerCell player={row.original} /> },
   { id: "playerId", accessorFn: (row) => getPlayerMeta(row).playerId, header: "Player ID", cell: ({ row }) => <span className="font-mono text-xs tracking-wide text-foreground">{getPlayerMeta(row.original).playerId}</span> },
   { id: "identifier", accessorFn: (row) => getPlayerMeta(row).identifier, header: "Identifier", cell: ({ row }) => <span className="max-w-44 truncate text-sm">{getPlayerMeta(row.original).identifier}</span> },
   { id: "joined", accessorFn: (row) => new Date(row.joinedDate).getTime(), header: "Joined", cell: ({ row }) => <span className="whitespace-nowrap text-sm tabular-nums">{getPlayerMeta(row.original).joined}</span> },
