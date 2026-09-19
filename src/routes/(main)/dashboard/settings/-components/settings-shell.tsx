@@ -1,5 +1,16 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Bell, CreditCard, FileClock, Languages, LockKeyhole, Settings2, SlidersHorizontal } from "lucide-react";
+import {
+  ArrowLeft,
+  Bell,
+  CreditCard,
+  FileClock,
+  Globe2,
+  Languages,
+  LockKeyhole,
+  Settings2,
+  SlidersHorizontal,
+  UsersRound,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
