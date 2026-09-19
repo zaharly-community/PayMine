@@ -13,6 +13,8 @@ const iconMap = {
   "audit-log": FileClock,
   billing: CreditCard,
   features: SlidersHorizontal,
+  "custom-domain": Globe2,
+  "team-access": UsersRound,
 } as const;
 
 export function SettingsShell({
