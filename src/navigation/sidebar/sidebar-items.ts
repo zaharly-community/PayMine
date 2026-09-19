@@ -3,7 +3,7 @@ import {
   ArrowUpFromLine,
   Banknote,
   CircleDollarSign,
-
+  Landmark,
   Calendar,
   ChartBar,
   CheckSquare,
