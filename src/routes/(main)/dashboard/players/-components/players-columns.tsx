@@ -4,14 +4,13 @@ import { Ban, Eye, Flag, Trash2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "cn";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { DataTableFeatures } from "@/lib/data-table-features";
-import { formatCurrency, getInitials } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import type { PlayerRow } from "./data";
 
 const locations = ["Tunis, Tunisia", "Sousse, Tunisia", "Sfax, Tunisia", "Monastir, Tunisia", "Bizerte, Tunisia", "Nabeul, Tunisia"];
@@ -38,11 +37,6 @@ function ScoreBars({ score }: { score: number }) {
   const filled = Math.min(10, Math.max(0, Math.round(score)));
   const tone = scoreTone(score);
   return <div aria-label={"Score " + score.toFixed(1) + " out of 10"} className="flex items-center gap-[3px]" role="img" title={"Score " + score.toFixed(1)}>{Array.from({ length: 10 }, (_, index) => <span key={index} className={cn("h-4 w-1 rounded-full", index < filled ? tone : "bg-muted-foreground/20")} />)}</div>;
-}
-
-function PlayerCell({ player }: { player: PlayerRow }) {
-  const meta = getPlayerMeta(player);
-  return <div className="flex min-w-48 items-center gap-3"><Avatar size="sm" className="shrink-0"><AvatarFallback className="bg-muted text-[10px] font-medium">{getInitials(player.name)}</AvatarFallback></Avatar><div className="min-w-0"><div className="truncate font-medium text-foreground text-sm">{player.name}</div><div className="truncate text-xs text-muted-foreground">{meta.location}</div></div></div>;
 }
 
 function StatusBadge({ status }: { status: PlayerStatus }) {
