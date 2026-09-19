@@ -47,6 +47,9 @@ import { Route as mainDashboardSettingsNotificationsRouteRouteImport } from './r
 import { Route as mainDashboardSettingsAuditLogRouteRouteImport } from './routes/(main)/dashboard/settings/audit-log/route'
 import { Route as mainDashboardSettingsBillingRouteRouteImport } from './routes/(main)/dashboard/settings/billing/route'
 import { Route as mainDashboardSettingsFeaturesRouteRouteImport } from './routes/(main)/dashboard/settings/features/route'
+import { Route as mainDashboardSettingsCustomDomainRouteRouteImport } from './routes/(main)/dashboard/settings/custom-domain/route'
+import { Route as mainDashboardSettingsTeamAccessRouteRouteImport } from './routes/(main)/dashboard/settings/team-access/route'
+
 import { Route as mainDashboardIntegrationsRouteRouteImport } from './routes/(main)/dashboard/integrations/route'
 import { Route as mainDashboardPortalRouteRouteImport } from './routes/(main)/dashboard/portal/route'
 import { Route as mainDashboardInfrastructureRouteRouteImport } from './routes/(main)/dashboard/infrastructure/route'
@@ -273,6 +276,17 @@ const mainDashboardSettingsFeaturesRouteRoute = mainDashboardSettingsFeaturesRou
   path: '/features',
   getParentRoute: () => mainDashboardSettingsRouteRoute,
 } as any)
+const mainDashboardSettingsCustomDomainRouteRoute = mainDashboardSettingsCustomDomainRouteRouteImport.update({
+  id: '/custom-domain',
+  path: '/custom-domain',
+  getParentRoute: () => mainDashboardSettingsRouteRoute,
+} as any)
+const mainDashboardSettingsTeamAccessRouteRoute = mainDashboardSettingsTeamAccessRouteRouteImport.update({
+  id: '/team-access',
+  path: '/team-access',
+  getParentRoute: () => mainDashboardSettingsRouteRoute,
+} as any)
+
 const mainDashboardIntegrationsRouteRoute = mainDashboardIntegrationsRouteRouteImport.update({
   id: '/integrations',
   path: '/integrations',
@@ -450,6 +464,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/audit-log': typeof mainDashboardSettingsAuditLogRouteRoute
   '/dashboard/settings/billing': typeof mainDashboardSettingsBillingRouteRoute
   '/dashboard/settings/features': typeof mainDashboardSettingsFeaturesRouteRoute
+  '/dashboard/settings/custom-domain': typeof mainDashboardSettingsCustomDomainRouteRoute
+  '/dashboard/settings/team-access': typeof mainDashboardSettingsTeamAccessRouteRoute
   '/dashboard/integrations': typeof mainDashboardIntegrationsRouteRoute
   '/dashboard/portal': typeof mainDashboardPortalRouteRoute
   '/dashboard/settings': typeof mainDashboardSettingsRouteRoute
@@ -583,6 +599,8 @@ export interface FileRoutesById {
   '/(main)/dashboard/settings/audit-log': typeof mainDashboardSettingsAuditLogRouteRoute
   '/(main)/dashboard/settings/billing': typeof mainDashboardSettingsBillingRouteRoute
   '/(main)/dashboard/settings/features': typeof mainDashboardSettingsFeaturesRouteRoute
+  '/(main)/dashboard/settings/custom-domain': typeof mainDashboardSettingsCustomDomainRouteRoute
+  '/(main)/dashboard/settings/team-access': typeof mainDashboardSettingsTeamAccessRouteRoute
   '/(main)/dashboard/integrations': typeof mainDashboardIntegrationsRouteRoute
   '/(main)/dashboard/portal': typeof mainDashboardPortalRouteRoute
   '/(main)/dashboard/profile': typeof mainDashboardProfileRouteRoute
@@ -650,6 +668,10 @@ export interface FileRouteTypes {
     | '/dashboard/settings/audit-log'
     | '/dashboard/settings/billing'
     | '/dashboard/settings/features'
+    | '/dashboard/settings/custom-domain'
+    | '/dashboard/settings/team-access'
+    | '/dashboard/settings/custom-domain'
+    | '/dashboard/settings/team-access'
     | '/dashboard/integrations'
     | '/dashboard/portal'
     | '/dashboard/settings'
@@ -778,6 +800,8 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/settings/audit-log'
     | '/(main)/dashboard/settings/billing'
     | '/(main)/dashboard/settings/features'
+    | '/(main)/dashboard/settings/custom-domain'
+    | '/(main)/dashboard/settings/team-access'
     | '/(main)/dashboard/integrations'
     | '/(main)/dashboard/portal'
     | '/(main)/dashboard/profile'
@@ -1066,6 +1090,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardSettingsFeaturesRouteRouteImport
       parentRoute: typeof mainDashboardSettingsRouteRoute
     }
+    '/(main)/dashboard/settings/custom-domain': {
+      id: '/(main)/dashboard/settings/custom-domain'
+      path: '/custom-domain'
+      fullPath: '/dashboard/settings/custom-domain'
+      preLoaderRoute: typeof mainDashboardSettingsCustomDomainRouteRouteImport
+      parentRoute: typeof mainDashboardSettingsRouteRoute
+    }
+    '/(main)/dashboard/settings/team-access': {
+      id: '/(main)/dashboard/settings/team-access'
+      path: '/team-access'
+      fullPath: '/dashboard/settings/team-access'
+      preLoaderRoute: typeof mainDashboardSettingsTeamAccessRouteRouteImport
+      parentRoute: typeof mainDashboardSettingsRouteRoute
+    }
     '/(main)/dashboard/integrations': {
       id: '/(main)/dashboard/integrations'
       path: '/integrations'
@@ -1332,6 +1370,8 @@ interface mainDashboardSettingsRouteRouteChildren {
   mainDashboardSettingsAuditLogRouteRoute: typeof mainDashboardSettingsAuditLogRouteRoute
   mainDashboardSettingsBillingRouteRoute: typeof mainDashboardSettingsBillingRouteRoute
   mainDashboardSettingsFeaturesRouteRoute: typeof mainDashboardSettingsFeaturesRouteRoute
+  mainDashboardSettingsCustomDomainRouteRoute: typeof mainDashboardSettingsCustomDomainRouteRoute
+  mainDashboardSettingsTeamAccessRouteRoute: typeof mainDashboardSettingsTeamAccessRouteRoute
 }
 
 const mainDashboardSettingsRouteRouteChildren: mainDashboardSettingsRouteRouteChildren = {
@@ -1342,6 +1382,8 @@ const mainDashboardSettingsRouteRouteChildren: mainDashboardSettingsRouteRouteCh
   mainDashboardSettingsAuditLogRouteRoute: mainDashboardSettingsAuditLogRouteRoute,
   mainDashboardSettingsBillingRouteRoute: mainDashboardSettingsBillingRouteRoute,
   mainDashboardSettingsFeaturesRouteRoute: mainDashboardSettingsFeaturesRouteRoute,
+  mainDashboardSettingsCustomDomainRouteRoute: mainDashboardSettingsCustomDomainRouteRoute,
+  mainDashboardSettingsTeamAccessRouteRoute: mainDashboardSettingsTeamAccessRouteRoute,
 }
 
 const mainDashboardSettingsRouteRouteWithChildren =
@@ -9599,4 +9641,6 @@ declare module '@tanstack/react-start' {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
   }
-}
+}  '/dashboard/settings/custom-domain': typeof mainDashboardSettingsCustomDomainRouteRoute
+  '/dashboard/settings/team-access': typeof mainDashboardSettingsTeamAccessRouteRoute
+
