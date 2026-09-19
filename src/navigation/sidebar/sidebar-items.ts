@@ -118,18 +118,6 @@ export const sidebarItems: NavGroup[] = [
         icon: ChartBar,
       },
       {
-        id: "finance",
-        title: "Finance",
-        icon: Banknote,
-        subItems: [
-          { id: "finance-overview", title: "Overview", url: "/dashboard/finance" },
-          { id: "finance-transactions", title: "Transactions", url: "/dashboard/finance/transactions", icon: ReceiptText },
-          { id: "finance-treasury", title: "Treasury", url: "/dashboard/finance/treasury", icon: Landmark },
-          { id: "finance-settlements", title: "Settlements", url: "/dashboard/finance/settlements", icon: CircleDollarSign },
-          { id: "finance-reports", title: "Reports", url: "/dashboard/finance/reports", icon: ChartBar },
-        ],
-      },
-      {
         id: "analytics",
         title: "Analytics",
         url: "/dashboard/analytics",
@@ -183,6 +171,36 @@ export const sidebarItems: NavGroup[] = [
     id: 2,
     label: "Pages",
     items: [
+      {
+        id: "finance",
+        title: "Finance",
+        url: "/dashboard/finance",
+        icon: Banknote,
+      },
+      {
+        id: "finance-transactions",
+        title: "Transactions",
+        url: "/dashboard/finance/transactions",
+        icon: ReceiptText,
+      },
+      {
+        id: "finance-treasury",
+        title: "Treasury",
+        url: "/dashboard/finance/treasury",
+        icon: Landmark,
+      },
+      {
+        id: "finance-settlements",
+        title: "Settlements",
+        url: "/dashboard/finance/settlements",
+        icon: CircleDollarSign,
+      },
+      {
+        id: "finance-reports",
+        title: "Reports",
+        url: "/dashboard/finance/reports",
+        icon: ChartBar,
+      },
       {
         id: "email",
         title: "Email",
