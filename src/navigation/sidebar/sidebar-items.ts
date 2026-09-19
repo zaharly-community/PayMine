@@ -2,6 +2,8 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   Banknote,
+  CircleDollarSign,
+
   Calendar,
   ChartBar,
   CheckSquare,
@@ -118,8 +120,14 @@ export const sidebarItems: NavGroup[] = [
       {
         id: "finance",
         title: "Finance",
-        url: "/dashboard/finance",
         icon: Banknote,
+        subItems: [
+          { id: "finance-overview", title: "Overview", url: "/dashboard/finance" },
+          { id: "finance-transactions", title: "Transactions", url: "/dashboard/finance/transactions", icon: ReceiptText },
+          { id: "finance-treasury", title: "Treasury", url: "/dashboard/finance/treasury", icon: Landmark },
+          { id: "finance-settlements", title: "Settlements", url: "/dashboard/finance/settlements", icon: CircleDollarSign },
+          { id: "finance-reports", title: "Reports", url: "/dashboard/finance/reports", icon: ChartBar },
+        ],
       },
       {
         id: "analytics",
