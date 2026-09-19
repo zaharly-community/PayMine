@@ -36,6 +36,16 @@ import { Route as mainDashboardFinanceReportsDistributorPerformanceRouteRouteImp
 import { Route as mainDashboardFinanceReportsFeesCompensationRouteRouteImport } from './routes/(main)/dashboard/finance/reports/fees-compensation/route'
 import { Route as mainDashboardFinanceReportsSettlementReportRouteRouteImport } from './routes/(main)/dashboard/finance/reports/settlement-report/route'
 import { Route as mainDashboardFinanceReportsReconciliationReportRouteRouteImport } from './routes/(main)/dashboard/finance/reports/reconciliation-report/route'
+import { Route as mainDashboardSettingsRouteRouteImport } from './routes/(main)/dashboard/settings/route'
+import { Route as mainDashboardSettingsGeneralRouteRouteImport } from './routes/(main)/dashboard/settings/general/route'
+import { Route as mainDashboardSettingsLanguagesRouteRouteImport } from './routes/(main)/dashboard/settings/languages/route'
+import { Route as mainDashboardSettingsSecurityRouteRouteImport } from './routes/(main)/dashboard/settings/security/route'
+import { Route as mainDashboardSettingsNotificationsRouteRouteImport } from './routes/(main)/dashboard/settings/notifications/route'
+import { Route as mainDashboardSettingsAuditLogRouteRouteImport } from './routes/(main)/dashboard/settings/audit-log/route'
+import { Route as mainDashboardSettingsBillingRouteRouteImport } from './routes/(main)/dashboard/settings/billing/route'
+import { Route as mainDashboardSettingsFeaturesRouteRouteImport } from './routes/(main)/dashboard/settings/features/route'
+import { Route as mainDashboardIntegrationsRouteRouteImport } from './routes/(main)/dashboard/integrations/route'
+import { Route as mainDashboardPortalRouteRouteImport } from './routes/(main)/dashboard/portal/route'
 import { Route as mainDashboardInfrastructureRouteRouteImport } from './routes/(main)/dashboard/infrastructure/route'
 import { Route as mainDashboardInvoiceRouteRouteImport } from './routes/(main)/dashboard/invoice/route'
 import { Route as mainDashboardKanbanRouteRouteImport } from './routes/(main)/dashboard/kanban/route'
@@ -203,6 +213,57 @@ const mainDashboardFinanceReportsReconciliationReportRouteRoute = mainDashboardF
   getParentRoute: () => mainDashboardFinanceReportsRouteRoute,
 } as any)
 
+const mainDashboardSettingsRouteRoute = mainDashboardSettingsRouteRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => mainDashboardRouteRoute,
+} as any)
+const mainDashboardSettingsGeneralRouteRoute = mainDashboardSettingsGeneralRouteRouteImport.update({
+  id: '/general',
+  path: '/general',
+  getParentRoute: () => mainDashboardSettingsRouteRoute,
+} as any)
+const mainDashboardSettingsLanguagesRouteRoute = mainDashboardSettingsLanguagesRouteRouteImport.update({
+  id: '/languages',
+  path: '/languages',
+  getParentRoute: () => mainDashboardSettingsRouteRoute,
+} as any)
+const mainDashboardSettingsSecurityRouteRoute = mainDashboardSettingsSecurityRouteRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => mainDashboardSettingsRouteRoute,
+} as any)
+const mainDashboardSettingsNotificationsRouteRoute = mainDashboardSettingsNotificationsRouteRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => mainDashboardSettingsRouteRoute,
+} as any)
+const mainDashboardSettingsAuditLogRouteRoute = mainDashboardSettingsAuditLogRouteRouteImport.update({
+  id: '/audit-log',
+  path: '/audit-log',
+  getParentRoute: () => mainDashboardSettingsRouteRoute,
+} as any)
+const mainDashboardSettingsBillingRouteRoute = mainDashboardSettingsBillingRouteRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => mainDashboardSettingsRouteRoute,
+} as any)
+const mainDashboardSettingsFeaturesRouteRoute = mainDashboardSettingsFeaturesRouteRouteImport.update({
+  id: '/features',
+  path: '/features',
+  getParentRoute: () => mainDashboardSettingsRouteRoute,
+} as any)
+const mainDashboardIntegrationsRouteRoute = mainDashboardIntegrationsRouteRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => mainDashboardRouteRoute,
+} as any)
+const mainDashboardPortalRouteRoute = mainDashboardPortalRouteRouteImport.update({
+  id: '/portal',
+  path: '/portal',
+  getParentRoute: () => mainDashboardRouteRoute,
+} as any)
+
 const mainDashboardInfrastructureRouteRoute =
   mainDashboardInfrastructureRouteRouteImport.update({
     id: '/infrastructure',
@@ -355,6 +416,26 @@ export interface FileRoutesByFullPath {
   '/dashboard/finance/reports/fees-compensation': typeof mainDashboardFinanceReportsFeesCompensationRouteRoute
   '/dashboard/finance/reports/settlement-report': typeof mainDashboardFinanceReportsSettlementReportRouteRoute
   '/dashboard/finance/reports/reconciliation-report': typeof mainDashboardFinanceReportsReconciliationReportRouteRoute
+  '/dashboard/settings': typeof mainDashboardSettingsRouteRoute
+  '/dashboard/settings/general': typeof mainDashboardSettingsGeneralRouteRoute
+  '/dashboard/settings/languages': typeof mainDashboardSettingsLanguagesRouteRoute
+  '/dashboard/settings/security': typeof mainDashboardSettingsSecurityRouteRoute
+  '/dashboard/settings/notifications': typeof mainDashboardSettingsNotificationsRouteRoute
+  '/dashboard/settings/audit-log': typeof mainDashboardSettingsAuditLogRouteRoute
+  '/dashboard/settings/billing': typeof mainDashboardSettingsBillingRouteRoute
+  '/dashboard/settings/features': typeof mainDashboardSettingsFeaturesRouteRoute
+  '/dashboard/integrations': typeof mainDashboardIntegrationsRouteRoute
+  '/dashboard/portal': typeof mainDashboardPortalRouteRoute
+  '/dashboard/settings': typeof mainDashboardSettingsRouteRoute
+  '/dashboard/settings/general': typeof mainDashboardSettingsGeneralRouteRoute
+  '/dashboard/settings/languages': typeof mainDashboardSettingsLanguagesRouteRoute
+  '/dashboard/settings/security': typeof mainDashboardSettingsSecurityRouteRoute
+  '/dashboard/settings/notifications': typeof mainDashboardSettingsNotificationsRouteRoute
+  '/dashboard/settings/audit-log': typeof mainDashboardSettingsAuditLogRouteRoute
+  '/dashboard/settings/billing': typeof mainDashboardSettingsBillingRouteRoute
+  '/dashboard/settings/features': typeof mainDashboardSettingsFeaturesRouteRoute
+  '/dashboard/integrations': typeof mainDashboardIntegrationsRouteRoute
+  '/dashboard/portal': typeof mainDashboardPortalRouteRoute
   '/dashboard/infrastructure': typeof mainDashboardInfrastructureRouteRoute
   '/dashboard/invoice': typeof mainDashboardInvoiceRouteRoute
   '/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
@@ -460,6 +541,16 @@ export interface FileRoutesById {
   '/(main)/dashboard/finance/reports/fees-compensation': typeof mainDashboardFinanceReportsFeesCompensationRouteRoute
   '/(main)/dashboard/finance/reports/settlement-report': typeof mainDashboardFinanceReportsSettlementReportRouteRoute
   '/(main)/dashboard/finance/reports/reconciliation-report': typeof mainDashboardFinanceReportsReconciliationReportRouteRoute
+  '/(main)/dashboard/settings': typeof mainDashboardSettingsRouteRouteWithChildren
+  '/(main)/dashboard/settings/general': typeof mainDashboardSettingsGeneralRouteRoute
+  '/(main)/dashboard/settings/languages': typeof mainDashboardSettingsLanguagesRouteRoute
+  '/(main)/dashboard/settings/security': typeof mainDashboardSettingsSecurityRouteRoute
+  '/(main)/dashboard/settings/notifications': typeof mainDashboardSettingsNotificationsRouteRoute
+  '/(main)/dashboard/settings/audit-log': typeof mainDashboardSettingsAuditLogRouteRoute
+  '/(main)/dashboard/settings/billing': typeof mainDashboardSettingsBillingRouteRoute
+  '/(main)/dashboard/settings/features': typeof mainDashboardSettingsFeaturesRouteRoute
+  '/(main)/dashboard/integrations': typeof mainDashboardIntegrationsRouteRoute
+  '/(main)/dashboard/portal': typeof mainDashboardPortalRouteRoute
   '/(main)/dashboard/infrastructure': typeof mainDashboardInfrastructureRouteRoute
   '/(main)/dashboard/invoice': typeof mainDashboardInvoiceRouteRoute
   '/(main)/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
@@ -513,6 +604,26 @@ export interface FileRouteTypes {
     | '/dashboard/finance/reports/fees-compensation'
     | '/dashboard/finance/reports/settlement-report'
     | '/dashboard/finance/reports/reconciliation-report'
+    | '/dashboard/settings'
+    | '/dashboard/settings/general'
+    | '/dashboard/settings/languages'
+    | '/dashboard/settings/security'
+    | '/dashboard/settings/notifications'
+    | '/dashboard/settings/audit-log'
+    | '/dashboard/settings/billing'
+    | '/dashboard/settings/features'
+    | '/dashboard/integrations'
+    | '/dashboard/portal'
+    | '/dashboard/settings'
+    | '/dashboard/settings/general'
+    | '/dashboard/settings/languages'
+    | '/dashboard/settings/security'
+    | '/dashboard/settings/notifications'
+    | '/dashboard/settings/audit-log'
+    | '/dashboard/settings/billing'
+    | '/dashboard/settings/features'
+    | '/dashboard/integrations'
+    | '/dashboard/portal'
     | '/dashboard/infrastructure'
     | '/dashboard/invoice'
     | '/dashboard/kanban'
@@ -613,6 +724,16 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/finance/reports/fees-compensation'
     | '/(main)/dashboard/finance/reports/settlement-report'
     | '/(main)/dashboard/finance/reports/reconciliation-report'
+    | '/(main)/dashboard/settings'
+    | '/(main)/dashboard/settings/general'
+    | '/(main)/dashboard/settings/languages'
+    | '/(main)/dashboard/settings/security'
+    | '/(main)/dashboard/settings/notifications'
+    | '/(main)/dashboard/settings/audit-log'
+    | '/(main)/dashboard/settings/billing'
+    | '/(main)/dashboard/settings/features'
+    | '/(main)/dashboard/integrations'
+    | '/(main)/dashboard/portal'
     | '/(main)/dashboard/infrastructure'
     | '/(main)/dashboard/invoice'
     | '/(main)/dashboard/kanban'
@@ -839,6 +960,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardFinanceReportsReconciliationReportRouteRouteImport
       parentRoute: typeof mainDashboardFinanceReportsRouteRoute
     }
+    '/(main)/dashboard/settings': {
+      id: '/(main)/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof mainDashboardSettingsRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
+    '/(main)/dashboard/settings/general': {
+      id: '/(main)/dashboard/settings/general'
+      path: '/general'
+      fullPath: '/dashboard/settings/general'
+      preLoaderRoute: typeof mainDashboardSettingsGeneralRouteRouteImport
+      parentRoute: typeof mainDashboardSettingsRouteRoute
+    }
+    '/(main)/dashboard/settings/languages': {
+      id: '/(main)/dashboard/settings/languages'
+      path: '/languages'
+      fullPath: '/dashboard/settings/languages'
+      preLoaderRoute: typeof mainDashboardSettingsLanguagesRouteRouteImport
+      parentRoute: typeof mainDashboardSettingsRouteRoute
+    }
+    '/(main)/dashboard/settings/security': {
+      id: '/(main)/dashboard/settings/security'
+      path: '/security'
+      fullPath: '/dashboard/settings/security'
+      preLoaderRoute: typeof mainDashboardSettingsSecurityRouteRouteImport
+      parentRoute: typeof mainDashboardSettingsRouteRoute
+    }
+    '/(main)/dashboard/settings/notifications': {
+      id: '/(main)/dashboard/settings/notifications'
+      path: '/notifications'
+      fullPath: '/dashboard/settings/notifications'
+      preLoaderRoute: typeof mainDashboardSettingsNotificationsRouteRouteImport
+      parentRoute: typeof mainDashboardSettingsRouteRoute
+    }
+    '/(main)/dashboard/settings/audit-log': {
+      id: '/(main)/dashboard/settings/audit-log'
+      path: '/audit-log'
+      fullPath: '/dashboard/settings/audit-log'
+      preLoaderRoute: typeof mainDashboardSettingsAuditLogRouteRouteImport
+      parentRoute: typeof mainDashboardSettingsRouteRoute
+    }
+    '/(main)/dashboard/settings/billing': {
+      id: '/(main)/dashboard/settings/billing'
+      path: '/billing'
+      fullPath: '/dashboard/settings/billing'
+      preLoaderRoute: typeof mainDashboardSettingsBillingRouteRouteImport
+      parentRoute: typeof mainDashboardSettingsRouteRoute
+    }
+    '/(main)/dashboard/settings/features': {
+      id: '/(main)/dashboard/settings/features'
+      path: '/features'
+      fullPath: '/dashboard/settings/features'
+      preLoaderRoute: typeof mainDashboardSettingsFeaturesRouteRouteImport
+      parentRoute: typeof mainDashboardSettingsRouteRoute
+    }
+    '/(main)/dashboard/integrations': {
+      id: '/(main)/dashboard/integrations'
+      path: '/integrations'
+      fullPath: '/dashboard/integrations'
+      preLoaderRoute: typeof mainDashboardIntegrationsRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
+    '/(main)/dashboard/portal': {
+      id: '/(main)/dashboard/portal'
+      path: '/portal'
+      fullPath: '/dashboard/portal'
+      preLoaderRoute: typeof mainDashboardPortalRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
     '/(main)/dashboard/infrastructure': {
       id: '/(main)/dashboard/infrastructure'
       path: '/infrastructure'
@@ -1055,6 +1246,29 @@ const mainDashboardFinanceReportsRouteRouteChildren: mainDashboardFinanceReports
 const mainDashboardFinanceReportsRouteRouteWithChildren =
   mainDashboardFinanceReportsRouteRoute._addFileChildren(mainDashboardFinanceReportsRouteRouteChildren)
 
+interface mainDashboardSettingsRouteRouteChildren {
+  mainDashboardSettingsGeneralRouteRoute: typeof mainDashboardSettingsGeneralRouteRoute
+  mainDashboardSettingsLanguagesRouteRoute: typeof mainDashboardSettingsLanguagesRouteRoute
+  mainDashboardSettingsSecurityRouteRoute: typeof mainDashboardSettingsSecurityRouteRoute
+  mainDashboardSettingsNotificationsRouteRoute: typeof mainDashboardSettingsNotificationsRouteRoute
+  mainDashboardSettingsAuditLogRouteRoute: typeof mainDashboardSettingsAuditLogRouteRoute
+  mainDashboardSettingsBillingRouteRoute: typeof mainDashboardSettingsBillingRouteRoute
+  mainDashboardSettingsFeaturesRouteRoute: typeof mainDashboardSettingsFeaturesRouteRoute
+}
+
+const mainDashboardSettingsRouteRouteChildren: mainDashboardSettingsRouteRouteChildren = {
+  mainDashboardSettingsGeneralRouteRoute: mainDashboardSettingsGeneralRouteRoute,
+  mainDashboardSettingsLanguagesRouteRoute: mainDashboardSettingsLanguagesRouteRoute,
+  mainDashboardSettingsSecurityRouteRoute: mainDashboardSettingsSecurityRouteRoute,
+  mainDashboardSettingsNotificationsRouteRoute: mainDashboardSettingsNotificationsRouteRoute,
+  mainDashboardSettingsAuditLogRouteRoute: mainDashboardSettingsAuditLogRouteRoute,
+  mainDashboardSettingsBillingRouteRoute: mainDashboardSettingsBillingRouteRoute,
+  mainDashboardSettingsFeaturesRouteRoute: mainDashboardSettingsFeaturesRouteRoute,
+}
+
+const mainDashboardSettingsRouteRouteWithChildren =
+  mainDashboardSettingsRouteRoute._addFileChildren(mainDashboardSettingsRouteRouteChildren)
+
 interface mainDashboardRouteRouteChildren {
   mainDashboardAcademyRouteRoute: typeof mainDashboardAcademyRouteRoute
   mainDashboardAnalyticsRouteRoute: typeof mainDashboardAnalyticsRouteRoute
@@ -1065,6 +1279,9 @@ interface mainDashboardRouteRouteChildren {
   mainDashboardDefaultRouteRoute: typeof mainDashboardDefaultRouteRoute
   mainDashboardEcommerceRouteRoute: typeof mainDashboardEcommerceRouteRoute
   mainDashboardFinanceRouteRoute: typeof mainDashboardFinanceRouteRouteWithChildren
+  mainDashboardSettingsRouteRoute: typeof mainDashboardSettingsRouteRouteWithChildren
+  mainDashboardIntegrationsRouteRoute: typeof mainDashboardIntegrationsRouteRoute
+  mainDashboardPortalRouteRoute: typeof mainDashboardPortalRouteRoute
   mainDashboardInfrastructureRouteRoute: typeof mainDashboardInfrastructureRouteRoute
   mainDashboardInvoiceRouteRoute: typeof mainDashboardInvoiceRouteRoute
   mainDashboardKanbanRouteRoute: typeof mainDashboardKanbanRouteRoute
@@ -1096,6 +1313,9 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardDefaultRouteRoute: mainDashboardDefaultRouteRoute,
   mainDashboardEcommerceRouteRoute: mainDashboardEcommerceRouteRoute,
   mainDashboardFinanceRouteRoute: mainDashboardFinanceRouteRouteWithChildren,
+  mainDashboardSettingsRouteRoute: mainDashboardSettingsRouteRouteWithChildren,
+  mainDashboardIntegrationsRouteRoute: mainDashboardIntegrationsRouteRoute,
+  mainDashboardPortalRouteRoute: mainDashboardPortalRouteRoute,
   mainDashboardInfrastructureRouteRoute: mainDashboardInfrastructureRouteRoute,
   mainDashboardInvoiceRouteRoute: mainDashboardInvoiceRouteRoute,
   mainDashboardKanbanRouteRoute: mainDashboardKanbanRouteRoute,
