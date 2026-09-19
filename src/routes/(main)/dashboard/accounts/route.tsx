@@ -5,7 +5,6 @@ import {
   ChevronRight,
   CreditCard,
   Eye,
-  Landmark,
   Plus,
   Search,
   TicketPercent,
