@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { ArrowRight, BarChart3, CircleDollarSign, Landmark, ReceiptText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -21,6 +21,12 @@ export const Route = createFileRoute("/(main)/dashboard/finance")({
 });
 
 function Page() {
+  const { pathname } = useLocation();
+
+  if (pathname !== "/dashboard/finance") {
+    return <Outlet />;
+  }
+
   return (
     <section className="flex min-h-full flex-col gap-5 bg-background">
       <div>
