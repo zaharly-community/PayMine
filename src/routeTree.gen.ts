@@ -416,7 +416,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/finance/reports/fees-compensation': typeof mainDashboardFinanceReportsFeesCompensationRouteRoute
   '/dashboard/finance/reports/settlement-report': typeof mainDashboardFinanceReportsSettlementReportRouteRoute
   '/dashboard/finance/reports/reconciliation-report': typeof mainDashboardFinanceReportsReconciliationReportRouteRoute
-  '/dashboard/settings': typeof mainDashboardSettingsRouteRoute
+  '/dashboard/settings': typeof mainDashboardSettingsRouteRouteWithChildren
   '/dashboard/settings/general': typeof mainDashboardSettingsGeneralRouteRoute
   '/dashboard/settings/languages': typeof mainDashboardSettingsLanguagesRouteRoute
   '/dashboard/settings/security': typeof mainDashboardSettingsSecurityRouteRoute
