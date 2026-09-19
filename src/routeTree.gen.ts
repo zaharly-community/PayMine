@@ -26,6 +26,16 @@ import { Route as mainDashboardCrmRouteRouteImport } from './routes/(main)/dashb
 import { Route as mainDashboardDefaultRouteRouteImport } from './routes/(main)/dashboard/default/route'
 import { Route as mainDashboardEcommerceRouteRouteImport } from './routes/(main)/dashboard/ecommerce/route'
 import { Route as mainDashboardFinanceRouteRouteImport } from './routes/(main)/dashboard/finance/route'
+import { Route as mainDashboardFinanceTransactionsRouteRouteImport } from './routes/(main)/dashboard/finance/transactions/route'
+import { Route as mainDashboardFinanceTreasuryRouteRouteImport } from './routes/(main)/dashboard/finance/treasury/route'
+import { Route as mainDashboardFinanceSettlementsRouteRouteImport } from './routes/(main)/dashboard/finance/settlements/route'
+import { Route as mainDashboardFinanceReportsRouteRouteImport } from './routes/(main)/dashboard/finance/reports/route'
+import { Route as mainDashboardFinanceReportsFinancialPerformanceRouteRouteImport } from './routes/(main)/dashboard/finance/reports/financial-performance/route'
+import { Route as mainDashboardFinanceReportsProviderPerformanceRouteRouteImport } from './routes/(main)/dashboard/finance/reports/provider-performance/route'
+import { Route as mainDashboardFinanceReportsDistributorPerformanceRouteRouteImport } from './routes/(main)/dashboard/finance/reports/distributor-performance/route'
+import { Route as mainDashboardFinanceReportsFeesCompensationRouteRouteImport } from './routes/(main)/dashboard/finance/reports/fees-compensation/route'
+import { Route as mainDashboardFinanceReportsSettlementReportRouteRouteImport } from './routes/(main)/dashboard/finance/reports/settlement-report/route'
+import { Route as mainDashboardFinanceReportsReconciliationReportRouteRouteImport } from './routes/(main)/dashboard/finance/reports/reconciliation-report/route'
 import { Route as mainDashboardInfrastructureRouteRouteImport } from './routes/(main)/dashboard/infrastructure/route'
 import { Route as mainDashboardInvoiceRouteRouteImport } from './routes/(main)/dashboard/invoice/route'
 import { Route as mainDashboardKanbanRouteRouteImport } from './routes/(main)/dashboard/kanban/route'
@@ -142,6 +152,57 @@ const mainDashboardFinanceRouteRoute =
     path: '/finance',
     getParentRoute: () => mainDashboardRouteRoute,
   } as any)
+const mainDashboardFinanceTransactionsRouteRoute = mainDashboardFinanceTransactionsRouteRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => mainDashboardFinanceRouteRoute,
+} as any)
+const mainDashboardFinanceTreasuryRouteRoute = mainDashboardFinanceTreasuryRouteRouteImport.update({
+  id: '/treasury',
+  path: '/treasury',
+  getParentRoute: () => mainDashboardFinanceRouteRoute,
+} as any)
+const mainDashboardFinanceSettlementsRouteRoute = mainDashboardFinanceSettlementsRouteRouteImport.update({
+  id: '/settlements',
+  path: '/settlements',
+  getParentRoute: () => mainDashboardFinanceRouteRoute,
+} as any)
+const mainDashboardFinanceReportsRouteRoute = mainDashboardFinanceReportsRouteRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => mainDashboardFinanceRouteRoute,
+} as any)
+const mainDashboardFinanceReportsFinancialPerformanceRouteRoute = mainDashboardFinanceReportsFinancialPerformanceRouteRouteImport.update({
+  id: '/financial-performance',
+  path: '/financial-performance',
+  getParentRoute: () => mainDashboardFinanceReportsRouteRoute,
+} as any)
+const mainDashboardFinanceReportsProviderPerformanceRouteRoute = mainDashboardFinanceReportsProviderPerformanceRouteRouteImport.update({
+  id: '/provider-performance',
+  path: '/provider-performance',
+  getParentRoute: () => mainDashboardFinanceReportsRouteRoute,
+} as any)
+const mainDashboardFinanceReportsDistributorPerformanceRouteRoute = mainDashboardFinanceReportsDistributorPerformanceRouteRouteImport.update({
+  id: '/distributor-performance',
+  path: '/distributor-performance',
+  getParentRoute: () => mainDashboardFinanceReportsRouteRoute,
+} as any)
+const mainDashboardFinanceReportsFeesCompensationRouteRoute = mainDashboardFinanceReportsFeesCompensationRouteRouteImport.update({
+  id: '/fees-compensation',
+  path: '/fees-compensation',
+  getParentRoute: () => mainDashboardFinanceReportsRouteRoute,
+} as any)
+const mainDashboardFinanceReportsSettlementReportRouteRoute = mainDashboardFinanceReportsSettlementReportRouteRouteImport.update({
+  id: '/settlement-report',
+  path: '/settlement-report',
+  getParentRoute: () => mainDashboardFinanceReportsRouteRoute,
+} as any)
+const mainDashboardFinanceReportsReconciliationReportRouteRoute = mainDashboardFinanceReportsReconciliationReportRouteRouteImport.update({
+  id: '/reconciliation-report',
+  path: '/reconciliation-report',
+  getParentRoute: () => mainDashboardFinanceReportsRouteRoute,
+} as any)
+
 const mainDashboardInfrastructureRouteRoute =
   mainDashboardInfrastructureRouteRouteImport.update({
     id: '/infrastructure',
@@ -284,6 +345,16 @@ export interface FileRoutesByFullPath {
   '/dashboard/default': typeof mainDashboardDefaultRouteRoute
   '/dashboard/ecommerce': typeof mainDashboardEcommerceRouteRoute
   '/dashboard/finance': typeof mainDashboardFinanceRouteRoute
+  '/dashboard/finance/transactions': typeof mainDashboardFinanceTransactionsRouteRoute
+  '/dashboard/finance/treasury': typeof mainDashboardFinanceTreasuryRouteRoute
+  '/dashboard/finance/settlements': typeof mainDashboardFinanceSettlementsRouteRoute
+  '/dashboard/finance/reports': typeof mainDashboardFinanceReportsRouteRoute
+  '/dashboard/finance/reports/financial-performance': typeof mainDashboardFinanceReportsFinancialPerformanceRouteRoute
+  '/dashboard/finance/reports/provider-performance': typeof mainDashboardFinanceReportsProviderPerformanceRouteRoute
+  '/dashboard/finance/reports/distributor-performance': typeof mainDashboardFinanceReportsDistributorPerformanceRouteRoute
+  '/dashboard/finance/reports/fees-compensation': typeof mainDashboardFinanceReportsFeesCompensationRouteRoute
+  '/dashboard/finance/reports/settlement-report': typeof mainDashboardFinanceReportsSettlementReportRouteRoute
+  '/dashboard/finance/reports/reconciliation-report': typeof mainDashboardFinanceReportsReconciliationReportRouteRoute
   '/dashboard/infrastructure': typeof mainDashboardInfrastructureRouteRoute
   '/dashboard/invoice': typeof mainDashboardInvoiceRouteRoute
   '/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
@@ -325,6 +396,16 @@ export interface FileRoutesByTo {
   '/dashboard/default': typeof mainDashboardDefaultRouteRoute
   '/dashboard/ecommerce': typeof mainDashboardEcommerceRouteRoute
   '/dashboard/finance': typeof mainDashboardFinanceRouteRoute
+  '/dashboard/finance/transactions': typeof mainDashboardFinanceTransactionsRouteRoute
+  '/dashboard/finance/treasury': typeof mainDashboardFinanceTreasuryRouteRoute
+  '/dashboard/finance/settlements': typeof mainDashboardFinanceSettlementsRouteRoute
+  '/dashboard/finance/reports': typeof mainDashboardFinanceReportsRouteRoute
+  '/dashboard/finance/reports/financial-performance': typeof mainDashboardFinanceReportsFinancialPerformanceRouteRoute
+  '/dashboard/finance/reports/provider-performance': typeof mainDashboardFinanceReportsProviderPerformanceRouteRoute
+  '/dashboard/finance/reports/distributor-performance': typeof mainDashboardFinanceReportsDistributorPerformanceRouteRoute
+  '/dashboard/finance/reports/fees-compensation': typeof mainDashboardFinanceReportsFeesCompensationRouteRoute
+  '/dashboard/finance/reports/settlement-report': typeof mainDashboardFinanceReportsSettlementReportRouteRoute
+  '/dashboard/finance/reports/reconciliation-report': typeof mainDashboardFinanceReportsReconciliationReportRouteRoute
   '/dashboard/infrastructure': typeof mainDashboardInfrastructureRouteRoute
   '/dashboard/invoice': typeof mainDashboardInvoiceRouteRoute
   '/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
@@ -334,8 +415,13 @@ export interface FileRoutesByTo {
   '/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/dashboard/tasks': typeof mainDashboardTasksRouteRoute
   '/dashboard/users': typeof mainDashboardUsersRouteRoute
+  '/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
+  '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
+  '/dashboard/deposits/transaction-detail': typeof mainDashboardDepositsTransactionDetailRouteRoute
+  '/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
+  '/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/dashboard/distributors': typeof mainDashboardDistributorsRouteRoute
-  '/dashboard/  '/dashboard': typeof mainDashboardIndexRoute
+  '/dashboard/': typeof mainDashboardIndexRoute
   '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
   '/auth/v1/register': typeof mainAuthV1RegisterRouteRoute
   '/auth/v2/login': typeof mainAuthV2LoginRouteRoute
@@ -364,6 +450,16 @@ export interface FileRoutesById {
   '/(main)/dashboard/default': typeof mainDashboardDefaultRouteRoute
   '/(main)/dashboard/ecommerce': typeof mainDashboardEcommerceRouteRoute
   '/(main)/dashboard/finance': typeof mainDashboardFinanceRouteRoute
+  '/(main)/dashboard/finance/transactions': typeof mainDashboardFinanceTransactionsRouteRoute
+  '/(main)/dashboard/finance/treasury': typeof mainDashboardFinanceTreasuryRouteRoute
+  '/(main)/dashboard/finance/settlements': typeof mainDashboardFinanceSettlementsRouteRoute
+  '/(main)/dashboard/finance/reports': typeof mainDashboardFinanceReportsRouteRoute
+  '/(main)/dashboard/finance/reports/financial-performance': typeof mainDashboardFinanceReportsFinancialPerformanceRouteRoute
+  '/(main)/dashboard/finance/reports/provider-performance': typeof mainDashboardFinanceReportsProviderPerformanceRouteRoute
+  '/(main)/dashboard/finance/reports/distributor-performance': typeof mainDashboardFinanceReportsDistributorPerformanceRouteRoute
+  '/(main)/dashboard/finance/reports/fees-compensation': typeof mainDashboardFinanceReportsFeesCompensationRouteRoute
+  '/(main)/dashboard/finance/reports/settlement-report': typeof mainDashboardFinanceReportsSettlementReportRouteRoute
+  '/(main)/dashboard/finance/reports/reconciliation-report': typeof mainDashboardFinanceReportsReconciliationReportRouteRoute
   '/(main)/dashboard/infrastructure': typeof mainDashboardInfrastructureRouteRoute
   '/(main)/dashboard/invoice': typeof mainDashboardInvoiceRouteRoute
   '/(main)/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
@@ -379,7 +475,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/distributors': typeof mainDashboardDistributorsRouteRoute
-  '/(main)/dashboard/  '/(main)/dashboard/': typeof mainDashboardIndexRoute
+  '/(main)/dashboard/': typeof mainDashboardIndexRoute
   '/(main)/auth/v1/login': typeof mainAuthV1LoginRouteRoute
   '/(main)/auth/v1/register': typeof mainAuthV1RegisterRouteRoute
   '/(main)/auth/v2/login': typeof mainAuthV2LoginRouteRoute
@@ -407,6 +503,16 @@ export interface FileRouteTypes {
     | '/dashboard/default'
     | '/dashboard/ecommerce'
     | '/dashboard/finance'
+    | '/dashboard/finance/transactions'
+    | '/dashboard/finance/treasury'
+    | '/dashboard/finance/settlements'
+    | '/dashboard/finance/reports'
+    | '/dashboard/finance/reports/financial-performance'
+    | '/dashboard/finance/reports/provider-performance'
+    | '/dashboard/finance/reports/distributor-performance'
+    | '/dashboard/finance/reports/fees-compensation'
+    | '/dashboard/finance/reports/settlement-report'
+    | '/dashboard/finance/reports/reconciliation-report'
     | '/dashboard/infrastructure'
     | '/dashboard/invoice'
     | '/dashboard/kanban'
@@ -450,6 +556,16 @@ export interface FileRouteTypes {
     | '/dashboard/default'
     | '/dashboard/ecommerce'
     | '/dashboard/finance'
+    | '/dashboard/finance/transactions'
+    | '/dashboard/finance/treasury'
+    | '/dashboard/finance/settlements'
+    | '/dashboard/finance/reports'
+    | '/dashboard/finance/reports/financial-performance'
+    | '/dashboard/finance/reports/provider-performance'
+    | '/dashboard/finance/reports/distributor-performance'
+    | '/dashboard/finance/reports/fees-compensation'
+    | '/dashboard/finance/reports/settlement-report'
+    | '/dashboard/finance/reports/reconciliation-report'
     | '/dashboard/infrastructure'
     | '/dashboard/invoice'
     | '/dashboard/kanban'
@@ -460,7 +576,8 @@ export interface FileRouteTypes {
     | '/dashboard/tasks'
     | '/dashboard/users'
     | '/dashboard/distributors'
-    | '/dashboard/    | '/dashboard'
+    | '/dashboard/'
+    | '/dashboard'
     | '/auth/v1/login'
     | '/auth/v1/register'
     | '/auth/v2/login'
@@ -486,6 +603,16 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/default'
     | '/(main)/dashboard/ecommerce'
     | '/(main)/dashboard/finance'
+    | '/(main)/dashboard/finance/transactions'
+    | '/(main)/dashboard/finance/treasury'
+    | '/(main)/dashboard/finance/settlements'
+    | '/(main)/dashboard/finance/reports'
+    | '/(main)/dashboard/finance/reports/financial-performance'
+    | '/(main)/dashboard/finance/reports/provider-performance'
+    | '/(main)/dashboard/finance/reports/distributor-performance'
+    | '/(main)/dashboard/finance/reports/fees-compensation'
+    | '/(main)/dashboard/finance/reports/settlement-report'
+    | '/(main)/dashboard/finance/reports/reconciliation-report'
     | '/(main)/dashboard/infrastructure'
     | '/(main)/dashboard/invoice'
     | '/(main)/dashboard/kanban'
@@ -499,7 +626,7 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/withdrawls'
     | '/(main)/dashboard/players'
     | '/(main)/dashboard/distributors'
-    | '/(main)/dashboard/    | '/(main)/dashboard/'
+    | '/(main)/dashboard/'
     | '/(main)/auth/v1/login'
     | '/(main)/auth/v1/register'
     | '/(main)/auth/v2/login'
@@ -641,6 +768,76 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/finance'
       preLoaderRoute: typeof mainDashboardFinanceRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
+    }
+    '/(main)/dashboard/finance/transactions': {
+      id: '/(main)/dashboard/finance/transactions'
+      path: '/transactions'
+      fullPath: '/dashboard/finance/transactions'
+      preLoaderRoute: typeof mainDashboardFinanceTransactionsRouteRouteImport
+      parentRoute: typeof mainDashboardFinanceRouteRoute
+    }
+    '/(main)/dashboard/finance/treasury': {
+      id: '/(main)/dashboard/finance/treasury'
+      path: '/treasury'
+      fullPath: '/dashboard/finance/treasury'
+      preLoaderRoute: typeof mainDashboardFinanceTreasuryRouteRouteImport
+      parentRoute: typeof mainDashboardFinanceRouteRoute
+    }
+    '/(main)/dashboard/finance/settlements': {
+      id: '/(main)/dashboard/finance/settlements'
+      path: '/settlements'
+      fullPath: '/dashboard/finance/settlements'
+      preLoaderRoute: typeof mainDashboardFinanceSettlementsRouteRouteImport
+      parentRoute: typeof mainDashboardFinanceRouteRoute
+    }
+    '/(main)/dashboard/finance/reports': {
+      id: '/(main)/dashboard/finance/reports'
+      path: '/reports'
+      fullPath: '/dashboard/finance/reports'
+      preLoaderRoute: typeof mainDashboardFinanceReportsRouteRouteImport
+      parentRoute: typeof mainDashboardFinanceRouteRoute
+    }
+    '/(main)/dashboard/finance/reports/financial-performance': {
+      id: '/(main)/dashboard/finance/reports/financial-performance'
+      path: '/financial-performance'
+      fullPath: '/dashboard/finance/reports/financial-performance'
+      preLoaderRoute: typeof mainDashboardFinanceReportsFinancialPerformanceRouteRouteImport
+      parentRoute: typeof mainDashboardFinanceReportsRouteRoute
+    }
+    '/(main)/dashboard/finance/reports/provider-performance': {
+      id: '/(main)/dashboard/finance/reports/provider-performance'
+      path: '/provider-performance'
+      fullPath: '/dashboard/finance/reports/provider-performance'
+      preLoaderRoute: typeof mainDashboardFinanceReportsProviderPerformanceRouteRouteImport
+      parentRoute: typeof mainDashboardFinanceReportsRouteRoute
+    }
+    '/(main)/dashboard/finance/reports/distributor-performance': {
+      id: '/(main)/dashboard/finance/reports/distributor-performance'
+      path: '/distributor-performance'
+      fullPath: '/dashboard/finance/reports/distributor-performance'
+      preLoaderRoute: typeof mainDashboardFinanceReportsDistributorPerformanceRouteRouteImport
+      parentRoute: typeof mainDashboardFinanceReportsRouteRoute
+    }
+    '/(main)/dashboard/finance/reports/fees-compensation': {
+      id: '/(main)/dashboard/finance/reports/fees-compensation'
+      path: '/fees-compensation'
+      fullPath: '/dashboard/finance/reports/fees-compensation'
+      preLoaderRoute: typeof mainDashboardFinanceReportsFeesCompensationRouteRouteImport
+      parentRoute: typeof mainDashboardFinanceReportsRouteRoute
+    }
+    '/(main)/dashboard/finance/reports/settlement-report': {
+      id: '/(main)/dashboard/finance/reports/settlement-report'
+      path: '/settlement-report'
+      fullPath: '/dashboard/finance/reports/settlement-report'
+      preLoaderRoute: typeof mainDashboardFinanceReportsSettlementReportRouteRouteImport
+      parentRoute: typeof mainDashboardFinanceReportsRouteRoute
+    }
+    '/(main)/dashboard/finance/reports/reconciliation-report': {
+      id: '/(main)/dashboard/finance/reports/reconciliation-report'
+      path: '/reconciliation-report'
+      fullPath: '/dashboard/finance/reports/reconciliation-report'
+      preLoaderRoute: typeof mainDashboardFinanceReportsReconciliationReportRouteRouteImport
+      parentRoute: typeof mainDashboardFinanceReportsRouteRoute
     }
     '/(main)/dashboard/infrastructure': {
       id: '/(main)/dashboard/infrastructure'
@@ -820,6 +1017,44 @@ const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteCh
 const mainDashboardDepositsRouteRouteWithChildren =
   mainDashboardDepositsRouteRoute._addFileChildren(mainDashboardDepositsRouteRouteChildren)
 
+interface mainDashboardFinanceRouteRouteChildren {
+  mainDashboardFinanceTransactionsRouteRoute: typeof mainDashboardFinanceTransactionsRouteRoute
+  mainDashboardFinanceTreasuryRouteRoute: typeof mainDashboardFinanceTreasuryRouteRoute
+  mainDashboardFinanceSettlementsRouteRoute: typeof mainDashboardFinanceSettlementsRouteRoute
+  mainDashboardFinanceReportsRouteRoute: typeof mainDashboardFinanceReportsRouteRouteWithChildren
+}
+
+const mainDashboardFinanceRouteRouteChildren: mainDashboardFinanceRouteRouteChildren = {
+  mainDashboardFinanceTransactionsRouteRoute: mainDashboardFinanceTransactionsRouteRoute,
+  mainDashboardFinanceTreasuryRouteRoute: mainDashboardFinanceTreasuryRouteRoute,
+  mainDashboardFinanceSettlementsRouteRoute: mainDashboardFinanceSettlementsRouteRoute,
+  mainDashboardFinanceReportsRouteRoute: mainDashboardFinanceReportsRouteRouteWithChildren,
+}
+
+const mainDashboardFinanceRouteRouteWithChildren =
+  mainDashboardFinanceRouteRoute._addFileChildren(mainDashboardFinanceRouteRouteChildren)
+
+interface mainDashboardFinanceReportsRouteRouteChildren {
+  mainDashboardFinanceReportsFinancialPerformanceRouteRoute: typeof mainDashboardFinanceReportsFinancialPerformanceRouteRoute
+  mainDashboardFinanceReportsProviderPerformanceRouteRoute: typeof mainDashboardFinanceReportsProviderPerformanceRouteRoute
+  mainDashboardFinanceReportsDistributorPerformanceRouteRoute: typeof mainDashboardFinanceReportsDistributorPerformanceRouteRoute
+  mainDashboardFinanceReportsFeesCompensationRouteRoute: typeof mainDashboardFinanceReportsFeesCompensationRouteRoute
+  mainDashboardFinanceReportsSettlementReportRouteRoute: typeof mainDashboardFinanceReportsSettlementReportRouteRoute
+  mainDashboardFinanceReportsReconciliationReportRouteRoute: typeof mainDashboardFinanceReportsReconciliationReportRouteRoute
+}
+
+const mainDashboardFinanceReportsRouteRouteChildren: mainDashboardFinanceReportsRouteRouteChildren = {
+  mainDashboardFinanceReportsFinancialPerformanceRouteRoute: mainDashboardFinanceReportsFinancialPerformanceRouteRoute,
+  mainDashboardFinanceReportsProviderPerformanceRouteRoute: mainDashboardFinanceReportsProviderPerformanceRouteRoute,
+  mainDashboardFinanceReportsDistributorPerformanceRouteRoute: mainDashboardFinanceReportsDistributorPerformanceRouteRoute,
+  mainDashboardFinanceReportsFeesCompensationRouteRoute: mainDashboardFinanceReportsFeesCompensationRouteRoute,
+  mainDashboardFinanceReportsSettlementReportRouteRoute: mainDashboardFinanceReportsSettlementReportRouteRoute,
+  mainDashboardFinanceReportsReconciliationReportRouteRoute: mainDashboardFinanceReportsReconciliationReportRouteRoute,
+}
+
+const mainDashboardFinanceReportsRouteRouteWithChildren =
+  mainDashboardFinanceReportsRouteRoute._addFileChildren(mainDashboardFinanceReportsRouteRouteChildren)
+
 interface mainDashboardRouteRouteChildren {
   mainDashboardAcademyRouteRoute: typeof mainDashboardAcademyRouteRoute
   mainDashboardAnalyticsRouteRoute: typeof mainDashboardAnalyticsRouteRoute
@@ -829,7 +1064,7 @@ interface mainDashboardRouteRouteChildren {
   mainDashboardCrmRouteRoute: typeof mainDashboardCrmRouteRoute
   mainDashboardDefaultRouteRoute: typeof mainDashboardDefaultRouteRoute
   mainDashboardEcommerceRouteRoute: typeof mainDashboardEcommerceRouteRoute
-  mainDashboardFinanceRouteRoute: typeof mainDashboardFinanceRouteRoute
+  mainDashboardFinanceRouteRoute: typeof mainDashboardFinanceRouteRouteWithChildren
   mainDashboardInfrastructureRouteRoute: typeof mainDashboardInfrastructureRouteRoute
   mainDashboardInvoiceRouteRoute: typeof mainDashboardInvoiceRouteRoute
   mainDashboardKanbanRouteRoute: typeof mainDashboardKanbanRouteRoute
@@ -860,7 +1095,7 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardCrmRouteRoute: mainDashboardCrmRouteRoute,
   mainDashboardDefaultRouteRoute: mainDashboardDefaultRouteRoute,
   mainDashboardEcommerceRouteRoute: mainDashboardEcommerceRouteRoute,
-  mainDashboardFinanceRouteRoute: mainDashboardFinanceRouteRoute,
+  mainDashboardFinanceRouteRoute: mainDashboardFinanceRouteRouteWithChildren,
   mainDashboardInfrastructureRouteRoute: mainDashboardInfrastructureRouteRoute,
   mainDashboardInvoiceRouteRoute: mainDashboardInvoiceRouteRoute,
   mainDashboardKanbanRouteRoute: mainDashboardKanbanRouteRoute,
