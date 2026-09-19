@@ -1,5 +1,7 @@
 import * as React from "react";
 
+import { Link } from "@tanstack/react-router";
+
 import {
   type ColumnFiltersState,
   type ColumnVisibilityState,
@@ -20,12 +22,10 @@ import { dataTableFeatures } from "@/lib/data-table-features";
 import type { DistributorRow } from "./data";
 import { createDistributorsColumns } from "./distributors-columns";
 import { DistributorsTable } from "./distributors-table";
-import { TreasuryDialog } from "./treasury-dialog";
 
 export function Distributors({ distributors: initialDistributors }: { distributors: DistributorRow[] }) {
   const [distributors, setDistributors] = React.useState(initialDistributors);
   const [addDistributorOpen, setAddDistributorOpen] = React.useState(false);
-  const [treasuryOpen, setTreasuryOpen] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -144,8 +144,8 @@ export function Distributors({ distributors: initialDistributors }: { distributo
             </InputGroupAddon>
           </InputGroup>
 
-          <Button variant="outline" size="sm" onClick={() => setTreasuryOpen(true)}>
-            <Landmark /> Treasury
+          <Button asChild variant="outline" size="sm">
+            <Link to="/dashboard/finance/treasury"><Landmark /> Treasury</Link>
           </Button>
           <Button variant="outline" size="sm">
             <SlidersHorizontal /> Hide
@@ -172,11 +172,6 @@ export function Distributors({ distributors: initialDistributors }: { distributo
         onCreate={(distributor) => setDistributors((current) => [distributor, ...current])}
       />
 
-      <TreasuryDialog
-        open={treasuryOpen}
-        onOpenChange={setTreasuryOpen}
-        distributors={distributors}
-      />
     </section>
   );
 }
