@@ -9,6 +9,12 @@ export const Route = createFileRoute("/(main)/dashboard/finance/reports")({
 });
 
 function Page() {
+  const { pathname } = useLocation();
+
+  if (pathname !== "/dashboard/finance/reports") {
+    return <Outlet />;
+  }
+
   return (
     <section className="flex min-h-full flex-col gap-5 bg-background">
       <div className="flex flex-wrap items-start justify-between gap-4">
