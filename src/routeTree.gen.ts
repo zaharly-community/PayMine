@@ -68,6 +68,7 @@ import { Route as mainDashboardWithdrawlsRouteRouteImport } from './routes/(main
 import { Route as mainDashboardPlayersRouteRouteImport } from './routes/(main)/dashboard/players/route'
 import { Route as mainDashboardPlayersProfileRouteRouteImport } from './routes/(main)/dashboard/players/$playerId/route'
 import { Route as mainDashboardDistributorsRouteRouteImport } from './routes/(main)/dashboard/distributors/route'
+import { Route as mainDashboardAccountsRouteRouteImport } from './routes/(main)/dashboard/accounts/route'
 import { Route as mainAuthV1LoginRouteRouteImport } from './routes/(main)/auth/v1/login/route'
 import { Route as mainAuthV1RegisterRouteRouteImport } from './routes/(main)/auth/v1/register/route'
 import { Route as mainAuthV2LoginRouteRouteImport } from './routes/(main)/auth/v2/login/route'
@@ -385,6 +386,11 @@ const mainDashboardDistributorsRouteRoute = mainDashboardDistributorsRouteRouteI
   path: '/distributors',
   getParentRoute: () => mainDashboardRouteRoute,
 } as any)
+const mainDashboardAccountsRouteRoute = mainDashboardAccountsRouteRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => mainDashboardRouteRoute,
+} as any)
 const mainAuthV1LoginRouteRoute = mainAuthV1LoginRouteRouteImport.update({
   id: '/(main)/auth/v1/login',
   path: '/auth/v1/login',
@@ -497,6 +503,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/dashboard/players/$playerId': typeof mainDashboardPlayersProfileRouteRoute
   '/dashboard/distributors': typeof mainDashboardDistributorsRouteRoute
+  '/dashboard/accounts': typeof mainDashboardAccountsRouteRoute
   '/dashboard/$': typeof mainDashboardSplatRoute
   '/dashboard/': typeof mainDashboardIndexRoute
   '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
@@ -622,6 +629,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/players/$playerId': typeof mainDashboardPlayersProfileRouteRoute
   '/(main)/dashboard/distributors': typeof mainDashboardDistributorsRouteRoute
+  '/(main)/dashboard/accounts': typeof mainDashboardAccountsRouteRoute
   '/(main)/dashboard/': typeof mainDashboardIndexRoute
   '/(main)/auth/v1/login': typeof mainAuthV1LoginRouteRoute
   '/(main)/auth/v1/register': typeof mainAuthV1RegisterRouteRoute
@@ -709,6 +717,7 @@ export interface FileRouteTypes {
     | '/dashboard/players/$playerId'
     | '/dashboard/players/$playerId'
     | '/dashboard/distributors'
+    | '/dashboard/accounts'
     | '/dashboard/$'
     | '/dashboard/'
     | '/auth/v1/login'
@@ -1252,6 +1261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDistributorsRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
+    '/(main)/dashboard/accounts': {
+      id: '/(main)/dashboard/accounts'
+      path: '/accounts'
+      fullPath: '/dashboard/accounts'
+      preLoaderRoute: typeof mainDashboardAccountsRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
     '/(main)/auth/v1/login': {
       id: '/(main)/auth/v1/login'
       path: '/auth/v1/login'
@@ -1467,6 +1483,7 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardPlayersRouteRoute: mainDashboardPlayersRouteRoute,
   mainDashboardPlayersRouteRoute: mainDashboardPlayersRouteRouteWithChildren,
   mainDashboardDistributorsRouteRoute: mainDashboardDistributorsRouteRoute,
+  mainDashboardAccountsRouteRoute: mainDashboardAccountsRouteRoute,
   mainDashboardSplatRoute: mainDashboardSplatRoute,
   mainDashboardIndexRoute: mainDashboardIndexRoute,
   mainDashboardlegacyAnalyticsV1RouteRoute:
