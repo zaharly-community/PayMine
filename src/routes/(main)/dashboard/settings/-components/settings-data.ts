@@ -6,6 +6,8 @@ export const settingsNav = [
   { key: "audit-log", label: "Audit log", description: "Review administrative activity." },
   { key: "billing", label: "Billing", description: "Plan, invoices and payment settings." },
   { key: "features", label: "Features", description: "Enable and manage platform modules." },
+  { key: "custom-domain", label: "Custom domain", description: "Branded dashboard and portal domains." },
+  { key: "team-access", label: "Team & access", description: "Workspace members, roles and permissions." },
 ] as const;
 
 export type SettingsKey = (typeof settingsNav)[number]["key"];
