@@ -26,7 +26,7 @@ import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -178,11 +178,13 @@ function TimedAction({
   tone,
   onCommit,
   className,
+  disabled = false,
 }: {
   label: string;
   tone: string;
   onCommit: () => void;
   className?: string;
+  disabled?: boolean;
 }) {
   const [arming, setArming] = useState(false);
   const [seconds, setSeconds] = useState(5);
@@ -242,6 +244,7 @@ function TimedAction({
       variant="outline"
       className={cn("h-8 px-3 text-[11px]", tone, className)}
       onClick={() => setArming(true)}
+      disabled={disabled}
     >
       {label}
     </Button>
@@ -352,18 +355,21 @@ function ProcessVoucherDialog({
             tone="text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30"
             onCommit={() => commit("Pending")}
             className="min-w-[126px]"
+            disabled={!balanceVerified}
           />
           <TimedAction
             label="Decline"
             tone="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
             onCommit={() => commit("Declined")}
             className="min-w-[86px]"
+            disabled={!balanceVerified}
           />
           <TimedAction
             label="Approve"
             tone="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
             onCommit={() => commit("Approved")}
             className="min-w-[86px]"
+            disabled={!balanceVerified}
           />
         </DialogFooter>
       </DialogContent>
@@ -504,11 +510,15 @@ function PaymentMethodsTable() {
                       <VoucherStatusBadge status={row.status} />
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <TimedAction
-                        label="Reprocess"
-                        tone="text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-950/30"
-                        onCommit={() => setProcessRow(row)}
-                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-3 text-[11px] text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-950/30"
+                        onClick={() => setProcessRow(row)}
+                      >
+                        Reprocess
+                      </Button>
                     </td>
                   </tr>
                 );
