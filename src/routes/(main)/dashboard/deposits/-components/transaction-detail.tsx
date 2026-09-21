@@ -129,7 +129,11 @@ function TimelineItem({
 const evidenceImages = [
   {
     src: "https://public.bnbstatic.com/image/cms/article/body/202404/8338b4f18b05bcfe65d55fe54b671c60.png",
-    title: "Payment evidence",
+    title: "Payment evidence 1",
+  },
+  {
+    src: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmMEuNPq2ez4ZHbY7Icxe4b_8fsoirmKqJaexD7mudUEeG-kCYwnW9ltTe&s=10",
+    title: "Payment evidence 2",
   },
 ] as const;
 
