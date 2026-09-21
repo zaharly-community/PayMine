@@ -28,6 +28,7 @@ import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
 function SectionHeading({ children }: { children: ReactNode }) {
@@ -148,12 +149,14 @@ function EvidenceGallery() {
 
   const image = evidenceImages[currentIndex];
 
-  const resetView = () => {
+  const clearZoom = () => {
     setScale(1);
     setOffset({ x: 0, y: 0 });
   };
 
-  const zoomIn = () => setScale((value) => Math.min(5, Number((value + 0.5).toFixed(1))));
+  const zoomIn = () =>
+    setScale((value) => Math.min(5, Number((value + 0.5).toFixed(1))));
+
   const zoomOut = () =>
     setScale((value) => {
       const next = Math.max(1, Number((value - 0.5).toFixed(1)));
@@ -163,14 +166,16 @@ function EvidenceGallery() {
 
   const previousImage = () => {
     if (evidenceImages.length < 2) return;
-    setCurrentIndex((value) => (value - 1 + evidenceImages.length) % evidenceImages.length);
-    resetView();
+    setCurrentIndex(
+      (value) => (value - 1 + evidenceImages.length) % evidenceImages.length,
+    );
+    clearZoom();
   };
 
   const nextImage = () => {
     if (evidenceImages.length < 2) return;
     setCurrentIndex((value) => (value + 1) % evidenceImages.length);
-    resetView();
+    clearZoom();
   };
 
   useEffect(() => {
@@ -180,6 +185,8 @@ function EvidenceGallery() {
       if (event.key === "Escape") setFullscreen(false);
       if (event.key === "ArrowRight") nextImage();
       if (event.key === "ArrowLeft") previousImage();
+      if (event.key === "+" || event.key === "=") zoomIn();
+      if (event.key === "-") zoomOut();
     };
 
     window.addEventListener("keydown", onKeyDown);
@@ -187,16 +194,22 @@ function EvidenceGallery() {
   }, [fullscreen]);
 
   const openFullscreen = () => {
-    resetView();
+    clearZoom();
     setFullscreen(true);
   };
 
   const imageStage = (isFullscreen: boolean) => (
     <div
       className={cn(
-        "relative overflow-hidden bg-muted/30",
-        isFullscreen ? "h-full w-full" : "h-[320px] w-full",
-        dragging ? "cursor-grabbing" : scale > 1 ? "cursor-grab" : "cursor-zoom-in",
+        "relative overflow-hidden bg-black/5",
+        isFullscreen
+          ? "flex h-[100dvh] w-full items-center justify-center"
+          : "h-[320px] w-full",
+        dragging
+          ? "cursor-grabbing"
+          : scale > 1
+            ? "cursor-grab"
+            : "cursor-zoom-in",
       )}
       onWheel={(event) => {
         event.preventDefault();
@@ -205,7 +218,10 @@ function EvidenceGallery() {
       }}
       onDoubleClick={() => {
         if (scale === 1) zoomIn();
-        else resetView();
+        else {
+          setScale(1);
+          setOffset({ x: 0, y: 0 });
+        }
       }}
       onPointerDown={(event) => {
         if (scale === 1) return;
@@ -241,39 +257,83 @@ function EvidenceGallery() {
           isFullscreen ? "object-contain" : "object-cover",
         )}
         style={{
-          transform: "translate(" + offset.x + "px, " + offset.y + "px) scale(" + scale + ")",
+          transform:
+            "translate(" +
+            offset.x +
+            "px, " +
+            offset.y +
+            "px) scale(" +
+            scale +
+            ")",
         }}
       />
 
       <div
         className={cn(
-          "absolute flex items-center gap-1 rounded-lg border bg-background/90 p-1 shadow-sm backdrop-blur",
-          isFullscreen ? "left-1/2 top-4 -translate-x-1/2" : "right-3 top-3",
+          "absolute z-10 flex items-center gap-1 rounded-lg border bg-background/90 p-1 shadow-sm backdrop-blur",
+          isFullscreen
+            ? "left-1/2 top-4 -translate-x-1/2"
+            : "right-3 top-3",
         )}
       >
-        <Button type="button" variant="ghost" size="icon-sm" onClick={previousImage} disabled={evidenceImages.length <= 1} aria-label="Previous evidence image">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={previousImage}
+          disabled={evidenceImages.length <= 1}
+          aria-label="Previous evidence image"
+        >
           <ArrowLeft />
         </Button>
-        <Button type="button" variant="ghost" size="icon-sm" onClick={zoomOut} disabled={scale <= 1} aria-label="Zoom out">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={zoomOut}
+          disabled={scale <= 1}
+          aria-label="Zoom out"
+        >
           <Minus />
         </Button>
-        <Button type="button" variant="ghost" size="icon-sm" onClick={resetView} aria-label="Reset image view">
-          <Maximize2 />
-        </Button>
-        <Button type="button" variant="ghost" size="icon-sm" onClick={zoomIn} disabled={scale >= 5} aria-label="Zoom in">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={zoomIn}
+          disabled={scale >= 5}
+          aria-label="Zoom in"
+        >
           <Plus />
         </Button>
-        <Button type="button" variant="ghost" size="icon-sm" onClick={nextImage} disabled={evidenceImages.length <= 1} aria-label="Next evidence image">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={nextImage}
+          disabled={evidenceImages.length <= 1}
+          aria-label="Next evidence image"
+        >
           <ChevronRight />
         </Button>
       </div>
 
-      <div className={cn(
-        "absolute flex items-center gap-2 rounded-md bg-black/55 px-2.5 py-1 text-[11px] text-white backdrop-blur",
-        isFullscreen ? "left-4 top-4" : "bottom-3 left-3",
-      )}>
-        <span>{currentIndex + 1} / {evidenceImages.length}</span>
-        {!isFullscreen ? <span className="hidden sm:inline">Click image to inspect</span> : <span className="hidden sm:inline">Esc to close · ← → to navigate</span>}
+      <div
+        className={cn(
+          "absolute z-10 flex items-center gap-2 rounded-md bg-black/60 px-2.5 py-1 text-[11px] text-white backdrop-blur",
+          isFullscreen ? "left-4 bottom-4" : "left-3 bottom-3",
+        )}
+      >
+        <span className="tabular-nums">
+          {currentIndex + 1} / {evidenceImages.length}
+        </span>
+        {!isFullscreen ? (
+          <span className="hidden sm:inline">Click image to inspect</span>
+        ) : (
+          <span className="hidden sm:inline">
+            Esc to close · ← → to navigate · + − to zoom
+          </span>
+        )}
       </div>
 
       {isFullscreen ? (
@@ -281,7 +341,7 @@ function EvidenceGallery() {
           type="button"
           variant="secondary"
           size="icon"
-          className="absolute right-4 top-4 size-9 shadow-sm"
+          className="absolute right-4 top-4 z-10 size-9 shadow-sm"
           onClick={() => setFullscreen(false)}
           aria-label="Close full screen"
         >
@@ -292,7 +352,7 @@ function EvidenceGallery() {
           type="button"
           variant="secondary"
           size="icon"
-          className="absolute bottom-3 right-3 size-8 shadow-sm"
+          className="absolute bottom-3 right-3 z-10 size-8 shadow-sm"
           onClick={openFullscreen}
           aria-label="Open image full screen"
         >
@@ -305,12 +365,12 @@ function EvidenceGallery() {
   return (
     <>
       <Card className="overflow-hidden">
-        <CardHeader className="border-b pb-3">
-          <div className="flex items-center justify-between gap-3">
+        <CardHeader className="border-b pb-0">
+          <div className="flex items-center justify-between gap-3 px-0 pb-3">
             <div>
               <CardTitle className="text-sm">Payment evidence</CardTitle>
               <p className="mt-1 text-xs text-muted-foreground">
-                Image fills the preview. Open full screen to zoom and inspect details.
+                Full preview in the card. Open the viewer for detailed inspection.
               </p>
             </div>
             <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
@@ -321,16 +381,14 @@ function EvidenceGallery() {
         {imageStage(false)}
       </Card>
 
-      {fullscreen ? (
-        <div
-          className="fixed inset-0 z-50 bg-black/95 p-4 backdrop-blur-sm sm:p-6"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Payment evidence viewer"
+      <Dialog open={fullscreen} onOpenChange={setFullscreen}>
+        <DialogContent
+          showCloseButton={false}
+          className="h-[100dvh] w-screen max-w-none overflow-hidden rounded-none border-0 bg-black p-0 text-white shadow-none"
         >
           {imageStage(true)}
-        </div>
-      ) : null}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
