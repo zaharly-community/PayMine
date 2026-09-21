@@ -71,7 +71,7 @@ function DocumentCard({
           <div className="truncate text-xs text-muted-foreground">{meta}</div>
         </div>
       </div>
-      <Button variant="ghost" size="icon-sm" aria-label={\`More actions for \${name}\`}>
+      <Button variant="ghost" size="icon-sm" aria-label={`More actions for ${name}`}>
         <MoreVertical />
       </Button>
     </div>
