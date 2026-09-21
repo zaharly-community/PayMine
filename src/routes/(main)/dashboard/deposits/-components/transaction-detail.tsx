@@ -1,11 +1,16 @@
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
+  ChevronRight,
   Circle,
   Copy,
+  Maximize2,
+  Minus,
+  Plus,
   Download,
   FileText,
   Mail,
@@ -116,6 +121,135 @@ function TimelineItem({
         <div className="mt-1 text-sm leading-5 text-muted-foreground">{description}</div>
       </div>
     </div>
+  );
+}
+
+const evidenceImages = [
+  {
+    src: "https://public.bnbstatic.com/image/cms/article/body/202404/8338b4f18b05bcfe65d55fe54b671c60.png",
+    title: "Payment evidence",
+  },
+] as const;
+
+function EvidenceGallery() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const startOffset = useRef({ x: 0, y: 0 });
+
+  const image = evidenceImages[currentIndex];
+
+  const resetView = () => {
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
+  };
+
+  const zoomIn = () => setScale((value) => Math.min(4, Number((value + 0.5).toFixed(1))));
+  const zoomOut = () =>
+    setScale((value) => {
+      const next = Math.max(1, Number((value - 0.5).toFixed(1)));
+      if (next === 1) setOffset({ x: 0, y: 0 });
+      return next;
+    });
+
+  const nextImage = () => {
+    if (evidenceImages.length < 2) return;
+    setCurrentIndex((value) => (value + 1) % evidenceImages.length);
+    resetView();
+  };
+
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="border-b pb-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-sm">Payment evidence</CardTitle>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Zoom and drag the image to inspect details.
+            </p>
+          </div>
+          <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+            {currentIndex + 1} / {evidenceImages.length}
+          </span>
+        </div>
+      </CardHeader>
+
+      <div
+        className={cn(
+          "relative h-[250px] overflow-hidden bg-muted/30",
+          dragging ? "cursor-grabbing" : scale > 1 ? "cursor-grab" : "cursor-zoom-in",
+        )}
+        onWheel={(event) => {
+          event.preventDefault();
+          if (event.deltaY < 0) zoomIn();
+          else zoomOut();
+        }}
+        onDoubleClick={() => {
+          if (scale === 1) zoomIn();
+          else resetView();
+        }}
+        onPointerDown={(event) => {
+          if (scale === 1) return;
+          event.currentTarget.setPointerCapture(event.pointerId);
+          dragStart.current = { x: event.clientX, y: event.clientY };
+          startOffset.current = offset;
+          setDragging(true);
+        }}
+        onPointerMove={(event) => {
+          if (!dragging) return;
+          setOffset({
+            x: startOffset.current.x + (event.clientX - dragStart.current.x),
+            y: startOffset.current.y + (event.clientY - dragStart.current.y),
+          });
+        }}
+        onPointerUp={(event) => {
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+          }
+          setDragging(false);
+        }}
+        onPointerCancel={() => setDragging(false)}
+      >
+        <div
+          className="flex h-full w-full items-center justify-center transition-transform duration-150"
+          style={{ transform: "translate(" + offset.x + "px, " + offset.y + "px) scale(" + scale + ")" }}
+        >
+          <img
+            src={image.src}
+            alt={image.title}
+            draggable={false}
+            className="h-full w-full select-none object-contain"
+          />
+        </div>
+
+        <div className="absolute right-3 top-3 flex items-center gap-1 rounded-lg border bg-background/90 p-1 shadow-sm backdrop-blur">
+          <Button type="button" variant="ghost" size="icon-sm" onClick={zoomOut} disabled={scale <= 1} aria-label="Zoom out">
+            <Minus />
+          </Button>
+          <Button type="button" variant="ghost" size="icon-sm" onClick={resetView} aria-label="Reset image view">
+            <Maximize2 />
+          </Button>
+          <Button type="button" variant="ghost" size="icon-sm" onClick={zoomIn} disabled={scale >= 4} aria-label="Zoom in">
+            <Plus />
+          </Button>
+        </div>
+
+        {evidenceImages.length > 1 ? (
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            className="absolute bottom-3 right-3 size-8 shadow-sm"
+            onClick={nextImage}
+            aria-label="Next evidence image"
+          >
+            <ChevronRight />
+          </Button>
+        ) : null}
+      </div>
+    </Card>
   );
 }
 
@@ -349,7 +483,8 @@ export function TransactionDetail() {
         </main>
 
         <div className="min-w-0">
-          <div className="sticky top-6">
+          <div className="sticky top-6 space-y-4">
+            <EvidenceGallery />
             <SummaryCard />
             <Button variant="outline" className="mt-4 w-full">
               <Mail />
