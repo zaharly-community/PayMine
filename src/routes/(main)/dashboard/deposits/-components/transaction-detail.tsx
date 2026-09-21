@@ -8,18 +8,18 @@ import {
   ChevronRight,
   Circle,
   Copy,
-  Maximize2,
-  Minus,
-  Plus,
   Download,
   FileText,
   Mail,
+  Maximize2,
+  MessageSquare,
+  Minus,
   MoreVertical,
   Pencil,
+  Plus,
   RefreshCcw,
   ShieldCheck,
   WalletCards,
-  MessageSquare,
   X,
 } from "lucide-react";
 
@@ -59,29 +59,280 @@ function Field({
   );
 }
 
-function DocumentCard({
-  name,
-  meta,
-  icon: Icon = FileText,
-}: {
-  name: string;
-  meta: string;
-  icon?: typeof FileText;
-}) {
+type VoucherStatus = "Pending" | "Duplicated" | "Processing" | "Approved" | "Declined";
+
+type VoucherMethod = {
+  id: string;
+  name: "Orange" | "Ooredoo" | "Tunisie Telecom";
+  logo?: string;
+};
+
+type VoucherRow = {
+  id: string;
+  method: VoucherMethod;
+  ending: string;
+  role: "Default" | "Backup";
+  expires: string;
+  status: VoucherStatus;
+};
+
+const voucherRows: VoucherRow[] = [
+  {
+    id: "voucher-orange",
+    method: { id: "orange", name: "Orange", logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZinnmva8-lJ1z37ULNDrM8XNNp4GJt91xerwCjyJLPCv2Cn__dTiBxlw&s=10" },
+    ending: "4123 4574 1000 2589",
+    role: "Default",
+    expires: "12/2032",
+    status: "Pending",
+  },
+  {
+    id: "voucher-ooredoo",
+    method: { id: "ooredoo", name: "Ooredoo", logo: "https://upload.wikimedia.org/wikipedia/commons/b/b6/Ooredoo.svg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original" },
+    ending: "5432 1187 9033 7214",
+    role: "Backup",
+    expires: "02/2030",
+    status: "Processing",
+  },
+  {
+    id: "voucher-tunisie-telecom",
+    method: { id: "tunisie-telecom", name: "Tunisie Telecom", logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcjAL9itCcYdAhLn5lm1jzsMtQMT75EzG3yMOCHB3MDw1vYaQ_yhivDm8&s=10" },
+    ending: "6214 8831 4470 3926",
+    role: "Backup",
+    expires: "08/2033",
+    status: "Approved",
+  },
+  {
+    id: "voucher-orange-duplicate",
+    method: { id: "orange-duplicate", name: "Orange", logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZinnmva8-lJ1z37ULNDrM8XNNp4GJt91xerwCjyJLPCv2Cn__dTiBxlw&s=10" },
+    ending: "4890 5501 7391 2048",
+    role: "Backup",
+    expires: "11/2029",
+    status: "Duplicated",
+  },
+  {
+    id: "voucher-ooredoo-declined",
+    method: { id: "ooredoo-declined", name: "Ooredoo", logo: "https://upload.wikimedia.org/wikipedia/commons/b/b6/Ooredoo.svg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original" },
+    ending: "3987 2201 6114 5082",
+    role: "Backup",
+    expires: "05/2031",
+    status: "Declined",
+  },
+];
+
+const statusStyles: Record<VoucherStatus, string> = {
+  Pending: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300",
+  Duplicated: "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/30 dark:text-violet-300",
+  Processing: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300",
+  Approved: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
+  Declined: "border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
+};
+
+const nextActions: Record<Exclude<VoucherStatus, "Approved">, Array<{ label: string; target: VoucherStatus; tone: string }>> = {
+  Pending: [
+    { label: "Processing", target: "Processing", tone: "text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-950/30" },
+    { label: "Declined", target: "Declined", tone: "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30" },
+  ],
+  Processing: [
+    { label: "Approved", target: "Approved", tone: "text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30" },
+    { label: "Declined", target: "Declined", tone: "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30" },
+  ],
+  Declined: [
+    { label: "Reprocessing", target: "Processing", tone: "text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-950/30" },
+  ],
+};
+
+function statusLabel(status: VoucherStatus) {
+  return status;
+}
+
+function VoucherStatusBadge({ status }: { status: VoucherStatus }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-3">
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted/40">
-          <Icon className="size-5 text-muted-foreground" />
-        </div>
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold">{name}</div>
-          <div className="truncate text-xs text-muted-foreground">{meta}</div>
-        </div>
-      </div>
-      <Button variant="ghost" size="icon-sm" aria-label={`More actions for ${name}`}>
-        <MoreVertical />
+    <span className={cn("inline-flex h-6 items-center rounded-md border px-2 text-[11px] font-medium", statusStyles[status])}>
+      <span className="mr-1.5 size-1.5 rounded-full bg-current" />
+      {statusLabel(status)}
+    </span>
+  );
+}
+
+function VoucherMethodCell({ method }: { method: VoucherMethod }) {
+  return (
+    <div className="flex items-center gap-3">
+      {method.id === "orange" || method.id === "orange-duplicate" ? (
+        <span className="flex h-8 w-12 items-center justify-center rounded-md bg-background text-[11px] font-semibold shadow-[0_0_0_1px_var(--border)]">
+          G Pay
+        </span>
+      ) : (
+        <span className="flex h-8 w-12 items-center justify-center overflow-hidden rounded-md bg-background p-1 shadow-[0_0_0_1px_var(--border)]">
+          <img src={method.logo} alt="" className="max-h-full max-w-full object-contain" />
+        </span>
+      )}
+      <span className="text-sm font-medium">{method.name}</span>
+    </div>
+  );
+}
+
+function VoucherAction({
+  label,
+  target,
+  tone,
+  onCommit,
+}: {
+  label: string;
+  target: VoucherStatus;
+  tone: string;
+  onCommit: () => void;
+}) {
+  const [arming, setArming] = useState(false);
+  const [seconds, setSeconds] = useState(5);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (!arming) return;
+
+    const startedAt = Date.now();
+    setSeconds(5);
+    setProgress(0);
+
+    const timer = window.setInterval(() => {
+      const elapsed = Date.now() - startedAt;
+      const nextProgress = Math.min(100, (elapsed / 5000) * 100);
+      const nextSeconds = Math.max(0, Math.ceil((5000 - elapsed) / 1000));
+      setProgress(nextProgress);
+      setSeconds(nextSeconds);
+
+      if (elapsed >= 5000) {
+        window.clearInterval(timer);
+        setArming(false);
+        onCommit();
+      }
+    }, 50);
+
+    return () => window.clearInterval(timer);
+  }, [arming, onCommit]);
+
+  if (arming) {
+    return (
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="relative h-7 min-w-[138px] overflow-hidden px-2 text-[11px]"
+        onClick={() => {
+          setArming(false);
+          setProgress(0);
+          setSeconds(5);
+        }}
+      >
+        <span
+          className="absolute inset-y-0 left-0 bg-foreground/10 transition-[width]"
+          style={{ width: progress + "%" }}
+        />
+        <span className="relative z-10 whitespace-nowrap">
+          العودة إلى الحالة السابقة · {seconds}s
+        </span>
       </Button>
+    );
+  }
+
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="ghost"
+      className={cn("h-7 px-2 text-[11px]", tone)}
+      onClick={() => setArming(true)}
+    >
+      {label}
+    </Button>
+  );
+}
+
+function VoucherActions({
+  row,
+  onStatusChange,
+}: {
+  row: VoucherRow;
+  onStatusChange: (id: string, status: VoucherStatus) => void;
+}) {
+  const actions = row.status === "Duplicated" ? [] : row.status === "Approved" ? [] : nextActions[row.status];
+
+  if (row.status === "Duplicated") {
+    return (
+      <Button type="button" size="sm" variant="outline" disabled className="h-7 px-2 text-[11px]">
+        cant handle
+      </Button>
+    );
+  }
+
+  if (row.status === "Approved") {
+    return <span className="text-[11px] text-muted-foreground">—</span>;
+  }
+
+  return (
+    <div className="flex items-center justify-end gap-1">
+      {actions.map((action) => (
+        <VoucherAction
+          key={action.target + action.label}
+          label={action.label}
+          target={action.target}
+          tone={action.tone}
+          onCommit={() => onStatusChange(row.id, action.target)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function PaymentMethodsTable() {
+  const [rows, setRows] = useState(voucherRows);
+
+  const updateStatus = (id: string, status: VoucherStatus) => {
+    setRows((current) => current.map((row) => (row.id === id ? { ...row, status } : row)));
+  };
+
+  return (
+    <div className="overflow-hidden rounded-lg border bg-background">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[920px] border-collapse">
+          <thead>
+            <tr className="border-b bg-background text-left">
+              <th className="px-4 py-3 text-xs font-medium text-muted-foreground">Payment method</th>
+              <th className="px-4 py-3 text-xs font-medium text-muted-foreground">Ending</th>
+              <th className="px-4 py-3 text-xs font-medium text-muted-foreground">Role</th>
+              <th className="px-4 py-3 text-xs font-medium text-muted-foreground">Date expired</th>
+              <th className="px-4 py-3 text-xs font-medium text-muted-foreground">Status</th>
+              <th className="w-[260px] px-4 py-3 text-right text-xs font-medium text-muted-foreground">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.id} className="border-b last:border-0">
+                <td className="px-4 py-3">
+                  <VoucherMethodCell method={row.method} />
+                </td>
+                <td className="px-4 py-3 text-sm tabular-nums text-muted-foreground">{row.ending}</td>
+                <td className="px-4 py-3">
+                  <span className={cn(
+                    "inline-flex items-center rounded-md border px-2 py-0.5 text-[10px]",
+                    row.role === "Default"
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+                      : "border-border bg-muted/30 text-muted-foreground",
+                  )}>
+                    {row.role === "Default" ? "• " : ""}{row.role}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-sm text-muted-foreground tabular-nums">{row.expires}</td>
+                <td className="px-4 py-3">
+                  <VoucherStatusBadge status={row.status} />
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <VoucherActions row={row} onStatusChange={updateStatus} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -529,12 +780,11 @@ export function TransactionDetail() {
           </section>
 
           <section className="space-y-5">
-            <SectionHeading>Supporting documents</SectionHeading>
-            <div className="grid gap-3 lg:grid-cols-3">
-              <DocumentCard name="bank-authorization.pdf" meta="Uploaded May 29, 2026 at 09:01" />
-              <DocumentCard name="risk-review-note.txt" meta="Added by Priya Shah at 09:18" />
-              <DocumentCard name="invoice-20486.pdf" meta="Generated from billing workspace" />
-            </div>
+            <SectionHeading>Payment methods</SectionHeading>
+            <p className="text-xs text-muted-foreground">
+              Recharge card and voucher payment methods configured for this deposit.
+            </p>
+            <PaymentMethodsTable />
           </section>
 
           <section className="space-y-5">
