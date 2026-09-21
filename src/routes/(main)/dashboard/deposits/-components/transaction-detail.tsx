@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import {
@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   WalletCards,
   MessageSquare,
+  X,
 } from "lucide-react";
 
 import { cn } from "cn";
@@ -137,6 +138,7 @@ function EvidenceGallery() {
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const startOffset = useRef({ x: 0, y: 0 });
 
@@ -147,7 +149,7 @@ function EvidenceGallery() {
     setOffset({ x: 0, y: 0 });
   };
 
-  const zoomIn = () => setScale((value) => Math.min(4, Number((value + 0.5).toFixed(1))));
+  const zoomIn = () => setScale((value) => Math.min(5, Number((value + 0.5).toFixed(1))));
   const zoomOut = () =>
     setScale((value) => {
       const next = Math.max(1, Number((value - 0.5).toFixed(1)));
@@ -155,102 +157,177 @@ function EvidenceGallery() {
       return next;
     });
 
+  const previousImage = () => {
+    if (evidenceImages.length < 2) return;
+    setCurrentIndex((value) => (value - 1 + evidenceImages.length) % evidenceImages.length);
+    resetView();
+  };
+
   const nextImage = () => {
     if (evidenceImages.length < 2) return;
     setCurrentIndex((value) => (value + 1) % evidenceImages.length);
     resetView();
   };
 
-  return (
-    <Card className="overflow-hidden">
-      <CardHeader className="border-b pb-3">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <CardTitle className="text-sm">Payment evidence</CardTitle>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Zoom and drag the image to inspect details.
-            </p>
-          </div>
-          <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
-            {currentIndex + 1} / {evidenceImages.length}
-          </span>
-        </div>
-      </CardHeader>
+  useEffect(() => {
+    if (!fullscreen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFullscreen(false);
+      if (event.key === "ArrowRight") nextImage();
+      if (event.key === "ArrowLeft") previousImage();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [fullscreen]);
+
+  const openFullscreen = () => {
+    resetView();
+    setFullscreen(true);
+  };
+
+  const imageStage = (isFullscreen: boolean) => (
+    <div
+      className={cn(
+        "relative overflow-hidden bg-muted/30",
+        isFullscreen ? "h-full w-full" : "h-[320px] w-full",
+        dragging ? "cursor-grabbing" : scale > 1 ? "cursor-grab" : "cursor-zoom-in",
+      )}
+      onWheel={(event) => {
+        event.preventDefault();
+        if (event.deltaY < 0) zoomIn();
+        else zoomOut();
+      }}
+      onDoubleClick={() => {
+        if (scale === 1) zoomIn();
+        else resetView();
+      }}
+      onPointerDown={(event) => {
+        if (scale === 1) return;
+        event.currentTarget.setPointerCapture(event.pointerId);
+        dragStart.current = { x: event.clientX, y: event.clientY };
+        startOffset.current = offset;
+        setDragging(true);
+      }}
+      onPointerMove={(event) => {
+        if (!dragging) return;
+        setOffset({
+          x: startOffset.current.x + (event.clientX - dragStart.current.x),
+          y: startOffset.current.y + (event.clientY - dragStart.current.y),
+        });
+      }}
+      onPointerUp={(event) => {
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+        setDragging(false);
+      }}
+      onPointerCancel={() => setDragging(false)}
+    >
+      <img
+        src={image.src}
+        alt={image.title}
+        draggable={false}
+        onClick={() => {
+          if (!isFullscreen && scale === 1) openFullscreen();
+        }}
+        className={cn(
+          "absolute inset-0 size-full select-none transition-transform duration-150",
+          isFullscreen ? "object-contain" : "object-cover",
+        )}
+        style={{
+          transform: "translate(" + offset.x + "px, " + offset.y + "px) scale(" + scale + ")",
+        }}
+      />
 
       <div
         className={cn(
-          "relative h-[250px] overflow-hidden bg-muted/30",
-          dragging ? "cursor-grabbing" : scale > 1 ? "cursor-grab" : "cursor-zoom-in",
+          "absolute flex items-center gap-1 rounded-lg border bg-background/90 p-1 shadow-sm backdrop-blur",
+          isFullscreen ? "left-1/2 top-4 -translate-x-1/2" : "right-3 top-3",
         )}
-        onWheel={(event) => {
-          event.preventDefault();
-          if (event.deltaY < 0) zoomIn();
-          else zoomOut();
-        }}
-        onDoubleClick={() => {
-          if (scale === 1) zoomIn();
-          else resetView();
-        }}
-        onPointerDown={(event) => {
-          if (scale === 1) return;
-          event.currentTarget.setPointerCapture(event.pointerId);
-          dragStart.current = { x: event.clientX, y: event.clientY };
-          startOffset.current = offset;
-          setDragging(true);
-        }}
-        onPointerMove={(event) => {
-          if (!dragging) return;
-          setOffset({
-            x: startOffset.current.x + (event.clientX - dragStart.current.x),
-            y: startOffset.current.y + (event.clientY - dragStart.current.y),
-          });
-        }}
-        onPointerUp={(event) => {
-          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-            event.currentTarget.releasePointerCapture(event.pointerId);
-          }
-          setDragging(false);
-        }}
-        onPointerCancel={() => setDragging(false)}
       >
-        <div
-          className="flex h-full w-full items-center justify-center transition-transform duration-150"
-          style={{ transform: "translate(" + offset.x + "px, " + offset.y + "px) scale(" + scale + ")" }}
-        >
-          <img
-            src={image.src}
-            alt={image.title}
-            draggable={false}
-            className="h-full w-full select-none object-contain"
-          />
-        </div>
-
-        <div className="absolute right-3 top-3 flex items-center gap-1 rounded-lg border bg-background/90 p-1 shadow-sm backdrop-blur">
-          <Button type="button" variant="ghost" size="icon-sm" onClick={zoomOut} disabled={scale <= 1} aria-label="Zoom out">
-            <Minus />
-          </Button>
-          <Button type="button" variant="ghost" size="icon-sm" onClick={resetView} aria-label="Reset image view">
-            <Maximize2 />
-          </Button>
-          <Button type="button" variant="ghost" size="icon-sm" onClick={zoomIn} disabled={scale >= 4} aria-label="Zoom in">
-            <Plus />
-          </Button>
-        </div>
-
-        {evidenceImages.length > 1 ? (
-          <Button
-            type="button"
-            variant="secondary"
-            size="icon"
-            className="absolute bottom-3 right-3 size-8 shadow-sm"
-            onClick={nextImage}
-            aria-label="Next evidence image"
-          >
-            <ChevronRight />
-          </Button>
-        ) : null}
+        <Button type="button" variant="ghost" size="icon-sm" onClick={previousImage} disabled={evidenceImages.length <= 1} aria-label="Previous evidence image">
+          <ArrowLeft />
+        </Button>
+        <Button type="button" variant="ghost" size="icon-sm" onClick={zoomOut} disabled={scale <= 1} aria-label="Zoom out">
+          <Minus />
+        </Button>
+        <Button type="button" variant="ghost" size="icon-sm" onClick={resetView} aria-label="Reset image view">
+          <Maximize2 />
+        </Button>
+        <Button type="button" variant="ghost" size="icon-sm" onClick={zoomIn} disabled={scale >= 5} aria-label="Zoom in">
+          <Plus />
+        </Button>
+        <Button type="button" variant="ghost" size="icon-sm" onClick={nextImage} disabled={evidenceImages.length <= 1} aria-label="Next evidence image">
+          <ChevronRight />
+        </Button>
       </div>
-    </Card>
+
+      <div className={cn(
+        "absolute flex items-center gap-2 rounded-md bg-black/55 px-2.5 py-1 text-[11px] text-white backdrop-blur",
+        isFullscreen ? "left-4 top-4" : "bottom-3 left-3",
+      )}>
+        <span>{currentIndex + 1} / {evidenceImages.length}</span>
+        {!isFullscreen ? <span className="hidden sm:inline">Click image to inspect</span> : <span className="hidden sm:inline">Esc to close · ← → to navigate</span>}
+      </div>
+
+      {isFullscreen ? (
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          className="absolute right-4 top-4 size-9 shadow-sm"
+          onClick={() => setFullscreen(false)}
+          aria-label="Close full screen"
+        >
+          <X />
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          className="absolute bottom-3 right-3 size-8 shadow-sm"
+          onClick={openFullscreen}
+          aria-label="Open image full screen"
+        >
+          <Maximize2 />
+        </Button>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+      <Card className="overflow-hidden">
+        <CardHeader className="border-b pb-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-sm">Payment evidence</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Image fills the preview. Open full screen to zoom and inspect details.
+              </p>
+            </div>
+            <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+              {currentIndex + 1} / {evidenceImages.length}
+            </span>
+          </div>
+        </CardHeader>
+        {imageStage(false)}
+      </Card>
+
+      {fullscreen ? (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 p-4 backdrop-blur-sm sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Payment evidence viewer"
+        >
+          {imageStage(true)}
+        </div>
+      ) : null}
+    </>
   );
 }
 
