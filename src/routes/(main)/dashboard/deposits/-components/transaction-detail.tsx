@@ -149,11 +149,6 @@ function EvidenceGallery() {
 
   const image = evidenceImages[currentIndex];
 
-  const clearZoom = () => {
-    setScale(1);
-    setOffset({ x: 0, y: 0 });
-  };
-
   const zoomIn = () =>
     setScale((value) => Math.min(5, Number((value + 0.5).toFixed(1))));
 
@@ -169,13 +164,15 @@ function EvidenceGallery() {
     setCurrentIndex(
       (value) => (value - 1 + evidenceImages.length) % evidenceImages.length,
     );
-    clearZoom();
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
   };
 
   const nextImage = () => {
     if (evidenceImages.length < 2) return;
     setCurrentIndex((value) => (value + 1) % evidenceImages.length);
-    clearZoom();
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
   };
 
   useEffect(() => {
@@ -194,7 +191,8 @@ function EvidenceGallery() {
   }, [fullscreen]);
 
   const openFullscreen = () => {
-    clearZoom();
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
     setFullscreen(true);
   };
 
@@ -217,11 +215,7 @@ function EvidenceGallery() {
         else zoomOut();
       }}
       onDoubleClick={() => {
-        if (scale === 1) zoomIn();
-        else {
-          setScale(1);
-          setOffset({ x: 0, y: 0 });
-        }
+        if (scale < 5) zoomIn();
       }}
       onPointerDown={(event) => {
         if (scale === 1) return;
