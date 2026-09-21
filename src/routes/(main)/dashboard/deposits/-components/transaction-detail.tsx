@@ -185,6 +185,9 @@ function VoucherAction({
   const [arming, setArming] = useState(false);
   const [seconds, setSeconds] = useState(5);
   const [progress, setProgress] = useState(0);
+  const onCommitRef = useRef(onCommit);
+
+  onCommitRef.current = onCommit;
 
   useEffect(() => {
     if (!arming) return;
@@ -203,12 +206,12 @@ function VoucherAction({
       if (elapsed >= 5000) {
         window.clearInterval(timer);
         setArming(false);
-        onCommit();
+        onCommitRef.current();
       }
     }, 50);
 
     return () => window.clearInterval(timer);
-  }, [arming, onCommit]);
+  }, [arming]);
 
   if (arming) {
     return (
