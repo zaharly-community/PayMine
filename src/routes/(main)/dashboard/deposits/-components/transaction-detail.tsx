@@ -4,23 +4,24 @@ import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
+  Circle,
   Copy,
   Download,
   FileText,
   Mail,
-  MessageSquare,
   MoreVertical,
   Pencil,
   RefreshCcw,
   ShieldCheck,
   WalletCards,
+  MessageSquare,
 } from "lucide-react";
 
 import { cn } from "cn";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 
 function SectionHeading({ children }: { children: ReactNode }) {
   return (
@@ -31,28 +32,46 @@ function SectionHeading({ children }: { children: ReactNode }) {
   );
 }
 
-function Field({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function Field({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
   return (
     <div className="min-w-0 space-y-1.5">
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={cn("truncate text-sm font-medium", mono && "font-mono text-xs")}>{value}</div>
+      <div className={cn("truncate text-sm font-medium", mono && "font-mono text-xs")}>
+        {value}
+      </div>
     </div>
   );
 }
 
-function DocumentCard({ name, meta }: { name: string; meta: string }) {
+function DocumentCard({
+  name,
+  meta,
+  icon: Icon = FileText,
+}: {
+  name: string;
+  meta: string;
+  icon?: typeof FileText;
+}) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-3">
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted/40">
-          <FileText className="size-5 text-muted-foreground" />
+          <Icon className="size-5 text-muted-foreground" />
         </div>
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold">{name}</div>
           <div className="truncate text-xs text-muted-foreground">{meta}</div>
         </div>
       </div>
-      <Button variant="ghost" size="icon-sm" aria-label="More document actions">
+      <Button variant="ghost" size="icon-sm" aria-label={\`More actions for \${name}\`}>
         <MoreVertical />
       </Button>
     </div>
@@ -81,7 +100,12 @@ function TimelineItem({
         <div>{time}</div>
       </div>
       <div className="relative flex justify-center">
-        <span className={cn("mt-1.5 size-2.5 rounded-full border-2 bg-background", active ? "border-amber-500 bg-amber-500" : "border-muted-foreground/40")} />
+        <span
+          className={cn(
+            "mt-1.5 size-2.5 rounded-full border-2 bg-background",
+            active ? "border-amber-500 bg-amber-500" : "border-muted-foreground/40",
+          )}
+        />
         <span className="absolute top-4 bottom-0 w-px bg-border" />
       </div>
       <div className="pb-7">
@@ -99,7 +123,10 @@ function SummaryCard() {
   return (
     <aside className="overflow-hidden rounded-lg border bg-background">
       <div className="space-y-5 p-5">
-        <Badge variant="outline" className="h-6 rounded-md border-amber-500/20 bg-amber-500/10 px-2 text-xs font-medium text-amber-700 dark:text-amber-400">
+        <Badge
+          variant="outline"
+          className="h-6 rounded-md border-amber-500/20 bg-amber-500/10 px-2 text-xs font-medium text-amber-700 dark:text-amber-400"
+        >
           <span className="mr-1.5 size-1.5 rounded-full bg-amber-500" />
           Pending review
         </Badge>
@@ -133,11 +160,20 @@ function SummaryCard() {
       </div>
 
       <div className="grid grid-cols-2 border-t">
-        <Button type="button" variant="ghost" className="h-11 rounded-none border-r text-sm" onClick={() => navigator.clipboard?.writeText("txn_R8M42QH91L6C")}>
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-11 rounded-none border-r text-sm"
+          onClick={() => navigator.clipboard?.writeText("txn_R8M42QH91L6C")}
+        >
           <Copy />
           Copy ID
         </Button>
-        <Button type="button" variant="ghost" className="h-11 rounded-none text-sm">
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-11 rounded-none text-sm"
+        >
           <Download />
           Receipt
         </Button>
@@ -154,7 +190,10 @@ export function TransactionDetail() {
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0">
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="h-6 rounded-md border-amber-500/20 bg-amber-500/10 px-2 text-xs font-medium text-amber-700 dark:text-amber-400">
+                <Badge
+                  variant="outline"
+                  className="h-6 rounded-md border-amber-500/20 bg-amber-500/10 px-2 text-xs font-medium text-amber-700 dark:text-amber-400"
+                >
                   <span className="mr-1.5 size-1.5 rounded-full bg-amber-500" />
                   Pending review
                 </Badge>
@@ -162,7 +201,9 @@ export function TransactionDetail() {
               </div>
 
               <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-semibold tracking-tight">Transaction txn_R8M42QH91L6C</h1>
+                <h1 className="text-3xl font-semibold tracking-tight">
+                  Transaction txn_R8M42QH91L6C
+                </h1>
                 <Button variant="outline" size="icon-sm" aria-label="Edit transaction">
                   <Pencil />
                 </Button>
@@ -190,133 +231,121 @@ export function TransactionDetail() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1500px] gap-8 px-6 py-8 xl:grid-cols-[minmax(0,1fr)_304px]">
-        <main className="min-w-0">
-          <Tabs className="gap-6" defaultValue="overview">
-            <TabsList variant="line" className="w-full justify-start gap-2 border-b ps-0 *:data-[slot=tabs-trigger]:flex-none">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="transaction">Transaction details</TabsTrigger>
-              <TabsTrigger value="processor">Processor</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="operations">Operations</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="overview" className="space-y-8">
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-4">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
-                  <p className="text-sm leading-6 text-amber-900 dark:text-amber-100">
-                    This ACH debit is inside a manual review window because the customer exceeded the new-account velocity limit. Confirm the invoice, authorization file, and bank ownership before approval.
-                  </p>
-                </div>
-              </div>
-
-              <section className="space-y-5">
-                <SectionHeading>Transaction snapshot</SectionHeading>
-                <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
-                  <Field label="Transaction ID" value="txn_R8M42QH91L6C" mono />
-                  <Field label="Amount" value="$8,120.50" />
-                  <Field label="Customer" value="Helio Supply" />
-                  <Field label="Payment method" value="ACH debit" />
-                  <Field label="Processor" value="Adyen" />
-                  <Field label="Source" value="Hosted checkout" />
-                  <Field label="Currency" value="USD" />
-                  <Field label="Created" value="May 29, 2026, 08:56 IST" />
-                </div>
-              </section>
-            </TabsContent>
-
-            <TabsContent value="transaction" className="space-y-8">
-              <section className="space-y-5">
-                <SectionHeading>Transaction Details</SectionHeading>
-                <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
-                  <Field label="Transaction ID" value="txn_R8M42QH91L6C" mono />
-                  <Field label="Amount" value="$8,120.50" />
-                  <Field label="Customer" value="Helio Supply" />
-                  <Field label="Payment method" value="ACH debit" />
-                  <Field label="Processor" value="Adyen" />
-                  <Field label="Source" value="Hosted checkout" />
-                  <Field label="Currency" value="USD" />
-                  <Field label="Created" value="May 29, 2026, 08:56 IST" />
-                  <Field label="Settlement" value="Expected Jun 02, 2026" />
-                  <Field label="Ledger account" value="Operating balance" />
-                  <Field label="Descriptor" value="HELIO-SUPPLY-0429" />
-                  <Field label="Statement ID" value="STMT-8462-HS" />
-                </div>
-              </section>
-            </TabsContent>
-
-            <TabsContent value="processor" className="space-y-8">
-              <section className="space-y-5">
-                <SectionHeading>Processor Context</SectionHeading>
-                <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
-                  <Field label="Merchant route" value="North America / ACH" />
-                  <Field label="Invoice" value="INV-20486" mono />
-                  <Field label="Customer email" value="billing@helio.supply" />
-                  <Field label="Capture mode" value="Automatic after bank confirmation" />
-                  <Field label="Verification" value="Micro-deposit fallback enabled" />
-                  <Field label="Location" value="Austin, TX" />
-                  <Field label="IP address" value="198.51.100.42" mono />
-                  <Field label="Webhook delivery" value="2 delivered, 1 retry scheduled" />
-                </div>
-              </section>
-            </TabsContent>
-
-            <TabsContent value="documents" className="space-y-8">
-              <section className="space-y-5">
-                <SectionHeading>Supporting documents</SectionHeading>
-                <div className="grid gap-3 lg:grid-cols-3">
-                  <DocumentCard name="bank-authorization.pdf" meta="Uploaded May 29, 2026 at 09:01" />
-                  <DocumentCard name="risk-review-note.txt" meta="Added by Priya Shah at 09:18" />
-                  <DocumentCard name="invoice-20486.pdf" meta="Generated from billing workspace" />
-                </div>
-              </section>
-            </TabsContent>
-
-            <TabsContent value="operations" className="space-y-8">
-              <section className="space-y-5">
-                <SectionHeading>Operational Notes</SectionHeading>
-                <div className="grid gap-3 lg:grid-cols-3">
-                  <div className="rounded-lg border p-4">
-                    <ShieldCheck className="size-5 text-muted-foreground" />
-                    <div className="mt-5 text-sm font-semibold">Risk posture</div>
-                    <p className="mt-2 text-sm leading-5 text-muted-foreground">Low dispute history, elevated transaction size.</p>
-                  </div>
-                  <div className="rounded-lg border p-4">
-                    <WalletCards className="size-5 text-muted-foreground" />
-                    <div className="mt-5 text-sm font-semibold">Funds movement</div>
-                    <p className="mt-2 text-sm leading-5 text-muted-foreground">Debit is authorized but settlement has not started.</p>
-                  </div>
-                  <div className="rounded-lg border p-4">
-                    <MessageSquare className="size-5 text-muted-foreground" />
-                    <div className="mt-5 text-sm font-semibold">Customer thread</div>
-                    <p className="mt-2 text-sm leading-5 text-muted-foreground">Billing contact confirmed the invoice by email.</p>
-                  </div>
-                </div>
-              </section>
-            </TabsContent>
-
-            <TabsContent value="history" className="space-y-8">
-              <section className="space-y-5">
-                <SectionHeading>History</SectionHeading>
-                <div>
-                  <TimelineItem date="May 29" time="09:22" title="Review window opened" actor="Risk engine" description="ACH velocity threshold requested a second approval before capture." active />
-                  <TimelineItem date="May 29" time="09:18" title="Internal note added" actor="Priya Shah" description="Finance confirmed the purchase order and matching invoice total." />
-                  <TimelineItem date="May 29" time="09:03" title="Bank account verified" actor="Adyen" description="Account ownership passed through processor verification." />
-                </div>
-              </section>
-            </TabsContent>
-
-            <div className="pt-2">
-              <Button asChild variant="ghost" size="sm">
-                <a href="/dashboard/deposits">
-                  <ArrowLeft />
-                  Back to deposits
-                </a>
-              </Button>
+      <div className="mx-auto grid max-w-[1500px] gap-8 px-6 py-10 xl:grid-cols-[minmax(0,1fr)_304px]">
+        <main className="min-w-0 space-y-10">
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
+              <p className="text-sm leading-6 text-amber-900 dark:text-amber-100">
+                This ACH debit is inside a manual review window because the customer exceeded the new-account velocity limit. Confirm the invoice, authorization file, and bank ownership before approval.
+              </p>
             </div>
-          </Tabs>
+          </div>
+
+          <section className="space-y-5">
+            <SectionHeading>Transaction Details</SectionHeading>
+            <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
+              <Field label="Transaction ID" value="txn_R8M42QH91L6C" mono />
+              <Field label="Amount" value="$8,120.50" />
+              <Field label="Customer" value="Helio Supply" />
+              <Field label="Payment method" value="ACH debit" />
+              <Field label="Processor" value="Adyen" />
+              <Field label="Source" value="Hosted checkout" />
+              <Field label="Currency" value="USD" />
+              <Field label="Created" value="May 29, 2026, 08:56 IST" />
+              <Field label="Settlement" value="Expected Jun 02, 2026" />
+              <Field label="Ledger account" value="Operating balance" />
+              <Field label="Descriptor" value="HELIO-SUPPLY-0429" />
+              <Field label="Statement ID" value="STMT-8462-HS" />
+            </div>
+          </section>
+
+          <section className="space-y-5">
+            <SectionHeading>Supporting documents</SectionHeading>
+            <div className="grid gap-3 lg:grid-cols-3">
+              <DocumentCard name="bank-authorization.pdf" meta="Uploaded May 29, 2026 at 09:01" />
+              <DocumentCard name="risk-review-note.txt" meta="Added by Priya Shah at 09:18" />
+              <DocumentCard name="invoice-20486.pdf" meta="Generated from billing workspace" />
+            </div>
+          </section>
+
+          <section className="space-y-5">
+            <SectionHeading>Processor Context</SectionHeading>
+            <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
+              <Field label="Merchant route" value="North America / ACH" />
+              <Field label="Invoice" value="INV-20486" mono />
+              <Field label="Customer email" value="billing@helio.supply" />
+              <Field label="Capture mode" value="Automatic after bank confirmation" />
+              <Field label="Verification" value="Micro-deposit fallback enabled" />
+              <Field label="Location" value="Austin, TX" />
+              <Field label="IP address" value="198.51.100.42" mono />
+              <Field label="Webhook delivery" value="2 delivered, 1 retry scheduled" />
+            </div>
+          </section>
+
+          <section className="space-y-5">
+            <SectionHeading>Operational Notes</SectionHeading>
+            <div className="grid gap-3 lg:grid-cols-3">
+              <div className="rounded-lg border p-4">
+                <ShieldCheck className="size-5 text-muted-foreground" />
+                <div className="mt-5 text-sm font-semibold">Risk posture</div>
+                <p className="mt-2 text-sm leading-5 text-muted-foreground">
+                  Low dispute history, elevated transaction size.
+                </p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <WalletCards className="size-5 text-muted-foreground" />
+                <div className="mt-5 text-sm font-semibold">Funds movement</div>
+                <p className="mt-2 text-sm leading-5 text-muted-foreground">
+                  Debit is authorized but settlement has not started.
+                </p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <MessageSquare className="size-5 text-muted-foreground" />
+                <div className="mt-5 text-sm font-semibold">Customer thread</div>
+                <p className="mt-2 text-sm leading-5 text-muted-foreground">
+                  Billing contact confirmed the invoice by email.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-5">
+            <SectionHeading>History</SectionHeading>
+            <div>
+              <TimelineItem
+                date="May 29"
+                time="09:22"
+                title="Review window opened"
+                actor="Risk engine"
+                description="ACH velocity threshold requested a second approval before capture."
+                active
+              />
+              <TimelineItem
+                date="May 29"
+                time="09:18"
+                title="Internal note added"
+                actor="Priya Shah"
+                description="Finance confirmed the purchase order and matching invoice total."
+              />
+              <TimelineItem
+                date="May 29"
+                time="09:03"
+                title="Bank account verified"
+                actor="Adyen"
+                description="Account ownership passed through processor verification."
+              />
+            </div>
+          </section>
+
+          <div className="pt-2">
+            <Button asChild variant="ghost" size="sm">
+              <a href="/dashboard/deposits">
+                <ArrowLeft />
+                Back to deposits
+              </a>
+            </Button>
+          </div>
         </main>
 
         <div className="min-w-0">
