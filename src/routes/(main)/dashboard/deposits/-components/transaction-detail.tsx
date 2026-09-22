@@ -909,7 +909,85 @@ function SummaryCard() {
   );
 }
 
+function ReportCustomerDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [subject, setSubject] = useState("Suspicious activity");
+  const [reason, setReason] = useState("");
+
+  const close = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setSubject("Suspicious activity");
+      setReason("");
+    }
+    onOpenChange(nextOpen);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={close}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Report customer</DialogTitle>
+          <DialogDescription>
+            Select a subject and provide the reason for reporting this customer.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="report-subject">Subject</Label>
+            <select
+              id="report-subject"
+              value={subject}
+              onChange={(event) => setSubject(event.target.value)}
+              className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+            >
+              <option>Suspicious activity</option>
+              <option>Fraud</option>
+              <option>Duplicate payment</option>
+              <option>Abuse</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="report-reason">Reason</Label>
+            <textarea
+              id="report-reason"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Write the reason for this report..."
+              rows={5}
+              className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => close(false)}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={!reason.trim()}
+            onClick={() => close(false)}
+          >
+            Submit report
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function TransactionDetail() {
+  const [reportOpen, setReportOpen] = useState(false);
+
   return (
     <section className="min-h-full bg-background">
       <header className="border-b px-6 py-5">
@@ -1082,6 +1160,16 @@ export function TransactionDetail() {
               <Mail />
               Email customer
             </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="w-full"
+              onClick={() => setReportOpen(true)}
+            >
+              <AlertTriangle />
+              Report customer
+            </Button>
+            <ReportCustomerDialog open={reportOpen} onOpenChange={setReportOpen} />
           </div>
         </div>
       </div>
