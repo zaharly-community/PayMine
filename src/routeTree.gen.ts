@@ -786,6 +786,7 @@ export interface FileRouteTypes {
     | '/dashboard/roles'
     | '/dashboard/tasks'
     | '/dashboard/users'
+    | '/dashboard/withdrawls/analytics'
     | '/dashboard/distributors'
     | '/dashboard/'
     | '/dashboard'
