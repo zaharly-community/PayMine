@@ -10,14 +10,11 @@ import {
   Download,
   Mail,
   Maximize2,
-  MessageSquare,
   Minus,
   MoreVertical,
   Pencil,
   Plus,
   RefreshCcw,
-  ShieldCheck,
-  WalletCards,
   X,
 } from "lucide-react";
 
@@ -1141,47 +1138,6 @@ export function TransactionDetail() {
               Recharge card and voucher payment methods configured for this deposit.
             </p>
             <PaymentMethodsTable />
-          </section>
-
-          <section className="space-y-5">
-            <SectionHeading>Processor Context</SectionHeading>
-            <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
-              <Field label="Merchant route" value="North America / ACH" />
-              <Field label="Invoice" value="INV-20486" mono />
-              <Field label="Customer email" value="billing@helio.supply" />
-              <Field label="Capture mode" value="Automatic after bank confirmation" />
-              <Field label="Verification" value="Micro-deposit fallback enabled" />
-              <Field label="Location" value="Austin, TX" />
-              <Field label="IP address" value="198.51.100.42" mono />
-              <Field label="Webhook delivery" value="2 delivered, 1 retry scheduled" />
-            </div>
-          </section>
-
-          <section className="space-y-5">
-            <SectionHeading>Operational Notes</SectionHeading>
-            <div className="grid gap-3 lg:grid-cols-3">
-              <div className="rounded-lg border p-4">
-                <ShieldCheck className="size-5 text-muted-foreground" />
-                <div className="mt-5 text-sm font-semibold">Risk posture</div>
-                <p className="mt-2 text-sm leading-5 text-muted-foreground">
-                  Low dispute history, elevated transaction size.
-                </p>
-              </div>
-              <div className="rounded-lg border p-4">
-                <WalletCards className="size-5 text-muted-foreground" />
-                <div className="mt-5 text-sm font-semibold">Funds movement</div>
-                <p className="mt-2 text-sm leading-5 text-muted-foreground">
-                  Debit is authorized but settlement has not started.
-                </p>
-              </div>
-              <div className="rounded-lg border p-4">
-                <MessageSquare className="size-5 text-muted-foreground" />
-                <div className="mt-5 text-sm font-semibold">Customer thread</div>
-                <p className="mt-2 text-sm leading-5 text-muted-foreground">
-                  Billing contact confirmed the invoice by email.
-                </p>
-              </div>
-            </div>
           </section>
 
           <section className="space-y-5">
