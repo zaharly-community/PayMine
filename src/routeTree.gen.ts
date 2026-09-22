@@ -68,7 +68,7 @@ import { Route as mainDashboardWithdrawlsRouteRouteImport } from './routes/(main
 import { Route as mainDashboardPlayersRouteRouteImport } from './routes/(main)/dashboard/players/route'
 import { Route as mainDashboardPlayersProfileRouteRouteImport } from './routes/(main)/dashboard/players/$playerId/route'
 import { Route as mainDashboardDistributorsRouteRouteImport } from './routes/(main)/dashboard/distributors/route'
-import { Route as mainDashboardDistributorsAccountRouteRouteImport } from './routes/(main)/dashboard/distributors/account'
+import { Route as mainDashboardDistributorsAccountRouteRouteImport } from './routes/(main)/dashboard/distributors_.account'
 import { Route as mainDashboardAccountsRouteRouteImport } from './routes/(main)/dashboard/accounts/route'
 import { Route as mainAuthV1LoginRouteRouteImport } from './routes/(main)/auth/v1/login/route'
 import { Route as mainAuthV1RegisterRouteRouteImport } from './routes/(main)/auth/v1/register/route'
@@ -389,7 +389,7 @@ const mainDashboardDistributorsRouteRoute = mainDashboardDistributorsRouteRouteI
 } as any)
 const mainDashboardDistributorsAccountRouteRoute =
   mainDashboardDistributorsAccountRouteRouteImport.update({
-    id: '/distributors/account',
+    id: '/distributors_/account',
     path: '/distributors/account',
     getParentRoute: () => mainDashboardRouteRoute,
   } as any)
@@ -638,7 +638,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/players/$playerId': typeof mainDashboardPlayersProfileRouteRoute
   '/(main)/dashboard/distributors': typeof mainDashboardDistributorsRouteRoute
-  '/(main)/dashboard/distributors/account': typeof mainDashboardDistributorsAccountRouteRoute
+  '/(main)/dashboard/distributors_/account': typeof mainDashboardDistributorsAccountRouteRoute
   '/(main)/dashboard/accounts': typeof mainDashboardAccountsRouteRoute
   '/(main)/dashboard/': typeof mainDashboardIndexRoute
   '/(main)/auth/v1/login': typeof mainAuthV1LoginRouteRoute
