@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ReactNode } from "react";
 
 import {
@@ -38,7 +39,6 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const rangeItems = [
   { value: "7d", label: "Last 7 days" },
@@ -530,6 +530,60 @@ function ProvidersAnalytics() {
   );
 }
 
+
+const analyticsTabs = [
+  { value: "overview", label: "Overview" },
+  { value: "deposits", label: "Deposits" },
+  { value: "withdrawls", label: "Withdrawls" },
+  { value: "players", label: "Players" },
+  { value: "distributors", label: "Distributors" },
+  { value: "providers", label: "Providers" },
+] as const;
+
+type AnalyticsTab = (typeof analyticsTabs)[number]["value"];
+
+function AnalyticsTabs() {
+  const [activeTab, setActiveTab] = useState<AnalyticsTab>("overview");
+
+  return (
+    <div className="-mx-4 -mb-4 flex flex-col gap-4 sm:-mx-6 sm:-mb-6">
+      <nav className="border-b bg-background" aria-label="Analytics sections">
+        <ul role="list" className="flex min-w-full items-center gap-6 overflow-x-auto px-4 sm:px-6">
+          {analyticsTabs.map((tab) => {
+            const active = activeTab === tab.value;
+
+            return (
+              <li key={tab.value} className="shrink-0">
+                <button
+                  type="button"
+                  aria-current={active ? "page" : undefined}
+                  onClick={() => setActiveTab(tab.value)}
+                  className={
+                    active
+                      ? "inline-flex h-12 items-center border-b-2 border-foreground text-sm font-semibold text-foreground transition-colors"
+                      : "inline-flex h-12 items-center border-b-2 border-transparent text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                  }
+                >
+                  {tab.label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      <div className="px-4 sm:px-6">
+        {activeTab === "overview" ? <PlatformOverview /> : null}
+        {activeTab === "deposits" ? <DepositsAnalytics /> : null}
+        {activeTab === "withdrawls" ? <WithdrawlsTab /> : null}
+        {activeTab === "players" ? <PlayersAnalytics /> : null}
+        {activeTab === "distributors" ? <DistributorsAnalytics /> : null}
+        {activeTab === "providers" ? <ProvidersAnalytics /> : null}
+      </div>
+    </div>
+  );
+}
+
 export function WithdrawlsAnalytics() {
   return (
     <div className="flex flex-col gap-4">
@@ -565,37 +619,7 @@ export function WithdrawlsAnalytics() {
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="flex flex-col gap-4">
-        <div className="overflow-x-auto pb-1">
-          <TabsList className="w-max gap-1">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="deposits">Deposits</TabsTrigger>
-            <TabsTrigger value="withdrawls">Withdrawls</TabsTrigger>
-            <TabsTrigger value="players">Players</TabsTrigger>
-            <TabsTrigger value="distributors">Distributors</TabsTrigger>
-            <TabsTrigger value="providers">Providers</TabsTrigger>
-          </TabsList>
-        </div>
-
-        <TabsContent value="overview">
-          <PlatformOverview />
-        </TabsContent>
-        <TabsContent value="deposits">
-          <DepositsAnalytics />
-        </TabsContent>
-        <TabsContent value="withdrawls">
-          <WithdrawlsTab />
-        </TabsContent>
-        <TabsContent value="players">
-          <PlayersAnalytics />
-        </TabsContent>
-        <TabsContent value="distributors">
-          <DistributorsAnalytics />
-        </TabsContent>
-        <TabsContent value="providers">
-          <ProvidersAnalytics />
-        </TabsContent>
-      </Tabs>
+      <AnalyticsTabs />
     </div>
   );
 }
