@@ -68,7 +68,7 @@ import { Route as mainDashboardWithdrawlsRouteRouteImport } from './routes/(main
 import { Route as mainDashboardPlayersRouteRouteImport } from './routes/(main)/dashboard/players/route'
 import { Route as mainDashboardPlayersProfileRouteRouteImport } from './routes/(main)/dashboard/players/$playerId/route'
 import { Route as mainDashboardDistributorsRouteRouteImport } from './routes/(main)/dashboard/distributors/route'
-import { Route as mainDashboardDistributorsAccountRouteRouteImport } from './routes/(main)/dashboard/distributors/account/route'
+import { Route as mainDashboardDistributorsAccountRouteRouteImport } from './routes/(main)/dashboard/distributors/account'
 import { Route as mainDashboardAccountsRouteRouteImport } from './routes/(main)/dashboard/accounts/route'
 import { Route as mainAuthV1LoginRouteRouteImport } from './routes/(main)/auth/v1/login/route'
 import { Route as mainAuthV1RegisterRouteRouteImport } from './routes/(main)/auth/v1/register/route'
@@ -389,9 +389,9 @@ const mainDashboardDistributorsRouteRoute = mainDashboardDistributorsRouteRouteI
 } as any)
 const mainDashboardDistributorsAccountRouteRoute =
   mainDashboardDistributorsAccountRouteRouteImport.update({
-    id: '/account',
-    path: '/account',
-    getParentRoute: () => mainDashboardDistributorsRouteRoute,
+    id: '/distributors/account',
+    path: '/distributors/account',
+    getParentRoute: () => mainDashboardRouteRoute,
   } as any)
 const mainDashboardAccountsRouteRoute = mainDashboardAccountsRouteRouteImport.update({
   id: '/accounts',
@@ -509,7 +509,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/dashboard/players/$playerId': typeof mainDashboardPlayersProfileRouteRoute
-  '/dashboard/distributors': typeof mainDashboardDistributorsRouteRouteWithChildren
+  '/dashboard/distributors': typeof mainDashboardDistributorsRouteRoute
   '/dashboard/distributors/account': typeof mainDashboardDistributorsAccountRouteRoute
   '/dashboard/accounts': typeof mainDashboardAccountsRouteRoute
   '/dashboard/$': typeof mainDashboardSplatRoute
@@ -637,7 +637,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/players/$playerId': typeof mainDashboardPlayersProfileRouteRoute
-  '/(main)/dashboard/distributors': typeof mainDashboardDistributorsRouteRouteWithChildren
+  '/(main)/dashboard/distributors': typeof mainDashboardDistributorsRouteRoute
   '/(main)/dashboard/distributors/account': typeof mainDashboardDistributorsAccountRouteRoute
   '/(main)/dashboard/accounts': typeof mainDashboardAccountsRouteRoute
   '/(main)/dashboard/': typeof mainDashboardIndexRoute
@@ -1435,17 +1435,6 @@ const mainDashboardPlayersRouteRouteChildren: mainDashboardPlayersRouteRouteChil
 const mainDashboardPlayersRouteRouteWithChildren =
   mainDashboardPlayersRouteRoute._addFileChildren(mainDashboardPlayersRouteRouteChildren)
 
-interface mainDashboardDistributorsRouteRouteChildren {
-  mainDashboardDistributorsAccountRouteRoute: typeof mainDashboardDistributorsAccountRouteRoute
-}
-
-const mainDashboardDistributorsRouteRouteChildren: mainDashboardDistributorsRouteRouteChildren = {
-  mainDashboardDistributorsAccountRouteRoute: mainDashboardDistributorsAccountRouteRoute,
-}
-
-const mainDashboardDistributorsRouteRouteWithChildren =
-  mainDashboardDistributorsRouteRoute._addFileChildren(mainDashboardDistributorsRouteRouteChildren)
-
 interface mainDashboardRouteRouteChildren {
   mainDashboardAcademyRouteRoute: typeof mainDashboardAcademyRouteRoute
   mainDashboardAnalyticsRouteRoute: typeof mainDashboardAnalyticsRouteRoute
@@ -1474,7 +1463,7 @@ interface mainDashboardRouteRouteChildren {
   mainDashboardDepositsRouteRoute: typeof mainDashboardDepositsRouteRoute
   mainDashboardWithdrawlsRouteRoute: typeof mainDashboardWithdrawlsRouteRoute
   mainDashboardPlayersRouteRoute: typeof mainDashboardPlayersRouteRouteWithChildren
-  mainDashboardDistributorsRouteRoute: typeof mainDashboardDistributorsRouteRouteWithChildren
+  mainDashboardDistributorsRouteRoute: typeof mainDashboardDistributorsRouteRoute
   mainDashboardSplatRoute: typeof mainDashboardSplatRoute
   mainDashboardIndexRoute: typeof mainDashboardIndexRoute
   mainDashboardlegacyAnalyticsV1RouteRoute: typeof mainDashboardlegacyAnalyticsV1RouteRoute
@@ -1512,7 +1501,7 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardWithdrawlsRouteRoute: mainDashboardWithdrawlsRouteRoute,
   mainDashboardPlayersRouteRoute: mainDashboardPlayersRouteRoute,
   mainDashboardPlayersRouteRoute: mainDashboardPlayersRouteRouteWithChildren,
-  mainDashboardDistributorsRouteRoute: mainDashboardDistributorsRouteRouteWithChildren,
+  mainDashboardDistributorsRouteRoute: mainDashboardDistributorsRouteRoute,
   mainDashboardAccountsRouteRoute: mainDashboardAccountsRouteRoute,
   mainDashboardSplatRoute: mainDashboardSplatRoute,
   mainDashboardIndexRoute: mainDashboardIndexRoute,
