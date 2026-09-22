@@ -110,9 +110,9 @@ export const sidebarItems: NavGroup[] = [
         icon: ArrowUpFromLine,
       },
       {
-        id: "withdrawls-analytics",
+        id: "analytics",
         title: "Analytics",
-        url: "/dashboard/withdrawls/analytics",
+        url: "/dashboard/analytics",
         icon: ChartBar,
       },
     ],
