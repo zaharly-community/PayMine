@@ -848,67 +848,70 @@ function EvidenceGallery() {
 
 function SummaryCard() {
   return (
-    <aside className="overflow-hidden rounded-lg border bg-background">
-      <div className="space-y-5 p-5">
-        <Badge
-          variant="outline"
-          className="h-6 rounded-md border-amber-500/20 bg-amber-500/10 px-2 text-xs font-medium text-amber-700 dark:text-amber-400"
-        >
-          <span className="mr-1.5 size-1.5 rounded-full bg-amber-500" />
-          Pending review
-        </Badge>
+    <>
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-4 px-6 py-3">
+          <Badge
+            variant="outline"
+            className="h-6 rounded-md border-amber-500/20 bg-amber-500/10 px-2 text-xs font-medium text-amber-700 dark:text-amber-400"
+          >
+            <span className="mr-1.5 size-1.5 rounded-full bg-amber-500" />
+            Pending review
+          </Badge>
 
-        <div className="text-3xl font-semibold tracking-tight tabular-nums">$8,120.50</div>
+          <div className="text-2xl font-semibold tracking-tight tabular-nums">$8,120.50</div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-lg bg-muted/40 p-3">
-            <div className="text-xs text-muted-foreground">Processor fee</div>
-            <div className="mt-1 text-sm font-semibold tabular-nums">$183.63</div>
-          </div>
-          <div className="rounded-lg bg-muted/40 p-3">
-            <div className="text-xs text-muted-foreground">Net after fees</div>
-            <div className="mt-1 text-sm font-semibold tabular-nums">$7,936.87</div>
-          </div>
-        </div>
-
-        <div className="border-t pt-4">
-          <div className="flex gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
-              <AlertTriangle className="size-4" />
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-muted/40 px-3 py-2">
+              <div className="text-[11px] text-muted-foreground">Processor fee</div>
+              <div className="mt-0.5 text-sm font-semibold tabular-nums">$183.63</div>
             </div>
-            <div className="space-y-1">
-              <div className="text-sm font-semibold">Manual verification required</div>
-              <div className="text-sm leading-5 text-muted-foreground">
-                Confirm authorization before release. Capture is paused until the review outcome is logged.
+            <div className="rounded-lg bg-muted/40 px-3 py-2">
+              <div className="text-[11px] text-muted-foreground">Net after fees</div>
+              <div className="mt-0.5 text-sm font-semibold tabular-nums">$7,936.87</div>
+            </div>
+          </div>
+
+          <div className="ml-auto flex min-w-0 items-center gap-2">
+            <div className="hidden max-w-xl items-center gap-2 lg:flex">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="size-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold">Manual verification required</div>
+                <div className="truncate text-xs text-muted-foreground">
+                  Confirm authorization before release. Capture is paused until the review outcome is logged.
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 border-t">
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-11 rounded-none border-r text-sm"
-          onClick={() => navigator.clipboard?.writeText("txn_R8M42QH91L6C")}
-        >
-          <Copy />
-          Copy ID
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-11 rounded-none text-sm"
-        >
-          <Download />
-          Receipt
-        </Button>
-      </div>
-    </aside>
+      <Card className="overflow-hidden">
+        <div className="grid grid-cols-2 border-t">
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-11 rounded-none border-r text-sm"
+            onClick={() => navigator.clipboard?.writeText("txn_R8M42QH91L6C")}
+          >
+            <Copy />
+            Copy ID
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-11 rounded-none text-sm"
+          >
+            <Download />
+            Receipt
+          </Button>
+        </div>
+      </Card>
+    </>
   );
 }
-
 function ReportCustomerDialog({
   open,
   onOpenChange,
