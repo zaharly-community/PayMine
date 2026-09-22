@@ -7,7 +7,6 @@ import { Ban, Check, Eye, Minus, Plus, Trash2, WalletCards } from "lucide-react"
 
 import { cn } from "cn";
 
-import { buttonVariants } from "@/components/ui/button";
 
 import {
   AlertDialog,
@@ -21,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import type { DataTableFeatures } from "@/lib/data-table-features";
