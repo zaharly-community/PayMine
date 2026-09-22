@@ -198,8 +198,7 @@ function DistributorActions({
           className="size-8 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <Link
-            to="/dashboard/distributors/$distributorId"
-            params={{ distributorId: distributor.id }}
+            to="/dashboard/distributors/account"
           >
             <Eye className="size-3.5" />
           </Link>
