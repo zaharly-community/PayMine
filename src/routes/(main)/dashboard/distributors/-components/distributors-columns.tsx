@@ -7,6 +7,8 @@ import { Ban, Check, Eye, Minus, Plus, Trash2, WalletCards } from "lucide-react"
 
 import { cn } from "cn";
 
+import { buttonVariants } from "@/components/ui/button";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -188,21 +190,17 @@ function DistributorActions({
   return (
     <>
       <div className="flex items-center justify-end gap-0.5">
-        <Button
-          asChild
-          type="button"
-          size="icon-sm"
-          variant="ghost"
+        <Link
+          to="/dashboard/distributors/account"
           aria-label={"View " + distributor.name}
           title={"View " + distributor.name}
-          className="size-8 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "icon-sm" }),
+            "size-8 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground",
+          )}
         >
-          <Link
-            to="/dashboard/distributors/account"
-          >
-            <Eye className="size-3.5" />
-          </Link>
-        </Button>
+          <Eye className="size-3.5" />
+        </Link>
 
         <IconButton
           label={distributor.type === "Agent" ? "Control funding wallet" : "View wallet ledger"}
