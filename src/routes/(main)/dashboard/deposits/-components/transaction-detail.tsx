@@ -26,7 +26,9 @@ import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 function SectionHeading({ children }: { children: ReactNode }) {
   return (
@@ -69,6 +71,13 @@ type VoucherRow = {
   method: VoucherMethod;
   ending: string;
   status: VoucherStatus;
+};
+
+type PaymentAccountOption = {
+  id: string;
+  label: string;
+  balance: number;
+  currency: string;
 };
 
 const voucherRows: VoucherRow[] = [
@@ -122,6 +131,12 @@ const voucherRows: VoucherRow[] = [
     ending: "3987 2201 6114 5082",
     status: "Declined",
   },
+];
+
+const paymentAccounts: PaymentAccountOption[] = [
+  { id: "ACC-001", label: "4123 8801 4290", balance: 18420, currency: "TND" },
+  { id: "ACC-002", label: "5261 0934 7721", balance: 11875, currency: "TND" },
+  { id: "ACC-003", label: "6418 5022 1106", balance: 8640, currency: "TND" },
 ];
 
 const statusStyles: Record<VoucherStatus, string> = {
@@ -217,7 +232,7 @@ function TimedAction({
           className="absolute inset-y-0 left-0 bg-foreground/10 transition-[width]"
           style={{ width: progress + "%" }}
         />
-        <span className="relative z-10 whitespace-nowrap">Return · {seconds}s</span>
+        <span className="relative z-10 whitespace-nowrap">Undo · {seconds}s</span>
       </Button>
     );
   }
@@ -236,110 +251,297 @@ function TimedAction({
   );
 }
 
-function PaymentMethodsTable() {
-  const [rows, setRows] = useState(voucherRows);
+function ProcessVoucherDialog({
+  row,
+  open,
+  onOpenChange,
+  onStatusChange,
+}: {
+  row: VoucherRow;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onStatusChange: (id: string, status: VoucherStatus) => void;
+}) {
+  const [accountId, setAccountId] = useState(paymentAccounts[0].id);
+  const [balanceInput, setBalanceInput] = useState("");
+  const selectedAccount = paymentAccounts.find((account) => account.id === accountId) ?? paymentAccounts[0];
 
-  const updateStatus = (id: string, status: VoucherStatus) => {
-    setRows((current) =>
-      current.map((row) => (row.id === id ? { ...row, status } : row)),
-    );
+  const expectedBalance = selectedAccount.balance.toFixed(2);
+  const balanceVerified = balanceInput.trim() === expectedBalance;
+
+  const close = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setBalanceInput("");
+      setAccountId(paymentAccounts[0].id);
+    }
+    onOpenChange(nextOpen);
+  };
+
+  const approveTarget: VoucherStatus = row.status === "Pending" || row.status === "Declined" ? "Processing" : "Approved";
+
+  const commit = (status: VoucherStatus) => {
+    if (!balanceVerified) return;
+    onStatusChange(row.id, status);
+    close(false);
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-background">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] border-collapse">
-          <thead>
-            <tr className="border-b bg-background text-left">
-              <th className="px-4 py-3 text-xs font-medium text-muted-foreground">
-                Payment method
-              </th>
-              <th className="px-4 py-3 text-xs font-medium text-muted-foreground">
-                Card number
-              </th>
-              <th className="px-4 py-3 text-xs font-medium text-muted-foreground">
-                Status
-              </th>
-              <th className="w-[330px] px-4 py-3 text-right text-xs font-medium text-muted-foreground">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id} className="border-b last:border-0">
-                <td className="px-4 py-3">
-                  <VoucherMethodCell method={row.method} />
-                </td>
-                <td className="px-4 py-3 font-mono text-sm tabular-nums text-muted-foreground">
-                  {row.ending}
-                </td>
-                <td className="px-4 py-3">
-                  <VoucherStatusBadge status={row.status} />
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-2">
-                    {row.status === "Pending" ? (
-                      <>
-                        <TimedAction
-                          label="Processing"
-                          tone="text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-950/30"
-                          onCommit={() => updateStatus(row.id, "Processing")}
-                        />
-                        <TimedAction
-                          label="Declined"
-                          tone="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                          onCommit={() => updateStatus(row.id, "Declined")}
-                        />
-                      </>
-                    ) : null}
+    <Dialog open={open} onOpenChange={close}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Process payment card</DialogTitle>
+          <DialogDescription>
+            Select the payment account that will receive the card load and verify its current balance before continuing.
+          </DialogDescription>
+        </DialogHeader>
 
-                    {row.status === "Processing" ? (
-                      <>
-                        <TimedAction
-                          label="Approved"
-                          tone="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
-                          onCommit={() => updateStatus(row.id, "Approved")}
-                        />
-                        <TimedAction
-                          label="Declined"
-                          tone="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                          onCommit={() => updateStatus(row.id, "Declined")}
-                        />
-                      </>
-                    ) : null}
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label>Payment account</Label>
+            <select
+              value={accountId}
+              onChange={(event) => {
+                setAccountId(event.target.value);
+                setBalanceInput("");
+              }}
+              className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+            >
+              {paymentAccounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-                    {row.status === "Declined" ? (
-                      <TimedAction
-                        label="Reprocessing"
-                        tone="text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-950/30"
-                        onCommit={() => updateStatus(row.id, "Processing")}
-                      />
-                    ) : null}
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <p className="text-[11px] text-muted-foreground">Current balance</p>
+              <p className="mt-1 font-semibold tabular-nums">
+                {selectedAccount.balance.toLocaleString()} {selectedAccount.currency}
+              </p>
+            </div>
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <p className="text-[11px] text-muted-foreground">Card</p>
+              <p className="mt-1 font-semibold tabular-nums">{row.ending}</p>
+            </div>
+          </div>
 
-                    {row.status === "Duplicated" ? (
+          <div className="grid gap-2">
+            <Label>Enter current balance to verify</Label>
+            <Input
+              value={balanceInput}
+              onChange={(event) => setBalanceInput(event.target.value)}
+              placeholder={expectedBalance}
+              inputMode="decimal"
+              aria-invalid={balanceInput.length > 0 && !balanceVerified}
+            />
+            {balanceInput.length > 0 ? (
+              <p className={cn("text-xs", balanceVerified ? "text-emerald-600" : "text-red-600")}>
+                {balanceVerified ? "Balance verified." : "Balance does not match the selected account."}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="rounded-lg border bg-muted/20 p-3 text-xs text-muted-foreground">
+            Verification is required before any final status action is enabled.
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => close(false)}>
+            Cancel
+          </Button>
+          <TimedAction
+            label="Request editing"
+            tone="text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30"
+            onCommit={() => commit("Pending")}
+            className="min-w-[126px]"
+            disabled={!balanceVerified}
+          />
+          <TimedAction
+            label="Decline"
+            tone="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+            onCommit={() => commit("Declined")}
+            className="min-w-[86px]"
+            disabled={!balanceVerified}
+          />
+          <TimedAction
+            label="Approve"
+            tone="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
+            onCommit={() => commit(approveTarget)}
+            className="min-w-[86px]"
+            disabled={!balanceVerified}
+          />
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PaymentMethodsTable() {
+  const [rows, setRows] = useState(voucherRows);
+  const [processRow, setProcessRow] = useState<VoucherRow | null>(null);
+
+  const updateStatus = (id: string, status: VoucherStatus) => {
+    setRows((current) => current.map((row) => (row.id === id ? { ...row, status } : row)));
+  };
+
+  return (
+    <>
+      <div className="overflow-hidden rounded-lg border bg-background">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[860px] border-collapse">
+            <thead>
+              <tr className="border-b bg-background text-left">
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground">Payment method</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground">Ending</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground">Status</th>
+                <th className="w-[320px] px-4 py-3 text-right text-xs font-medium text-muted-foreground">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                if (row.status === "Duplicated") {
+                  return (
+                    <tr key={row.id} className="border-b last:border-0">
+                      <td className="px-4 py-3">
+                        <VoucherMethodCell method={row.method} />
+                      </td>
+                      <td className="px-4 py-3 text-sm tabular-nums text-muted-foreground">{row.ending}</td>
+                      <td className="px-4 py-3">
+                        <VoucherStatusBadge status={row.status} />
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Button type="button" size="sm" variant="outline" disabled className="h-8 px-3 text-[11px]">
+                          Can't handle
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                }
+
+                if (row.status === "Approved") {
+                  return (
+                    <tr key={row.id} className="border-b last:border-0">
+                      <td className="px-4 py-3">
+                        <VoucherMethodCell method={row.method} />
+                      </td>
+                      <td className="px-4 py-3 text-sm tabular-nums text-muted-foreground">{row.ending}</td>
+                      <td className="px-4 py-3">
+                        <VoucherStatusBadge status={row.status} />
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-[11px] text-muted-foreground">—</span>
+                      </td>
+                    </tr>
+                  );
+                }
+
+                if (row.status === "Pending") {
+                  return (
+                    <tr key={row.id} className="border-b last:border-0">
+                      <td className="px-4 py-3">
+                        <VoucherMethodCell method={row.method} />
+                      </td>
+                      <td className="px-4 py-3 text-sm tabular-nums text-muted-foreground">{row.ending}</td>
+                      <td className="px-4 py-3">
+                        <VoucherStatusBadge status={row.status} />
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-3 text-[11px] text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-950/30"
+                            onClick={() => setProcessRow(row)}
+                          >
+                            Process
+                          </Button>
+                          <TimedAction
+                            label="Decline"
+                            tone="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                            onCommit={() => updateStatus(row.id, "Declined")}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                }
+
+                if (row.status === "Processing") {
+                  return (
+                    <tr key={row.id} className="border-b last:border-0">
+                      <td className="px-4 py-3">
+                        <VoucherMethodCell method={row.method} />
+                      </td>
+                      <td className="px-4 py-3 text-sm tabular-nums text-muted-foreground">{row.ending}</td>
+                      <td className="px-4 py-3">
+                        <VoucherStatusBadge status={row.status} />
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-3 text-[11px] text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-950/30"
+                            onClick={() => setProcessRow(row)}
+                          >
+                            Process
+                          </Button>
+                          <TimedAction
+                            label="Decline"
+                            tone="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                            onCommit={() => updateStatus(row.id, "Declined")}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                }
+
+                return (
+                  <tr key={row.id} className="border-b last:border-0">
+                    <td className="px-4 py-3">
+                      <VoucherMethodCell method={row.method} />
+                    </td>
+                    <td className="px-4 py-3 text-sm tabular-nums text-muted-foreground">{row.ending}</td>
+                    <td className="px-4 py-3">
+                      <VoucherStatusBadge status={row.status} />
+                    </td>
+                    <td className="px-4 py-3 text-right">
                       <Button
                         type="button"
                         size="sm"
                         variant="outline"
-                        disabled
-                        className="h-8 px-3 text-[11px]"
+                        className="h-8 px-3 text-[11px] text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-950/30"
+                        onClick={() => setProcessRow(row)}
                       >
-                        Can't handle
+                        Reprocess
                       </Button>
-                    ) : null}
-
-                    {row.status === "Approved" ? (
-                      <span className="text-[11px] text-muted-foreground">—</span>
-                    ) : null}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      {processRow ? (
+        <ProcessVoucherDialog
+          row={processRow}
+          open
+          onOpenChange={(open) => !open && setProcessRow(null)}
+          onStatusChange={(id, status) => {
+            updateStatus(id, status);
+            setProcessRow(null);
+          }}
+        />
+      ) : null}
+    </>
   );
 }
 
