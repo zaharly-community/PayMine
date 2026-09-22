@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "cn";
 
-import { distributors } from "./-components/data";
+import { distributors } from "../-components/data";
 
 export const Route = createFileRoute("/(main)/dashboard/distributors/account")({
   component: Page,
