@@ -1,9 +1,8 @@
 import * as React from "react";
 
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   AlertTriangle,
-  ArrowLeft,
   Banknote,
   CalendarDays,
   CheckCircle2,
