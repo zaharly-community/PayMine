@@ -202,6 +202,167 @@ function SectionCard({
   );
 }
 
+
+const activityStart = new Date("2025-10-01T00:00:00.000Z");
+const activityEnd = new Date("2026-09-22T00:00:00.000Z");
+
+const dailyFlowActivity = Array.from(
+  { length: Math.round((activityEnd.getTime() - activityStart.getTime()) / 86400000) + 1 },
+  (_, index) => {
+    const date = new Date(activityStart.getTime() + index * 86400000);
+    const phase = index % 11;
+    const base = 28 + (index % 9) * 4;
+
+    const deposits =
+      base +
+      [18, 8, 27, 5, 21, 12, 31, 15, 4, 24, 10][phase] +
+      Math.round(Math.sin(index / 5) * 9);
+    const withdrawls =
+      base +
+      [7, 20, 12, 25, 10, 18, 29, 6, 23, 14, 19][phase] +
+      Math.round(Math.cos(index / 7) * 7);
+
+    return {
+      date,
+      deposits: Math.max(8, deposits),
+      withdrawls: Math.max(8, withdrawls),
+    };
+  },
+);
+
+function getFlowTone(deposits: number, withdrawls: number) {
+  const difference = Math.abs(deposits - withdrawls);
+  const larger = Math.max(deposits, withdrawls);
+  const relativeGap = larger === 0 ? 0 : difference / larger;
+
+  if (relativeGap <= 0.12) {
+    return deposits >= withdrawls ? "bg-emerald-500/20" : "bg-red-500/20";
+  }
+
+  return deposits > withdrawls ? "bg-emerald-500/70" : "bg-red-500/70";
+}
+
+function formatActivityDate(date: Date) {
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function getMonthMarkers() {
+  const markers: Array<{ label: string; index: number }> = [];
+  let currentMonth = -1;
+
+  dailyFlowActivity.forEach((item, index) => {
+    const month = item.date.getUTCMonth();
+
+    if (month !== currentMonth) {
+      markers.push({
+        label: item.date.toLocaleDateString("en-US", {
+          month: "short",
+          timeZone: "UTC",
+        }),
+        index,
+      });
+      currentMonth = month;
+    }
+  });
+
+  return markers;
+}
+
+const activityMonthMarkers = getMonthMarkers();
+
+function DailyFlowActivity() {
+  const firstDayOffset = (activityStart.getUTCDay() + 6) % 7;
+  const paddedActivity = [
+    ...Array.from({ length: firstDayOffset }, () => null),
+    ...dailyFlowActivity,
+  ];
+  const weeks = Math.ceil(paddedActivity.length / 7);
+  const grid = Array.from({ length: weeks * 7 }, (_, index) => paddedActivity[index] ?? null);
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle className="font-normal">Daily Flow Activity</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Deposits vs. withdrawls</span> by day
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>Withdrawls higher</span>
+            <span className="inline-block size-3 rounded-sm bg-red-500/70" />
+            <span className="inline-block size-3 rounded-sm bg-red-500/20" />
+            <span className="inline-block size-3 rounded-sm bg-emerald-500/20" />
+            <span className="inline-block size-3 rounded-sm bg-emerald-500/70" />
+            <span>Deposits higher</span>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        <div className="overflow-x-auto pb-1">
+          <div className="min-w-[760px]">
+            <div className="relative ml-8 h-5 text-[10px] text-muted-foreground">
+              {activityMonthMarkers.map((marker) => (
+                <span
+                  key={marker.label + marker.index}
+                  className="absolute"
+                  style={{
+                    left: `${(marker.index / dailyFlowActivity.length) * 100}%`,
+                  }}
+                >
+                  {marker.label}
+                </span>
+              ))}
+            </div>
+
+            <div
+              className="grid grid-flow-col grid-rows-7 gap-1"
+              style={{
+                gridTemplateColumns: `repeat(${weeks}, minmax(11px, 1fr))`,
+              }}
+            >
+              {grid.map((item, index) => {
+                const row = index % 7;
+
+                if (!item) {
+                  return <span key={index} className="size-3.5 sm:size-4" aria-hidden="true" />;
+                }
+
+                return (
+                  <span
+                    key={item.date.toISOString()}
+                    className={`size-3.5 rounded-[3px] sm:size-4 ${getFlowTone(item.deposits, item.withdrawls)} transition-colors hover:ring-1 hover:ring-foreground/30`}
+                    title={`${formatActivityDate(item.date)} — Deposits: ${item.deposits}k · Withdrawls: ${item.withdrawls}k`}
+                    aria-label={`${formatActivityDate(item.date)}. Deposits ${item.deposits} thousand. Withdrawls ${item.withdrawls} thousand.`}
+                  />
+                );
+              })}
+            </div>
+
+            <div className="mt-2 grid grid-cols-7 text-[10px] text-muted-foreground">
+              <span>Mon</span>
+              <span />
+              <span>Wed</span>
+              <span />
+              <span>Fri</span>
+              <span />
+              <span>Sun</span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function PlatformOverview() {
   return (
     <div className="flex flex-col gap-4">
@@ -213,6 +374,8 @@ function PlatformOverview() {
         <MetricCard title="Success rate" value="97.8%" detail="Across all payment methods" trend="1.2%" icon={Percent} />
         <MetricCard title="Active players" value="18,462" detail="Players transacting this period" trend="4.7%" icon={Users} />
       </div>
+
+      <DailyFlowActivity />
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
         <div className="xl:col-span-7">
