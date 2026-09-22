@@ -1044,18 +1044,63 @@ export function TransactionDetail() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button className="h-9">
-                <CheckCircle2 />
-                Approve
-              </Button>
-              <Button variant="outline" className="h-9">
-                <RefreshCcw />
-                Refund
-              </Button>
-              <Button variant="outline" size="icon-sm" aria-label="More transaction actions">
-                <MoreVertical />
-              </Button>
+            <div className="relative flex items-center justify-center">
+              <div
+                className="absolute top-0 h-[90px] w-[160px] rounded-full blur-3xl"
+                style={{ background: "radial-gradient(rgba(59, 130, 246, 0.094) 0%, transparent 70%)" }}
+              />
+              <svg width="180" height="110" viewBox="0 0 180 110" className="overflow-visible">
+                <defs>
+                  <linearGradient id="health-gauge-grad" x1="0%" y1="50%" x2="100%" y2="50%">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+                    <stop offset="50%" stopColor="#3b82f6" />
+                    <stop offset="100%" stopColor="#60a5fa" />
+                  </linearGradient>
+                  <filter id="health-gauge-glow">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <path
+                  d="M 20 95 A 70 70 0 0 1 160 95"
+                  fill="none"
+                  stroke="var(--color-muted, hsl(var(--muted)))"
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                  opacity="0.2"
+                />
+                <path
+                  d="M 20 95 A 70 70 0 0 1 160 95"
+                  fill="none"
+                  stroke="url(#health-gauge-grad)"
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                  strokeDasharray="219.9114857512855"
+                  filter="url(#health-gauge-glow)"
+                  strokeDashoffset="48.3805268652828"
+                />
+                <text x="18" y="109" textAnchor="middle" className="fill-muted-foreground/40 text-[9px] tabular-nums">
+                  0
+                </text>
+                <text x="90" y="19" textAnchor="middle" className="fill-muted-foreground/40 text-[9px] tabular-nums">
+                  50
+                </text>
+                <text x="162" y="109" textAnchor="middle" className="fill-muted-foreground/40 text-[9px] tabular-nums">
+                  100
+                </text>
+              </svg>
+              <div className="absolute bottom-0 flex flex-col items-center">
+                <span className="text-3xl font-bold tabular-nums tracking-tight">78</span>
+                <span className="font-bold text-[11px] text-muted-foreground underline decoration-2 underline-offset-2">
+                  AI Desicion
+                </span>
+                <span className="text-[11px] font-bold underline decoration-4 underline-offset-2">
+                  Safe
+                </span>
+              </div>
             </div>
           </div>
         </div>
