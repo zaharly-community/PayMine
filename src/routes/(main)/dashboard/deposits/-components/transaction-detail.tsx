@@ -849,8 +849,8 @@ function EvidenceGallery() {
 
 function SummaryCard({ onReport }: { onReport: () => void }) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:left-[248px]">
-      <div className="flex min-h-[72px] w-full items-center gap-3 px-4 py-2.5 md:px-5 lg:px-6">
+    <div className="fixed bottom-0 left-0 right-0 z-40 overflow-hidden border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:bottom-2 md:left-[calc(var(--sidebar-width)+0.5rem)] md:right-2 md:rounded-xl">
+      <div className="flex min-h-[72px] w-full min-w-0 items-center gap-3 px-4 py-2.5 md:px-5 lg:px-6">
         <Badge
           variant="outline"
           className="h-6 shrink-0 rounded-md border-amber-500/20 bg-amber-500/10 px-2 text-xs font-medium text-amber-700 dark:text-amber-400"
