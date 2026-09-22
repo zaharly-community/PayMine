@@ -404,43 +404,6 @@ export function WithdrawalDetail() {
           </section>
 
           <section className="space-y-5">
-            <SectionHeading>Withdrawal processing</SectionHeading>
-            <div className="overflow-hidden rounded-lg border">
-              <div className="grid grid-cols-4 border-b bg-muted/30">
-                <div className="px-4 py-3 text-xs font-medium text-muted-foreground">Step</div>
-                <div className="px-4 py-3 text-xs font-medium text-muted-foreground">Status</div>
-                <div className="px-4 py-3 text-xs font-medium text-muted-foreground">Operator</div>
-                <div className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Time</div>
-              </div>
-              {[
-                ["Requested", "Completed", "System", "10:12 AM"],
-                ["Destination verified", "Completed", "PayMine", "10:13 AM"],
-                ["Payout sent", "Pending", "Koray Okumus", "—"],
-                ["Proof uploaded", "Pending", "Operator", "—"],
-              ].map(([step, status, operator, time]) => (
-                <div key={step} className="grid grid-cols-4 border-b last:border-0">
-                  <div className="px-4 py-3 text-sm font-medium">{step}</div>
-                  <div className="px-4 py-3">
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-[10px]",
-                        status === "Completed"
-                          ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
-                          : "border-amber-500/30 text-amber-600 dark:text-amber-400",
-                      )}
-                    >
-                      {status}
-                    </Badge>
-                  </div>
-                  <div className="px-4 py-3 text-sm text-muted-foreground">{operator}</div>
-                  <div className="px-4 py-3 text-right text-xs text-muted-foreground">{time}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="space-y-5">
             <SectionHeading>History</SectionHeading>
             <div>
               <TimelineItem
@@ -499,17 +462,7 @@ export function WithdrawalDetail() {
               Copy withdrawal ID
             </Button>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Payout summary</CardTitle>
-              </CardHeader>
-              <div className="space-y-3 px-4 pb-4">
-                <SummaryRow label="Requested" value="$185.23" />
-                <SummaryRow label="Commission" value="$1.85" />
-                <SummaryRow label="Net payout" value="$183.38" />
-                <SummaryRow label="Destination" value="+216 ·••• · 4421" />
-              </div>
-            </Card>
+
           </div>
         </aside>
       </div>
