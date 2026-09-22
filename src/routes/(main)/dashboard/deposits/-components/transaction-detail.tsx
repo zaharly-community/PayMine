@@ -848,70 +848,73 @@ function EvidenceGallery() {
 
 function SummaryCard() {
   return (
-    <>
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-4 px-6 py-3">
-          <Badge
-            variant="outline"
-            className="h-6 rounded-md border-amber-500/20 bg-amber-500/10 px-2 text-xs font-medium text-amber-700 dark:text-amber-400"
-          >
-            <span className="mr-1.5 size-1.5 rounded-full bg-amber-500" />
-            Pending review
-          </Badge>
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:left-64">
+      <div className="mx-auto flex min-h-[76px] max-w-[1500px] items-center gap-4 px-6 py-3">
+        <Badge
+          variant="outline"
+          className="h-6 shrink-0 rounded-md border-amber-500/20 bg-amber-500/10 px-2 text-xs font-medium text-amber-700 dark:text-amber-400"
+        >
+          <span className="mr-1.5 size-1.5 rounded-full bg-amber-500" />
+          Pending review
+        </Badge>
 
-          <div className="text-2xl font-semibold tracking-tight tabular-nums">$8,120.50</div>
+        <div className="shrink-0 text-2xl font-semibold tracking-tight tabular-nums">$8,120.50</div>
 
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-muted/40 px-3 py-2">
-              <div className="text-[11px] text-muted-foreground">Processor fee</div>
-              <div className="mt-0.5 text-sm font-semibold tabular-nums">$183.63</div>
-            </div>
-            <div className="rounded-lg bg-muted/40 px-3 py-2">
-              <div className="text-[11px] text-muted-foreground">Net after fees</div>
-              <div className="mt-0.5 text-sm font-semibold tabular-nums">$7,936.87</div>
-            </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <div className="rounded-lg bg-muted/40 px-3 py-2">
+            <div className="text-[11px] text-muted-foreground">Processor fee</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums">$183.63</div>
           </div>
+          <div className="rounded-lg bg-muted/40 px-3 py-2">
+            <div className="text-[11px] text-muted-foreground">Net after fees</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums">$7,936.87</div>
+          </div>
+        </div>
 
-          <div className="ml-auto flex min-w-0 items-center gap-2">
-            <div className="hidden max-w-xl items-center gap-2 lg:flex">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                <AlertTriangle className="size-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-semibold">Manual verification required</div>
-                <div className="truncate text-xs text-muted-foreground">
-                  Confirm authorization before release. Capture is paused until the review outcome is logged.
-                </div>
+        <div className="ml-auto flex min-w-0 items-center gap-2">
+          <div className="hidden max-w-xl items-center gap-2 lg:flex">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold">Manual verification required</div>
+              <div className="truncate text-xs text-muted-foreground">
+                Confirm authorization before release. Capture is paused until the review outcome is logged.
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <Card className="overflow-hidden">
-        <div className="grid grid-cols-2 border-t">
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-11 rounded-none border-r text-sm"
-            onClick={() => navigator.clipboard?.writeText("txn_R8M42QH91L6C")}
-          >
-            <Copy />
-            Copy ID
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-11 rounded-none text-sm"
-          >
-            <Download />
-            Receipt
-          </Button>
-        </div>
-      </Card>
-    </>
+    </div>
   );
 }
+
+function SummaryActionsCard() {
+  return (
+    <Card className="overflow-hidden">
+      <div className="grid grid-cols-2">
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-11 rounded-none border-r text-sm"
+          onClick={() => navigator.clipboard?.writeText("txn_R8M42QH91L6C")}
+        >
+          <Copy />
+          Copy ID
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-11 rounded-none text-sm"
+        >
+          <Download />
+          Receipt
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
 function ReportCustomerDialog({
   open,
   onOpenChange,
@@ -992,7 +995,7 @@ export function TransactionDetail() {
   const [reportOpen, setReportOpen] = useState(false);
 
   return (
-    <section className="min-h-full bg-background">
+    <section className="min-h-full bg-background pb-28">
       <header className="border-b px-6 py-5">
         <div className="mx-auto max-w-[1500px]">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -1158,7 +1161,7 @@ export function TransactionDetail() {
         <div className="min-w-0">
           <div className="sticky top-6 space-y-4">
             <EvidenceGallery />
-            <SummaryCard />
+            <SummaryActionsCard />
             <Button variant="outline" className="mt-4 w-full">
               <Mail />
               Email customer
