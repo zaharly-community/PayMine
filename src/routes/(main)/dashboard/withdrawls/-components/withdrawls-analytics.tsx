@@ -33,8 +33,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -254,24 +252,34 @@ function PlatformOverview() {
 
         <div className="xl:col-span-5">
           <SectionCard title="Payment methods">
-            <ChartContainer config={methodChartConfig} className="h-72 w-full">
+            <ChartContainer config={methodChartConfig} className="h-64 w-full">
               <PieChart>
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Pie
                   data={methodData}
                   dataKey="amount"
                   nameKey="method"
-                  innerRadius={72}
-                  outerRadius={104}
+                  innerRadius={64}
+                  outerRadius={96}
                   paddingAngle={2}
                 >
                   {methodData.map((item) => (
                     <Cell key={item.method} fill={item.fill} />
                   ))}
                 </Pie>
-                <ChartLegend content={<ChartLegendContent nameKey="method" />} />
               </PieChart>
             </ChartContainer>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              {methodData.map((item) => (
+                <div key={item.method} className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full" style={{ backgroundColor: item.fill }} />
+                    <span className="text-muted-foreground">{item.method}</span>
+                  </div>
+                  <span className="font-medium tabular-nums">{item.amount}%</span>
+                </div>
+              ))}
+            </div>
           </SectionCard>
         </div>
       </div>
