@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { parse } from "date-fns";
 import {
@@ -98,16 +100,16 @@ function Actions({ withdrawl }: { withdrawl: WithdrawlRow }) {
       >
         <Check className="size-3.5" />
       </Button>
-      <Button
-        type="button"
+      <Link
+        to="/dashboard/withdrawls/withdrawl-details"
         aria-label={`View withdrawal ${withdrawl.id}`}
         title="View"
-        size="icon-sm"
-        variant="ghost"
-        className="size-7 rounded-[min(var(--radius-md),12px)] text-muted-foreground hover:bg-muted hover:text-foreground"
+        className={cn(
+          "inline-flex size-7 items-center justify-center rounded-[min(var(--radius-md),12px)] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+        )}
       >
         <Eye className="size-3.5" />
-      </Button>
+      </Link>
       <Button
         type="button"
         aria-label={`Skip withdrawal ${withdrawl.id}`}
