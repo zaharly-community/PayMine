@@ -106,8 +106,11 @@ export const sidebarItems: NavGroup[] = [
       {
         id: "withdrawls",
         title: "Withdrawls",
-        url: "/dashboard/withdrawls",
         icon: ArrowUpFromLine,
+        subItems: [
+          { id: "withdrawls-list", title: "Withdrawls", url: "/dashboard/withdrawls", icon: ArrowUpFromLine },
+          { id: "withdrawls-analytics", title: "Analytics", url: "/dashboard/withdrawls/analytics", icon: ChartBar },
+        ],
       },
     ],
   },
