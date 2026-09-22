@@ -1044,12 +1044,12 @@ export function TransactionDetail() {
               </p>
             </div>
 
-            <div className="relative flex items-center justify-center">
+            <div className="relative flex min-h-[110px] w-[220px] shrink-0 items-center justify-center self-stretch max-w-full">
               <div
-                className="absolute top-0 h-[90px] w-[160px] rounded-full blur-3xl"
+                className="absolute top-0 h-[90px] w-[180px] rounded-full blur-3xl"
                 style={{ background: "radial-gradient(rgba(59, 130, 246, 0.094) 0%, transparent 70%)" }}
               />
-              <svg width="180" height="110" viewBox="0 0 180 110" className="overflow-visible">
+              <svg width="200" height="122" viewBox="0 0 180 110" className="h-auto w-[200px] overflow-visible max-w-full">
                 <defs>
                   <linearGradient id="health-gauge-grad" x1="0%" y1="50%" x2="100%" y2="50%">
                     <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
@@ -1094,10 +1094,10 @@ export function TransactionDetail() {
               </svg>
               <div className="absolute bottom-0 flex flex-col items-center">
                 <span className="text-3xl font-bold tabular-nums tracking-tight">78</span>
-                <span className="font-bold text-[11px] text-muted-foreground underline decoration-2 underline-offset-2">
+                <span className="text-[11px] font-bold text-muted-foreground">
                   AI Desicion
                 </span>
-                <span className="text-[11px] font-bold underline decoration-4 underline-offset-2">
+                <span className="text-[11px] text-muted-foreground">
                   Safe
                 </span>
               </div>
