@@ -713,7 +713,7 @@ function EvidenceGallery() {
             "px, " +
             offset.y +
             "px) scale(" +
-            scale +
+            (isFullscreen ? scale : scale * 1.1) +
             ")",
         }}
       />
@@ -1105,15 +1105,6 @@ export function TransactionDetail() {
 
       <div className="mx-auto grid max-w-[1500px] gap-8 px-6 py-10 xl:grid-cols-[minmax(0,1fr)_304px]">
         <main className="min-w-0 space-y-10">
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
-              <p className="text-sm leading-6 text-amber-900 dark:text-amber-100">
-                This ACH debit is inside a manual review window because the customer exceeded the new-account velocity limit. Confirm the invoice, authorization file, and bank ownership before approval.
-              </p>
-            </div>
-          </div>
-
           <section className="space-y-5">
             <SectionHeading>Transaction Details</SectionHeading>
             <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
