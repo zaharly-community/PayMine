@@ -29,7 +29,6 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
-  ResponsiveContainer,
   XAxis,
   YAxis,
 } from "recharts";
@@ -359,11 +358,10 @@ function Page() {
                 </div>
 
                 <ChartContainer config={chartConfig} className="h-[280px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                      data={volume}
-                      margin={{ top: 8, right: 2, left: 0, bottom: 0 }}
-                    >
+                  <AreaChart
+                    data={volume}
+                    margin={{ top: 8, right: 2, left: 0, bottom: 0 }}
+                  >
                       <defs>
                         <linearGradient id="distributorGrossFill" x1="0" y1="0" x2="0" y2="1">
                           <stop
@@ -445,8 +443,7 @@ function Page() {
                         animationBegin={150}
                         animationEasing="ease-out"
                       />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                  </AreaChart>
                 </ChartContainer>
               </CardContent>
             </Card>
