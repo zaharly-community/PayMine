@@ -535,8 +535,7 @@ export function WithdrawlsAnalytics() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 border-b pb-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-1">
-          <div className="text-muted-foreground text-xs font-medium uppercase tracking-[0.14em]">Withdrawls / Analytics</div>
-          <h1 className="text-3xl tracking-tight">Platform Analytics</h1>
+          <h1 className="text-3xl tracking-tight">Analytics</h1>
           <p className="text-muted-foreground text-sm">
             Monitor the full payment platform across deposits, withdrawls, players, distributors, and providers.
           </p>
