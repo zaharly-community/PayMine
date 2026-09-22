@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { Link } from "@tanstack/react-router";
 import {
   type ColumnFiltersState,
   type ColumnVisibilityState,
@@ -8,7 +9,7 @@ import {
   useTable,
 } from "@tanstack/react-table";
 
-import { Cog, Download, Plus, Search, SlidersHorizontal } from "lucide-react";
+import { BarChart3, Cog, Download, Plus, Search, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -80,6 +81,10 @@ export function Withdrawls({ withdrawls }: { withdrawls: WithdrawlRow[] }) {
               <Kbd className="h-4 text-[10px]">⌘K</Kbd>
             </InputGroupAddon>
           </InputGroup>
+
+          <Button variant="outline" size="sm" render={<Link to="/dashboard/withdrawls/analytics" />}>
+            <BarChart3 /> Analytics
+          </Button>
 
           <Button variant="outline" size="sm">
             <SlidersHorizontal /> Hide
