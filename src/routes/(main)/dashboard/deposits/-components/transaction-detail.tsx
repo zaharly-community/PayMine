@@ -849,7 +849,7 @@ function EvidenceGallery() {
 
 function SummaryCard({ onReport }: { onReport: () => void }) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 overflow-hidden border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:bottom-2 md:left-[calc(var(--sidebar-width)+0.5rem)] md:right-2 md:rounded-xl">
+    <div className="sticky bottom-0 z-40 overflow-hidden border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="flex min-h-[72px] w-full min-w-0 items-center gap-3 px-4 py-2.5 md:px-5 lg:px-6">
         <Badge
           variant="outline"
@@ -1014,7 +1014,7 @@ export function TransactionDetail() {
   const [reportOpen, setReportOpen] = useState(false);
 
   return (
-    <section className="min-h-full bg-background pb-28">
+    <section className="min-h-full bg-background">
       <header className="border-b px-6 py-5">
         <div className="mx-auto max-w-[1500px]">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
