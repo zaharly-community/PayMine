@@ -65,6 +65,7 @@ import { Route as mainDashboardDepositsRouteRouteImport } from './routes/(main)/
 import { Route as mainDashboardDepositsDepoistDetailsRouteRouteImport } from './routes/(main)/dashboard/deposits/depoist-details/route'
 import { Route as mainDashboardDepositsIndexRouteImport } from './routes/(main)/dashboard/deposits/index'
 import { Route as mainDashboardWithdrawlsRouteRouteImport } from './routes/(main)/dashboard/withdrawls/route'
+import { Route as mainDashboardWithdrawlsAnalyticsRouteRouteImport } from './routes/(main)/dashboard/withdrawls_.analytics'
 import { Route as mainDashboardPlayersRouteRouteImport } from './routes/(main)/dashboard/players/route'
 import { Route as mainDashboardPlayersProfileRouteRouteImport } from './routes/(main)/dashboard/players/$playerId/route'
 import { Route as mainDashboardDistributorsRouteRouteImport } from './routes/(main)/dashboard/distributors/route'
@@ -371,6 +372,12 @@ const mainDashboardWithdrawlsRouteRoute = mainDashboardWithdrawlsRouteRouteImpor
   path: '/withdrawls',
   getParentRoute: () => mainDashboardRouteRoute,
 } as any)
+const mainDashboardWithdrawlsAnalyticsRouteRoute =
+  mainDashboardWithdrawlsAnalyticsRouteRouteImport.update({
+    id: '/withdrawls_/analytics',
+    path: '/withdrawls/analytics',
+    getParentRoute: () => mainDashboardRouteRoute,
+  } as any)
 const mainDashboardPlayersRouteRoute = mainDashboardPlayersRouteRouteImport.update({
   id: '/players',
   path: '/players',
@@ -507,6 +514,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
   '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
   '/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
+  '/dashboard/withdrawls/analytics': typeof mainDashboardWithdrawlsAnalyticsRouteRoute
   '/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/dashboard/players/$playerId': typeof mainDashboardPlayersProfileRouteRoute
   '/dashboard/distributors': typeof mainDashboardDistributorsRouteRoute
@@ -564,6 +572,7 @@ export interface FileRoutesByTo {
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
   '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
   '/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
+  '/dashboard/withdrawls/analytics': typeof mainDashboardWithdrawlsAnalyticsRouteRoute
   '/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/dashboard/players/$playerId': typeof mainDashboardPlayersProfileRouteRoute
   '/dashboard/distributors': typeof mainDashboardDistributorsRouteRouteWithChildren
@@ -635,6 +644,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
   '/(main)/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
   '/(main)/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
+  '/(main)/dashboard/withdrawls_/analytics': typeof mainDashboardWithdrawlsAnalyticsRouteRoute
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
   '/(main)/dashboard/players/$playerId': typeof mainDashboardPlayersProfileRouteRoute
   '/(main)/dashboard/distributors': typeof mainDashboardDistributorsRouteRoute
@@ -721,6 +731,7 @@ export interface FileRouteTypes {
     | '/dashboard/deposits/'
     | '/dashboard/deposits/depoist-details'
         | '/dashboard/withdrawls'
+    | '/dashboard/withdrawls/analytics'
     | '/dashboard/deposits'
     | '/dashboard/withdrawls'
     | '/dashboard/players'
@@ -839,6 +850,7 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/users'
     | '/(main)/dashboard/deposits'
     | '/(main)/dashboard/withdrawls'
+    | '/(main)/dashboard/withdrawls_/analytics'
     | '/(main)/dashboard/players'
     | '/(main)/dashboard/players/$playerId'
     | '/(main)/dashboard/distributors'
@@ -1252,6 +1264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardWithdrawlsRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
+    '/(main)/dashboard/withdrawls_/analytics': {
+      id: '/(main)/dashboard/withdrawls_/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/withdrawls/analytics'
+      preLoaderRoute: typeof mainDashboardWithdrawlsAnalyticsRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
     '/(main)/dashboard/players': {
       id: '/(main)/dashboard/players'
       path: '/players'
@@ -1462,6 +1481,7 @@ interface mainDashboardRouteRouteChildren {
   mainDashboardUsersRouteRoute: typeof mainDashboardUsersRouteRoute
   mainDashboardDepositsRouteRoute: typeof mainDashboardDepositsRouteRoute
   mainDashboardWithdrawlsRouteRoute: typeof mainDashboardWithdrawlsRouteRoute
+  mainDashboardWithdrawlsAnalyticsRouteRoute: typeof mainDashboardWithdrawlsAnalyticsRouteRoute
   mainDashboardPlayersRouteRoute: typeof mainDashboardPlayersRouteRouteWithChildren
   mainDashboardDistributorsRouteRoute: typeof mainDashboardDistributorsRouteRoute
   mainDashboardDistributorsAccountRouteRoute: typeof mainDashboardDistributorsAccountRouteRoute
@@ -1500,6 +1520,7 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardUsersRouteRoute: mainDashboardUsersRouteRoute,
   mainDashboardDepositsRouteRoute: mainDashboardDepositsRouteRouteWithChildren,
   mainDashboardWithdrawlsRouteRoute: mainDashboardWithdrawlsRouteRoute,
+  mainDashboardWithdrawlsAnalyticsRouteRoute: mainDashboardWithdrawlsAnalyticsRouteRoute,
   mainDashboardPlayersRouteRoute: mainDashboardPlayersRouteRoute,
   mainDashboardPlayersRouteRoute: mainDashboardPlayersRouteRouteWithChildren,
   mainDashboardDistributorsRouteRoute: mainDashboardDistributorsRouteRoute,
