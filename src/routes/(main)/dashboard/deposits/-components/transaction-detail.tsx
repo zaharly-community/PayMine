@@ -277,6 +277,8 @@ function ProcessVoucherDialog({
     onOpenChange(nextOpen);
   };
 
+  const approveTarget: VoucherStatus = row.status === "Pending" || row.status === "Declined" ? "Processing" : "Approved";
+
   const commit = (status: VoucherStatus) => {
     if (!balanceVerified) return;
     onStatusChange(row.id, status);
@@ -367,7 +369,7 @@ function ProcessVoucherDialog({
           <TimedAction
             label="Approve"
             tone="text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
-            onCommit={() => commit("Approved")}
+            onCommit={() => commit(approveTarget)}
             className="min-w-[86px]"
             disabled={!balanceVerified}
           />
