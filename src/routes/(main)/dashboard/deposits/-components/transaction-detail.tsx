@@ -849,8 +849,8 @@ function EvidenceGallery() {
 
 function SummaryCard({ onReport }: { onReport: () => void }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:left-64">
-      <div className="mx-auto flex min-h-[76px] max-w-[1500px] items-center gap-4 px-6 py-3">
+    <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:left-[248px]">
+      <div className="flex min-h-[72px] w-full items-center gap-3 px-4 py-2.5 md:px-5 lg:px-6">
         <Badge
           variant="outline"
           className="h-6 shrink-0 rounded-md border-amber-500/20 bg-amber-500/10 px-2 text-xs font-medium text-amber-700 dark:text-amber-400"
@@ -873,33 +873,33 @@ function SummaryCard({ onReport }: { onReport: () => void }) {
         </div>
 
         <div className="ml-auto flex min-w-0 items-center gap-3">
-          <div className="hidden max-w-xl min-w-0 items-center gap-2 lg:flex">
+          <div className="hidden min-w-0 flex-1 items-center gap-2 xl:flex xl:max-w-[34rem]">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <AlertTriangle className="size-4" />
             </div>
             <div className="min-w-0">
               <div className="text-sm font-semibold">Manual verification required</div>
-              <div className="truncate text-xs text-muted-foreground">
+              <div className="line-clamp-2 text-xs text-muted-foreground">
                 Confirm authorization before release. Capture is paused until the review outcome is logged.
               </div>
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5">
             <Button
               type="button"
               variant="outline"
-              className="h-10"
+              className="h-9 shrink-0 px-3"
               onClick={() => navigator.clipboard?.writeText("txn_R8M42QH91L6C")}
             >
               <Copy />
               Copy ID
             </Button>
-            <Button type="button" variant="outline" className="h-10">
+            <Button type="button" variant="outline" className="h-9 shrink-0 px-3">
               <Download />
               Receipt
             </Button>
-            <Button type="button" variant="destructive" className="h-10" onClick={onReport}>
+            <Button type="button" variant="destructive" className="h-9 shrink-0 px-3" onClick={onReport}>
               <Mail />
               Report customer
             </Button>
