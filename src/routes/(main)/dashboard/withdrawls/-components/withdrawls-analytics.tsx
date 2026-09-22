@@ -330,8 +330,6 @@ function DailyFlowActivity() {
               }}
             >
               {grid.map((item, index) => {
-                const row = index % 7;
-
                 if (!item) {
                   return <span key={index} className="size-3.5 sm:size-4" aria-hidden="true" />;
                 }
