@@ -912,27 +912,25 @@ function SummaryCard({ onReport }: { onReport: () => void }) {
 
 function SummaryActionsCard() {
   return (
-    <Card className="overflow-hidden">
-      <div className="grid grid-cols-2">
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-11 rounded-none border-r text-sm"
-          onClick={() => navigator.clipboard?.writeText("txn_R8M42QH91L6C")}
-        >
-          <Copy />
-          Copy ID
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-11 rounded-none text-sm"
-        >
-          <Download />
-          Receipt
-        </Button>
-      </div>
-    </Card>
+    <div className="grid grid-cols-2 border-t">
+      <Button
+        type="button"
+        variant="ghost"
+        className="h-11 rounded-none border-r text-sm"
+        onClick={() => navigator.clipboard?.writeText("txn_R8M42QH91L6C")}
+      >
+        <Copy />
+        Copy ID
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        className="h-11 rounded-none text-sm"
+      >
+        <Download />
+        Receipt
+      </Button>
+    </div>
   );
 }
 
