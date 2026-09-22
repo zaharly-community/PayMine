@@ -1273,12 +1273,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardDistributorsRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
-    '/(main)/dashboard/distributors/account': {
-      id: '/(main)/dashboard/distributors/account'
-      path: '/account'
+    '/(main)/dashboard/distributors_/account': {
+      id: '/(main)/dashboard/distributors_/account'
+      path: '/distributors/account'
       fullPath: '/dashboard/distributors/account'
       preLoaderRoute: typeof mainDashboardDistributorsAccountRouteRouteImport
-      parentRoute: typeof mainDashboardDistributorsRouteRoute
+      parentRoute: typeof mainDashboardRouteRoute
     }
     '/(main)/dashboard/accounts': {
       id: '/(main)/dashboard/accounts'
