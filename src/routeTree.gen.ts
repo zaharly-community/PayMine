@@ -1464,6 +1464,7 @@ interface mainDashboardRouteRouteChildren {
   mainDashboardWithdrawlsRouteRoute: typeof mainDashboardWithdrawlsRouteRoute
   mainDashboardPlayersRouteRoute: typeof mainDashboardPlayersRouteRouteWithChildren
   mainDashboardDistributorsRouteRoute: typeof mainDashboardDistributorsRouteRoute
+  mainDashboardDistributorsAccountRouteRoute: typeof mainDashboardDistributorsAccountRouteRoute
   mainDashboardSplatRoute: typeof mainDashboardSplatRoute
   mainDashboardIndexRoute: typeof mainDashboardIndexRoute
   mainDashboardlegacyAnalyticsV1RouteRoute: typeof mainDashboardlegacyAnalyticsV1RouteRoute
@@ -1502,6 +1503,7 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardPlayersRouteRoute: mainDashboardPlayersRouteRoute,
   mainDashboardPlayersRouteRoute: mainDashboardPlayersRouteRouteWithChildren,
   mainDashboardDistributorsRouteRoute: mainDashboardDistributorsRouteRoute,
+  mainDashboardDistributorsAccountRouteRoute: mainDashboardDistributorsAccountRouteRoute,
   mainDashboardAccountsRouteRoute: mainDashboardAccountsRouteRoute,
   mainDashboardSplatRoute: mainDashboardSplatRoute,
   mainDashboardIndexRoute: mainDashboardIndexRoute,
