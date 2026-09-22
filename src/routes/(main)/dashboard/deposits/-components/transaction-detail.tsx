@@ -832,6 +832,7 @@ function EvidenceGallery() {
           </div>
         </CardHeader>
         {imageStage(false)}
+        <SummaryActionsCard />
       </Card>
 
       <Dialog open={fullscreen} onOpenChange={setFullscreen}>
@@ -1161,7 +1162,6 @@ export function TransactionDetail() {
         <div className="min-w-0">
           <div className="sticky top-6 space-y-4">
             <EvidenceGallery />
-            <SummaryActionsCard />
             <Button variant="outline" className="mt-4 w-full">
               <Mail />
               Email customer
