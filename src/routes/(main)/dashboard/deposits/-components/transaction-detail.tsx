@@ -847,7 +847,7 @@ function EvidenceGallery() {
   );
 }
 
-function SummaryCard() {
+function SummaryCard({ onReport }: { onReport: () => void }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:left-64">
       <div className="mx-auto flex min-h-[76px] max-w-[1500px] items-center gap-4 px-6 py-3">
@@ -872,8 +872,8 @@ function SummaryCard() {
           </div>
         </div>
 
-        <div className="ml-auto flex min-w-0 items-center gap-2">
-          <div className="hidden max-w-xl items-center gap-2 lg:flex">
+        <div className="ml-auto flex min-w-0 items-center gap-3">
+          <div className="hidden max-w-xl min-w-0 items-center gap-2 lg:flex">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <AlertTriangle className="size-4" />
             </div>
@@ -883,6 +883,26 @@ function SummaryCard() {
                 Confirm authorization before release. Capture is paused until the review outcome is logged.
               </div>
             </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10"
+              onClick={() => navigator.clipboard?.writeText("txn_R8M42QH91L6C")}
+            >
+              <Copy />
+              Copy ID
+            </Button>
+            <Button type="button" variant="outline" className="h-10">
+              <Download />
+              Receipt
+            </Button>
+            <Button type="button" variant="destructive" className="h-10" onClick={onReport}>
+              <Mail />
+              Report customer
+            </Button>
           </div>
         </div>
       </div>
@@ -1179,6 +1199,8 @@ export function TransactionDetail() {
           </div>
         </div>
       </div>
+
+      <SummaryCard onReport={() => setReportOpen(true)} />
     </section>
   );
 }
