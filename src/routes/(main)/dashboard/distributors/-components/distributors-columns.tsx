@@ -1,5 +1,7 @@
 import * as React from "react";
 
+import { Link } from "@tanstack/react-router";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { Ban, Check, Eye, Minus, Plus, Trash2, WalletCards } from "lucide-react";
 
@@ -143,7 +145,6 @@ function DistributorActions({
 }: {
   distributor: DistributorRow;
 } & DistributorColumnActions) {
-  const [viewOpen, setViewOpen] = React.useState(false);
   const [walletOpen, setWalletOpen] = React.useState(false);
   const [walletMode, setWalletMode] = React.useState<"add" | "withdraw">("add");
   const [walletAmount, setWalletAmount] = React.useState("");
@@ -187,9 +188,22 @@ function DistributorActions({
   return (
     <>
       <div className="flex items-center justify-end gap-0.5">
-        <IconButton label={"View " + distributor.name} onClick={() => setViewOpen(true)}>
-          <Eye className="size-3.5" />
-        </IconButton>
+        <Button
+          asChild
+          type="button"
+          size="icon-sm"
+          variant="ghost"
+          aria-label={"View " + distributor.name}
+          title={"View " + distributor.name}
+          className="size-8 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <Link
+            to="/dashboard/distributors/$distributorId"
+            params={{ distributorId: distributor.id }}
+          >
+            <Eye className="size-3.5" />
+          </Link>
+        </Button>
 
         <IconButton
           label={distributor.type === "Agent" ? "Control funding wallet" : "View wallet ledger"}
@@ -210,44 +224,6 @@ function DistributorActions({
           {isDelete ? <Trash2 className="size-3.5" /> : <Ban className="size-3.5" />}
         </IconButton>
       </div>
-
-      <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Distributor details</DialogTitle>
-            <DialogDescription>{distributor.name}</DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-2.5 text-sm">
-            <div className="flex items-center gap-3 border-b pb-3">
-              <Avatar size="lg" className={cn("shrink-0", getAvatarTone(distributor.name))}>
-                <AvatarImage src={distributor.avatarUrl || undefined} alt="" referrerPolicy="no-referrer" />
-                <AvatarFallback>{getInitials(distributor.name)}</AvatarFallback>
-                {distributor.verified ? (
-                  <AvatarBadge className="bg-blue-600 text-blue-950 [&>svg]:text-white">
-                    <Check />
-                  </AvatarBadge>
-                ) : null}
-              </Avatar>
-              <div className="min-w-0">
-                <p className="font-semibold">{distributor.name}</p>
-                <p className="text-muted-foreground">@{distributor.username}</p>
-              </div>
-            </div>
-
-            <div className="grid gap-2 sm:grid-cols-2">
-              <InfoRow label="Distributor ID" value={distributor.id} mono />
-              <InfoRow label="Role" value={distributor.type} />
-              <InfoRow label="Username" value={"@" + (distributor.username || "—")} />
-              <InfoRow label="Email" value={distributor.email} />
-              <InfoRow label="Joined" value={distributor.joinedDate} />
-              <InfoRow label="Wallet balance" value={formatCurrency(distributor.balance)} />
-              <InfoRow label="Wallet model" value={distributor.walletModel} />
-              <InfoRow label="Status" value={distributor.status === "Suspended" ? "Suspended" : "Active"} />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={walletOpen} onOpenChange={closeWallet}>
         <DialogContent className="sm:max-w-lg">
@@ -510,15 +486,6 @@ function DistributorActions({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
-}
-
-function InfoRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="rounded-md bg-muted/35 px-3 py-2">
-      <span className="block text-[11px] text-muted-foreground">{label}</span>
-      <span className={cn("mt-0.5 block truncate font-medium text-sm", mono ? "font-mono text-xs" : "")}>{value}</span>
-    </div>
   );
 }
 
