@@ -82,7 +82,7 @@ export function Withdrawls({ withdrawls }: { withdrawls: WithdrawlRow[] }) {
             </InputGroupAddon>
           </InputGroup>
 
-          <Button variant="outline" size="sm" render={<Link to="/dashboard/withdrawls/analytics" />}>
+          <Button variant="outline" size="sm" render={<Link to="/dashboard/analytics" />}>
             <BarChart3 /> Analytics
           </Button>
 
