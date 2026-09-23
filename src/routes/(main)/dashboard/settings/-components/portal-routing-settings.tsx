@@ -5,7 +5,7 @@ import { GripVertical, ListFilter, RotateCcw, Save } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { SettingCard, SettingsShell } from "../-components/settings-shell";
+import { SettingCard, SettingsShell } from "./settings-shell";
 
 type PriorityRule = {
   id: string;
