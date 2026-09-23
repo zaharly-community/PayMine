@@ -7,6 +7,7 @@ import {
   Globe2,
   Languages,
   LockKeyhole,
+  ListFilter,
   Settings2,
   SlidersHorizontal,
   UsersRound,
@@ -24,6 +25,7 @@ const iconMap = {
   "audit-log": FileClock,
   billing: CreditCard,
   features: SlidersHorizontal,
+  "portal-routing": ListFilter,
   "custom-domain": Globe2,
   "team-access": UsersRound,
 } as const;
