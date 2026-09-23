@@ -13,13 +13,135 @@ import { Cog, Download, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Kbd } from "@/components/ui/kbd";
+import { TransactionImportDialog } from "@/components/transactions/import-transactions-dialog";
 import { dataTableFeatures } from "@/lib/data-table-features";
 
-import type { DepositRow } from "./data";
+import type { DepositRow, DepositStatus, PaymentMethod, VerificationStatus } from "./data";
 import { depositsColumns } from "./deposits-columns";
 import { DepositsTable } from "./deposits-table";
+import {
+  HEADER_ALIASES,
+  importedDate,
+  importedNumber,
+  pickImportedField,
+  type ImportedRecord,
+} from "@/lib/transaction-import";
+
+
+
+const depositStatuses: DepositStatus[] = [
+  "Pending",
+  "Processing",
+  "Completed",
+  "Canceled",
+];
+
+const verificationStatuses: VerificationStatus[] = [
+  "Pending",
+  "Processing",
+  "Approved",
+  "Canceled",
+  "Waiting Correction",
+  "In Process",
+];
+
+const paymentMethods: PaymentMethod[] = [
+  "Flouci",
+  "D17",
+  "Tunisie Telecom",
+  "Kashy",
+];
+
+function importValue(value: string, fallback: string) {
+  return value.trim() || fallback;
+}
+
+function buildImportedDeposit(
+  record: ImportedRecord,
+  index: number,
+  existingRows: DepositRow[],
+): DepositRow {
+  const paymentMethod = paymentMethods.includes(
+    pickImportedField(record, HEADER_ALIASES.method) as PaymentMethod,
+  )
+    ? (pickImportedField(record, HEADER_ALIASES.method) as PaymentMethod)
+    : "Flouci";
+  const amount = importedNumber(
+    pickImportedField(record, HEADER_ALIASES.amount),
+  );
+  const feePercent = importedNumber(
+    pickImportedField(record, HEADER_ALIASES.feePercent),
+  );
+  const explicitFee = importedNumber(
+    pickImportedField(record, HEADER_ALIASES.feeAmount),
+  );
+  const feeAmount =
+    explicitFee > 0 ? explicitFee : Number(((amount * feePercent) / 100).toFixed(2));
+  const verificationRaw = pickImportedField(
+    record,
+    HEADER_ALIASES.verificationStatus,
+  );
+  const statusRaw =
+    pickImportedField(record, HEADER_ALIASES.depositStatus) || "Pending";
+  const verificationStatus = verificationStatuses.includes(
+    verificationRaw as VerificationStatus,
+  )
+    ? (verificationRaw as VerificationStatus)
+    : "Pending";
+  const depositStatus = depositStatuses.includes(statusRaw as DepositStatus)
+    ? (statusRaw as DepositStatus)
+    : "Pending";
+  const processor = importValue(
+    pickImportedField(record, HEADER_ALIASES.processor),
+    "Unassigned",
+  );
+  const id =
+    pickImportedField(record, HEADER_ALIASES.id) ||
+    `IMP-DEP-${Date.now().toString(36).toUpperCase()}-${index + 1}`;
+  const matchingImage = existingRows.find(
+    (row) => row.paymentMethod === paymentMethod,
+  )?.paymentMethodImage;
+
+  return {
+    id,
+    name: importValue(
+      pickImportedField(record, HEADER_ALIASES.name),
+      "Imported player",
+    ),
+    email: importValue(
+      pickImportedField(record, HEADER_ALIASES.email),
+      "—",
+    ),
+    date: importValue(
+      importedDate(pickImportedField(record, HEADER_ALIASES.date)),
+      new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+        .format(new Date())
+        .replace(",", ""),
+    ),
+    paymentMethod,
+    paymentMethodImage: matchingImage ?? "",
+    verificationStatus,
+    amount,
+    feePercent,
+    feeAmount,
+    depositStatus,
+    processedBy: {
+      name: processor,
+      image: "",
+    },
+    indicatorStatus: depositStatus,
+  };
+}
 
 export function Deposits({ deposits }: { deposits: DepositRow[] }) {
+  const [rows, setRows] = React.useState(deposits);
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "date", desc: true }]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -33,7 +155,8 @@ export function Deposits({ deposits }: { deposits: DepositRow[] }) {
 
   const table = useTable({
     features: dataTableFeatures,
-    data: deposits,
+    data: rows,
+  // Keep imported rows visible immediately; the import dialog deduplicates against this state.
     columns: depositsColumns,
     state: {
       rowSelection,
@@ -87,6 +210,16 @@ export function Deposits({ deposits }: { deposits: DepositRow[] }) {
           <Button variant="outline" size="sm">
             <Cog /> Customize
           </Button>
+          <TransactionImportDialog
+            kind="deposit"
+            title="Deposits"
+            existingRows={rows as Array<Record<string, unknown>>}
+            buildRow={(record, index) => buildImportedDeposit(record, index, rows)}
+            onImport={(importedRows) => {
+              setRows((current) => [...importedRows, ...current]);
+              table.setPageIndex(0);
+            }}
+          />
           <Button variant="outline" size="sm">
             <Download /> Export
           </Button>
