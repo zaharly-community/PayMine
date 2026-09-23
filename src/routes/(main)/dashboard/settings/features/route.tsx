@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { type DragEvent, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { BarChart3, CheckCircle2, CreditCard, Database, Gauge, Network, ShieldCheck, SlidersHorizontal, ToggleLeft, Users, X } from "lucide-react";
+import { CheckCircle2, CreditCard, Database, GripVertical, Network, Save, ShieldCheck, SlidersHorizontal, ToggleLeft, Users, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,7 @@ function Page() {
           );
         })}
       </div>
+      <PortalRoutingSection />
       <FeatureDialog feature={selected} open={Boolean(selected)} onOpenChange={(open) => !open && setSelected(null)} />
     </SettingsShell>
   );
@@ -52,6 +53,179 @@ function Page() {
 
 function Card({ children, feature, onClick }: { children: React.ReactNode; feature: string; onClick: () => void }) {
   return <button type="button" className="rounded-xl border bg-card p-4 text-left shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm" onClick={onClick} aria-label={"Configure " + feature}>{children}</button>;
+}
+
+
+type PriorityRule = {
+  id: string;
+  label: string;
+  description: string;
+  enabled: boolean;
+};
+
+const initialPortalRoutingRules = {
+  distributors: [
+    { id: "response-speed", label: "Fastest response", description: "Prioritize agents and supervisors with the shortest recent response time.", enabled: true },
+    { id: "rating", label: "Highest rating", description: "Prefer distributors with the strongest customer rating history.", enabled: true },
+    { id: "newest", label: "Newest distributors", description: "Give recently onboarded agents and supervisors higher placement.", enabled: false },
+    { id: "oldest", label: "Oldest distributors", description: "Prefer the longest-tenured agents and supervisors.", enabled: false },
+  ],
+  wallets: [
+    { id: "wallet-response-speed", label: "Fastest response", description: "Prefer wallets/providers with the fastest recent response time.", enabled: true },
+    { id: "wallet-rating", label: "Highest rating", description: "Prefer wallets/providers with the strongest customer rating history.", enabled: true },
+    { id: "wallet-newest", label: "Newest wallets", description: "Give recently added wallets higher placement.", enabled: false },
+    { id: "wallet-oldest", label: "Oldest wallets", description: "Prefer the longest-running wallets.", enabled: false },
+  ],
+} satisfies Record<string, PriorityRule[]>;
+
+function PortalRoutingSection() {
+  const [distributorRules, setDistributorRules] = useState<PriorityRule[]>(() => initialPortalRoutingRules.distributors);
+  const [walletRules, setWalletRules] = useState<PriorityRule[]>(() => initialPortalRoutingRules.wallets);
+  const [saved, setSaved] = useState(true);
+
+  const markDirty = () => setSaved(false);
+  const handleSave = () => setSaved(true);
+  const handleReset = () => {
+    setDistributorRules(initialPortalRoutingRules.distributors);
+    setWalletRules(initialPortalRoutingRules.wallets);
+    setSaved(true);
+  };
+
+  return (
+    <SettingCard
+      title="Portal display & routing priority"
+      description="Control which agents, supervisors and wallets appear first in the portal."
+    >
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/20 px-4 py-3">
+          <div>
+            <p className="text-sm font-medium">Priority order</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Drag criteria to set priority from top to bottom. Rules switched Off are ignored completely.
+            </p>
+          </div>
+          <Badge variant={saved ? "secondary" : "outline"}>
+            {saved ? "Saved" : "Unsaved changes"}
+          </Badge>
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-2">
+          <PriorityRuleList
+            title="Agents & Supervisors"
+            description="How eligible distributors are ordered inside the portal."
+            rules={distributorRules}
+            onChange={(rules) => { setDistributorRules(rules); markDirty(); }}
+          />
+          <PriorityRuleList
+            title="Wallets"
+            description="How available wallets/providers are ordered for the player."
+            rules={walletRules}
+            onChange={(rules) => { setWalletRules(rules); markDirty(); }}
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+          <p className="text-xs text-muted-foreground">Top position = highest priority. Off rules are excluded from the ordering.</p>
+          <div className="flex items-center gap-2">
+            <Button type="button" size="sm" variant="outline" onClick={handleReset}>Reset</Button>
+            <Button type="button" size="sm" onClick={handleSave}><Save /> Save routing</Button>
+          </div>
+        </div>
+      </div>
+    </SettingCard>
+  );
+}
+
+function PriorityRuleList({
+  title,
+  description,
+  rules,
+  onChange,
+}: {
+  title: string;
+  description: string;
+  rules: PriorityRule[];
+  onChange: (rules: PriorityRule[]) => void;
+}) {
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  const moveRule = (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return;
+    const sourceIndex = rules.findIndex((rule) => rule.id === sourceId);
+    const targetIndex = rules.findIndex((rule) => rule.id === targetId);
+    if (sourceIndex < 0 || targetIndex < 0) return;
+
+    const next = [...rules];
+    const [moved] = next.splice(sourceIndex, 1);
+    if (!moved) return;
+    next.splice(targetIndex, 0, moved);
+    onChange(next);
+  };
+
+  const handleDragStart = (event: DragEvent<HTMLDivElement>, id: string) => {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", id);
+    setDraggedId(id);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>, targetId: string) => {
+    event.preventDefault();
+    const sourceId = event.dataTransfer.getData("text/plain");
+    if (sourceId) moveRule(sourceId, targetId);
+    setDraggedId(null);
+  };
+
+  return (
+    <div className="rounded-xl border bg-card p-3">
+      <div className="mb-3 flex items-start justify-between gap-3 px-1">
+        <div>
+          <p className="text-sm font-medium">{title}</p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
+        </div>
+        <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Priority</span>
+      </div>
+
+      <div className="space-y-2" role="list">
+        {rules.map((rule, index) => (
+          <div
+            key={rule.id}
+            draggable
+            role="listitem"
+            onDragStart={(event) => handleDragStart(event, rule.id)}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => handleDrop(event, rule.id)}
+            onDragEnd={() => setDraggedId(null)}
+            className={[
+              "group flex cursor-grab items-center gap-3 rounded-lg border px-3 py-3 transition",
+              rule.enabled ? "bg-background" : "bg-muted/30 opacity-60",
+              draggedId === rule.id ? "border-primary/50 shadow-sm" : "hover:border-primary/30",
+            ].join(" ")}
+          >
+            <GripVertical className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-[10px] font-semibold tabular-nums text-muted-foreground">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">{rule.label}</p>
+              <p className="mt-0.5 text-[11px] leading-5 text-muted-foreground">{rule.description}</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className={rule.enabled ? "text-[10px] font-medium text-foreground" : "text-[10px] font-medium text-muted-foreground"}>
+                {rule.enabled ? "On" : "Off"}
+              </span>
+              <Switch
+                checked={rule.enabled}
+                onCheckedChange={(enabled) => {
+                  onChange(rules.map((item) => item.id === rule.id ? { ...item, enabled } : item));
+                }}
+                aria-label={rule.label + (rule.enabled ? " On" : " Off")}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function FeatureDialog({ feature, open, onOpenChange }: { feature: FeatureName | null; open: boolean; onOpenChange: (open: boolean) => void }) {
