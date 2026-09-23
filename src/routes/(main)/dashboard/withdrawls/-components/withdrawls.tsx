@@ -12,6 +12,14 @@ import {
 import { BarChart3, Cog, Download, Plus, Search, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { TransactionImportDialog } from "@/components/transactions/import-transactions-dialog";
+import {
+  HEADER_ALIASES,
+  importedDate,
+  importedNumber,
+  pickImportedField,
+  type ImportedRecord,
+} from "@/lib/transaction-import";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Kbd } from "@/components/ui/kbd";
 import { dataTableFeatures } from "@/lib/data-table-features";
@@ -20,7 +28,65 @@ import type { WithdrawlRow } from "./data";
 import { withdrawlsColumns } from "./withdrawls-columns";
 import { WithdrawlsTable } from "./withdrawls-table";
 
+const withdrawlMethods: WithdrawlMethod[] = ["Flouci", "D17", "Kashy", "Bank Transfer"];
+
+function buildImportedWithdrawl(
+  record: ImportedRecord,
+  index: number,
+  existingRows: WithdrawlRow[],
+): WithdrawlRow {
+  const rawMethod = pickImportedField(record, HEADER_ALIASES.method) as WithdrawlMethod;
+  const withdrawlMethod = withdrawlMethods.includes(rawMethod) ? rawMethod : "Flouci";
+  const amount = importedNumber(pickImportedField(record, HEADER_ALIASES.amount));
+  const commissionPercent = importedNumber(pickImportedField(record, HEADER_ALIASES.feePercent));
+  const explicitCommission = importedNumber(pickImportedField(record, HEADER_ALIASES.feeAmount));
+  const commissionAmount = explicitCommission > 0
+    ? explicitCommission
+    : Number(((amount * commissionPercent) / 100).toFixed(2));
+  const statusRaw = pickImportedField(record, HEADER_ALIASES.withdrawlStatus) || "Pending";
+  const status: WithdrawlStatus =
+    statusRaw === "Completed" || statusRaw === "Waiting Correction"
+      ? statusRaw
+      : "Pending";
+  const processor = pickImportedField(record, HEADER_ALIASES.processor) || "Unassigned";
+  const id =
+    pickImportedField(record, HEADER_ALIASES.id) ||
+    `IMP-WDL-${Date.now().toString(36).toUpperCase()}-${index + 1}`;
+  const matchingImage = existingRows.find(
+    (row) => row.withdrawlMethod === withdrawlMethod,
+  )?.withdrawlMethodImage;
+
+  return {
+    id,
+    name: pickImportedField(record, HEADER_ALIASES.name) || "Imported player",
+    email: pickImportedField(record, HEADER_ALIASES.email) || "—",
+    date:
+      importedDate(pickImportedField(record, HEADER_ALIASES.date)) ||
+      new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+        .format(new Date())
+        .replace(",", ""),
+    withdrawlMethod,
+    withdrawlMethodImage: matchingImage ?? "",
+    amount,
+    commissionPercent,
+    commissionAmount,
+    status,
+    processedBy: {
+      name: processor,
+      image: "",
+    },
+  };
+}
+
 export function Withdrawls({ withdrawls }: { withdrawls: WithdrawlRow[] }) {
+  const [rows, setRows] = React.useState(withdrawls);
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "date", desc: true }]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -34,7 +100,7 @@ export function Withdrawls({ withdrawls }: { withdrawls: WithdrawlRow[] }) {
 
   const table = useTable({
     features: dataTableFeatures,
-    data: withdrawls,
+    data: rows,
     columns: withdrawlsColumns,
     state: {
       rowSelection,
@@ -92,6 +158,16 @@ export function Withdrawls({ withdrawls }: { withdrawls: WithdrawlRow[] }) {
           <Button variant="outline" size="sm">
             <Cog /> Customize
           </Button>
+          <TransactionImportDialog
+            kind="withdrawl"
+            title="Withdrawls"
+            existingRows={rows as Array<Record<string, unknown>>}
+            buildRow={(record, index) => buildImportedWithdrawl(record, index, rows)}
+            onImport={(importedRows) => {
+              setRows((current) => [...importedRows, ...current]);
+              table.setPageIndex(0);
+            }}
+          />
           <Button variant="outline" size="sm">
             <Download /> Export
           </Button>
