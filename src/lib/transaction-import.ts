@@ -20,7 +20,7 @@ export function normalizeImportedHeader(value: string) {
     .trim()
     .toLowerCase()
     .normalize("NFKD")
-    .replace(/[\\u0300-\\u036f]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]/g, "");
 }
 
@@ -48,7 +48,7 @@ export function importedNumber(value: string) {
   if (!value) return 0;
   const cleaned = value
     .replace(/[^0-9.,-]/g, "")
-    .replace(/,(?=\\d{3}(?:\\D|$))/g, "");
+    .replace(/,(?=\d{3}(?:\D|$))/g, "");
 
   const parsed = Number.parseFloat(cleaned.replace(/,/g, "."));
   return Number.isFinite(parsed) ? parsed : 0;
@@ -112,7 +112,7 @@ export function parseDelimitedText(text: string, delimiter = ",") {
   let cell = "";
   let quoted = false;
 
-  const source = text.replace(/^\\uFEFF/, "");
+  const source = text.replace(/^\uFEFF/, "");
 
   for (let index = 0; index < source.length; index += 1) {
     const char = source[index];
@@ -160,8 +160,8 @@ export function parseDelimitedText(text: string, delimiter = ",") {
 }
 
 function detectDelimiter(text: string) {
-  const sample = text.split(/\\r?\\n/).find((line) => line.trim()) ?? "";
-  const candidates = [",", "\\t", ";"];
+  const sample = text.split(/\r?\n/).find((line) => line.trim()) ?? "";
+  const candidates = [",", "\t", ";"];
 
   return candidates
     .map((candidate) => ({
@@ -296,9 +296,9 @@ function findWorksheetPath(workbook: Document, relationships: Document) {
     throw new Error("The Excel workbook worksheet relationship is invalid.");
   }
 
-  return target.replace(/^\\//, "").startsWith("xl/")
-    ? target.replace(/^\\//, "")
-    : `xl/${target.replace(/^\\//, "")}`;
+  return target.replace(/^\//, "").startsWith("xl/")
+    ? target.replace(/^\//, "")
+    : `xl/${target.replace(/^\//, "")}`;
 }
 
 function cellColumnIndex(reference: string) {
@@ -397,7 +397,7 @@ export async function readTransactionImportFile(file: File) {
   if (extension === "csv" || extension === "tsv") {
     const text = await file.text();
     return rowsToRecords(
-      parseDelimitedText(text, extension === "tsv" ? "\\t" : detectDelimiter(text)),
+      parseDelimitedText(text, extension === "tsv" ? "\t" : detectDelimiter(text)),
     );
   }
 
