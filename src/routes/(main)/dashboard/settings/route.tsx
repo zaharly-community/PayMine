@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
-import { ArrowRight, Bell, CreditCard, FileClock, Languages, LockKeyhole, Settings2, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, Bell, CreditCard, FileClock, Languages, ListFilter, LockKeyhole, Settings2, SlidersHorizontal } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const cards = [
@@ -10,6 +10,7 @@ const cards = [
   ["audit-log", "Audit log", "Administrative activity history.", FileClock],
   ["billing", "Billing", "Plan, invoices and payment configuration.", CreditCard],
   ["features", "Features", "Platform modules, availability and rollout controls.", SlidersHorizontal],
+  ["portal-routing", "Portal routing", "Ordering priorities for distributors and wallets shown in the portal.", ListFilter],
 ] as const;
 
 export const Route = createFileRoute("/(main)/dashboard/settings")({
