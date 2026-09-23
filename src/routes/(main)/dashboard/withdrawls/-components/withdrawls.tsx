@@ -24,7 +24,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Kbd } from "@/components/ui/kbd";
 import { dataTableFeatures } from "@/lib/data-table-features";
 
-import type { WithdrawlRow } from "./data";
+import type { WithdrawlMethod, WithdrawlRow, WithdrawlStatus } from "./data";
 import { withdrawlsColumns } from "./withdrawls-columns";
 import { WithdrawlsTable } from "./withdrawls-table";
 
