@@ -9,7 +9,7 @@ import {
   useTable,
 } from "@tanstack/react-table";
 
-import { BarChart3, Cog, Download, Plus, Search, SlidersHorizontal } from "lucide-react";
+import { BarChart3, Check, Cog, Download, GripVertical, Plus, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { TransactionImportDialog } from "@/components/transactions/import-transactions-dialog";
@@ -93,6 +93,18 @@ export function Withdrawls({ withdrawls }: { withdrawls: WithdrawlRow[] }) {
   const [columnVisibility, setColumnVisibility] = React.useState<ColumnVisibilityState>({
     search: false,
   });
+  const [columnOrder, setColumnOrder] = React.useState<string[]>([
+    "withdrawlId",
+    "name",
+    "withdrawlMethod",
+    "date",
+    "amount",
+    "status",
+    "processedBy",
+    "actions",
+  ]);
+  const [customizeOpen, setCustomizeOpen] = React.useState(false);
+  const customizeRef = React.useRef<HTMLDivElement>(null);
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: 25,
@@ -107,6 +119,7 @@ export function Withdrawls({ withdrawls }: { withdrawls: WithdrawlRow[] }) {
       sorting,
       columnFilters,
       columnVisibility,
+      columnOrder,
       pagination,
     },
     getRowId: (row) => row.id,
@@ -116,8 +129,35 @@ export function Withdrawls({ withdrawls }: { withdrawls: WithdrawlRow[] }) {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
+    onColumnOrderChange: setColumnOrder,
     onPaginationChange: setPagination,
   });
+
+  React.useEffect(() => {
+    if (!customizeOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (customizeRef.current && !customizeRef.current.contains(event.target as Node)) {
+        setCustomizeOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [customizeOpen]);
+
+  const reorderColumns = (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return;
+    setColumnOrder((current) => {
+      const next = [...current];
+      const sourceIndex = next.indexOf(sourceId);
+      const targetIndex = next.indexOf(targetId);
+      if (sourceIndex === -1 || targetIndex === -1) return current;
+      const [moved] = next.splice(sourceIndex, 1);
+      next.splice(targetIndex, 0, moved);
+      return next;
+    });
+  };
 
   const searchQuery = (table.getColumn("search")?.getFilterValue() as string | undefined) ?? "";
 
@@ -152,12 +192,81 @@ export function Withdrawls({ withdrawls }: { withdrawls: WithdrawlRow[] }) {
             <BarChart3 /> Analytics
           </Button>
 
-          <Button variant="outline" size="sm">
-            <SlidersHorizontal /> Hide
-          </Button>
-          <Button variant="outline" size="sm">
-            <Cog /> Customize
-          </Button>
+          <div className="relative" ref={customizeRef}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-expanded={customizeOpen}
+              aria-haspopup="menu"
+              onClick={() => setCustomizeOpen((open) => !open)}
+            >
+              <Cog /> Customize
+            </Button>
+            {customizeOpen ? (
+              <div role="menu" className="absolute right-0 top-[calc(100%+6px)] z-50 w-72 rounded-lg bg-popover p-2 text-popover-foreground shadow-lg ring-1 ring-foreground/10">
+                <div className="border-b px-2 pb-2">
+                  <p className="text-sm font-medium">Customize columns</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Show, hide, and drag columns to change their order.</p>
+                </div>
+                <div className="mt-2 max-h-80 overflow-y-auto">
+                  {table.getAllLeafColumns()
+                    .filter((column) => column.id !== "search")
+                    .map((column) => {
+                      const visible = column.getIsVisible();
+                      const canHide = column.getCanHide();
+                      const labelMap: Record<string, string> = {
+                        withdrawlId: "Withdrawls ID",
+                        name: "Player",
+                        withdrawlMethod: "Withdrawl Method",
+                        date: "date",
+                        amount: "Amount",
+                        status: "Status",
+                        processedBy: "Processed By",
+                        actions: "Actions",
+                      };
+                      return (
+                        <div
+                          key={column.id}
+                          draggable={column.id !== "actions"}
+                          onDragStart={() => {
+                            if (column.id !== "actions") customizeRef.current?.setAttribute("data-dragging-column", column.id);
+                          }}
+                          onDragEnd={() => customizeRef.current?.removeAttribute("data-dragging-column")}
+                          onDragOver={(event) => {
+                            if (column.id !== "actions") event.preventDefault();
+                          }}
+                          onDrop={(event) => {
+                            event.preventDefault();
+                            const sourceId = customizeRef.current?.getAttribute("data-dragging-column");
+                            if (sourceId) reorderColumns(sourceId, column.id);
+                          }}
+                          className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/50"
+                        >
+                          <GripVertical className={column.id === "actions" ? "size-3.5 text-muted-foreground/35" : "size-3.5 cursor-grab text-muted-foreground"} />
+                          <button
+                            type="button"
+                            disabled={!canHide}
+                            role="menuitemcheckbox"
+                            aria-checked={visible}
+                            className="flex min-w-0 flex-1 items-center gap-2 text-left disabled:cursor-not-allowed disabled:opacity-60"
+                            onClick={() => {
+                              if (canHide) column.toggleVisibility(!visible);
+                            }}
+                          >
+                            <span className={visible ? "flex size-4 shrink-0 items-center justify-center rounded-sm border border-primary bg-primary text-primary-foreground" : "flex size-4 shrink-0 items-center justify-center rounded-sm border border-input bg-background"}>
+                              {visible ? <Check className="size-3" /> : null}
+                            </span>
+                            <span className="truncate">{labelMap[column.id] ?? column.id}</span>
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
+                <div className="mt-2 border-t pt-2 text-[11px] text-muted-foreground">Actions stays visible and cannot be hidden.</div>
+              </div>
+            ) : null}
+          </div>
           <TransactionImportDialog
             kind="withdrawl"
             title="Withdrawls"
