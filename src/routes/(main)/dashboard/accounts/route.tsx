@@ -89,6 +89,8 @@ const supervisorDirectory: SupervisorRule[] = distributors
     avatarUrl: distributor.avatarUrl ?? "",
   }));
 
+const walletMethods: AccountMethod[] = ["D17", "Flouci", "Kashy", "e-Dinar"];
+
 const dayOptions = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function createDefaultConfig(method: AccountMethod): AccountConfig {
