@@ -1,6 +1,7 @@
-import { ArrowDownToLine, ArrowUpFromLine, WalletCards } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, History, WalletCards } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Link } from "@tanstack/react-router";
 import { Progress } from "@/components/ui/progress";
 import {
   DropdownMenu,
@@ -62,7 +63,7 @@ export function WalletMenu() {
 
         <DropdownMenuSeparator />
 
-        <div className="grid grid-cols-2 gap-2 p-2">
+        <div className="grid grid-cols-3 gap-2 p-2">
           <Button type="button" size="sm" variant="outline">
             <ArrowDownToLine />
             Deposit
@@ -70,6 +71,15 @@ export function WalletMenu() {
           <Button type="button" size="sm">
             <ArrowUpFromLine />
             Withdrawl
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            render={<Link to="/dashboard/finance/transactions" />}
+          >
+            <History />
+            Activity
           </Button>
         </div>
       </DropdownMenuContent>
