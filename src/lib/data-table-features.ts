@@ -1,6 +1,7 @@
 import {
   columnFacetingFeature,
   columnFilteringFeature,
+  columnOrderingFeature,
   columnSizingFeature,
   columnVisibilityFeature,
   createFacetedRowModel,
@@ -30,6 +31,7 @@ import {
 export const dataTableFeatures = tableFeatures({
   columnFacetingFeature,
   columnFilteringFeature,
+  columnOrderingFeature,
   columnSizingFeature,
   columnVisibilityFeature,
   globalFilteringFeature,
