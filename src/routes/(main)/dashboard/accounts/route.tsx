@@ -307,7 +307,6 @@ function Page() {
   function handleRent(offerId: string) {
     setRentedOffers((current) => current.includes(offerId) ? current : [...current, offerId]);
     setRentOpen(false);
-    setClaimOfferId(offerId);
   }
 
   const rentedOfferRecords = rentalOffers.filter((offer) => rentedOffers.includes(offer.id));
@@ -1322,16 +1321,8 @@ function RentedAccountCard({ offer, onClaim }: { offer: (typeof rentalOffers)[nu
   );
 }
 
-function buildRentedAccount(offer: (typeof rentalOffers)[number]): PaymentAccount {
+function buildRentedAccount(offer: (typeof rentalOffers)[number], config: AccountConfig): PaymentAccount {
   const method: AccountMethod = offer.title.startsWith("E-Dinar") ? "e-Dinar" : "Flouci";
-  const config = createDefaultConfig(method);
-  config.ownerName = "Rental account";
-  config.walletNumber = offer.identifier;
-  config.walletName = offer.title;
-  config.pin = "••••";
-  config.cardNumber = method === "e-Dinar" ? offer.identifier : "";
-  config.maxTransactions = method === "e-Dinar" ? "200" : "150";
-  config.maxAmount = method === "e-Dinar" ? "30000" : "20000";
 
   return {
     id: "ACC-" + String(Date.now()).slice(-6),
@@ -1339,7 +1330,7 @@ function buildRentedAccount(offer: (typeof rentalOffers)[number]): PaymentAccoun
     method,
     type: "Wallet",
     identifier: offer.identifier,
-    balance: 0,
+    balance: config.openingBalance,
     currency: "TND",
     status: "Active",
     lastActivity: "Just now",
@@ -1431,7 +1422,7 @@ function RentalClaimDialog({
   offer: (typeof rentalOffers)[number] | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onClaim: (offer: (typeof rentalOffers)[number]) => void;
+  onClaim: (offer: (typeof rentalOffers)[number], config: AccountConfig) => void;
 }) {
   const [step, setStep] = useState(1);
   const [maxTransactions, setMaxTransactions] = useState("200");
@@ -1495,7 +1486,7 @@ function RentalClaimDialog({
   };
 
   function finishClaim() {
-    onClaim(offer);
+    onClaim(offer, createConfig());
   }
 
   return (
