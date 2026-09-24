@@ -17,6 +17,7 @@ import {
   Plus,
   Sparkles,
   Search,
+  Settings2,
   ShieldCheck,
   UsersRound,
   WalletCards,
@@ -401,6 +402,13 @@ function SummaryCard({
   );
 }
 
+const accountMethodImages: Partial<Record<AccountMethod, string>> = {
+  D17: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0ypBwHv3CfREaQhqna5sVwpNdMVutnTBwADkF_mOLxw&s=10",
+  Flouci: "https://play-lh.googleusercontent.com/eKwfMMr86vhBxUG6cGGVwXYR_fZqzLIJCTFXTI_JDD6VsBfYvvUHSuz-M9BC8Oy1cU5AXq4PkLre0bre3rmY=s0-br30",
+  Kashy: "https://play-lh.googleusercontent.com/pTtXnbOlZa8LXuvgdkvNb00J34wEPpDOHcEnBQiJYPV8zN5OQUBezMlosM0iO_KX5pLIbml45uvH-5MyUy1LQqI=w240-h480-rw",
+  "e-Dinar": "https://www.ama-business.com/wp-content/uploads/2023/05/E-Dinar.jpg",
+};
+
 function AccountCard({ account, onView }: { account: PaymentAccount; onView: () => void }) {
   const positive = account.change >= 0;
 
@@ -410,12 +418,19 @@ function AccountCard({ account, onView }: { account: PaymentAccount; onView: () 
       <CardHeader className="pb-2 pl-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted">
-              {account.type === "Voucher" ? <CreditCard className="size-4" /> : <WalletCards className="size-4" />}
+            <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-muted">
+              {accountMethodImages[account.method] ? (
+                <img
+                  src={accountMethodImages[account.method]}
+                  alt={account.method}
+                  className="size-full object-cover"
+                />
+              ) : (
+                <CreditCard className="size-4 text-muted-foreground" />
+              )}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-xs text-muted-foreground">{account.method}</p>
-              <CardTitle className="mt-1 truncate text-sm">{account.accountName}</CardTitle>
+              <CardTitle className="truncate text-sm">{account.accountName}</CardTitle>
               <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{account.identifier}</p>
             </div>
           </div>
@@ -429,9 +444,14 @@ function AccountCard({ account, onView }: { account: PaymentAccount; onView: () 
             <p className="text-[11px] text-muted-foreground">Available balance</p>
             <p className="mt-1 text-xl font-semibold tabular-nums">{formatMoney(account.balance)}</p>
           </div>
-          <button type="button" onClick={onView} className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={"View " + account.accountName}>
-            <Eye className="size-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={onView} className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={"View " + account.accountName}>
+              <Eye className="size-4" />
+            </button>
+            <button type="button" onClick={onView} className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={"Configure " + account.accountName}>
+              <Settings2 className="size-4" />
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 flex items-center justify-between gap-3 text-xs">
