@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { distributors } from "../distributors/-components/data";
 
 type AccountType = "Wallet" | "Voucher";
 type AccountStatus = "Active" | "Disabled";
@@ -62,7 +63,6 @@ type AccountConfig = {
   days: string[];
   startTime: string;
   endTime: string;
-  timezone: string;
   openingBalance: number;
 };
 
@@ -80,22 +80,22 @@ type PaymentAccount = {
   config: AccountConfig;
 };
 
-const supervisors = [
-  { id: "sup-001", name: "Ahmed Ben Salem", avatarUrl: "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/6dfc72b9-8c86-438a-aada-8d3530e13a68/d2c9cgs-69217879-a8d4-438a-b98d-baa29baf98d8.jpg/v1/fill/w_900,h_1126,q_75,strp/this_random_guy_by_inxonic_d2c9cgs-fullview.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi82ZGZjNzJiOS04Yzg2LTQzOGEtYWFkYS04ZDM1MzBlMTNhNjgvZDJjOWNncy02OTIxNzg3OS1hOGQ0LTQzOGEtYjk4ZC1iYWEyOWJhZjk4ZDguanBnIiwiaGVpZ2h0IjoiPD0xMTI2Iiwid2lkdGgiOiI8PTkwMCJ9XV0sImF1ZCI6WyJ1cm46c2VydmljZTppbWFnZS53YXRlcm1hcmsiLCJvd20iOnsicGF0aCI6Ii93bS82ZGZjNzJiOS04Yzg2LTQzOGEtYWFkYS04ZDM1MzBlMTNhNjgvZ2V0Iiwib3BhY2l0eSI6OTV9fX0.oLUUOQ0Apg_6Gq1gPPuVu9DXt6494FP4rbUTeN4h-wA" },
-  { id: "sup-002", name: "Sami Jaziri", avatarUrl: "https://plus.unsplash.com/premium_photo-1689530775582-83b8abdb5020?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cmFuZG9tJTIwcGVyc29ufGVufDB8fDB8fHww" },
-  { id: "sup-003", name: "Hatem Chaabane", avatarUrl: "https://img.magnific.com/free-photo/close-up-portrait-curly-handsome-european-male_176532-8133.jpg?semt=ais_hybrid&w=740&q=80" },
-  { id: "sup-004", name: "Anis Mansour", avatarUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHy922UMR9X9MNgNutdRRnbRe0eklCXLAe_nagnpquGQ&s" },
-] as const;
-
-const walletMethods: AccountMethod[] = ["D17", "Flouci", "Kashy", "e-Dinar"];
+const supervisorDirectory: SupervisorRule[] = distributors
+  .filter((distributor) => distributor.type === "Supervisor" && distributor.status === "Active")
+  .slice(0, 6)
+  .map((distributor) => ({
+    id: distributor.id,
+    name: distributor.name,
+    avatarUrl: distributor.avatarUrl ?? "",
+  }));
 
 const dayOptions = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function createDefaultConfig(method: AccountMethod): AccountConfig {
-  const supervisorRules = supervisors.map((supervisor) => ({
+  const supervisorRules = supervisorDirectory.map((supervisor) => ({
     id: supervisor.id,
     name: supervisor.name,
-    mode: "Not set" as SupervisorMode,
+    avatarUrl: supervisor.avatarUrl,
   }));
 
   return {
@@ -144,8 +144,8 @@ const initialAccounts: PaymentAccount[] = [
       maxTransactions: "250",
       maxAmount: "50000",
       supervisorPolicy: "Exclude selected",
-      selectedSupervisorIds: ["sup-003"],
-      supervisors: supervisors.map(({ id, name, avatarUrl }) => ({ id, name, avatarUrl })),
+      selectedSupervisorIds: ["SUP-000221"],
+      supervisors: supervisorDirectory.map((supervisor) => ({ ...supervisor })),
       scheduleEnabled: true,
       days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
       startTime: "07:00",
@@ -173,7 +173,7 @@ const initialAccounts: PaymentAccount[] = [
       maxTransactions: "180",
       maxAmount: "35000",
       supervisorPolicy: "Include only",
-      selectedSupervisorIds: ["sup-001", "sup-003"],
+      selectedSupervisorIds: ["SUP-000184", "SUP-000221"],
       supervisors: supervisors.map(({ id, name, avatarUrl }) => ({ id, name, avatarUrl })),
       scheduleEnabled: true,
       days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
@@ -826,8 +826,6 @@ function StepSupervisors({
   onToggleSupervisor: (id: string) => void;
   onConfigChange: (patch: Partial<AccountConfig>) => void;
 }) {
-  const selectedCount = config.selectedSupervisorIds.length;
-
   return (
     <div className="space-y-5">
       <div className="rounded-xl border bg-muted/20 p-4">
