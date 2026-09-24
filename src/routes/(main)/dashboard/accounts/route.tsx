@@ -421,8 +421,8 @@ function Page() {
         offer={rentalOffers.find((item) => item.id === claimOfferId) ?? null}
         open={Boolean(claimOfferId)}
         onOpenChange={(open) => !open && setClaimOfferId(null)}
-        onClaim={(offer) => {
-          const rentedAccount = buildRentedAccount(offer);
+        onClaim={(offer, config) => {
+          const rentedAccount = buildRentedAccount(offer, config);
           handleCreate(rentedAccount);
           setRentedOffers((current) => current.filter((id) => id !== offer.id));
           setClaimOfferId(null);
