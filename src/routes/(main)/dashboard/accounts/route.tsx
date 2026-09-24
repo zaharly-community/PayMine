@@ -274,6 +274,8 @@ export const Route = createFileRoute("/(main)/dashboard/accounts")({ component: 
 
 function Page() {
   const [accounts, setAccounts] = useState(initialAccounts);
+  const [rentedOffers, setRentedOffers] = useState<string[]>([]);
+  const [claimOfferId, setClaimOfferId] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<"All" | AccountType>("All");
   const [query, setQuery] = useState("");
   const [addOpen, setAddOpen] = useState(false);
@@ -301,6 +303,14 @@ function Page() {
     setAccounts((current) => [account, ...current]);
     setAddOpen(false);
   }
+
+  function handleRent(offerId: string) {
+    setRentedOffers((current) => current.includes(offerId) ? current : [...current, offerId]);
+    setRentOpen(false);
+    setClaimOfferId(offerId);
+  }
+
+  const rentedOfferRecords = rentalOffers.filter((offer) => rentedOffers.includes(offer.id));
 
   return (
     <section className="flex min-h-full flex-col gap-5 bg-background">
@@ -351,6 +361,23 @@ function Page() {
         </div>
       </div>
 
+      {rentedOfferRecords.length ? (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold">Rented cards & wallets</p>
+              <p className="text-xs text-muted-foreground">Rental accounts are shown here until they are claimed into your account list.</p>
+            </div>
+            <Badge variant="outline">{rentedOfferRecords.length} rented</Badge>
+          </div>
+          <div className="grid gap-2 xl:grid-cols-2">
+            {rentedOfferRecords.map((offer) => (
+              <RentedAccountCard key={offer.id} offer={offer} onClaim={() => setClaimOfferId(offer.id)} />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredAccounts.map((account) => (
           <AccountCard key={account.id} account={account} onView={() => setViewAccount(account)} />
@@ -385,7 +412,23 @@ function Page() {
 
       <AccountWizard open={addOpen} onOpenChange={setAddOpen} onCreate={handleCreate} />
       <AccountDetailsDialog account={viewAccount} open={Boolean(viewAccount)} onOpenChange={(open) => !open && setViewAccount(null)} />
-      <RentCardDialog open={rentOpen} onOpenChange={setRentOpen} />
+      <RentCardDialog
+        open={rentOpen}
+        onOpenChange={setRentOpen}
+        rentedOffers={rentedOffers}
+        onRent={handleRent}
+      />
+      <RentalClaimDialog
+        offer={rentalOffers.find((item) => item.id === claimOfferId) ?? null}
+        open={Boolean(claimOfferId)}
+        onOpenChange={(open) => !open && setClaimOfferId(null)}
+        onClaim={(offer) => {
+          const rentedAccount = buildRentedAccount(offer);
+          handleCreate(rentedAccount);
+          setRentedOffers((current) => current.filter((id) => id !== offer.id));
+          setClaimOfferId(null);
+        }}
+      />
     </section>
   );
 }
@@ -1263,21 +1306,61 @@ const rentalOffers = [
   },
 ] as const;
 
+function RentedAccountCard({ offer, onClaim }: { offer: (typeof rentalOffers)[number]; onClaim: () => void }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-md border bg-background p-3">
+      <div className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-md bg-muted">
+        <img src={offer.image} alt={offer.title} className="size-full object-cover" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold">{offer.title}</p>
+        <p className="truncate text-xs text-muted-foreground">{offer.identifier} · 100 TND / month · No commission</p>
+      </div>
+      <Badge variant="secondary">Rented</Badge>
+      <Button type="button" size="sm" onClick={onClaim}>Claim</Button>
+    </div>
+  );
+}
+
+function buildRentedAccount(offer: (typeof rentalOffers)[number]): PaymentAccount {
+  const method: AccountMethod = offer.title.startsWith("E-Dinar") ? "e-Dinar" : "Flouci";
+  const config = createDefaultConfig(method);
+  config.ownerName = "Rental account";
+  config.walletNumber = offer.identifier;
+  config.walletName = offer.title;
+  config.pin = "••••";
+  config.cardNumber = method === "e-Dinar" ? offer.identifier : "";
+  config.maxTransactions = method === "e-Dinar" ? "200" : "150";
+  config.maxAmount = method === "e-Dinar" ? "30000" : "20000";
+
+  return {
+    id: "ACC-" + String(Date.now()).slice(-6),
+    accountName: offer.title,
+    method,
+    type: "Wallet",
+    identifier: offer.identifier,
+    balance: 0,
+    currency: "TND",
+    status: "Active",
+    lastActivity: "Just now",
+    change: 0,
+    config,
+  };
+}
+
 function RentCardDialog({
   open,
   onOpenChange,
+  rentedOffers,
+  onRent,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  rentedOffers: string[];
+  onRent: (offerId: string) => void;
 }) {
-  const [rentedId, setRentedId] = useState<string | null>(null);
-
-  function rentOffer(id: string) {
-    setRentedId(id);
-  }
-
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => { onOpenChange(nextOpen); if (!nextOpen) setRentedId(null); }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Rent a payment account</DialogTitle>
@@ -1288,9 +1371,9 @@ function RentCardDialog({
 
         <div className="grid gap-3 sm:grid-cols-2">
           {rentalOffers.map((offer) => {
-            const rented = rentedId === offer.id;
+            const rented = rentedOffers.includes(offer.id);
             return (
-              <Card key={offer.id} className={rented ? "border-emerald-500/30 bg-emerald-500/5 shadow-none" : "shadow-none"}>
+              <Card key={offer.id} className={rented ? "border-primary/30 bg-muted/20 shadow-none" : "shadow-none"}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="size-14 shrink-0 overflow-hidden rounded-xl border bg-muted">
@@ -1313,7 +1396,7 @@ function RentCardDialog({
                       <p className="text-[11px] text-muted-foreground">Monthly rental</p>
                       <p className="text-lg font-semibold tabular-nums">100 TND <span className="text-xs font-normal text-muted-foreground">/ month</span></p>
                     </div>
-                    <Button type="button" size="sm" disabled={rented} onClick={() => rentOffer(offer.id)}>
+                    <Button type="button" size="sm" disabled={rented} onClick={() => onRent(offer.id)}>
                       {rented ? "Rented" : "Rent now"}
                     </Button>
                   </div>
@@ -1334,6 +1417,270 @@ function RentCardDialog({
             </div>
           </div>
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RentalClaimDialog({
+  offer,
+  open,
+  onOpenChange,
+  onClaim,
+}: {
+  offer: (typeof rentalOffers)[number] | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onClaim: (offer: (typeof rentalOffers)[number]) => void;
+}) {
+  const [step, setStep] = useState(1);
+  const [maxTransactions, setMaxTransactions] = useState("200");
+  const [maxAmount, setMaxAmount] = useState("30000");
+  const [supervisorPolicy, setSupervisorPolicy] = useState<SupervisorPolicy>("All");
+  const [selectedSupervisorIds, setSelectedSupervisorIds] = useState<string[]>([]);
+  const [scheduleEnabled, setScheduleEnabled] = useState(true);
+  const [days, setDays] = useState<string[]>(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
+  const [startTime, setStartTime] = useState("08:00");
+  const [endTime, setEndTime] = useState("22:00");
+  const [openingBalance, setOpeningBalance] = useState("0");
+
+  if (!offer) return null;
+
+  const method: AccountMethod = offer.title.startsWith("E-Dinar") ? "e-Dinar" : "Flouci";
+  const isEdinar = method === "e-Dinar";
+  const allDays = days.length === dayOptions.length;
+
+  const reset = () => {
+    setStep(1);
+    setMaxTransactions(isEdinar ? "200" : "150");
+    setMaxAmount(isEdinar ? "30000" : "20000");
+    setSupervisorPolicy("All");
+    setSelectedSupervisorIds([]);
+    setScheduleEnabled(true);
+    setDays(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
+    setStartTime("08:00");
+    setEndTime("22:00");
+    setOpeningBalance("0");
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) reset();
+    onOpenChange(nextOpen);
+  };
+
+  const supervisorNames = supervisorDirectory.filter((item) => selectedSupervisorIds.includes(item.id));
+  const supervisorSummary =
+    supervisorPolicy === "All"
+      ? "All active supervisors"
+      : selectedSupervisorIds.length + (supervisorPolicy === "Include only" ? " included" : " excluded");
+
+  const createConfig = () => {
+    const config = createDefaultConfig(method);
+    config.ownerName = "Rental account";
+    config.walletNumber = offer.identifier;
+    config.walletName = offer.title;
+    config.cardNumber = isEdinar ? offer.identifier : "";
+    config.pin = "••••";
+    config.maxTransactions = maxTransactions;
+    config.maxAmount = maxAmount;
+    config.supervisorPolicy = supervisorPolicy;
+    config.selectedSupervisorIds = selectedSupervisorIds;
+    config.scheduleEnabled = scheduleEnabled;
+    config.days = days;
+    config.startTime = startTime;
+    config.endTime = endTime;
+    config.openingBalance = Number(openingBalance) || 0;
+    config.supervisors = supervisorDirectory.map((supervisor) => ({ ...supervisor }));
+    return config;
+  };
+
+  function finishClaim() {
+    onClaim(offer);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+        <DialogHeader>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <DialogTitle>Claim rented account</DialogTitle>
+              <DialogDescription>{offer.title} · 100 TND / month · no transaction commission</DialogDescription>
+            </div>
+            <Badge variant="outline">Step {step} of 4</Badge>
+          </div>
+        </DialogHeader>
+
+        <div className="grid gap-2 sm:grid-cols-4">
+          {["Account details", "Supervisors & limits", "Schedule", "Opening balance & review"].map((title, index) => (
+            <div key={title} className="flex items-center gap-2 rounded-lg border px-3 py-2">
+              <span className={index + 1 <= step ? "flex size-7 items-center justify-center rounded-full bg-foreground text-background text-xs font-semibold" : "flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs"}>
+                {index + 1}
+              </span>
+              <span className={index + 1 === step ? "text-xs font-semibold" : "text-xs text-muted-foreground"}>{title}</span>
+            </div>
+          ))}
+        </div>
+
+        {step === 1 ? (
+          <div className="space-y-4">
+            <div className="rounded-xl border bg-muted/20 p-4">
+              <p className="text-sm font-medium">Provided account details</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">These values come with the rented account and are ready to use. You do not need to enter them again.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ReviewItem label="Account type" value="Wallet" />
+              <ReviewItem label="Wallet method" value={method} />
+              <ReviewItem label="Account / wallet" value={offer.identifier} />
+              <ReviewItem label="Wallet name" value={offer.title} />
+              <ReviewItem label="Account holder" value="Rental account" />
+              <ReviewItem label="PIN" value="••••" />
+              {isEdinar ? <ReviewItem label="Card / Exp" value={offer.identifier + " · provided"} /> : null}
+            </div>
+          </div>
+        ) : null}
+
+        {step === 2 ? (
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { value: "All" as const, title: "All supervisors" },
+                { value: "Include only" as const, title: "Include selected" },
+                { value: "Exclude selected" as const, title: "Exclude selected" },
+              ].map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => { setSupervisorPolicy(item.value); setSelectedSupervisorIds([]); }}
+                  className={["rounded-xl border p-3 text-left", supervisorPolicy === item.value ? "border-foreground bg-muted/40" : "hover:bg-muted/30"].join(" ")}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold">{item.title}</p>
+                    {supervisorPolicy === item.value ? <Check className="size-4" /> : null}
+                  </div>
+                </button>
+              ))}
+            </div>
+            {supervisorPolicy !== "All" ? (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {supervisorDirectory.map((supervisor) => {
+                  const selected = selectedSupervisorIds.includes(supervisor.id);
+                  return (
+                    <button key={supervisor.id} type="button" onClick={() => setSelectedSupervisorIds((ids) => selected ? ids.filter((id) => id !== supervisor.id) : [...ids, supervisor.id])} className={["flex items-center gap-3 rounded-xl border p-3 text-left", selected ? "border-foreground bg-muted/30" : "hover:bg-muted/20"].join(" ")}>
+                      <img src={supervisor.avatarUrl} alt="" className="size-9 rounded-full object-cover ring-1 ring-border" />
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium">{supervisor.name}</span>
+                      {selected ? <span className="flex size-7 items-center justify-center rounded-full bg-foreground text-background"><Check className="size-3.5" /></span> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <LimitField icon={<Activity className="size-4" />} label="Maximum transactions" description="Suggested starting limit; editable." value={maxTransactions} onChange={setMaxTransactions} placeholder="200" suffix="transactions / day" />
+              <LimitField icon={<Gauge className="size-4" />} label="Maximum amount" description="Suggested starting limit; editable." value={maxAmount} onChange={setMaxAmount} placeholder="30000" suffix="TND / day" />
+            </div>
+            <div className="rounded-lg border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+              Recommended starting limits: {isEdinar ? "200 transactions and 30,000 TND/day" : "150 transactions and 20,000 TND/day"}; adjust them to your operating volume.
+            </div>
+          </div>
+        ) : null}
+
+        {step === 3 ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-xl border bg-muted/20 p-4">
+              <div>
+                <p className="text-sm font-medium">Scheduled availability</p>
+                <p className="mt-1 text-xs text-muted-foreground">Uses the platform timezone automatically.</p>
+              </div>
+              <Switch checked={scheduleEnabled} onCheckedChange={setScheduleEnabled} />
+            </div>
+            {scheduleEnabled ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label>Active days</Label>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">{allDays ? "All days" : days.join(", ") || "No days selected"}</p>
+                  </div>
+                  <Button type="button" size="sm" variant={allDays ? "default" : "outline"} onClick={() => setDays(allDays ? [] : [...dayOptions])}>
+                    {allDays ? "All days" : "Use all days"}
+                  </Button>
+                </div>
+                {!allDays ? (
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-7">
+                    {dayOptions.map((day) => (
+                      <button key={day} type="button" onClick={() => setDays((current) => current.includes(day) ? current.filter((item) => item !== day) : [...current, day])} className={["rounded-lg border px-2 py-2 text-xs font-medium", days.includes(day) ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"].join(" ")}>
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-2"><Label>Start time</Label><Input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} /></div>
+                  <div className="grid gap-2"><Label>End time</Label><Input type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} /></div>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm">Always available</div>
+            )}
+          </div>
+        ) : null}
+
+        {step === 4 ? (
+          <div className="space-y-4">
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <Card className="shadow-none">
+                <CardHeader className="border-b pb-3">
+                  <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Review</p>
+                  <CardTitle className="mt-1 text-base">{offer.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y">
+                    <SummaryRow label="Account type" value="Wallet" />
+                    <SummaryRow label="Method" value={method} />
+                    <SummaryRow label="Account details" value={offer.identifier + " · provided"} />
+                    <SummaryRow label="Supervisors" value={supervisorSummary} />
+                    <SummaryRow label="Limits" value={maxTransactions + " transactions · " + maxAmount + " TND/day"} />
+                    <SummaryRow label="Schedule" value={scheduleEnabled ? (allDays ? "All days" : days.join(", ")) + " · " + startTime + "–" + endTime : "Always available"} />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-primary/20 bg-primary/5 shadow-none">
+                <CardHeader className="border-b pb-3">
+                  <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Required</p>
+                  <CardTitle className="mt-1 text-base">Opening balance</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Label>Current balance in provider</Label>
+                  <div className="flex items-end gap-2 rounded-xl border bg-background px-3">
+                    <span className="pb-2 text-xs font-medium text-muted-foreground">TND</span>
+                    <Input type="number" min="0" step="0.01" value={openingBalance} onChange={(event) => setOpeningBalance(event.target.value)} className="h-12 border-0 bg-transparent px-0 text-2xl font-semibold tabular-nums shadow-none focus-visible:ring-0" />
+                  </div>
+                  <p className="text-[11px] leading-5 text-muted-foreground">Enter the actual balance shown by the rented provider account before claiming it.</p>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <ReviewStat icon={<UsersRound className="size-4" />} label="Supervisors" value={supervisorSummary} />
+              <ReviewStat icon={<Clock3 className="size-4" />} label="Availability" value={scheduleEnabled ? "Scheduled" : "Always on"} />
+              <ReviewStat icon={<WalletCards className="size-4" />} label="Opening balance" value={formatMoney(Number(openingBalance) || 0)} />
+            </div>
+          </div>
+        ) : null}
+
+        <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+          <div className="text-xs text-muted-foreground">Rental: 100 TND/month · no transaction commission</div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
+            {step > 1 ? <Button variant="outline" onClick={() => setStep((current) => current - 1)}><ChevronLeft />Back</Button> : null}
+            {step < 4 ? (
+              <Button onClick={() => setStep((current) => current + 1)}>
+                Continue <ChevronRight />
+              </Button>
+            ) : (
+              <Button onClick={finishClaim}><CheckCircle2 />Claim & add account</Button>
+            )}
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
