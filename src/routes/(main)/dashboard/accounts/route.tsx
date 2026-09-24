@@ -15,6 +15,7 @@ import {
   Info,
   Link2,
   Plus,
+  Sparkles,
   Search,
   ShieldCheck,
   UsersRound,
@@ -34,12 +35,12 @@ type AccountType = "Wallet" | "Voucher";
 type AccountStatus = "Active" | "Disabled";
 type AccountMethod = "D17" | "Flouci" | "Kashy" | "e-Dinar" | "Voucher";
 
-type SupervisorMode = "Include" | "Exclude" | "Not set";
+type SupervisorPolicy = "All" | "Include only" | "Exclude selected";
 
 type SupervisorRule = {
   id: string;
   name: string;
-  mode: SupervisorMode;
+  avatarUrl: string;
 };
 
 type AccountConfig = {
@@ -54,6 +55,8 @@ type AccountConfig = {
   denomination: string;
   maxTransactions: string;
   maxAmount: string;
+  supervisorPolicy: SupervisorPolicy;
+  selectedSupervisorIds: string[];
   supervisors: SupervisorRule[];
   scheduleEnabled: boolean;
   days: string[];
@@ -78,10 +81,10 @@ type PaymentAccount = {
 };
 
 const supervisors = [
-  { id: "sup-001", name: "Maya Chen" },
-  { id: "sup-002", name: "Aiy Ben Salah" },
-  { id: "sup-003", name: "Omar Ben Ali" },
-  { id: "sup-004", name: "Koray Okumus" },
+  { id: "sup-001", name: "Ahmed Ben Salem", avatarUrl: "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/6dfc72b9-8c86-438a-aada-8d3530e13a68/d2c9cgs-69217879-a8d4-438a-b98d-baa29baf98d8.jpg/v1/fill/w_900,h_1126,q_75,strp/this_random_guy_by_inxonic_d2c9cgs-fullview.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi82ZGZjNzJiOS04Yzg2LTQzOGEtYWFkYS04ZDM1MzBlMTNhNjgvZDJjOWNncy02OTIxNzg3OS1hOGQ0LTQzOGEtYjk4ZC1iYWEyOWJhZjk4ZDguanBnIiwiaGVpZ2h0IjoiPD0xMTI2Iiwid2lkdGgiOiI8PTkwMCJ9XV0sImF1ZCI6WyJ1cm46c2VydmljZTppbWFnZS53YXRlcm1hcmsiLCJvd20iOnsicGF0aCI6Ii93bS82ZGZjNzJiOS04Yzg2LTQzOGEtYWFkYS04ZDM1MzBlMTNhNjgvZ2V0Iiwib3BhY2l0eSI6OTV9fX0.oLUUOQ0Apg_6Gq1gPPuVu9DXt6494FP4rbUTeN4h-wA" },
+  { id: "sup-002", name: "Sami Jaziri", avatarUrl: "https://plus.unsplash.com/premium_photo-1689530775582-83b8abdb5020?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cmFuZG9tJTIwcGVyc29ufGVufDB8fDB8fHww" },
+  { id: "sup-003", name: "Hatem Chaabane", avatarUrl: "https://img.magnific.com/free-photo/close-up-portrait-curly-handsome-european-male_176532-8133.jpg?semt=ais_hybrid&w=740&q=80" },
+  { id: "sup-004", name: "Anis Mansour", avatarUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHy922UMR9X9MNgNutdRRnbRe0eklCXLAe_nagnpquGQ&s" },
 ] as const;
 
 const walletMethods: AccountMethod[] = ["D17", "Flouci", "Kashy", "e-Dinar"];
@@ -107,12 +110,13 @@ function createDefaultConfig(method: AccountMethod): AccountConfig {
     denomination: "",
     maxTransactions: "",
     maxAmount: "",
+    supervisorPolicy: "All",
+    selectedSupervisorIds: [],
     supervisors: supervisorRules,
     scheduleEnabled: true,
     days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
     startTime: "08:00",
     endTime: "22:00",
-    timezone: "Africa/Tunis",
     openingBalance: 0,
   };
 }
@@ -139,12 +143,9 @@ const initialAccounts: PaymentAccount[] = [
       pin: "••••",
       maxTransactions: "250",
       maxAmount: "50000",
-      supervisors: [
-        { id: "sup-001", name: "Maya Chen", mode: "Include" },
-        { id: "sup-002", name: "Aiy Ben Salah", mode: "Include" },
-        { id: "sup-003", name: "Omar Ben Ali", mode: "Exclude" },
-        { id: "sup-004", name: "Koray Okumus", mode: "Not set" },
-      ],
+      supervisorPolicy: "Exclude selected",
+      selectedSupervisorIds: ["sup-003"],
+      supervisors: supervisors.map(({ id, name, avatarUrl }) => ({ id, name, avatarUrl })),
       scheduleEnabled: true,
       days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
       startTime: "07:00",
@@ -171,12 +172,9 @@ const initialAccounts: PaymentAccount[] = [
       pin: "••••",
       maxTransactions: "180",
       maxAmount: "35000",
-      supervisors: [
-        { id: "sup-001", name: "Maya Chen", mode: "Include" },
-        { id: "sup-002", name: "Aiy Ben Salah", mode: "Not set" },
-        { id: "sup-003", name: "Omar Ben Ali", mode: "Include" },
-        { id: "sup-004", name: "Koray Okumus", mode: "Exclude" },
-      ],
+      supervisorPolicy: "Include only",
+      selectedSupervisorIds: ["sup-001", "sup-003"],
+      supervisors: supervisors.map(({ id, name, avatarUrl }) => ({ id, name, avatarUrl })),
       scheduleEnabled: true,
       days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
       startTime: "09:00",
@@ -498,9 +496,15 @@ function AccountWizard({
     updateConfig({ days });
   }
 
-  function setSupervisorMode(id: string, mode: SupervisorMode) {
+  function setSupervisorPolicy(policy: SupervisorPolicy) {
+    updateConfig({ supervisorPolicy: policy, selectedSupervisorIds: [] });
+  }
+
+  function toggleSupervisor(id: string) {
     updateConfig({
-      supervisors: config.supervisors.map((item) => (item.id === id ? { ...item, mode } : item)),
+      selectedSupervisorIds: config.selectedSupervisorIds.includes(id)
+        ? config.selectedSupervisorIds.filter((item) => item !== id)
+        : [...config.selectedSupervisorIds, id],
     });
   }
 
@@ -514,8 +518,7 @@ function AccountWizard({
       if (type === "Voucher" && (!config.voucherCode.trim() || !config.issuer.trim() || !config.denomination.trim())) return false;
     }
     if (step === 2) {
-      const hasSupervisorRule = config.supervisors.some((item) => item.mode !== "Not set");
-      if (!hasSupervisorRule) return false;
+      if (config.supervisorPolicy !== "All" && config.selectedSupervisorIds.length === 0) return false;
     }
     if (step === 3) {
       if (config.scheduleEnabled && (config.days.length === 0 || !config.startTime || !config.endTime)) return false;
@@ -597,7 +600,8 @@ function AccountWizard({
           {step === 2 ? (
             <StepSupervisors
               config={config}
-              onModeChange={setSupervisorMode}
+              onPolicyChange={setSupervisorPolicy}
+              onToggleSupervisor={toggleSupervisor}
               onConfigChange={updateConfig}
             />
           ) : null}
@@ -675,27 +679,69 @@ function StepAccountDetails({
 }) {
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="grid gap-2">
-          <Label>Type</Label>
-          <Select value={type} onValueChange={(value) => onTypeChange(value as AccountType)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Wallet">Wallet</SelectItem>
-              <SelectItem value="Voucher">Voucher</SelectItem>
-            </SelectContent>
-          </Select>
+      <div>
+        <Label className="text-sm">Account type</Label>
+        <div className="mt-2 grid gap-3 sm:grid-cols-2">
+          {[
+            { value: "Wallet" as const, title: "Wallet", description: "Live wallet balance used for deposits and withdrawals.", icon: WalletCards },
+            { value: "Voucher" as const, title: "Voucher", description: "Code / inventory based payment account.", icon: CreditCard },
+          ].map((item) => {
+            const Icon = item.icon;
+            const active = type === item.value;
+            return (
+              <button
+                key={item.value}
+                type="button"
+                onClick={() => onTypeChange(item.value)}
+                className={[
+                  "flex items-start gap-3 rounded-xl border p-4 text-left transition-colors",
+                  active ? "border-foreground bg-muted/40" : "hover:bg-muted/30",
+                ].join(" ")}
+              >
+                <span className={active ? "flex size-10 shrink-0 items-center justify-center rounded-xl bg-foreground text-background" : "flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground"}>
+                  <Icon className="size-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold">{item.title}</span>
+                  <span className="mt-1 block text-xs leading-5 text-muted-foreground">{item.description}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
-        <div className="grid gap-2">
-          <Label>{type === "Wallet" ? "Wallet method" : "Voucher method"}</Label>
-          <Select value={method} onValueChange={(value) => onMethodChange(value as AccountMethod)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {(type === "Wallet" ? walletMethods : ["Voucher" as const]).map((item) => (
-                <SelectItem key={item} value={item}>{item}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      </div>
+
+      <div>
+        <Label className="text-sm">{type === "Wallet" ? "Wallet method" : "Voucher method"}</Label>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          {(type === "Wallet" ? walletMethods : ["Voucher" as const]).map((item) => {
+            const active = method === item;
+            const descriptions: Record<string, string> = {
+              D17: "Card, wallet number and PIN based wallet.",
+              Flouci: "Wallet number and PIN based wallet.",
+              Kashy: "Wallet number and PIN based wallet.",
+              "e-Dinar": "Card, wallet number and PIN based wallet.",
+              Voucher: "Code, issuer and denomination based account.",
+            };
+            return (
+              <button
+                key={item}
+                type="button"
+                onClick={() => onMethodChange(item)}
+                className={[
+                  "rounded-xl border p-3 text-left transition-colors",
+                  active ? "border-foreground bg-muted/40" : "hover:bg-muted/30",
+                ].join(" ")}
+              >
+                <span className="flex items-center justify-between gap-2">
+                  <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-xs font-bold">{item === "e-Dinar" ? "ED" : item === "Voucher" ? "V" : item.slice(0, 1)}</span>
+                  {active ? <Check className="size-4" /> : null}
+                </span>
+                <span className="mt-2 block text-sm font-semibold">{item}</span>
+                <span className="mt-1 block text-[11px] leading-5 text-muted-foreground">{descriptions[item]}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -705,8 +751,8 @@ function StepAccountDetails({
             <WalletCards className="size-4 text-muted-foreground" />
           </div>
           <div>
-            <p className="text-sm font-medium">{method} account</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">Fields are driven by the selected method, so two Wallet accounts can have different data and configuration.</p>
+            <p className="text-sm font-medium">{method} account details</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">The fields below change with the selected method. Each linked account keeps its own configuration.</p>
           </div>
         </div>
       </div>
@@ -771,49 +817,93 @@ function StepAccountDetails({
 
 function StepSupervisors({
   config,
-  onModeChange,
+  onPolicyChange,
+  onToggleSupervisor,
   onConfigChange,
 }: {
   config: AccountConfig;
-  onModeChange: (id: string, mode: SupervisorMode) => void;
+  onPolicyChange: (policy: SupervisorPolicy) => void;
+  onToggleSupervisor: (id: string) => void;
   onConfigChange: (patch: Partial<AccountConfig>) => void;
 }) {
+  const selectedCount = config.selectedSupervisorIds.length;
+
   return (
     <div className="space-y-5">
       <div className="rounded-xl border bg-muted/20 p-4">
         <div className="flex items-start gap-3">
           <UsersRound className="mt-0.5 size-4 text-muted-foreground" />
           <div>
-            <p className="text-sm font-medium">Supervisors responsible for this account</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">Use Include to assign a supervisor, Exclude to explicitly block one, or leave Not set for no account-specific rule.</p>
+            <p className="text-sm font-medium">Who can operate this account?</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">Start with all supervisors, include only selected people, or exclude selected people. This is easier to scan than setting a rule one row at a time.</p>
           </div>
         </div>
       </div>
 
-      <div className="rounded-xl border">
-        <div className="grid grid-cols-[minmax(0,1fr)_132px] border-b bg-muted/30 px-4 py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          <span>Supervisor</span>
-          <span>Rule</span>
-        </div>
-        {config.supervisors.map((supervisor) => (
-          <div key={supervisor.id} className="grid grid-cols-[minmax(0,1fr)_132px] items-center gap-3 border-b px-4 py-3 last:border-b-0">
-            <div className="flex items-center gap-2.5">
-              <span className="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-semibold">
-                {supervisor.name.split(" ").map((part) => part[0]).join("").slice(0, 2)}
-              </span>
-              <span className="text-sm">{supervisor.name}</span>
-            </div>
-            <Select value={supervisor.mode} onValueChange={(value) => onModeChange(supervisor.id, value as SupervisorMode)}>
-              <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Include">Include</SelectItem>
-                <SelectItem value="Exclude">Exclude</SelectItem>
-                <SelectItem value="Not set">Not set</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        ))}
+      <div className="grid gap-3 md:grid-cols-3">
+        {[
+          { value: "All" as const, title: "All supervisors", description: "Everyone active can operate the account." },
+          { value: "Include only" as const, title: "Include selected", description: "Only the people you choose can operate it." },
+          { value: "Exclude selected" as const, title: "Exclude selected", description: "Everyone can operate it except the people you choose." },
+        ].map((item) => {
+          const active = config.supervisorPolicy === item.value;
+          return (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => onPolicyChange(item.value)}
+              className={[
+                "rounded-xl border p-4 text-left transition-colors",
+                active ? "border-foreground bg-muted/40" : "hover:bg-muted/30",
+              ].join(" ")}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold">{item.title}</p>
+                {active ? <Check className="size-4" /> : null}
+              </div>
+              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">{item.description}</p>
+            </button>
+          );
+        })}
       </div>
+
+      {config.supervisorPolicy === "All" ? (
+        <div className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
+          <CheckCircle2 className="size-4 text-emerald-600" />
+          <div>
+            <p className="text-sm font-medium">All active supervisors are enabled</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">No individual selection is required.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {config.supervisors.map((supervisor) => {
+            const selected = config.selectedSupervisorIds.includes(supervisor.id);
+            return (
+              <button
+                key={supervisor.id}
+                type="button"
+                onClick={() => onToggleSupervisor(supervisor.id)}
+                className={[
+                  "flex items-center gap-3 rounded-xl border p-3 text-left transition-colors",
+                  selected ? "border-foreground bg-muted/30" : "hover:bg-muted/20",
+                ].join(" ")}
+              >
+                <img src={supervisor.avatarUrl} alt="" className="size-10 shrink-0 rounded-full object-cover ring-1 ring-border" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">{supervisor.name}</span>
+                  <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                    {selected ? (config.supervisorPolicy === "Include only" ? "Included" : "Excluded") : "Not selected"}
+                  </span>
+                </span>
+                <span className={selected ? "flex size-7 items-center justify-center rounded-full bg-foreground text-background" : "flex size-7 items-center justify-center rounded-full border text-muted-foreground"}>
+                  {selected ? <Check className="size-3.5" /> : null}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <LimitField
@@ -823,7 +913,7 @@ function StepSupervisors({
           value={config.maxTransactions}
           onChange={(value) => onConfigChange({ maxTransactions: value })}
           placeholder="250"
-          suffix="transactions"
+          suffix="transactions / day"
         />
         <LimitField
           icon={<Gauge className="size-4" />}
@@ -848,6 +938,8 @@ function StepSchedule({
   onConfigChange: (patch: Partial<AccountConfig>) => void;
   onToggleDay: (day: string) => void;
 }) {
+  const allDays = config.days.length === dayOptions.length;
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between rounded-xl border bg-muted/20 p-4">
@@ -855,57 +947,69 @@ function StepSchedule({
           <Clock3 className="mt-0.5 size-4 text-muted-foreground" />
           <div>
             <p className="text-sm font-medium">Scheduled activation</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">Define when this account is available to the portal.</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">Choose whether this account follows a weekly schedule or stays available all the time.</p>
           </div>
         </div>
         <Switch checked={config.scheduleEnabled} onCheckedChange={(checked) => onConfigChange({ scheduleEnabled: checked })} />
       </div>
 
-      <div className={config.scheduleEnabled ? "space-y-4" : "pointer-events-none opacity-50 space-y-4"}>
-        <div className="grid gap-2">
-          <Label>Active days</Label>
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
-            {dayOptions.map((day) => {
-              const selected = config.days.includes(day);
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => onToggleDay(day)}
-                  className={[
-                    "rounded-lg border px-2 py-2 text-xs font-medium transition-colors",
-                    selected ? "bg-foreground text-background" : "bg-background text-muted-foreground hover:bg-muted",
-                  ].join(" ")}
-                >
-                  {day}
-                </button>
-              );
-            })}
+      {!config.scheduleEnabled ? (
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+          <div className="flex items-center gap-3">
+            <Sparkles className="size-4 text-emerald-600" />
+            <div>
+              <p className="text-sm font-medium">Always available</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">The account is available 24/7 and does not use day or time restrictions.</p>
+            </div>
           </div>
         </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label>Active days</Label>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">{allDays ? "All days" : config.days.join(", ") || "No days selected"}</p>
+              </div>
+              <Button type="button" size="sm" variant={allDays ? "default" : "outline"} onClick={() => onConfigChange({ days: allDays ? [] : [...dayOptions] })}>
+                {allDays ? "All days" : "Use all days"}
+              </Button>
+            </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="grid gap-2">
-            <Label>Start time</Label>
-            <Input type="time" value={config.startTime} onChange={(event) => onConfigChange({ startTime: event.target.value })} />
+            {!allDays ? (
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-7">
+                {dayOptions.map((day) => {
+                  const selected = config.days.includes(day);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => onToggleDay(day)}
+                      className={[
+                        "rounded-lg border px-2 py-2 text-xs font-medium transition-colors",
+                        selected ? "bg-foreground text-background" : "bg-background text-muted-foreground hover:bg-muted",
+                      ].join(" ")}
+                    >
+                      {day}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
-          <div className="grid gap-2">
-            <Label>End time</Label>
-            <Input type="time" value={config.endTime} onChange={(event) => onConfigChange({ endTime: event.target.value })} />
-          </div>
-          <div className="grid gap-2">
-            <Label>Timezone</Label>
-            <Select value={config.timezone} onValueChange={(value) => onConfigChange({ timezone: value })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Africa/Tunis">Africa/Tunis</SelectItem>
-                <SelectItem value="UTC">UTC</SelectItem>
-                <SelectItem value="Europe/Paris">Europe/Paris</SelectItem>
-              </SelectContent>
-            </Select>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Start time</Label>
+              <Input type="time" value={config.startTime} onChange={(event) => onConfigChange({ startTime: event.target.value })} />
+            </div>
+            <div className="grid gap-2">
+              <Label>End time</Label>
+              <Input type="time" value={config.endTime} onChange={(event) => onConfigChange({ endTime: event.target.value })} />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -923,50 +1027,59 @@ function StepReview({
   config: AccountConfig;
   onConfigChange: (patch: Partial<AccountConfig>) => void;
 }) {
+  const supervisorSummary =
+    config.supervisorPolicy === "All"
+      ? "All active supervisors"
+      : config.selectedSupervisorIds.length + (config.supervisorPolicy === "Include only" ? " included" : " excluded");
+
+  const accountIdentifier = config.walletNumber || config.voucherCode || "—";
+
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 size-4 text-amber-600" />
           <div>
-            <p className="text-sm font-medium">Opening balance required before activation</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">Enter the real balance currently visible in the account. This becomes the opening balance so the transaction ledger starts from the same amount.</p>
+            <p className="text-sm font-medium">Confirm the current balance before activation</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">Enter the exact balance shown in the wallet right now. It becomes the opening balance for this account and keeps the starting ledger aligned with the provider.</p>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-[1fr_280px]">
-        <div className="grid gap-4">
-          <Card className="shadow-none">
-            <CardHeader className="pb-3"><CardTitle className="text-sm">Account summary</CardTitle></CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-3">
-              <ReviewItem label="Name" value={accountName || "—"} />
-              <ReviewItem label="Type" value={type} />
-              <ReviewItem label="Method" value={method} />
-              <ReviewItem label="Owner" value={config.ownerName || "—"} />
-              <ReviewItem label="Identifier" value={config.walletNumber || config.voucherCode || "—"} />
-              <ReviewItem label="Supervisors" value={String(config.supervisors.filter((item) => item.mode === "Include").length) + " included"} />
-            </CardContent>
-          </Card>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <Card className="shadow-none">
+          <CardHeader className="border-b pb-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Review</p>
+                <CardTitle className="mt-1 text-base">Account summary</CardTitle>
+              </div>
+              <Badge variant="outline">{type}</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y">
+              <SummaryRow label="Account name" value={accountName || "—"} />
+              <SummaryRow label="Method" value={method} />
+              <SummaryRow label="Account holder" value={config.ownerName || "—"} />
+              <SummaryRow label="Identifier" value={accountIdentifier} />
+              <SummaryRow label="Supervisors" value={supervisorSummary} />
+              <SummaryRow label="Limits" value={(config.maxTransactions || "Unlimited") + " transactions · " + (config.maxAmount ? config.maxAmount + " TND" : "Unlimited amount")} />
+              <SummaryRow label="Schedule" value={config.scheduleEnabled ? (config.days.length === dayOptions.length ? "All days" : config.days.join(", ") || "No days") + " · " + config.startTime + "–" + config.endTime : "Always available"} />
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="shadow-none">
-            <CardHeader className="pb-3"><CardTitle className="text-sm">Rules & schedule</CardTitle></CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2">
-              <ReviewItem label="Max transactions" value={config.maxTransactions || "Unlimited"} />
-              <ReviewItem label="Max amount" value={config.maxAmount ? config.maxAmount + " TND / day" : "Unlimited"} />
-              <ReviewItem label="Schedule" value={config.scheduleEnabled ? config.startTime + " – " + config.endTime : "Always available"} />
-              <ReviewItem label="Active days" value={config.scheduleEnabled ? config.days.join(", ") : "All days"} />
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="border-primary/20 bg-primary/5 shadow-none">
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Current account balance</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid gap-2">
-              <Label>Available balance now</Label>
-              <div className="flex items-center rounded-lg border bg-background pl-3">
-                <span className="text-sm text-muted-foreground">TND</span>
+        <Card className="shadow-none">
+          <CardHeader className="border-b pb-3">
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Required</p>
+            <CardTitle className="mt-1 text-base">Opening balance</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-xl border bg-muted/20 p-4">
+              <p className="text-xs text-muted-foreground">Current balance in provider</p>
+              <div className="mt-2 flex items-end gap-2">
+                <span className="pb-1 text-xs font-medium text-muted-foreground">TND</span>
                 <Input
                   type="number"
                   min="0"
@@ -976,13 +1089,42 @@ function StepReview({
                     const numeric = Number(event.target.value);
                     onConfigChange({ openingBalance: Number.isNaN(numeric) ? 0 : numeric });
                   }}
-                  className="border-0 pl-2 shadow-none focus-visible:ring-0"
+                  className="h-11 border-0 bg-transparent px-0 text-2xl font-semibold tabular-nums shadow-none focus-visible:ring-0"
                 />
               </div>
-              <p className="text-[11px] leading-5 text-muted-foreground">Use the actual balance from the wallet/voucher account at the moment you connect it.</p>
+            </div>
+            <div className="rounded-lg bg-muted/40 px-3 py-2.5 text-xs leading-5 text-muted-foreground">
+              This amount is recorded as the account opening balance when you confirm.
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <ReviewStat icon={<UsersRound className="size-4" />} label="Supervisors" value={supervisorSummary} />
+        <ReviewStat icon={<Clock3 className="size-4" />} label="Availability" value={config.scheduleEnabled ? "Scheduled" : "Always on"} />
+        <ReviewStat icon={<WalletCards className="size-4" />} label="Opening balance" value={formatMoney(config.openingBalance)} />
+      </div>
+    </div>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-1 px-4 py-3 sm:grid-cols-[140px_minmax(0,1fr)] sm:items-center">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium">{value}</span>
+    </div>
+  );
+}
+
+function ReviewStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border bg-muted/20 p-3">
+      <span className="flex size-8 items-center justify-center rounded-lg bg-background text-muted-foreground">{icon}</span>
+      <div className="min-w-0">
+        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="mt-1 truncate text-sm font-medium">{value}</p>
       </div>
     </div>
   );
@@ -1063,8 +1205,7 @@ function AccountDetailsDialog({
 }) {
   if (!account) return null;
 
-  const included = account.config.supervisors.filter((item) => item.mode === "Include");
-  const excluded = account.config.supervisors.filter((item) => item.mode === "Exclude");
+  const selectedSupervisors = account.config.supervisors.filter((item) => account.config.selectedSupervisorIds.includes(item.id));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1100,19 +1241,14 @@ function AccountDetailsDialog({
                 <ReviewItem label="Max amount" value={account.config.maxAmount ? account.config.maxAmount + " TND / day" : "Unlimited"} />
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-lg border p-3">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Included supervisors</p>
+              <div className="rounded-lg border p-3">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Supervisor policy</p>
+                <p className="mt-1 text-sm font-medium">{account.config.supervisorPolicy}</p>
+                {account.config.supervisorPolicy !== "All" ? (
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {included.length ? included.map((item) => <Badge key={item.id} variant="secondary">{item.name}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
+                    {selectedSupervisors.length ? selectedSupervisors.map((item) => <Badge key={item.id} variant={account.config.supervisorPolicy === "Include only" ? "secondary" : "outline"}>{item.name}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
                   </div>
-                </div>
-                <div className="rounded-lg border p-3">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Excluded supervisors</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {excluded.length ? excluded.map((item) => <Badge key={item.id} variant="outline">{item.name}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
-                  </div>
-                </div>
+                ) : null}
               </div>
 
               <div className="rounded-lg border p-3">
@@ -1122,7 +1258,7 @@ function AccountDetailsDialog({
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {account.config.scheduleEnabled
-                    ? account.config.days.join(", ") + " · " + account.config.startTime + "–" + account.config.endTime + " · " + account.config.timezone
+                    ? (account.config.days.length === dayOptions.length ? "All days" : account.config.days.join(", ")) + " · " + account.config.startTime + "–" + account.config.endTime
                     : "Always available"}
                 </p>
               </div>
