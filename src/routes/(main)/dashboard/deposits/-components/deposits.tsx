@@ -48,8 +48,10 @@ const verificationStatuses: VerificationStatus[] = [
 const paymentMethods: PaymentMethod[] = [
   "Flouci",
   "D17",
-  "Tunisie Telecom",
   "Kashy",
+  "Tunisie Telecom",
+  "Orange",
+  "Ooredoo",
 ];
 
 function importValue(value: string, fallback: string) {
