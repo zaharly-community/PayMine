@@ -12,7 +12,6 @@ import {
   Maximize2,
   Minus,
   MoreVertical,
-  Pencil,
   Plus,
   RefreshCcw,
   X,
@@ -1026,18 +1025,17 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
                   className="h-6 rounded-md border-amber-500/20 bg-amber-500/10 px-2 text-xs font-medium text-amber-700 dark:text-amber-400"
                 >
                   <span className="mr-1.5 size-1.5 rounded-full bg-amber-500" />
-                  Pending review
+                  Pending
                 </Badge>
-                <span className="font-mono text-xs text-muted-foreground">pay_ONfo13LR3OInWj5e1r6z4</span>
+                <span className="font-mono text-xs text-muted-foreground">
+                  May 29, 2026, 08:56
+                </span>
               </div>
 
               <div className="flex items-center gap-2">
                 <h1 className="text-3xl font-semibold tracking-tight">
-                  Transaction txn_R8M42QH91L6C
+                  Deposit DEP-02026010
                 </h1>
-                <Button variant="outline" size="icon-sm" aria-label="Edit transaction">
-                  <Pencil />
-                </Button>
               </div>
 
               <p className="mt-2 max-w-4xl text-sm text-muted-foreground">
@@ -1110,20 +1108,16 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
       <div className="mx-auto grid max-w-[1500px] gap-8 px-6 py-10 xl:grid-cols-[minmax(0,1fr)_304px]">
         <main className="min-w-0 space-y-10">
           <section className="space-y-5">
-            <SectionHeading>Transaction Details</SectionHeading>
+            <SectionHeading>Deposit Details</SectionHeading>
             <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
-              <Field label="Transaction ID" value="txn_R8M42QH91L6C" mono />
+              <Field label="Player Identifier" value="helio-supply-0429" mono />
               <Field label="Amount" value="$8,120.50" />
-              <Field label="Customer" value="Helio Supply" />
-              <Field label="Payment method" value={paymentMethod} />
-              <Field label="Processor" value="Adyen" />
-              <Field label="Source" value="Hosted checkout" />
-              <Field label="Currency" value="USD" />
-              <Field label="Created" value="May 29, 2026, 08:56 IST" />
-              <Field label="Settlement" value="Expected Jun 02, 2026" />
-              <Field label="Ledger account" value="Operating balance" />
-              <Field label="Descriptor" value="HELIO-SUPPLY-0429" />
-              <Field label="Statement ID" value="STMT-8462-HS" />
+              <Field label="Fees" value="$183.63" />
+              <Field label="Payment Method" value={paymentMethod} />
+              <Field label="Account ID" value="ACC-001" mono />
+              <Field label="Account Owner" value="Yassine Trabelsi" />
+              <Field label="Account Number" value="4123 8801 4290" mono />
+              <Field label="Transaction ID" value="txn_R8M42QH91L6C" mono />
             </div>
           </section>
 
@@ -1142,25 +1136,32 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
             <div>
               <TimelineItem
                 date="May 29"
-                time="09:22"
-                title="Review window opened"
-                actor="Risk engine"
-                description="ACH velocity threshold requested a second approval before capture."
-                active
-              />
-              <TimelineItem
-                date="May 29"
-                time="09:18"
-                title="Internal note added"
-                actor="Priya Shah"
-                description="Finance confirmed the purchase order and matching invoice total."
+                time="08:56"
+                title="Deposit request created"
+                actor="Helio Supply"
+                description="The deposit request was registered with the submitted payment details."
               />
               <TimelineItem
                 date="May 29"
                 time="09:03"
-                title="Bank account verified"
-                actor="Adyen"
-                description="Account ownership passed through processor verification."
+                title="Deposit request reserved"
+                actor="Yassine Trabelsi"
+                description="The request was reserved by the assigned Supervisor for processing."
+              />
+              <TimelineItem
+                date="May 29"
+                time="09:18"
+                title="Payment account verified"
+                actor={paymentMethod}
+                description="The payment account details passed the payment-method verification step."
+              />
+              <TimelineItem
+                date="May 29"
+                time="09:22"
+                title="Deposit awaiting confirmation"
+                actor="Finance"
+                description="The deposit is at the current stage and remains pending final confirmation."
+                active
               />
             </div>
           </section>
