@@ -843,68 +843,287 @@ function EvidenceGallery() {
   );
 }
 
-function SummaryCard({ onReport }: { onReport: () => void }) {
+function SummaryCard() {
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [modificationOpen, setModificationOpen] = useState(false);
+  const [approveOpen, setApproveOpen] = useState(false);
+
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 overflow-hidden border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:left-(--sidebar-width)">
-      <div className="flex min-h-[72px] w-full min-w-0 items-center gap-3 px-4 py-2.5 md:px-5 lg:px-6">
-        <Badge
-          variant="outline"
-          className="h-6 shrink-0 rounded-md border-amber-500/20 bg-amber-500/10 px-2 text-xs font-medium text-amber-700 dark:text-amber-400"
-        >
-          <span className="mr-1.5 size-1.5 rounded-full bg-amber-500" />
-          Pending review
-        </Badge>
+    <>
+      <div className="fixed inset-x-0 bottom-0 z-40 overflow-hidden border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:left-(--sidebar-width)">
+        <div className="flex min-h-[72px] w-full min-w-0 items-center gap-3 px-4 py-2.5 md:px-5 lg:px-6">
+          <div className="shrink-0 text-2xl font-semibold tracking-tight tabular-nums">$8,120.50</div>
 
-        <div className="shrink-0 text-2xl font-semibold tracking-tight tabular-nums">$8,120.50</div>
-
-        <div className="flex shrink-0 items-center gap-3">
-          <div className="rounded-lg bg-muted/40 px-3 py-2">
-            <div className="text-[11px] text-muted-foreground">Processor fee</div>
-            <div className="mt-0.5 text-sm font-semibold tabular-nums">$183.63</div>
-          </div>
-          <div className="rounded-lg bg-muted/40 px-3 py-2">
-            <div className="text-[11px] text-muted-foreground">Net after fees</div>
-            <div className="mt-0.5 text-sm font-semibold tabular-nums">$7,936.87</div>
-          </div>
-        </div>
-
-        <div className="ml-auto flex min-w-0 items-center gap-3">
-          <div className="hidden min-w-0 flex-1 items-center gap-2 xl:flex xl:max-w-[34rem]">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
-              <AlertTriangle className="size-4" />
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="rounded-lg bg-muted/40 px-3 py-2">
+              <div className="text-[11px] text-muted-foreground">Processor fee</div>
+              <div className="mt-0.5 text-sm font-semibold tabular-nums">$183.63</div>
             </div>
-            <div className="min-w-0">
-              <div className="text-sm font-semibold">Manual verification required</div>
-              <div className="line-clamp-2 text-xs text-muted-foreground">
-                Confirm authorization before release. Capture is paused until the review outcome is logged.
-              </div>
+            <div className="rounded-lg bg-muted/40 px-3 py-2">
+              <div className="text-[11px] text-muted-foreground">Net after fees</div>
+              <div className="mt-0.5 text-sm font-semibold tabular-nums">$7,936.87</div>
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9 shrink-0 px-3"
-              onClick={() => navigator.clipboard?.writeText("txn_R8M42QH91L6C")}
-            >
-              <Copy />
-              Copy ID
+          <div className="ml-auto flex shrink-0 items-center gap-1.5">
+            <Button type="button" variant="outline" className="h-9 shrink-0 px-3" onClick={() => setCancelOpen(true)}>
+              <X />
+              Cancel payment
             </Button>
-            <Button type="button" variant="outline" className="h-9 shrink-0 px-3">
-              <Download />
-              Receipt
+            <Button type="button" variant="outline" className="h-9 shrink-0 px-3" onClick={() => setModificationOpen(true)}>
+              <RefreshCcw />
+              Request modification
             </Button>
-            <Button type="button" variant="destructive" className="h-9 shrink-0 px-3" onClick={onReport}>
-              <Mail />
-              Report customer
+            <Button type="button" className="h-9 shrink-0 px-3" onClick={() => setApproveOpen(true)}>
+              <CheckCircle2 />
+              Approve payment
             </Button>
           </div>
         </div>
       </div>
-    </div>
+
+      <CancelPaymentDialog open={cancelOpen} onOpenChange={setCancelOpen} />
+      <RequestModificationDialog open={modificationOpen} onOpenChange={setModificationOpen} />
+      <ApprovePaymentDialog open={approveOpen} onOpenChange={setApproveOpen} />
+    </>
   );
 }
+
+function CancelPaymentDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [subject, setSubject] = useState("Payment proof issue");
+  const [reason, setReason] = useState("");
+
+  const close = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setSubject("Payment proof issue");
+      setReason("");
+    }
+    onOpenChange(nextOpen);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={close}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Cancel payment</DialogTitle>
+          <DialogDescription>
+            Select the cancellation subject and provide the reason that will be recorded for this deposit.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="cancel-payment-subject">Subject</Label>
+            <select
+              id="cancel-payment-subject"
+              value={subject}
+              onChange={(event) => setSubject(event.target.value)}
+              className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+            >
+              <option>Payment proof issue</option>
+              <option>Duplicate payment</option>
+              <option>Invalid account details</option>
+              <option>Fraud / suspicious activity</option>
+              <option>Player requested cancellation</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="cancel-payment-reason">Reason</Label>
+            <textarea
+              id="cancel-payment-reason"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Write the reason for cancelling this payment..."
+              rows={5}
+              className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => close(false)}>
+            Keep payment
+          </Button>
+          <Button type="button" variant="destructive" disabled={!reason.trim()} onClick={() => close(false)}>
+            <X />
+            Confirm cancellation
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RequestModificationDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [requestedChange, setRequestedChange] = useState("Payment proof");
+  const [note, setNote] = useState("");
+
+  const close = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setRequestedChange("Payment proof");
+      setNote("");
+    }
+    onOpenChange(nextOpen);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={close}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Request modification from player</DialogTitle>
+          <DialogDescription>
+            Choose what the player needs to correct and add a note that will be visible to the player.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="deposit-modification-field">What needs modification?</Label>
+            <select
+              id="deposit-modification-field"
+              value={requestedChange}
+              onChange={(event) => setRequestedChange(event.target.value)}
+              className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+            >
+              <option>Payment proof</option>
+              <option>Amount</option>
+              <option>Payment method</option>
+              <option>Account number</option>
+              <option>Player identifier</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="deposit-modification-note">Note for player</Label>
+            <textarea
+              id="deposit-modification-note"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Explain exactly what the player should update..."
+              rows={5}
+              className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
+            />
+            <p className="text-[11px] text-muted-foreground">This note is intended to be shown to the player.</p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => close(false)}>
+            Cancel
+          </Button>
+          <Button type="button" disabled={!note.trim()} onClick={() => close(false)}>
+            <RefreshCcw />
+            Send modification request
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ApprovePaymentDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [receivedAmount, setReceivedAmount] = useState("");
+  const [feeResponsibility, setFeeResponsibility] = useState<"player" | "platform">("player");
+  const numericAmount = Number(receivedAmount);
+  const validAmount = Number.isFinite(numericAmount) && numericAmount > 0;
+
+  const close = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setReceivedAmount("");
+      setFeeResponsibility("player");
+    }
+    onOpenChange(nextOpen);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={close}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Approve payment</DialogTitle>
+          <DialogDescription>
+            Enter the exact amount actually received. Then choose who bears the payment fees before confirming the deposit.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="deposit-received-amount">Exact amount received</Label>
+            <Input
+              id="deposit-received-amount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={receivedAmount}
+              onChange={(event) => setReceivedAmount(event.target.value)}
+              placeholder="0.00"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Use the amount verified from the payment evidence, not the amount entered by the player.
+            </p>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="deposit-fee-responsibility">Fees paid by</Label>
+            <select
+              id="deposit-fee-responsibility"
+              value={feeResponsibility}
+              onChange={(event) => setFeeResponsibility(event.target.value as "player" | "platform")}
+              className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+            >
+              <option value="player">Player pays fees</option>
+              <option value="platform">Platform absorbs fees</option>
+            </select>
+          </div>
+
+          <div className="rounded-lg border bg-muted/30 px-3 py-3">
+            <div className="flex items-center justify-between gap-3 text-xs">
+              <span className="text-muted-foreground">Verified received amount</span>
+              <strong className="tabular-nums">
+                {validAmount ? "$" + numericAmount.toFixed(2) : "—"}
+              </strong>
+            </div>
+            <div className="mt-1 flex items-center justify-between gap-3 text-xs">
+              <span className="text-muted-foreground">Fee responsibility</span>
+              <strong>{feeResponsibility === "player" ? "Player" : "Platform"}</strong>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => close(false)}>
+            Cancel
+          </Button>
+          <Button type="button" disabled={!validAmount} onClick={() => close(false)}>
+            <CheckCircle2 />
+            Confirm approval
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function SummaryActionsCard() {
   return (
@@ -1197,7 +1416,7 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
         </div>
       </div>
 
-      <SummaryCard onReport={() => setReportOpen(true)} />
+      <SummaryCard />
     </section>
   );
 }
