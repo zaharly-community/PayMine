@@ -90,6 +90,39 @@ function RoleBadge({ role }: { role: DistributorRow["type"] }) {
   );
 }
 
+function getDistributorScore(distributor: DistributorRow) {
+  let seed = 0;
+  for (const char of distributor.email) seed += char.charCodeAt(0);
+  return Number(((seed % 101) / 10).toFixed(1));
+}
+
+function scoreTone(score: number) {
+  if (score <= 3) return "bg-emerald-500";
+  if (score <= 6) return "bg-amber-500";
+  return "bg-red-500";
+}
+
+function ScoreBars({ score }: { score: number }) {
+  const filled = Math.min(10, Math.max(0, Math.round(score)));
+  const tone = scoreTone(score);
+
+  return (
+    <div
+      aria-label={"Score " + score.toFixed(1) + " out of 10"}
+      className="flex items-center gap-[3px]"
+      role="img"
+      title={"Score " + score.toFixed(1)}
+    >
+      {Array.from({ length: 10 }, (_, index) => (
+        <span
+          key={index}
+          className={cn("h-4 w-1 rounded-full", index < filled ? tone : "bg-muted-foreground/20")}
+        />
+      ))}
+    </div>
+  );
+}
+
 function StatusBadge({ status }: { status: DistributorRow["status"] }) {
   const suspended = status === "Suspended";
 
@@ -514,6 +547,12 @@ export function createDistributorsColumns(actions: DistributorColumnActions): Co
       accessorKey: "email",
       header: "Email",
       cell: ({ row }) => <span className="whitespace-nowrap text-sm text-muted-foreground">{row.original.email}</span>,
+    },
+    {
+      id: "score",
+      accessorFn: (row) => getDistributorScore(row),
+      header: "Score",
+      cell: ({ row }) => <ScoreBars score={getDistributorScore(row.original)} />,
     },
     {
       accessorKey: "joinedDate",
