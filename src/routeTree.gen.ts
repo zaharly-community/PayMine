@@ -528,6 +528,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
   '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
+  '/dashboard/deposits/depoist-details/': typeof mainDashboardDepositsDepoistDetailsIndexRoute
+  '/dashboard/deposits/depoist-details/voucher': typeof mainDashboardDepositsDepoistDetailsVoucherRouteRoute
   '/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/dashboard/withdrawls/analytics': typeof mainDashboardWithdrawlsAnalyticsRouteRoute
   '/dashboard/players': typeof mainDashboardPlayersRouteRoute
@@ -586,6 +588,8 @@ export interface FileRoutesByTo {
   '/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
   '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
+  '/dashboard/deposits/depoist-details/': typeof mainDashboardDepositsDepoistDetailsIndexRoute
+  '/dashboard/deposits/depoist-details/voucher': typeof mainDashboardDepositsDepoistDetailsVoucherRouteRoute
   '/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/dashboard/withdrawls/analytics': typeof mainDashboardWithdrawlsAnalyticsRouteRoute
   '/dashboard/players': typeof mainDashboardPlayersRouteRoute
@@ -658,6 +662,8 @@ export interface FileRoutesById {
   '/(main)/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/(main)/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
   '/(main)/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
+  '/(main)/dashboard/deposits/depoist-details/': typeof mainDashboardDepositsDepoistDetailsIndexRoute
+  '/(main)/dashboard/deposits/depoist-details/voucher': typeof mainDashboardDepositsDepoistDetailsVoucherRouteRoute
   '/(main)/dashboard/withdrawls': typeof mainDashboardWithdrawlsRouteRoute
   '/(main)/dashboard/withdrawls_/analytics': typeof mainDashboardWithdrawlsAnalyticsRouteRoute
   '/(main)/dashboard/players': typeof mainDashboardPlayersRouteRoute
@@ -1271,6 +1277,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/deposits/depoist-details'
       preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteImport
       parentRoute: typeof mainDashboardDepositsRouteRoute
+    }
+    '/(main)/dashboard/deposits/depoist-details/': {
+      id: '/(main)/dashboard/deposits/depoist-details/'
+      path: '/'
+      fullPath: '/dashboard/deposits/depoist-details/'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsIndexRouteImport
+      parentRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
+    }
+    '/(main)/dashboard/deposits/depoist-details/voucher': {
+      id: '/(main)/dashboard/deposits/depoist-details/voucher'
+      path: '/voucher'
+      fullPath: '/dashboard/deposits/depoist-details/voucher'
+      preLoaderRoute: typeof mainDashboardDepositsDepoistDetailsVoucherRouteImport
+      parentRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
     }
 
     '/(main)/dashboard/withdrawls': {
