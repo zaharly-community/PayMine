@@ -1007,20 +1007,12 @@ function ReportCustomerDialog({
   );
 }
 
-const walletPaymentMethods = ["Flouci", "D17", "Kashy"] as const;
-const voucherPaymentMethods = ["Tunisie Telecom", "Orange", "Ooredoo"] as const;
-type TransactionPaymentMethod = (typeof walletPaymentMethods)[number] | (typeof voucherPaymentMethods)[number];
+export type DepositDetailVariant = "wallet" | "voucher";
 
-function getRequestType(paymentMethod: TransactionPaymentMethod) {
-  return voucherPaymentMethods.includes(paymentMethod as (typeof voucherPaymentMethods)[number])
-    ? "Voucher"
-    : "Wallet";
-}
-
-export function TransactionDetail() {
+export function TransactionDetail({ variant }: { variant: DepositDetailVariant }) {
   const [reportOpen, setReportOpen] = useState(false);
-  const paymentMethod = "Tunisie Telecom" as TransactionPaymentMethod;
-  const requestType = getRequestType(paymentMethod);
+  const isVoucher = variant === "voucher";
+  const paymentMethod = isVoucher ? "Tunisie Telecom" : "Flouci";
 
   return (
     <section className="min-h-full bg-background pb-24">
@@ -1135,7 +1127,7 @@ export function TransactionDetail() {
             </div>
           </section>
 
-          {requestType === "Voucher" ? (
+          {isVoucher ? (
             <section className="space-y-5">
               <SectionHeading>Payment methods</SectionHeading>
               <p className="text-xs text-muted-foreground">
