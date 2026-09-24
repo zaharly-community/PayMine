@@ -243,7 +243,7 @@ export function Deposits({ deposits }: { deposits: DepositRow[] }) {
   };
 
   const searchableColumn = table.getColumn("search");
-  const searchQuery = (searchableColumn?.getFilterValue() as string | undefined) ?? ""; = (table.getColumn("search")?.getFilterValue() as string | undefined) ?? "";
+  const searchQuery = (searchableColumn?.getFilterValue() as string | undefined) ?? "";
 
   return (
     <section data-content-padding="false" className="flex min-h-full flex-col bg-background">
