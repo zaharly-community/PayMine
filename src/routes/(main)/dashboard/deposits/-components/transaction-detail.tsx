@@ -1009,6 +1009,7 @@ function ReportCustomerDialog({
 
 export function TransactionDetail() {
   const [reportOpen, setReportOpen] = useState(false);
+  const requestType = "Wallet" as "Wallet" | "Voucher";
 
   return (
     <section className="min-h-full bg-background pb-24">
@@ -1123,13 +1124,15 @@ export function TransactionDetail() {
             </div>
           </section>
 
-          <section className="space-y-5">
-            <SectionHeading>Payment methods</SectionHeading>
-            <p className="text-xs text-muted-foreground">
-              Recharge card and voucher payment methods configured for this deposit.
-            </p>
-            <PaymentMethodsTable />
-          </section>
+          {requestType === "Voucher" ? (
+            <section className="space-y-5">
+              <SectionHeading>Payment methods</SectionHeading>
+              <p className="text-xs text-muted-foreground">
+                Recharge card and voucher payment methods configured for this deposit.
+              </p>
+              <PaymentMethodsTable />
+            </section>
+          ) : null}
 
           <section className="space-y-5">
             <SectionHeading>History</SectionHeading>
