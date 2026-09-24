@@ -174,7 +174,7 @@ const initialAccounts: PaymentAccount[] = [
       maxAmount: "35000",
       supervisorPolicy: "Include only",
       selectedSupervisorIds: ["SUP-000184", "SUP-000221"],
-      supervisors: supervisors.map(({ id, name, avatarUrl }) => ({ id, name, avatarUrl })),
+      supervisors: supervisorDirectory.map((supervisor) => ({ ...supervisor })),
       scheduleEnabled: true,
       days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
       startTime: "09:00",
