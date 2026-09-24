@@ -1,9 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-import { TransactionDetail } from "../-components/transaction-detail";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute(
   "/(main)/dashboard/deposits/depoist-details",
 )({
-  component: TransactionDetail,
+  component: () => <Outlet />,
 });
