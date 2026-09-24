@@ -16,6 +16,7 @@ import {
   Link2,
   Plus,
   Sparkles,
+  TicketCheck,
   Search,
   Settings2,
   ShieldCheck,
@@ -277,6 +278,7 @@ function Page() {
   const [query, setQuery] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [viewAccount, setViewAccount] = useState<PaymentAccount | null>(null);
+  const [rentOpen, setRentOpen] = useState(false);
 
   const filteredAccounts = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -332,9 +334,20 @@ function Page() {
           ))}
         </div>
 
-        <div className="relative w-full max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={query} onChange={(event) => setQuery(event.target.value)} className="pl-9" placeholder="Search accounts..." />
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <div className="relative w-full sm:w-56">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input value={query} onChange={(event) => setQuery(event.target.value)} className="pl-9" placeholder="Search accounts..." />
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            className="h-8 gap-2 bg-primary px-3 font-semibold shadow-sm"
+            onClick={() => setRentOpen(true)}
+          >
+            <TicketCheck className="size-4" />
+            Rent Card
+          </Button>
         </div>
       </div>
 
@@ -372,6 +385,7 @@ function Page() {
 
       <AccountWizard open={addOpen} onOpenChange={setAddOpen} onCreate={handleCreate} />
       <AccountDetailsDialog account={viewAccount} open={Boolean(viewAccount)} onOpenChange={(open) => !open && setViewAccount(null)} />
+      <RentCardDialog open={rentOpen} onOpenChange={setRentOpen} />
     </section>
   );
 }
@@ -1211,6 +1225,117 @@ function Field({
       <Label>{label}</Label>
       <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
     </div>
+  );
+}
+
+const rentalOffers = [
+  {
+    id: "rent-edinar-01",
+    title: "E-Dinar Card",
+    type: "Card",
+    identifier: "**** **** **** 4821",
+    description: "Ready-to-use E-Dinar card account for portal payment operations.",
+    image: "https://www.ama-business.com/wp-content/uploads/2023/05/E-Dinar.jpg",
+  },
+  {
+    id: "rent-edinar-02",
+    title: "E-Dinar Card",
+    type: "Card",
+    identifier: "**** **** **** 7732",
+    description: "Separate E-Dinar card account with its own balance and configuration.",
+    image: "https://www.ama-business.com/wp-content/uploads/2023/05/E-Dinar.jpg",
+  },
+  {
+    id: "rent-flouci-01",
+    title: "Flouci Account",
+    type: "Wallet",
+    identifier: "+216 ** *** 1220",
+    description: "Flouci wallet account available for portal transactions.",
+    image: "https://play-lh.googleusercontent.com/eKwfMMr86vhBxUG6cGGVwXYR_fZqzLIJCTFXTI_JDD6VsBfYvvUHSuz-M9BC8Oy1cU5AXq4PkLre0bre3rmY=s0-br30",
+  },
+  {
+    id: "rent-flouci-02",
+    title: "Flouci Account",
+    type: "Wallet",
+    identifier: "+216 ** *** 9041",
+    description: "Independent Flouci wallet account with separate operating limits.",
+    image: "https://play-lh.googleusercontent.com/eKwfMMr86vhBxUG6cGGVwXYR_fZqzLIJCTFXTI_JDD6VsBfYvvUHSuz-M9BC8Oy1cU5AXq4PkLre0bre3rmY=s0-br30",
+  },
+] as const;
+
+function RentCardDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [rentedId, setRentedId] = useState<string | null>(null);
+
+  function rentOffer(id: string) {
+    setRentedId(id);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(nextOpen) => { onOpenChange(nextOpen); if (!nextOpen) setRentedId(null); }}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Rent a payment account</DialogTitle>
+          <DialogDescription>
+            Choose an available E-Dinar card or Flouci account. The rental price is 100 TND per month with no commission.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {rentalOffers.map((offer) => {
+            const rented = rentedId === offer.id;
+            return (
+              <Card key={offer.id} className={rented ? "border-emerald-500/30 bg-emerald-500/5 shadow-none" : "shadow-none"}>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="size-14 shrink-0 overflow-hidden rounded-xl border bg-muted">
+                      <img src={offer.image} alt={offer.title} className="size-full object-cover" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold">{offer.title}</p>
+                          <p className="mt-0.5 text-[11px] text-muted-foreground">{offer.type} · {offer.identifier}</p>
+                        </div>
+                        <Badge variant={rented ? "secondary" : "outline"}>{rented ? "Rented" : "Available"}</Badge>
+                      </div>
+                      <p className="mt-2 text-xs leading-5 text-muted-foreground">{offer.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between gap-3 border-t pt-3">
+                    <div>
+                      <p className="text-[11px] text-muted-foreground">Monthly rental</p>
+                      <p className="text-lg font-semibold tabular-nums">100 TND <span className="text-xs font-normal text-muted-foreground">/ month</span></p>
+                    </div>
+                    <Button type="button" size="sm" disabled={rented} onClick={() => rentOffer(offer.id)}>
+                      {rented ? "Rented" : "Rent now"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        <div className="rounded-xl border bg-muted/20 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <Info className="mt-0.5 size-4 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-medium">Simple rental</p>
+              <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+                100 TND monthly, zero transaction commission. Rental availability and activation are represented as UI mock data in this template.
+              </p>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
