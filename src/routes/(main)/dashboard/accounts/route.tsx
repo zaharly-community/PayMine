@@ -19,7 +19,6 @@ import {
   ShieldCheck,
   UsersRound,
   WalletCards,
-  X,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -613,6 +612,7 @@ function AccountWizard({
               method={method}
               accountName={accountName}
               config={config}
+              onConfigChange={updateConfig}
             />
           ) : null}
         </div>
@@ -915,11 +915,13 @@ function StepReview({
   method,
   accountName,
   config,
+  onConfigChange,
 }: {
   type: AccountType;
   method: AccountMethod;
   accountName: string;
   config: AccountConfig;
+  onConfigChange: (patch: Partial<AccountConfig>) => void;
 }) {
   return (
     <div className="space-y-5">
@@ -972,8 +974,7 @@ function StepReview({
                   value={String(config.openingBalance)}
                   onChange={(event) => {
                     const numeric = Number(event.target.value);
-                    // Keep the input numeric and allow an empty field while editing.
-                    (config as AccountConfig).openingBalance = Number.isNaN(numeric) ? 0 : numeric;
+                    onConfigChange({ openingBalance: Number.isNaN(numeric) ? 0 : numeric });
                   }}
                   className="border-0 pl-2 shadow-none focus-visible:ring-0"
                 />
