@@ -239,7 +239,7 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
         </Button>
 
         <Link
-          to="/dashboard/deposits/depoist-details"
+          to={getDepositDetailPath(deposit.paymentMethod)}
           aria-label={`Open deposit ${deposit.id} for processing`}
           title="Open deposit"
           className="inline-flex size-7 items-center justify-center rounded-[min(var(--radius-md),12px)] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -318,6 +318,14 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
       </AlertDialog>
     </>
   );
+}
+
+const voucherPaymentMethods = new Set(["Tunisie Telecom", "Orange", "Ooredoo"]);
+
+function getDepositDetailPath(paymentMethod: DepositRow["paymentMethod"]) {
+  return voucherPaymentMethods.has(paymentMethod)
+    ? "/dashboard/deposits/depoist-details/voucher"
+    : "/dashboard/deposits/depoist-details/";
 }
 
 export const depositsColumns: ColumnDef<DataTableFeatures, DepositRow>[] = [
