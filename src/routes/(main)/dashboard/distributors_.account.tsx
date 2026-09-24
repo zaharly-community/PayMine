@@ -2,16 +2,22 @@ import * as React from "react";
 
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  Activity,
+  BarChart3,
   Building2,
   CalendarDays,
   Check,
   CheckCircle2,
+  CircleAlert,
   CreditCard,
   FileText,
+  Gauge,
   Mail,
   MapPin,
   MessageSquare,
   Pencil,
+  Settings2,
+  Star,
   UserRound,
   Users,
   WalletCards,
@@ -36,7 +42,7 @@ export const Route = createFileRoute("/(main)/dashboard/distributors_/account")(
 });
 
 type LeftTab = "Details" | "Contacts" | "Notes";
-type MainTab = "Invoices" | "Activity" | "Payment methods" | "Settings";
+type MainTab = "Transactions" | "Analytics" | "Reviews" | "Score" | "Activity" | "Complaints" | "Settings";
 
 const billedMonths = [
   { month: "Aug", paid: 62000, open: 0, overdue: 0 },
@@ -343,7 +349,17 @@ function Page() {
           </div>
 
           <div className="flex overflow-x-auto border-b">
-            {(["Invoices", "Activity", "Payment methods", "Settings"] as MainTab[]).map((tab) => (
+            {(
+              [
+                "Transactions",
+                "Analytics",
+                "Reviews",
+                "Score",
+                "Activity",
+                "Complaints",
+                "Settings",
+              ] as MainTab[]
+            ).map((tab) => (
               <button
                 key={tab}
                 type="button"
@@ -353,14 +369,20 @@ function Page() {
                   mainTab === tab && "border-foreground text-foreground",
                 )}
               >
-                {tab === "Invoices" ? (
-                  <FileText className="size-4" />
-                ) : tab === "Activity" ? (
-                  <CalendarDays className="size-4" />
-                ) : tab === "Payment methods" ? (
+                {tab === "Transactions" ? (
                   <CreditCard className="size-4" />
+                ) : tab === "Analytics" ? (
+                  <BarChart3 className="size-4" />
+                ) : tab === "Reviews" ? (
+                  <Star className="size-4" />
+                ) : tab === "Score" ? (
+                  <Gauge className="size-4" />
+                ) : tab === "Activity" ? (
+                  <Activity className="size-4" />
+                ) : tab === "Complaints" ? (
+                  <CircleAlert className="size-4" />
                 ) : (
-                  <WalletCards className="size-4" />
+                  <Settings2 className="size-4" />
                 )}
                 {tab}
               </button>
@@ -368,9 +390,12 @@ function Page() {
           </div>
 
           <div className="p-5">
-            {mainTab === "Invoices" ? <InvoicesPanel /> : null}
+            {mainTab === "Transactions" ? <InvoicesPanel /> : null}
+            {mainTab === "Analytics" ? <AnalyticsPanel /> : null}
+            {mainTab === "Reviews" ? <ReviewsPanel /> : null}
+            {mainTab === "Score" ? <ScorePanel distributor={distributor} /> : null}
             {mainTab === "Activity" ? <ActivityPanel /> : null}
-            {mainTab === "Payment methods" ? <PaymentMethodsPanel distributor={distributor} /> : null}
+            {mainTab === "Complaints" ? <ComplaintsPanel /> : null}
             {mainTab === "Settings" ? <SettingsPanel distributor={distributor} /> : null}
           </div>
         </main>
@@ -428,6 +453,130 @@ function ActivityPanel() {
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium">{title}</p>
             <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
+          </div>
+          <span className="shrink-0 text-xs text-muted-foreground">{date}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AnalyticsPanel() {
+  const metrics = [
+    ["Processed volume", "$2.41M"],
+    ["Success rate", "96.4%"],
+    ["Avg. processing", "3m 18s"],
+    ["Transactions", "12,842"],
+  ];
+
+  return (
+    <div className="grid gap-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {metrics.map(([label, value]) => (
+          <div key={label} className="rounded-xl border p-4">
+            <p className="text-xs text-muted-foreground">{label}</p>
+            <p className="mt-1 text-xl font-semibold tabular-nums">{value}</p>
+          </div>
+        ))}
+      </div>
+      <div className="rounded-xl border p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold">Processing trend</p>
+            <p className="mt-1 text-xs text-muted-foreground">Last 30 days</p>
+          </div>
+          <BarChart3 className="size-4 text-muted-foreground" />
+        </div>
+        <div className="mt-6 grid h-28 grid-cols-12 items-end gap-2">
+          {[42, 58, 46, 71, 64, 82, 68, 76, 88, 69, 91, 84].map((height, index) => (
+            <div key={index} className="rounded-t bg-foreground/80" style={{ height: height + "%" }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReviewsPanel() {
+  const reviews = [
+    ["Payment handling", "Excellent", "Clear processing and reliable settlement handling."],
+    ["Communication", "Good", "Responses are consistent across operational requests."],
+    ["Account support", "Excellent", "Fast resolution for account-level questions."],
+  ] as const;
+
+  return (
+    <div className="space-y-3">
+      {reviews.map(([title, rating, detail]) => (
+        <div key={title} className="rounded-xl border p-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold">{title}</p>
+            <div className="inline-flex items-center gap-1 text-xs font-medium">
+              <Star className="size-3.5 fill-current" />
+              {rating}
+            </div>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">{detail}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ScorePanel({ distributor }: { distributor: (typeof distributors)[number] }) {
+  let seed = 0;
+  for (const char of distributor.email) seed += char.charCodeAt(0);
+  const score = Number(((seed % 101) / 10).toFixed(1));
+  const filled = Math.min(10, Math.max(0, Math.round(score)));
+
+  return (
+    <div className="max-w-2xl rounded-xl border p-5">
+      <div className="flex items-start justify-between gap-6">
+        <div>
+          <p className="text-sm font-semibold">Distributor score</p>
+          <p className="mt-1 text-xs text-muted-foreground">Operational score for this distributor account.</p>
+        </div>
+        <div className="text-right">
+          <p className="text-3xl font-semibold tabular-nums">{score.toFixed(1)}</p>
+          <p className="text-xs text-muted-foreground">out of 10</p>
+        </div>
+      </div>
+      <div className="mt-5 flex items-center gap-1.5">
+        {Array.from({ length: 10 }, (_, index) => (
+          <span
+            key={index}
+            className={cn(
+              "h-6 w-2 rounded-full",
+              index < filled ? "bg-foreground" : "bg-muted",
+            )}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ComplaintsPanel() {
+  const complaints = [
+    ["CMP-1042", "Settlement delay inquiry", "Resolved", "2 days ago"],
+    ["CMP-1037", "Payment routing question", "In review", "5 days ago"],
+    ["CMP-1028", "Duplicate transaction report", "Resolved", "9 days ago"],
+  ] as const;
+
+  return (
+    <div className="space-y-2">
+      {complaints.map(([id, subject, status, date]) => (
+        <div key={id} className="flex items-center gap-4 rounded-xl border p-4">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+            <CircleAlert className="size-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium">{subject}</p>
+              <Badge variant="outline" className="text-[10px]">
+                {status}
+              </Badge>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">{id}</p>
           </div>
           <span className="shrink-0 text-xs text-muted-foreground">{date}</span>
         </div>
