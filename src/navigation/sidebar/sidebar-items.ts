@@ -1,7 +1,6 @@
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
-  Banknote,
   CircleDollarSign,
   Landmark,
   Calendar,
@@ -121,12 +120,6 @@ export const sidebarItems: NavGroup[] = [
     id: 2,
     label: "Pages",
     items: [
-      {
-        id: "finance",
-        title: "Finance",
-        url: "/dashboard/finance",
-        icon: Banknote,
-      },
       {
         id: "finance-transactions",
         title: "Transactions",
