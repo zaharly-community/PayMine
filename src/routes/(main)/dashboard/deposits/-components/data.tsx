@@ -478,7 +478,7 @@ export const deposits: DepositRow[] = [
 ];
 
 export const filters = {
-  paymentMethod: ["All", "Flouci", "D17", "Tunisie Telecom", "Kashy"] as const,
+  paymentMethod: ["All", "Flouci", "D17", "Kashy", "Tunisie Telecom", "Orange", "Ooredoo"] as const,
   verificationStatus: ["All", "Pending", "Processing", "Approved", "Canceled", "Waiting Correction", "In Process"] as const,
   depositStatus: ["All", "Pending", "Processing", "Completed", "Canceled"] as const,
 };
