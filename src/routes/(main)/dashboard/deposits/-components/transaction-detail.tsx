@@ -1009,7 +1009,7 @@ function ReportCustomerDialog({
 
 export function TransactionDetail() {
   const [reportOpen, setReportOpen] = useState(false);
-  const requestType = "Wallet" as "Wallet" | "Voucher";
+  const requestType = "Voucher" as const;
 
   return (
     <section className="min-h-full bg-background pb-24">
@@ -1112,7 +1112,7 @@ export function TransactionDetail() {
               <Field label="Transaction ID" value="txn_R8M42QH91L6C" mono />
               <Field label="Amount" value="$8,120.50" />
               <Field label="Customer" value="Helio Supply" />
-              <Field label="Payment method" value="ACH debit" />
+              <Field label="Payment method" value="Tunisie Telecom Voucher" />
               <Field label="Processor" value="Adyen" />
               <Field label="Source" value="Hosted checkout" />
               <Field label="Currency" value="USD" />
