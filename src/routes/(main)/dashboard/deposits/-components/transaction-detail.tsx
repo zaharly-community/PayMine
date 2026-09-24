@@ -1007,9 +1007,20 @@ function ReportCustomerDialog({
   );
 }
 
+const walletPaymentMethods = ["Flouci", "D17", "Kashy"] as const;
+const voucherPaymentMethods = ["Tunisie Telecom", "Orange", "Ooredoo"] as const;
+type TransactionPaymentMethod = (typeof walletPaymentMethods)[number] | (typeof voucherPaymentMethods)[number];
+
+function getRequestType(paymentMethod: TransactionPaymentMethod) {
+  return voucherPaymentMethods.includes(paymentMethod as (typeof voucherPaymentMethods)[number])
+    ? "Voucher"
+    : "Wallet";
+}
+
 export function TransactionDetail() {
   const [reportOpen, setReportOpen] = useState(false);
-  const requestType = "Voucher" as const;
+  const paymentMethod = "Tunisie Telecom" as TransactionPaymentMethod;
+  const requestType = getRequestType(paymentMethod);
 
   return (
     <section className="min-h-full bg-background pb-24">
@@ -1112,7 +1123,7 @@ export function TransactionDetail() {
               <Field label="Transaction ID" value="txn_R8M42QH91L6C" mono />
               <Field label="Amount" value="$8,120.50" />
               <Field label="Customer" value="Helio Supply" />
-              <Field label="Payment method" value="Tunisie Telecom Voucher" />
+              <Field label="Payment method" value={paymentMethod} />
               <Field label="Processor" value="Adyen" />
               <Field label="Source" value="Hosted checkout" />
               <Field label="Currency" value="USD" />
@@ -1128,7 +1139,7 @@ export function TransactionDetail() {
             <section className="space-y-5">
               <SectionHeading>Payment methods</SectionHeading>
               <p className="text-xs text-muted-foreground">
-                Recharge card and voucher payment methods configured for this deposit.
+                Voucher payment methods configured for this deposit.
               </p>
               <PaymentMethodsTable />
             </section>
