@@ -63,6 +63,8 @@ import { Route as mainDashboardTasksRouteRouteImport } from './routes/(main)/das
 import { Route as mainDashboardUsersRouteRouteImport } from './routes/(main)/dashboard/users/route'
 import { Route as mainDashboardDepositsRouteRouteImport } from './routes/(main)/dashboard/deposits/route'
 import { Route as mainDashboardDepositsDepoistDetailsRouteRouteImport } from './routes/(main)/dashboard/deposits/depoist-details/route'
+import { Route as mainDashboardDepositsDepoistDetailsIndexRouteImport } from './routes/(main)/dashboard/deposits/depoist-details/index'
+import { Route as mainDashboardDepositsDepoistDetailsVoucherRouteImport } from './routes/(main)/dashboard/deposits/depoist-details/voucher/route'
 import { Route as mainDashboardDepositsIndexRouteImport } from './routes/(main)/dashboard/deposits/index'
 import { Route as mainDashboardWithdrawlsRouteRouteImport } from './routes/(main)/dashboard/withdrawls/route'
 import { Route as mainDashboardWithdrawlsAnalyticsRouteRouteImport } from './routes/(main)/dashboard/withdrawls_.analytics'
@@ -366,6 +368,19 @@ const mainDashboardDepositsDepoistDetailsRouteRoute =
     id: '/depoist-details',
     path: '/depoist-details',
     getParentRoute: () => mainDashboardDepositsRouteRoute,
+  } as any)
+
+const mainDashboardDepositsDepoistDetailsIndexRoute =
+  mainDashboardDepositsDepoistDetailsIndexRouteImport.update({
+    id: '/depoist-details/',
+    path: '/',
+    getParentRoute: () => mainDashboardDepositsDepoistDetailsRouteRoute,
+  } as any)
+const mainDashboardDepositsDepoistDetailsVoucherRouteRoute =
+  mainDashboardDepositsDepoistDetailsVoucherRouteImport.update({
+    id: '/voucher',
+    path: '/voucher',
+    getParentRoute: () => mainDashboardDepositsDepoistDetailsRouteRoute,
   } as any)
 const mainDashboardWithdrawlsRouteRoute = mainDashboardWithdrawlsRouteRouteImport.update({
   id: '/withdrawls',
@@ -1366,14 +1381,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface mainDashboardDepositsDepoistDetailsRouteRouteChildren {
+  mainDashboardDepositsDepoistDetailsIndexRoute: typeof mainDashboardDepositsDepoistDetailsIndexRoute
+  mainDashboardDepositsDepoistDetailsVoucherRouteRoute: typeof mainDashboardDepositsDepoistDetailsVoucherRouteRoute
+}
+
+const mainDashboardDepositsDepoistDetailsRouteRouteChildren: mainDashboardDepositsDepoistDetailsRouteRouteChildren = {
+  mainDashboardDepositsDepoistDetailsIndexRoute: mainDashboardDepositsDepoistDetailsIndexRoute,
+  mainDashboardDepositsDepoistDetailsVoucherRouteRoute: mainDashboardDepositsDepoistDetailsVoucherRouteRoute,
+}
+
+const mainDashboardDepositsDepoistDetailsRouteRouteWithChildren =
+  mainDashboardDepositsDepoistDetailsRouteRoute._addFileChildren(mainDashboardDepositsDepoistDetailsRouteRouteChildren)
+
 interface mainDashboardDepositsRouteRouteChildren {
   mainDashboardDepositsIndexRoute: typeof mainDashboardDepositsIndexRoute
-  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRoute
+  mainDashboardDepositsDepoistDetailsRouteRoute: typeof mainDashboardDepositsDepoistDetailsRouteRouteWithChildren
 }
 
 const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteChildren = {
   mainDashboardDepositsIndexRoute: mainDashboardDepositsIndexRoute,
-  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRoute,
+  mainDashboardDepositsDepoistDetailsRouteRoute: mainDashboardDepositsDepoistDetailsRouteRouteWithChildren,
 }
 
 const mainDashboardDepositsRouteRouteWithChildren =
