@@ -1024,6 +1024,7 @@ function RequestModificationDialog({
 }) {
   const [requestedChange, setRequestedChange] = useState("Payment proof");
   const [note, setNote] = useState("");
+  const [directEditOpen, setDirectEditOpen] = useState(false);
 
   const close = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -1106,15 +1107,14 @@ function RequestModificationDialog({
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled
-                title="Available later for agents with edit permissions"
+                onClick={() => setDirectEditOpen(true)}
               >
                 <Pencil />
                 Edit directly
               </Button>
             </div>
             <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
-              Direct editing will be available later for agents with the required edit permission.
+              Editing is enabled for this template agent.
             </p>
           </div>
 
@@ -1145,6 +1145,108 @@ function RequestModificationDialog({
     </Dialog>
   );
 }
+      <Dialog open={directEditOpen} onOpenChange={setDirectEditOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit directly · {requestedChange}</DialogTitle>
+            <DialogDescription>
+              This template is acting as an Agent with edit permission. Apply the correction directly, then save it to the local mock state.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4">
+            {requestedChange === "Payment proof" ? (
+              <div className="grid gap-2">
+                <Label htmlFor="direct-edit-proof">Payment proof reference</Label>
+                <Input
+                  id="direct-edit-proof"
+                  defaultValue="payment-proof-verified"
+                  placeholder="Enter proof reference"
+                />
+              </div>
+            ) : null}
+
+            {requestedChange === "Amount" ? (
+              <div className="grid gap-2">
+                <Label htmlFor="direct-edit-amount">Deposit amount</Label>
+                <Input
+                  id="direct-edit-amount"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  defaultValue="8120.50"
+                />
+              </div>
+            ) : null}
+
+            {requestedChange === "Payment method" ? (
+              <div className="grid gap-2">
+                <Label htmlFor="direct-edit-method">Payment method</Label>
+                <select
+                  id="direct-edit-method"
+                  defaultValue="Flouci"
+                  className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                >
+                  <option>Flouci</option>
+                  <option>D17</option>
+                  <option>Kashy</option>
+                  <option>Tunisie Telecom</option>
+                  <option>Orange</option>
+                  <option>Ooredoo</option>
+                </select>
+              </div>
+            ) : null}
+
+            {requestedChange === "Account number" ? (
+              <div className="grid gap-2">
+                <Label htmlFor="direct-edit-account">Account number</Label>
+                <Input
+                  id="direct-edit-account"
+                  defaultValue="4123 8801 4290"
+                />
+              </div>
+            ) : null}
+
+            {requestedChange === "Player identifier" ? (
+              <div className="grid gap-2">
+                <Label htmlFor="direct-edit-identifier">Player identifier</Label>
+                <Input
+                  id="direct-edit-identifier"
+                  defaultValue="helio-supply-0429"
+                />
+              </div>
+            ) : null}
+
+            {requestedChange === "Other" ? (
+              <div className="grid gap-2">
+                <Label htmlFor="direct-edit-other">Correction</Label>
+                <textarea
+                  id="direct-edit-other"
+                  defaultValue=""
+                  placeholder="Describe the direct correction..."
+                  rows={4}
+                  className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
+                />
+              </div>
+            ) : null}
+
+            <div className="rounded-lg border bg-muted/20 px-3 py-2.5 text-[11px] text-muted-foreground">
+              Changes are frontend-only for this template.
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setDirectEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={() => setDirectEditOpen(false)}>
+              <Pencil />
+              Save direct edit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
 function ApprovePaymentDialog({
   open,
