@@ -18,7 +18,6 @@ import { Route as mainAuthV2RouteRouteImport } from './routes/(main)/auth/v2/rou
 import { Route as mainDashboardIndexRouteImport } from './routes/(main)/dashboard/index'
 import { Route as mainDashboardSplatRouteImport } from './routes/(main)/dashboard/$'
 import { Route as mainDashboardAnalyticsRouteRouteImport } from './routes/(main)/dashboard/analytics/route'
-import { Route as mainDashboardFileManagerRouteRouteImport } from './routes/(main)/dashboard/file-manager/route'
 import { Route as mainDashboardSettingsRouteRouteImport } from './routes/(main)/dashboard/settings/route'
 import { Route as mainDashboardSettingsGeneralRouteRouteImport } from './routes/(main)/dashboard/settings/general/route'
 import { Route as mainDashboardSettingsLanguagesRouteRouteImport } from './routes/(main)/dashboard/settings/languages/route'
@@ -95,11 +94,6 @@ const mainDashboardAnalyticsRouteRoute =
     path: '/analytics',
     getParentRoute: () => mainDashboardRouteRoute,
   } as any)
-const mainDashboardFileManagerRouteRoute = mainDashboardFileManagerRouteRouteImport.update({
-  id: '/file-manager',
-  path: '/file-manager',
-  getParentRoute: () => mainDashboardRouteRoute,
-} as any)
 const mainDashboardSettingsRouteRoute = mainDashboardSettingsRouteRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -279,7 +273,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/features': typeof mainDashboardSettingsFeaturesRouteRoute
   '/dashboard/integrations': typeof mainDashboardIntegrationsRouteRoute
   '/dashboard/portal': typeof mainDashboardPortalRouteRoute
-  '/dashboard/file-manager': typeof mainDashboardFileManagerRouteRoute
   '/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
   '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
@@ -306,7 +299,6 @@ export interface FileRoutesByTo {
   '/': typeof externalIndexRoute
   '/auth/v2': typeof mainAuthV2RouteRouteWithChildren
   '/dashboard/analytics': typeof mainDashboardAnalyticsRouteRoute
-  '/dashboard/file-manager': typeof mainDashboardFileManagerRouteRoute
   '/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
   '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
@@ -347,7 +339,6 @@ export interface FileRoutesById {
   '/(main)/dashboard/settings/team-access': typeof mainDashboardSettingsTeamAccessRouteRoute
   '/(main)/dashboard/integrations': typeof mainDashboardIntegrationsRouteRoute
   '/(main)/dashboard/portal': typeof mainDashboardPortalRouteRoute
-  '/(main)/dashboard/file-manager': typeof mainDashboardFileManagerRouteRoute
   '/(main)/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/(main)/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
   '/(main)/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
@@ -400,8 +391,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/features'
     | '/dashboard/integrations'
     | '/dashboard/portal'
-    | '/dashboard/file-manager'
-    | '/dashboard/file-manager'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
     | '/dashboard/deposits/depoist-details'
@@ -754,8 +743,6 @@ declare module '@tanstack/react-router' {
     '/(main)/dashboard/file-manager': {
       id: '/(main)/dashboard/file-manager'
       path: '/file-manager'
-      fullPath: '/dashboard/file-manager'
-      preLoaderRoute: typeof mainDashboardFileManagerRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
     '/(main)/dashboard/patient-monitoring': {
@@ -1017,7 +1004,6 @@ interface mainDashboardRouteRouteChildren {
   mainDashboardSettingsRouteRoute: typeof mainDashboardSettingsRouteRouteWithChildren
   mainDashboardIntegrationsRouteRoute: typeof mainDashboardIntegrationsRouteRoute
   mainDashboardPortalRouteRoute: typeof mainDashboardPortalRouteRoute
-  mainDashboardFileManagerRouteRoute: typeof mainDashboardFileManagerRouteRoute
   mainDashboardDepositsRouteRoute: typeof mainDashboardDepositsRouteRoute
   mainDashboardWithdrawlsRouteRoute: typeof mainDashboardWithdrawlsRouteRoute
   mainDashboardWithdrawlsAnalyticsRouteRoute: typeof mainDashboardWithdrawlsAnalyticsRouteRoute
@@ -1033,7 +1019,6 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardSettingsRouteRoute: mainDashboardSettingsRouteRouteWithChildren,
   mainDashboardIntegrationsRouteRoute: mainDashboardIntegrationsRouteRoute,
   mainDashboardPortalRouteRoute: mainDashboardPortalRouteRoute,
-  mainDashboardFileManagerRouteRoute: mainDashboardFileManagerRouteRoute,
   mainDashboardDepositsRouteRoute: mainDashboardDepositsRouteRouteWithChildren,
   mainDashboardWithdrawlsRouteRoute: mainDashboardWithdrawlsRouteRoute,
   mainDashboardWithdrawlsAnalyticsRouteRoute: mainDashboardWithdrawlsAnalyticsRouteRoute,
