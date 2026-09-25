@@ -12,7 +12,7 @@ import {
 import { BarChart3, Check, Cog, Download, GripVertical, Plus, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { TransactionImportDialog } from "@/components/transactions/import-transactions-dialog";
+import { AddTransactionDialog, type AddTransactionFieldValues } from "@/components/transactions/add-transaction-dialog";
 import {
   HEADER_ALIASES,
   importedDate,
@@ -29,6 +29,61 @@ import { withdrawlsColumns } from "./withdrawls-columns";
 import { WithdrawlsTable } from "./withdrawls-table";
 
 const withdrawlMethods: WithdrawlMethod[] = ["Flouci", "D17", "Kashy", "Bank Transfer"];
+
+function formatTransactionDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  const datePart = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+  const timePart = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+
+  return datePart + ", " + timePart;
+}
+
+function buildSingleWithdrawl(
+  values: AddTransactionFieldValues,
+  existingRows: WithdrawlRow[],
+): WithdrawlRow {
+  const amount = Number(values.amount);
+  const commissionPercent = Number(values.feePercent) || 0;
+  const withdrawlMethod = withdrawlMethods.includes(values.method as WithdrawlMethod)
+    ? (values.method as WithdrawlMethod)
+    : "Flouci";
+  const processorName = values.processedBy.trim() || "Unassigned";
+  const withdrawlMethodImage =
+    existingRows.find((row) => row.withdrawlMethod === withdrawlMethod)?.withdrawlMethodImage ?? "";
+  const processor =
+    existingRows.find((row) => row.processedBy.name === processorName)?.processedBy ?? {
+      name: processorName,
+      image: "",
+    };
+  const status =
+    values.status === "Completed" || values.status === "Waiting Correction"
+      ? (values.status as WithdrawlStatus)
+      : "Pending";
+
+  return {
+    id: "WDL-ADD-" + Date.now().toString(36).toUpperCase(),
+    name: values.player.trim(),
+    email: values.email.trim() || "—",
+    date: formatTransactionDate(values.date),
+    withdrawlMethod,
+    withdrawlMethodImage,
+    amount,
+    commissionPercent,
+    commissionAmount: Number(((amount * commissionPercent) / 100).toFixed(2)),
+    status,
+    processedBy: processor,
+  };
+}
 
 function buildImportedWithdrawl(
   record: ImportedRecord,
@@ -266,12 +321,19 @@ export function Withdrawls({ withdrawls }: { withdrawls: WithdrawlRow[] }) {
                 <div className="mt-2 border-t pt-2 text-[11px] text-muted-foreground">Actions stays visible and cannot be hidden.</div>
               </div>
             ) : null}
-          </div>
-          <TransactionImportDialog
+          </div>          <AddTransactionDialog
             kind="withdrawl"
             title="Withdrawls"
+            description="Create a single withdrawal or add many withdrawals from an Excel, CSV, or TSV file."
             existingRows={rows as Array<Record<string, unknown>>}
-            buildRow={(record, index) => buildImportedWithdrawl(record, index, rows)}
+            methods={withdrawlMethods}
+            statuses={["Pending", "Completed", "Waiting Correction"]}
+            onCreateSingle={(values) => {
+              const row = buildSingleWithdrawl(values, rows);
+              setRows((current) => [row, ...current]);
+              table.setPageIndex(0);
+            }}
+            buildImportedRow={(record, index) => buildImportedWithdrawl(record, index, rows)}
             onImport={(importedRows) => {
               setRows((current) => [...importedRows, ...current]);
               table.setPageIndex(0);
