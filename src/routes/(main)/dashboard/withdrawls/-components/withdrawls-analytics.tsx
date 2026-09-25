@@ -98,7 +98,40 @@ const distributorData = [
   { name: "Olivia S.", volume: 11.8, commission: 2360, transactions: 911 },
 ];
 
-const providerData = [
+const revenueOverTime = [
+  { day: "Sep 16", revenue: 412000 },
+  { day: "Sep 17", revenue: 438000 },
+  { day: "Sep 18", revenue: 429000 },
+  { day: "Sep 19", revenue: 486000 },
+  { day: "Sep 20", revenue: 518000 },
+  { day: "Sep 21", revenue: 552000 },
+  { day: "Sep 22", revenue: 601000 },
+];
+
+const customersByCountry = [
+  { country: "Tanzania", customers: 6420 },
+  { country: "Kenya", customers: 4580 },
+  { country: "Uganda", customers: 3210 },
+  { country: "Rwanda", customers: 1940 },
+  { country: "Zambia", customers: 1330 },
+];
+
+const checkoutFunnel = [
+  { step: "Checkout opened", value: 12480, rate: 100 },
+  { step: "Method selected", value: 10840, rate: 86.9 },
+  { step: "Details submitted", value: 9420, rate: 75.5 },
+  { step: "Payment initiated", value: 8610, rate: 69.0 },
+  { step: "Payment completed", value: 7820, rate: 62.7 },
+];
+
+const paymentChannels = [
+  { channel: "Mobile Money", volume: 46, fill: "var(--color-flouci)" },
+  { channel: "Bank Transfer", volume: 24, fill: "var(--color-d17)" },
+  { channel: "Cards", volume: 18, fill: "var(--color-kashy)" },
+  { channel: "Voucher", volume: 12, fill: "var(--color-bank)" },
+];
+
+const const providerData = [
   { provider: "Flouci", successRate: 98.4, latency: 1.8, volume: 34.2, failures: 1.6 },
   { provider: "D17", successRate: 97.8, latency: 2.1, volume: 27.8, failures: 2.2 },
   { provider: "KashY", successRate: 96.9, latency: 2.6, volume: 21.4, failures: 3.1 },
@@ -120,6 +153,18 @@ const methodChartConfig = {
   d17: { label: "D17", color: "var(--chart-2)" },
   kashy: { label: "KashY", color: "var(--chart-3)" },
   bank: { label: "Bank transfer", color: "var(--chart-4)" },
+} satisfies ChartConfig;
+
+const revenueChartConfig = {
+  revenue: { label: "Revenue", color: "var(--chart-1)" },
+} satisfies ChartConfig;
+
+const countryChartConfig = {
+  customers: { label: "Customers", color: "var(--chart-2)" },
+} satisfies ChartConfig;
+
+const channelChartConfig = {
+  volume: { label: "Share", color: "var(--chart-3)" },
 } satisfies ChartConfig;
 
 const playerChartConfig = {
@@ -374,6 +419,134 @@ function PlatformOverview() {
       </div>
 
       <DailyFlowActivity />
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        <div className="xl:col-span-7">
+          <SectionCard title="Revenue over time (TZS)">
+            <ChartContainer config={revenueChartConfig} className="h-72 w-full">
+              <AreaChart data={revenueOverTime} margin={{ left: 4, right: 8, top: 12 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tickMargin={10} />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tickMargin={10}
+                  width={64}
+                  tickFormatter={(value) => {
+                    const numeric = Number(value);
+                    return numeric >= 1000000
+                      ? numeric / 1000000 + "M"
+                      : Math.round(numeric / 1000) + "K";
+                  }}
+                />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value) => Number(value).toLocaleString() + " TZS"}
+                    />
+                  }
+                />
+                <Area
+                  dataKey="revenue"
+                  type="monotone"
+                  fill="var(--color-revenue)"
+                  fillOpacity={0.14}
+                  stroke="var(--color-revenue)"
+                  strokeWidth={2.5}
+                />
+              </AreaChart>
+            </ChartContainer>
+          </SectionCard>
+        </div>
+
+        <div className="xl:col-span-5">
+          <SectionCard title="Customers by Country">
+            <ChartContainer config={countryChartConfig} className="h-72 w-full">
+              <BarChart
+                data={customersByCountry}
+                layout="vertical"
+                margin={{ left: 4, right: 8, top: 8, bottom: 8 }}
+              >
+                <CartesianGrid horizontal={false} />
+                <XAxis type="number" axisLine={false} tickLine={false} tickMargin={8} />
+                <YAxis
+                  type="category"
+                  dataKey="country"
+                  axisLine={false}
+                  tickLine={false}
+                  tickMargin={8}
+                  width={78}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar
+                  dataKey="customers"
+                  fill="var(--color-customers)"
+                  radius={[0, 4, 4, 0]}
+                  barSize={18}
+                />
+              </BarChart>
+            </ChartContainer>
+          </SectionCard>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        <div className="xl:col-span-7">
+          <SectionCard title="Checkout Funnel">
+            <div className="space-y-4">
+              {checkoutFunnel.map((item, index) => {
+                const width = Math.max(26, item.rate);
+                return (
+                  <div key={item.step} className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                      <span>{index + 1}. {item.step}</span>
+                      <span className="shrink-0 tabular-nums text-muted-foreground">
+                        {item.value.toLocaleString()} · {item.rate.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{ width: width + "%" }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </SectionCard>
+        </div>
+
+        <div className="xl:col-span-5">
+          <SectionCard title="Payment Channels">
+            <ChartContainer config={channelChartConfig} className="h-72 w-full">
+              <BarChart data={paymentChannels} margin={{ left: 4, right: 8, top: 12, bottom: 8 }}>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="channel" axisLine={false} tickLine={false} tickMargin={10} />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tickMargin={10}
+                  width={40}
+                  tickFormatter={(value) => value + "%"}
+                />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value) => value + "%"}
+                    />
+                  }
+                />
+                <Bar dataKey="volume" fill="var(--color-volume)" radius={[4, 4, 0, 0]}>
+                  {paymentChannels.map((item) => (
+                    <Cell key={item.channel} fill={item.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+          </SectionCard>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
         <div className="xl:col-span-7">
