@@ -12,6 +12,7 @@ import {
   Maximize2,
   Minus,
   MoreVertical,
+  Pencil,
   Plus,
   RefreshCcw,
   X,
@@ -847,6 +848,24 @@ function SummaryCard() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [modificationOpen, setModificationOpen] = useState(false);
   const [approveOpen, setApproveOpen] = useState(false);
+  const [verificationConfirmed, setVerificationConfirmed] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+
+    const timer = window.setInterval(() => {
+      setCountdown((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [countdown]);
+
+  const handleVerificationConfirmed = () => {
+    setApproveOpen(false);
+    setVerificationConfirmed(true);
+    setCountdown(5);
+  };
 
   return (
     <>
@@ -866,25 +885,59 @@ function SummaryCard() {
           </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
-            <Button type="button" variant="outline" className="h-9 shrink-0 px-3" onClick={() => setCancelOpen(true)}>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 shrink-0 px-3"
+              onClick={() => setCancelOpen(true)}
+              disabled={verificationConfirmed}
+            >
               <X />
               Cancel payment
             </Button>
-            <Button type="button" variant="outline" className="h-9 shrink-0 px-3" onClick={() => setModificationOpen(true)}>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 shrink-0 px-3"
+              onClick={() => setModificationOpen(true)}
+              disabled={verificationConfirmed}
+            >
               <RefreshCcw />
               Request modification
             </Button>
-            <Button type="button" className="h-9 shrink-0 px-3" onClick={() => setApproveOpen(true)}>
-              <CheckCircle2 />
-              Approve payment
-            </Button>
+
+            {verificationConfirmed ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={countdown > 0}
+                className="h-8 min-w-[116px] px-3 text-[11px] text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
+              >
+                <CheckCircle2 className="size-3.5" />
+                {"Approve" + (countdown > 0 ? " · " + countdown + "s" : "")}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                className="h-9 shrink-0 px-3"
+                onClick={() => setApproveOpen(true)}
+              >
+                <CheckCircle2 />
+                Confirm Verification
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
       <CancelPaymentDialog open={cancelOpen} onOpenChange={setCancelOpen} />
       <RequestModificationDialog open={modificationOpen} onOpenChange={setModificationOpen} />
-      <ApprovePaymentDialog open={approveOpen} onOpenChange={setApproveOpen} />
+      <ApprovePaymentDialog
+        open={approveOpen}
+        onOpenChange={setApproveOpen}
+        onConfirmed={handleVerificationConfirmed}
+      />
     </>
   );
 }
@@ -992,20 +1045,77 @@ function RequestModificationDialog({
 
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="deposit-modification-field">What needs modification?</Label>
-            <select
-              id="deposit-modification-field"
-              value={requestedChange}
-              onChange={(event) => setRequestedChange(event.target.value)}
-              className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
-            >
-              <option>Payment proof</option>
-              <option>Amount</option>
-              <option>Payment method</option>
-              <option>Account number</option>
-              <option>Player identifier</option>
-              <option>Other</option>
-            </select>
+            <Label>What needs modification?</Label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {[
+                ["Payment proof", "Upload a clearer or corrected proof.", CheckCircle2],
+                ["Amount", "Correct the amount entered for the deposit.", MoreVertical],
+                ["Payment method", "Select the correct wallet or voucher method.", RefreshCcw],
+                ["Account number", "Correct the account or wallet number.", Copy],
+                ["Player identifier", "Correct the identifier linked to this deposit.", AlertTriangle],
+                ["Other", "Request another correction not listed above.", Pencil],
+              ].map(([id, description, Icon]) => {
+                const optionId = id as string;
+                const selected = requestedChange === optionId;
+                const OptionIcon = Icon as typeof CheckCircle2;
+
+                return (
+                  <button
+                    key={optionId}
+                    type="button"
+                    onClick={() => setRequestedChange(optionId)}
+                    className={cn(
+                      "flex min-h-[76px] items-start gap-3 rounded-lg border p-3 text-left transition-colors",
+                      selected
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        : "border-border bg-background hover:bg-muted/40",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md",
+                        selected
+                          ? "bg-primary/10 text-primary"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      <OptionIcon className="size-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="flex items-center gap-2 text-sm font-medium">
+                        {optionId}
+                        {selected ? <span className="size-1.5 rounded-full bg-primary" /> : null}
+                      </span>
+                      <span className="mt-1 block text-xs leading-4 text-muted-foreground">
+                        {description}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="rounded-lg border bg-muted/20 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-xs text-muted-foreground">Selected correction</div>
+                <div className="mt-0.5 text-sm font-semibold">{requestedChange}</div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled
+                title="Available later for agents with edit permissions"
+              >
+                <Pencil />
+                Edit directly
+              </Button>
+            </div>
+            <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
+              Direct editing will be available later for agents with the required edit permission.
+            </p>
           </div>
 
           <div className="grid gap-2">
@@ -1039,9 +1149,11 @@ function RequestModificationDialog({
 function ApprovePaymentDialog({
   open,
   onOpenChange,
+  onConfirmed,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onConfirmed: () => void;
 }) {
   const [receivedAmount, setReceivedAmount] = useState("");
   const [feeResponsibility, setFeeResponsibility] = useState<"player" | "platform">("player");
@@ -1060,7 +1172,7 @@ function ApprovePaymentDialog({
     <Dialog open={open} onOpenChange={close}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Approve payment</DialogTitle>
+          <DialogTitle>Confirm verification</DialogTitle>
           <DialogDescription>
             Enter the exact amount actually received. Then choose who bears the payment fees before confirming the deposit.
           </DialogDescription>
@@ -1114,9 +1226,16 @@ function ApprovePaymentDialog({
           <Button type="button" variant="outline" onClick={() => close(false)}>
             Cancel
           </Button>
-          <Button type="button" disabled={!validAmount} onClick={() => close(false)}>
+          <Button
+            type="button"
+            disabled={!validAmount}
+            onClick={() => {
+              close(false);
+              onConfirmed();
+            }}
+          >
             <CheckCircle2 />
-            Confirm approval
+            Confirm verification
           </Button>
         </DialogFooter>
       </DialogContent>
