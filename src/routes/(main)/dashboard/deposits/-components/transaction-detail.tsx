@@ -1035,116 +1035,118 @@ function RequestModificationDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={close}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Request modification from player</DialogTitle>
-          <DialogDescription>
-            Choose what the player needs to correct and add a note that will be visible to the player.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={close}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Request modification from player</DialogTitle>
+            <DialogDescription>
+              Choose what the player needs to correct and add a note that will be visible to the player.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <Label>What needs modification?</Label>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {[
-                ["Payment proof", "Upload a clearer or corrected proof.", CheckCircle2],
-                ["Amount", "Correct the amount entered for the deposit.", MoreVertical],
-                ["Payment method", "Select the correct wallet or voucher method.", RefreshCcw],
-                ["Account number", "Correct the account or wallet number.", Copy],
-                ["Player identifier", "Correct the identifier linked to this deposit.", AlertTriangle],
-                ["Other", "Request another correction not listed above.", Pencil],
-              ].map(([id, description, Icon]) => {
-                const optionId = id as string;
-                const selected = requestedChange === optionId;
-                const OptionIcon = Icon as typeof CheckCircle2;
+          <div className="grid gap-5">
+            <div className="grid gap-2">
+              <Label>What needs modification?</Label>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {[
+                  ["Payment proof", "Upload a clearer or corrected proof.", CheckCircle2],
+                  ["Amount", "Correct the amount entered for the deposit.", MoreVertical],
+                  ["Payment method", "Select the correct wallet or voucher method.", RefreshCcw],
+                  ["Account number", "Correct the account or wallet number.", Copy],
+                  ["Player identifier", "Correct the identifier linked to this deposit.", AlertTriangle],
+                  ["Other", "Request another correction not listed above.", Pencil],
+                ].map(([id, description, Icon]) => {
+                  const optionId = id as string;
+                  const selected = requestedChange === optionId;
+                  const OptionIcon = Icon as typeof CheckCircle2;
 
-                return (
-                  <button
-                    key={optionId}
-                    type="button"
-                    onClick={() => setRequestedChange(optionId)}
-                    className={cn(
-                      "flex min-h-[76px] items-start gap-3 rounded-lg border p-3 text-left transition-colors",
-                      selected
-                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                        : "border-border bg-background hover:bg-muted/40",
-                    )}
-                  >
-                    <span
+                  return (
+                    <button
+                      key={optionId}
+                      type="button"
+                      onClick={() => setRequestedChange(optionId)}
                       className={cn(
-                        "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md",
+                        "flex min-h-[76px] items-start gap-3 rounded-lg border p-3 text-left transition-colors",
                         selected
-                          ? "bg-primary/10 text-primary"
-                          : "bg-muted text-muted-foreground",
+                          ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                          : "border-border bg-background hover:bg-muted/40",
                       )}
                     >
-                      <OptionIcon className="size-4" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="flex items-center gap-2 text-sm font-medium">
-                        {optionId}
-                        {selected ? <span className="size-1.5 rounded-full bg-primary" /> : null}
+                      <span
+                        className={cn(
+                          "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md",
+                          selected
+                            ? "bg-primary/10 text-primary"
+                            : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        <OptionIcon className="size-4" />
                       </span>
-                      <span className="mt-1 block text-xs leading-4 text-muted-foreground">
-                        {description}
+                      <span className="min-w-0">
+                        <span className="flex items-center gap-2 text-sm font-medium">
+                          {optionId}
+                          {selected ? <span className="size-1.5 rounded-full bg-primary" /> : null}
+                        </span>
+                        <span className="mt-1 block text-xs leading-4 text-muted-foreground">
+                          {description}
+                        </span>
                       </span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="rounded-lg border bg-muted/20 p-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-xs text-muted-foreground">Selected correction</div>
-                <div className="mt-0.5 text-sm font-semibold">{requestedChange}</div>
+                    </button>
+                  );
+                })}
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setDirectEditOpen(true)}
-              >
-                <Pencil />
-                Edit directly
-              </Button>
             </div>
-            <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
-              Editing is enabled for this template agent.
-            </p>
+
+            <div className="rounded-lg border bg-muted/20 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs text-muted-foreground">Selected correction</div>
+                  <div className="mt-0.5 text-sm font-semibold">{requestedChange}</div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDirectEditOpen(true)}
+                >
+                  <Pencil />
+                  Edit directly
+                </Button>
+              </div>
+              <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
+                Editing is enabled for this template agent.
+              </p>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="deposit-modification-note">Note for player</Label>
+              <textarea
+                id="deposit-modification-note"
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                placeholder="Explain exactly what the player should update..."
+                rows={5}
+                className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                This note is intended to be shown to the player.
+              </p>
+            </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="deposit-modification-note">Note for player</Label>
-            <textarea
-              id="deposit-modification-note"
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder="Explain exactly what the player should update..."
-              rows={5}
-              className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
-            />
-            <p className="text-[11px] text-muted-foreground">This note is intended to be shown to the player.</p>
-          </div>
-        </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => close(false)}>
+              Cancel
+            </Button>
+            <Button type="button" disabled={!note.trim()} onClick={() => close(false)}>
+              <RefreshCcw />
+              Send modification request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => close(false)}>
-            Cancel
-          </Button>
-          <Button type="button" disabled={!note.trim()} onClick={() => close(false)}>
-            <RefreshCcw />
-            Send modification request
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
       <Dialog open={directEditOpen} onOpenChange={setDirectEditOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -1158,35 +1160,19 @@ function RequestModificationDialog({
             {requestedChange === "Payment proof" ? (
               <div className="grid gap-2">
                 <Label htmlFor="direct-edit-proof">Payment proof reference</Label>
-                <Input
-                  id="direct-edit-proof"
-                  defaultValue="payment-proof-verified"
-                  placeholder="Enter proof reference"
-                />
+                <Input id="direct-edit-proof" defaultValue="payment-proof-verified" placeholder="Enter proof reference" />
               </div>
             ) : null}
-
             {requestedChange === "Amount" ? (
               <div className="grid gap-2">
                 <Label htmlFor="direct-edit-amount">Deposit amount</Label>
-                <Input
-                  id="direct-edit-amount"
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  defaultValue="8120.50"
-                />
+                <Input id="direct-edit-amount" type="number" min="0.01" step="0.01" defaultValue="8120.50" />
               </div>
             ) : null}
-
             {requestedChange === "Payment method" ? (
               <div className="grid gap-2">
                 <Label htmlFor="direct-edit-method">Payment method</Label>
-                <select
-                  id="direct-edit-method"
-                  defaultValue="Flouci"
-                  className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
-                >
+                <select id="direct-edit-method" defaultValue="Flouci" className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20">
                   <option>Flouci</option>
                   <option>D17</option>
                   <option>Kashy</option>
@@ -1196,33 +1182,23 @@ function RequestModificationDialog({
                 </select>
               </div>
             ) : null}
-
             {requestedChange === "Account number" ? (
               <div className="grid gap-2">
                 <Label htmlFor="direct-edit-account">Account number</Label>
-                <Input
-                  id="direct-edit-account"
-                  defaultValue="4123 8801 4290"
-                />
+                <Input id="direct-edit-account" defaultValue="4123 8801 4290" />
               </div>
             ) : null}
-
             {requestedChange === "Player identifier" ? (
               <div className="grid gap-2">
                 <Label htmlFor="direct-edit-identifier">Player identifier</Label>
-                <Input
-                  id="direct-edit-identifier"
-                  defaultValue="helio-supply-0429"
-                />
+                <Input id="direct-edit-identifier" defaultValue="helio-supply-0429" />
               </div>
             ) : null}
-
             {requestedChange === "Other" ? (
               <div className="grid gap-2">
                 <Label htmlFor="direct-edit-other">Correction</Label>
                 <textarea
                   id="direct-edit-other"
-                  defaultValue=""
                   placeholder="Describe the direct correction..."
                   rows={4}
                   className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
@@ -1246,7 +1222,9 @@ function RequestModificationDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
+    </>
+  );
+}
 
 function ApprovePaymentDialog({
   open,
