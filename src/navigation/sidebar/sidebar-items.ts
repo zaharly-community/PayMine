@@ -2,7 +2,6 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   ChartBar,
-  LayoutDashboard,
   Network,
   PanelsTopLeft,
   Settings2,
