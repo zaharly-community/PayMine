@@ -13,7 +13,7 @@ import { Check, Cog, Download, GripVertical, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Kbd } from "@/components/ui/kbd";
-import { TransactionImportDialog } from "@/components/transactions/import-transactions-dialog";
+import { AddTransactionDialog, type AddTransactionFieldValues } from "@/components/transactions/add-transaction-dialog";
 import { dataTableFeatures } from "@/lib/data-table-features";
 
 import type { DepositRow, DepositStatus, PaymentMethod, VerificationStatus } from "./data";
@@ -82,6 +82,65 @@ const depositColumnLabels: Record<(typeof depositColumnOrder)[number], string> =
 
 function importValue(value: string, fallback: string) {
   return value.trim() || fallback;
+}
+
+function formatTransactionDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  const datePart = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+  const timePart = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+
+  return datePart + ", " + timePart;
+}
+
+function buildSingleDeposit(values: AddTransactionFieldValues, existingRows: DepositRow[]): DepositRow {
+  const amount = Number(values.amount);
+  const feePercent = Number(values.feePercent) || 0;
+  const paymentMethod = paymentMethods.includes(values.method as PaymentMethod)
+    ? (values.method as PaymentMethod)
+    : "Flouci";
+  const processorName = values.processedBy.trim() || "Unassigned";
+  const paymentMethodImage =
+    existingRows.find((row) => row.paymentMethod === paymentMethod)?.paymentMethodImage ?? "";
+  const processor =
+    existingRows.find((row) => row.processedBy.name === processorName)?.processedBy ?? {
+      name: processorName,
+      image: "",
+    };
+  const depositStatus = depositStatuses.includes(values.status as DepositStatus)
+    ? (values.status as DepositStatus)
+    : "Pending";
+  const verificationStatus = verificationStatuses.includes(
+    values.verificationStatus as VerificationStatus,
+  )
+    ? (values.verificationStatus as VerificationStatus)
+    : "Pending";
+  const id = "DEP-ADD-" + Date.now().toString(36).toUpperCase();
+
+  return {
+    id,
+    name: values.player.trim(),
+    email: values.email.trim() || "—",
+    date: formatTransactionDate(values.date),
+    paymentMethod,
+    paymentMethodImage,
+    verificationStatus,
+    amount,
+    feePercent,
+    feeAmount: Number(((amount * feePercent) / 100).toFixed(2)),
+    depositStatus,
+    processedBy: processor,
+    indicatorStatus: depositStatus,
+  };
 }
 
 function buildImportedDeposit(
@@ -379,12 +438,20 @@ export function Deposits({ deposits }: { deposits: DepositRow[] }) {
                 </div>
               </div>
             ) : null}
-          </div>
-          <TransactionImportDialog
+          </div>          <AddTransactionDialog
             kind="deposit"
             title="Deposits"
+            description="Create a single deposit or add many deposits from an Excel, CSV, or TSV file."
             existingRows={rows as Array<Record<string, unknown>>}
-            buildRow={(record, index) => buildImportedDeposit(record, index, rows)}
+            methods={paymentMethods}
+            statuses={depositStatuses}
+            verificationStatuses={verificationStatuses}
+            onCreateSingle={(values) => {
+              const row = buildSingleDeposit(values, rows);
+              setRows((current) => [row, ...current]);
+              table.setPageIndex(0);
+            }}
+            buildImportedRow={(record, index) => buildImportedDeposit(record, index, rows)}
             onImport={(importedRows) => {
               setRows((current) => [...importedRows, ...current]);
               table.setPageIndex(0);
