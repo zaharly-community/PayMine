@@ -131,7 +131,7 @@ const paymentChannels = [
   { channel: "Voucher", volume: 12, fill: "var(--color-bank)" },
 ];
 
-const const providerData = [
+const providerData = [
   { provider: "Flouci", successRate: 98.4, latency: 1.8, volume: 34.2, failures: 1.6 },
   { provider: "D17", successRate: 97.8, latency: 2.1, volume: 27.8, failures: 2.2 },
   { provider: "KashY", successRate: 96.9, latency: 2.6, volume: 21.4, failures: 3.1 },
