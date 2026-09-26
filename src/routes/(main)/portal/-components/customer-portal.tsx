@@ -706,7 +706,7 @@ function FlouciStepTwo({
                     <span className="flex size-7 items-center justify-center rounded-md border border-cyan-200/30 bg-cyan-300/10">
                       <ScanText className="size-4 animate-pulse text-cyan-200" />
                     </span>
-                    <span className="hidden sm:block">Use detected ID</span>
+                    <span>Use detected ID</span>
                   </span>
                 </Button>
               ) : null}
