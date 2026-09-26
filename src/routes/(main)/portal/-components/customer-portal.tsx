@@ -896,7 +896,37 @@ function FlouciStepTwo({
         </div>
       </section>
 
-      <div className="mt-5 px-1 text-xs leading-relaxed text-slate-300 sm:text-sm">
+      <div className="mt-3 rounded-lg border border-slate-700 bg-slate-900/45 px-3 py-2.5">
+        <div className="flex items-center gap-2">
+          <Info className="size-3.5 shrink-0 text-slate-300" />
+          <p className="text-[11px] font-medium text-slate-200">How to make the transfer</p>
+        </div>
+
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-0">
+          <div className="flex items-center gap-2 sm:border-r sm:border-slate-700 sm:pr-3">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-slate-800 text-[9px] font-semibold text-slate-300">1</span>
+            <p className="text-[10px] leading-relaxed text-slate-400">
+              Open Flouci and start a transfer.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 sm:px-3">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-slate-800 text-[9px] font-semibold text-slate-300">2</span>
+            <p className="text-[10px] leading-relaxed text-slate-400">
+              Enter the number and exact amount shown above.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 sm:border-l sm:border-slate-700 sm:pl-3">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-slate-800 text-[9px] font-semibold text-slate-300">3</span>
+            <p className="text-[10px] leading-relaxed text-slate-400">
+              Confirm the transfer, then upload the payment photo.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 px-1 text-xs leading-relaxed text-slate-300 sm:text-sm">
         <p>
           Complete the transfer before the timer expires. After confirmation, your
           request will be sent for supervisor verification.
