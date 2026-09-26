@@ -294,6 +294,22 @@ function findOpenDepositRequest(
   const normalized = normalizeRequestPlayerValue(playerId);
   if (!normalized) return null;
 
+  // Temporary design-preview trigger:
+  // Player ID 0000000 always behaves as if an open deposit request exists.
+  if (playerLookupType === "playerId" && normalized === "0000000") {
+    return {
+      id: "DEP-DEMO-0000000",
+      playerId: "0000000",
+      playerLookupType: "playerId",
+      methodId: "flouci",
+      methodName: "Flouci",
+      amount: "150.00",
+      currency: "TND",
+      createdAt: "2026-09-26T11:00:00.000Z",
+      status: "open",
+    } satisfies DepositRequest;
+  }
+
   return (
     readOpenDepositRequests()
       .filter(
