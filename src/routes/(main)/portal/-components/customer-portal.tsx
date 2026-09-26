@@ -231,6 +231,12 @@ function FieldLabel({
 
 const flouciRecipientNumbers = ["22 345 678", "53 781 249", "29 614 832"];
 
+const flouciRecipientOwners: Record<string, string> = {
+  "22 345 678": "Mohamed Trabelsi",
+  "53 781 249": "Yassine Ben Amor",
+  "29 614 832": "Amine Jlassi",
+};
+
 type FlouciDemoStatus =
   | "reviewing"
   | "approved"
@@ -688,34 +694,50 @@ function FlouciStepTwo({
             </Button>
           </div>
 
-          <div className="mt-2 flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
-            <div className="relative shrink-0">
-              <img
-                src={flouciSupervisor?.avatarUrl || ""}
-                alt=""
-                className="size-9 rounded-full object-cover ring-1 ring-white/10"
-                referrerPolicy="no-referrer"
-              />
-              <span
-                className={cn(
-                  "absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full border-2 border-slate-900 text-[9px] text-white",
-                  supervisorVerified ? "bg-blue-600" : "bg-slate-600",
-                )}
-                title={supervisorVerified ? "Supervisor verified" : "Supervisor not verified"}
-              >
-                {supervisorVerified ? <Check className="size-2.5" /> : "!"}
-              </span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Supervisor</p>
-              <p className="truncate text-xs font-medium text-slate-100">{flouciSupervisor?.name ?? "Supervisor"}</p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Verification score</p>
-              <p className="text-xs font-semibold tabular-nums text-slate-100">{verificationScore.toFixed(1)}/10</p>
-              <p className={cn("text-[10px]", supervisorVerified ? "text-emerald-300" : "text-slate-500")}>
-                {supervisorVerified ? "Verified" : "Not verified"}
-              </p>
+          <div className="mt-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-emerald-400/20 bg-emerald-400/10 text-xs font-semibold text-emerald-300">
+                  {recipientNumber.slice(0, 2)}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Account owner</p>
+                  <p className="truncate text-xs font-medium text-slate-100">
+                    {flouciRecipientOwners[recipientNumber] ?? "Flouci account holder"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex min-w-0 items-center gap-3 sm:border-l sm:border-slate-700 sm:pl-3">
+                <div className="relative shrink-0">
+                  <img
+                    src={flouciSupervisor?.avatarUrl || ""}
+                    alt=""
+                    className="size-9 rounded-full object-cover ring-1 ring-white/10"
+                    referrerPolicy="no-referrer"
+                  />
+                  <span
+                    className={cn(
+                      "absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full border-2 border-slate-900 text-[9px] text-white",
+                      supervisorVerified ? "bg-blue-600" : "bg-slate-600",
+                    )}
+                    title={supervisorVerified ? "Supervisor verified" : "Supervisor not verified"}
+                  >
+                    {supervisorVerified ? <Check className="size-2.5" /> : "!"}
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Supervisor</p>
+                  <p className="truncate text-xs font-medium text-slate-100">{flouciSupervisor?.name ?? "Supervisor"}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Verification score</p>
+                  <p className="text-xs font-semibold tabular-nums text-slate-100">{verificationScore.toFixed(1)}/10</p>
+                  <p className={cn("text-[10px]", supervisorVerified ? "text-emerald-300" : "text-slate-500")}>
+                    {supervisorVerified ? "Verified" : "Not verified"}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
