@@ -277,7 +277,7 @@ function FlouciStepOne({
             <FieldLabel>Player identification</FieldLabel>
 
             <nav
-              className="relative z-0 flex overflow-hidden rounded-xl border border-slate-700 bg-slate-900/70"
+              className="flex items-center gap-2.5"
               aria-label="Player identification type"
               role="tablist"
             >
@@ -298,10 +298,11 @@ function FlouciStepOne({
                     setPlayerId("");
                   }}
                   className={cn(
-                    "relative min-w-0 flex-1 overflow-hidden border-s border-slate-700 py-3 px-3 text-center text-xs font-medium transition-all first:border-s-0 sm:py-3.5 sm:px-4 sm:text-sm",
-                    "bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-slate-100 focus:z-10 focus:outline-none",
+                    "min-w-0 rounded-lg border px-4 py-2.5 text-xs font-medium transition-all sm:px-5 sm:text-sm",
+                    "border-slate-700 bg-slate-800/60 text-slate-400 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100",
+                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40",
                     playerLookupType === type &&
-                      "border-b-2 border-emerald-400 bg-slate-800/90 text-white",
+                      "border-emerald-400/60 bg-emerald-400/10 text-emerald-300 shadow-[0_0_18px_rgba(52,211,153,0.08)]",
                   )}
                 >
                   {label}
