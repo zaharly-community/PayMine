@@ -387,33 +387,24 @@ function usePlayerRequestLookup(
 function PlayerRequestStatusNote({
   status,
   openRequest,
-  onViewRequest,
 }: {
   status: PlayerRequestLookupStatus;
   openRequest: DepositRequest | null;
-  onViewRequest: (request: DepositRequest) => void;
 }) {
-  if (status === "idle") {
-    return (
-      <div className="mt-2 flex items-center gap-2 px-1 text-[10px] text-slate-500">
-        <Info className="size-3.5 shrink-0" />
-        Enter your player information to check for an open deposit request.
-      </div>
-    );
-  }
-
   if (status === "checking") {
     return (
-      <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-2 text-[10px] text-slate-400">
-        <RefreshCw className="size-3.5 shrink-0 animate-spin" />
-        Checking for an open deposit request...
+      <div className="rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-2 text-[10px] text-slate-400">
+        <div className="flex items-center gap-2">
+          <RefreshCw className="size-3.5 shrink-0 animate-spin" />
+          Checking for an open deposit request...
+        </div>
       </div>
     );
   }
 
   if (status === "open" && openRequest) {
     return (
-      <div className="mt-2 rounded-lg border border-amber-400/20 bg-amber-400/5 px-3 py-2.5">
+      <div className="rounded-lg border border-amber-400/20 bg-amber-400/5 px-3 py-2.5">
         <div className="flex items-start gap-2">
           <Clock3 className="mt-0.5 size-3.5 shrink-0 text-amber-200" />
           <div className="min-w-0">
@@ -425,25 +416,20 @@ function PlayerRequestStatusNote({
             </p>
           </div>
         </div>
-        <Button
-          type="button"
-          onClick={() => onViewRequest(openRequest)}
-          title="View open deposit request"
-          className="mt-2 h-9 w-full rounded-md bg-amber-300 text-xs font-medium text-slate-950 hover:bg-amber-200"
-        >
-          <ArrowRight className="size-3.5" />
-          View Request
-        </Button>
       </div>
     );
   }
 
-  return (
-    <div className="mt-2 flex items-center gap-2 px-1 text-[10px] text-emerald-300">
-      <CheckCircle2 className="size-3.5 shrink-0" />
-      No open deposit request found. You can continue.
-    </div>
-  );
+  if (status === "available") {
+    return (
+      <div className="flex items-center gap-2 px-1 text-[10px] text-emerald-300">
+        <CheckCircle2 className="size-3.5 shrink-0" />
+        No open deposit request found. You can continue.
+      </div>
+    );
+  }
+
+  return null;
 }
 
 function DepositRequestTrackingPage({
@@ -961,23 +947,8 @@ function FlouciStepOne({
               </div>
             </div>
 
-            <div className="mt-1.5 min-h-4 text-[10px] text-slate-500">
-              Using{" "}
-              <span className="font-medium text-slate-300">
-                {playerLookupType === "playerId"
-                  ? "Player ID"
-                  : playerLookupType === "username"
-                    ? "Username"
-                    : "Email"}
-              </span>
-            </div>
           </div>
 
-          <PlayerRequestStatusNote
-            status={playerRequestStatus}
-            openRequest={openRequest}
-            onViewRequest={onViewRequest}
-          />
 
           <div>
             <FieldLabel>Deposit amount</FieldLabel>
@@ -1024,6 +995,10 @@ function FlouciStepOne({
             </div>
           ) : null}
 
+          <PlayerRequestStatusNote
+            status={playerRequestStatus}
+            openRequest={openRequest}
+          />
           <Button
             type={playerRequestStatus === "open" ? "button" : "submit"}
             onClick={
@@ -1037,7 +1012,12 @@ function FlouciStepOne({
                 ? "View your open deposit request"
                 : `Continue to ${method.name} payment`
             }
-            className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+            className={cn(
+            "h-10 w-full rounded-md text-sm font-medium text-slate-950",
+            playerRequestStatus === "open"
+              ? "bg-amber-300 hover:bg-amber-200"
+              : "bg-emerald-400 hover:bg-emerald-300",
+          )}
           >
             <CircleDollarSign className="size-4" />
             <span>
@@ -2815,11 +2795,6 @@ function CardDepositStepOne({
           </div>
         </div>
 
-        <PlayerRequestStatusNote
-          status={playerRequestStatus}
-          openRequest={openRequest}
-          onViewRequest={onViewRequest}
-        />
 
         <div>
           <FieldLabel>Total card amount</FieldLabel>
@@ -2866,6 +2841,10 @@ function CardDepositStepOne({
           </div>
         ) : null}
 
+        <PlayerRequestStatusNote
+          status={playerRequestStatus}
+          openRequest={openRequest}
+        />
         <Button
           type={playerRequestStatus === "open" ? "button" : "submit"}
           onClick={
@@ -2879,7 +2858,12 @@ function CardDepositStepOne({
               ? "View your open deposit request"
               : "Continue to " + method.name + " card payment"
           }
-          className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+          className={cn(
+            "h-10 w-full rounded-md text-sm font-medium text-slate-950",
+            playerRequestStatus === "open"
+              ? "bg-amber-300 hover:bg-amber-200"
+              : "bg-emerald-400 hover:bg-emerald-300",
+          )}
         >
           <CircleDollarSign className="size-4" />
           <span>
@@ -3743,23 +3727,8 @@ function EDinarStepOne({
             </div>
           </div>
 
-          <div className="mt-1.5 min-h-4 text-[10px] text-slate-500">
-            Using{" "}
-            <span className="font-medium text-slate-300">
-              {playerLookupType === "playerId"
-                ? "Player ID"
-                : playerLookupType === "username"
-                  ? "Username"
-                  : "Email"}
-            </span>
-          </div>
         </div>
 
-        <PlayerRequestStatusNote
-          status={playerRequestStatus}
-          openRequest={openRequest}
-          onViewRequest={onViewRequest}
-        />
 
         <div>
           <FieldLabel>Deposit amount</FieldLabel>
@@ -3806,6 +3775,10 @@ function EDinarStepOne({
           </div>
         ) : null}
 
+        <PlayerRequestStatusNote
+          status={playerRequestStatus}
+          openRequest={openRequest}
+        />
         <Button
           type={playerRequestStatus === "open" ? "button" : "submit"}
           onClick={
@@ -3819,7 +3792,12 @@ function EDinarStepOne({
               ? "View your open deposit request"
               : "Continue to " + method.name + " payment"
           }
-          className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+          className={cn(
+            "h-10 w-full rounded-md text-sm font-medium text-slate-950",
+            playerRequestStatus === "open"
+              ? "bg-amber-300 hover:bg-amber-200"
+              : "bg-emerald-400 hover:bg-emerald-300",
+          )}
         >
           <CircleDollarSign className="size-4" />
           <span>
