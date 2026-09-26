@@ -352,119 +352,138 @@ function FlouciStepOne({
 }
 
 
-function AiImageInspectionOverlay({ status }: { status: FlouciAiStatus }) {
-  const scanSteps = [
-    "Scanning image",
-    "Reading transfer details",
-    "Checking transaction ID",
-    "Comparing payment data",
+function AiOcrInspectionOverlay({ status }: { status: FlouciAiStatus }) {
+  const ocrStages = [
+    "Locating text regions",
+    "Reading transaction fields",
+    "Extracting payment amount",
+    "Matching transaction ID",
   ];
-  const [phaseIndex, setPhaseIndex] = React.useState(0);
+  const [stageIndex, setStageIndex] = React.useState(0);
 
   React.useEffect(() => {
     if (status !== "analyzing") {
-      setPhaseIndex(0);
+      setStageIndex(0);
       return;
     }
 
     const timer = window.setInterval(() => {
-      setPhaseIndex((current) => (current + 1) % scanSteps.length);
-    }, 650);
+      setStageIndex((current) => (current + 1) % ocrStages.length);
+    }, 700);
 
     return () => window.clearInterval(timer);
   }, [status]);
 
-  if (status === "idle") {
-    return null;
-  }
+  if (status === "idle") return null;
 
   const analyzing = status === "analyzing";
   const matched = status === "matched";
+  const unrecognized = status === "unrecognized";
 
   return (
-    <>
-      <style>
-        {`
-          @keyframes flouci-ai-scan {
-            0% { top: -12%; opacity: 0; }
-            8% { opacity: 1; }
-            50% { opacity: 1; }
-            92% { opacity: 1; }
-            100% { top: 112%; opacity: 0; }
-          }
-          @keyframes flouci-ai-scan-glow {
-            0%, 100% { transform: scaleX(0.96); opacity: 0.35; }
-            50% { transform: scaleX(1); opacity: 0.8; }
-          }
-        `}
-      </style>
+    <div
+      className={cn(
+        "pointer-events-none absolute inset-0 overflow-hidden rounded-md",
+        analyzing && "bg-slate-950/10",
+        matched && "bg-emerald-400/5",
+        unrecognized && "bg-amber-400/5",
+      )}
+      aria-hidden="true"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(2,6,23,0.42)_100%)]" />
 
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-0 overflow-hidden rounded-md",
-          analyzing ? "bg-slate-950/5" : "bg-emerald-400/5",
-        )}
-        aria-hidden="true"
-      >
-        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(to_right,rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.12)_1px,transparent_1px)] [background-size:24px_24px]" />
-
-        <div className="absolute inset-2">
-          <span className="absolute left-0 top-0 h-6 w-6 border-l border-t border-emerald-300/80" />
-          <span className="absolute right-0 top-0 h-6 w-6 border-r border-t border-emerald-300/80" />
-          <span className="absolute bottom-0 left-0 h-6 w-6 border-b border-l border-emerald-300/80" />
-          <span className="absolute bottom-0 right-0 h-6 w-6 border-b border-r border-emerald-300/80" />
-        </div>
-
-        {analyzing ? (
-          <>
-            <div
-              className="absolute left-2 right-2 h-12 rounded-full bg-gradient-to-b from-emerald-300/0 via-emerald-300/35 to-emerald-300/0 blur-[2px]"
-              style={{ animation: "flouci-ai-scan 2.4s linear infinite" }}
-            />
-            <div
-              className="absolute left-3 right-3 h-px bg-emerald-300 shadow-[0_0_16px_4px_rgba(110,231,183,0.45)]"
-              style={{ animation: "flouci-ai-scan 2.4s linear infinite" }}
-            />
-            <div className="absolute left-3 top-3 rounded-md border border-emerald-300/40 bg-slate-950/75 px-2.5 py-1.5 backdrop-blur-sm">
-              <div className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.9)] animate-pulse" />
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-200">
-                  AI inspection
-                </span>
-              </div>
-            </div>
-
-            <div className="absolute inset-x-0 bottom-3 flex justify-center">
-              <div className="flex items-center gap-2 rounded-full border border-emerald-300/20 bg-slate-950/80 px-3 py-1.5 backdrop-blur-sm">
-                <RefreshCw className="size-3.5 animate-spin text-emerald-300" />
-                <span className="text-[10px] font-medium text-slate-200">
-                  {scanSteps[phaseIndex]}
-                </span>
-              </div>
-            </div>
-
-            <div
-              className="absolute left-1/2 top-1/2 size-24 -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-300/20"
-              style={{ animation: "flouci-ai-scan-glow 1.8s ease-in-out infinite" }}
-            />
-            <div className="absolute left-1/2 top-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-300/35 bg-emerald-300/5" />
-          </>
-        ) : null}
-
-        {matched ? (
-          <div className="absolute left-3 top-3 rounded-md border border-emerald-300/40 bg-emerald-500/15 px-2.5 py-1.5 backdrop-blur-sm">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="size-3.5 text-emerald-300" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-200">
-                Match detected
+      {analyzing ? (
+        <>
+          <div className="absolute inset-x-5 top-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 rounded-full border border-cyan-300/30 bg-slate-950/75 px-2.5 py-1.5 backdrop-blur-md">
+              <span className="relative flex size-2 items-center justify-center">
+                <span className="absolute size-2 rounded-full bg-cyan-300/40 animate-ping" />
+                <span className="relative size-1.5 rounded-full bg-cyan-300" />
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-200">
+                AI OCR
               </span>
             </div>
+            <div className="rounded-full border border-white/10 bg-slate-950/70 px-2.5 py-1.5 text-[10px] font-medium text-slate-200 backdrop-blur-md">
+              {ocrStages[stageIndex]}
+            </div>
           </div>
-        ) : null}
-      </div>
-    </>
+
+          <div className="absolute inset-x-5 top-1/2 -translate-y-1/2">
+            <div className="relative h-24">
+              <span className="absolute left-0 top-0 h-8 w-8 border-l-2 border-t-2 border-cyan-300/90" />
+              <span className="absolute right-0 top-0 h-8 w-8 border-r-2 border-t-2 border-cyan-300/90" />
+              <span className="absolute bottom-0 left-0 h-8 w-8 border-b-2 border-l-2 border-cyan-300/90" />
+              <span className="absolute bottom-0 right-0 h-8 w-8 border-b-2 border-r-2 border-cyan-300/90" />
+
+              <div className="absolute left-[12%] top-[18%] h-8 w-[28%] rounded-sm border border-cyan-300/70 bg-cyan-300/10 shadow-[0_0_14px_rgba(103,232,249,0.14)]" />
+              <div className="absolute left-[44%] top-[52%] h-8 w-[40%] rounded-sm border border-cyan-300/70 bg-cyan-300/10 shadow-[0_0_14px_rgba(103,232,249,0.14)]" />
+              <div className="absolute left-[17%] bottom-[5%] h-6 w-[24%] rounded-sm border border-cyan-300/50 bg-cyan-300/5" />
+            </div>
+          </div>
+
+          <div
+            className="absolute inset-x-4 h-px bg-cyan-200 shadow-[0_0_18px_4px_rgba(103,232,249,0.55)]"
+            style={{ animation: "flouci-ocr-scan 2.1s linear infinite" }}
+          />
+          <div
+            className="absolute inset-x-4 h-12 bg-gradient-to-b from-cyan-300/0 via-cyan-300/15 to-cyan-300/0 blur-[2px]"
+            style={{ animation: "flouci-ocr-scan 2.1s linear infinite" }}
+          />
+
+          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-cyan-300/25 bg-slate-950/80 px-3 py-1.5 backdrop-blur-md">
+            <span className="text-[10px] font-medium text-slate-200">
+              OCR is scanning visible text
+            </span>
+            <span className="flex gap-0.5">
+              <span className="size-1 rounded-full bg-cyan-300 animate-bounce [animation-delay:-0.2s]" />
+              <span className="size-1 rounded-full bg-cyan-300 animate-bounce [animation-delay:-0.1s]" />
+              <span className="size-1 rounded-full bg-cyan-300 animate-bounce" />
+            </span>
+          </div>
+        </>
+      ) : null}
+
+      {matched ? (
+        <>
+          <div className="absolute inset-x-4 top-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 rounded-full border border-emerald-300/30 bg-slate-950/75 px-2.5 py-1.5 backdrop-blur-md">
+              <CheckCircle2 className="size-3.5 text-emerald-300" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-200">
+                OCR matched
+              </span>
+            </div>
+            <div className="rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1.5 text-[10px] font-medium text-emerald-200 backdrop-blur-md">
+              Transfer recognized
+            </div>
+          </div>
+
+          <div className="absolute inset-x-5 top-1/2 -translate-y-1/2">
+            <div className="relative h-24">
+              <span className="absolute left-0 top-0 h-8 w-8 border-l-2 border-t-2 border-emerald-300/90" />
+              <span className="absolute right-0 top-0 h-8 w-8 border-r-2 border-t-2 border-emerald-300/90" />
+              <span className="absolute bottom-0 left-0 h-8 w-8 border-b-2 border-l-2 border-emerald-300/90" />
+              <span className="absolute bottom-0 right-0 h-8 w-8 border-b-2 border-r-2 border-emerald-300/90" />
+            </div>
+          </div>
+
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-emerald-300/25 bg-slate-950/80 px-3 py-1.5 text-[10px] font-medium text-emerald-200 backdrop-blur-md">
+            Transaction details matched
+          </div>
+        </>
+      ) : null}
+
+      {unrecognized ? (
+        <div className="absolute inset-x-4 bottom-4 flex justify-center">
+          <div className="rounded-full border border-amber-300/25 bg-slate-950/80 px-3 py-1.5 text-[10px] font-medium text-amber-200 backdrop-blur-md">
+            OCR could not confidently read the transfer details
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }
+
 
 function FlouciStepTwo({
   playerId,
@@ -701,46 +720,24 @@ function FlouciStepTwo({
                   <img
                     src={previewUrl}
                     alt="Uploaded payment"
-                    className="max-h-72 w-full object-contain"
+                    className={cn(
+                      "max-h-72 w-full object-contain transition-all duration-300",
+                      aiStatus === "analyzing" && "brightness-[0.88]",
+                    )}
                   />
-                  <AiImageInspectionOverlay status={aiStatus} />
+                  <AiOcrInspectionOverlay status={aiStatus} />
                 </div>
-              ) : null}
-
-              <div
-                className={cn(
-                  "rounded-lg border px-3 py-2.5 text-xs transition-colors",
-                  aiStatus === "matched"
-                    ? "border-emerald-400/20 bg-emerald-400/5"
-                    : aiStatus === "unrecognized"
-                      ? "border-amber-400/20 bg-amber-400/5"
-                      : "border-slate-700 bg-slate-800/50",
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  {aiStatus === "matched" ? (
-                    <CheckCircle2 className="size-4 text-emerald-300" />
-                  ) : aiStatus === "unrecognized" ? (
-                    <ShieldCheck className="size-4 text-amber-300" />
-                  ) : (
-                    <RefreshCw className="size-4 animate-spin text-emerald-300" />
-                  )}
-                  <p className="font-medium text-slate-200">AI transfer recognition</p>
-                  {aiStatus === "analyzing" ? (
-                    <span className="ml-auto text-[10px] text-emerald-300">Scanning...</span>
-                  ) : aiStatus === "matched" ? (
-                    <span className="ml-auto text-[10px] text-emerald-300">Match found</span>
-                  ) : null}
+              ) : (
+                <div className="flex min-h-52 flex-1 items-center justify-center rounded-md border border-slate-700 bg-slate-900/60">
+                  <div className="text-center">
+                    <div className="mx-auto flex size-11 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-slate-300">
+                      <FileImage className="size-5" />
+                    </div>
+                    <p className="mt-3 text-xs font-medium text-slate-200">Upload payment photo</p>
+                    <p className="mt-1 text-[10px] text-slate-500">AI OCR will inspect the visible transfer details</p>
+                  </div>
                 </div>
-
-                <p className="mt-1.5 leading-relaxed text-slate-400">
-                  {aiStatus === "matched"
-                    ? "AI recognized the transfer and detected a match with the submitted transaction details."
-                    : aiStatus === "unrecognized"
-                      ? "AI could not confidently recognize the transfer details. The payment can continue to manual supervisor verification."
-                      : "AI is visually scanning the payment photo, reading the transfer details, and comparing them with the submitted transaction ID."}
-                </p>
-              </div>
+              )
 
 
             </label>
