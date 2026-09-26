@@ -240,6 +240,370 @@ const walletRecipientOwners: Record<string, string> = {
   "29 614 832": "Amine Jlassi",
 };
 
+
+type DepositRequest = {
+  id: string;
+  playerId: string;
+  playerLookupType: PlayerLookupType;
+  methodId: string;
+  methodName: string;
+  amount: string;
+  currency: string;
+  createdAt: string;
+  status: "open";
+};
+
+type PlayerRequestLookupStatus = "idle" | "checking" | "available" | "open";
+
+const openDepositRequestsStorageKey = "paymine-open-deposit-requests-v1";
+
+function normalizeRequestPlayerValue(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function readOpenDepositRequests(): DepositRequest[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const raw = window.localStorage.getItem(openDepositRequestsStorageKey);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeOpenDepositRequests(requests: DepositRequest[]) {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(
+      openDepositRequestsStorageKey,
+      JSON.stringify(requests),
+    );
+  } catch {
+    // Local storage may be unavailable in restricted browser contexts.
+  }
+}
+
+function findOpenDepositRequest(
+  playerId: string,
+  playerLookupType: PlayerLookupType,
+) {
+  const normalized = normalizeRequestPlayerValue(playerId);
+  if (!normalized) return null;
+
+  return (
+    readOpenDepositRequests()
+      .filter(
+        (request) =>
+          request.status === "open" &&
+          request.playerLookupType === playerLookupType &&
+          normalizeRequestPlayerValue(request.playerId) === normalized,
+      )
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ?? null
+  );
+}
+
+function createOpenDepositRequest({
+  playerId,
+  playerLookupType,
+  method,
+  amount,
+}: {
+  playerId: string;
+  playerLookupType: PlayerLookupType;
+  method: PaymentMethod;
+  amount: string;
+}) {
+  const existing = findOpenDepositRequest(playerId, playerLookupType);
+  if (existing) return existing;
+
+  const request: DepositRequest = {
+    id: "DEP-" + Date.now().toString(36).toUpperCase(),
+    playerId: playerId.trim(),
+    playerLookupType,
+    methodId: method.id,
+    methodName: method.name,
+    amount,
+    currency: method.currency,
+    createdAt: new Date().toISOString(),
+    status: "open",
+  };
+
+  writeOpenDepositRequests([request, ...readOpenDepositRequests()]);
+  return request;
+}
+
+function usePlayerRequestLookup(
+  playerId: string,
+  playerLookupType: PlayerLookupType,
+) {
+  const [status, setStatus] = React.useState<PlayerRequestLookupStatus>("idle");
+  const [openRequest, setOpenRequest] = React.useState<DepositRequest | null>(null);
+
+  React.useEffect(() => {
+    const normalized = normalizeRequestPlayerValue(playerId);
+
+    if (!normalized) {
+      setStatus("idle");
+      setOpenRequest(null);
+      return;
+    }
+
+    setStatus("checking");
+    setOpenRequest(null);
+
+    const timer = window.setTimeout(() => {
+      const request = findOpenDepositRequest(playerId, playerLookupType);
+      setOpenRequest(request);
+      setStatus(request ? "open" : "available");
+    }, 450);
+
+    return () => window.clearTimeout(timer);
+  }, [playerId, playerLookupType]);
+
+  return { status, openRequest };
+}
+
+function PlayerRequestStatusNote({
+  status,
+  openRequest,
+  onViewRequest,
+}: {
+  status: PlayerRequestLookupStatus;
+  openRequest: DepositRequest | null;
+  onViewRequest: (request: DepositRequest) => void;
+}) {
+  if (status === "idle") {
+    return (
+      <div className="mt-2 flex items-center gap-2 px-1 text-[10px] text-slate-500">
+        <Info className="size-3.5 shrink-0" />
+        Enter your player information to check for an open deposit request.
+      </div>
+    );
+  }
+
+  if (status === "checking") {
+    return (
+      <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-2 text-[10px] text-slate-400">
+        <RefreshCw className="size-3.5 shrink-0 animate-spin" />
+        Checking for an open deposit request...
+      </div>
+    );
+  }
+
+  if (status === "open" && openRequest) {
+    return (
+      <div className="mt-2 rounded-lg border border-amber-400/20 bg-amber-400/5 px-3 py-2.5">
+        <div className="flex items-start gap-2">
+          <Clock3 className="mt-0.5 size-3.5 shrink-0 text-amber-200" />
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold text-amber-100">
+              You already have an open deposit request.
+            </p>
+            <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
+              A new deposit cannot be started while request {openRequest.id} is still open.
+            </p>
+          </div>
+        </div>
+        <Button
+          type="button"
+          onClick={() => onViewRequest(openRequest)}
+          title="View open deposit request"
+          className="mt-2 h-9 w-full rounded-md bg-amber-300 text-xs font-medium text-slate-950 hover:bg-amber-200"
+        >
+          <ArrowRight className="size-3.5" />
+          View Request
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2 flex items-center gap-2 px-1 text-[10px] text-emerald-300">
+      <CheckCircle2 className="size-3.5 shrink-0" />
+      No open deposit request found. You can continue.
+    </div>
+  );
+}
+
+function DepositRequestTrackingPage({
+  request,
+  onBack,
+}: {
+  request: DepositRequest;
+  onBack: () => void;
+}) {
+  const createdAt = new Date(request.createdAt);
+  const formattedCreatedAt = Number.isNaN(createdAt.getTime())
+    ? request.createdAt
+    : createdAt.toLocaleString("en-US", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+
+  const isEDinar = request.methodId === "e-dinar";
+
+  const stages = [
+    {
+      title: "Request submitted",
+      description: "Your deposit request is registered and awaiting payment verification.",
+      state: "done" as const,
+      icon: CheckCircle2,
+    },
+    {
+      title: "Payment verification",
+      description: isEDinar
+        ? "Your E-Dinar payment is under review. Verification can take up to 8 hours."
+        : "Your payment details and proof are being reviewed.",
+      state: "active" as const,
+      icon: ShieldCheck,
+    },
+    {
+      title: "Deposit credit",
+      description: "The deposit will be credited to your player balance after verification.",
+      state: "pending" as const,
+      icon: CircleDollarSign,
+    },
+  ];
+
+  return (
+    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="text-slate-300 hover:bg-slate-800 hover:text-white"
+          >
+            <ArrowLeft />
+            Back
+          </Button>
+
+          <span className="rounded-full border border-white/10 bg-slate-900/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+            Deposit request
+          </span>
+        </div>
+
+        <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+          <div className="mb-4 flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/60 p-3">
+            <PaymentMethodMark
+              method={{
+                id: request.methodId,
+                name: request.methodName,
+                min: 1,
+                max: 10000,
+                currency: request.currency,
+                logoUrl: paymentMethods.find((item) => item.id === request.methodId)?.logoUrl,
+                logoClass: paymentMethods.find((item) => item.id === request.methodId)?.logoClass ?? "bg-white",
+                note: "",
+              }}
+            />
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Payment method</p>
+              <p className="truncate text-sm font-medium text-white">{request.methodName}</p>
+            </div>
+          </div>
+
+          <div className="mb-5 grid grid-cols-2 gap-2">
+            <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+              <p className="text-[9px] uppercase tracking-[0.08em] text-slate-500">Request ID</p>
+              <p className="mt-1 truncate font-mono text-xs text-slate-200">{request.id}</p>
+            </div>
+            <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+              <p className="text-[9px] uppercase tracking-[0.08em] text-slate-500">Amount</p>
+              <p className="mt-1 text-xs font-semibold tabular-nums text-white">
+                {Number(request.amount).toFixed(2)} {request.currency}
+              </p>
+            </div>
+            <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+              <p className="text-[9px] uppercase tracking-[0.08em] text-slate-500">Player</p>
+              <p className="mt-1 truncate text-xs text-slate-200">{request.playerId}</p>
+            </div>
+            <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+              <p className="text-[9px] uppercase tracking-[0.08em] text-slate-500">Created</p>
+              <p className="mt-1 truncate text-xs text-slate-300">{formattedCreatedAt}</p>
+            </div>
+          </div>
+
+          {isEDinar ? (
+            <div className="mb-5 rounded-lg border border-amber-300/20 bg-amber-300/5 px-3 py-2.5">
+              <div className="flex items-center gap-2 text-amber-100">
+                <Clock3 className="size-3.5" />
+                <span className="text-xs font-semibold">Verification window: up to 8 hours</span>
+              </div>
+              <p className="mt-1 text-[10px] leading-relaxed text-slate-500">
+                Your request remains open while the E-Dinar payment is being verified.
+              </p>
+            </div>
+          ) : null}
+
+          <div className="relative pl-1">
+            {stages.map((stage, index) => {
+              const Icon = stage.icon;
+              const isLast = index === stages.length - 1;
+
+              return (
+                <div key={stage.title} className="relative pb-7 last:pb-0">
+                  <div className="relative flex gap-4">
+                    {!isLast ? (
+                      <div className="absolute left-[15px] top-8 h-[calc(100%-1rem)] w-px bg-slate-700" />
+                    ) : null}
+
+                    <div
+                      className={cn(
+                        "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border",
+                        stage.state === "done"
+                          ? "border-emerald-400 bg-emerald-400 text-slate-950"
+                          : stage.state === "active"
+                            ? "border-amber-400 bg-amber-400 text-slate-950"
+                            : "border-slate-700 bg-slate-800 text-slate-500",
+                      )}
+                    >
+                      {stage.state === "done" ? <Check className="size-4" /> : <Icon className="size-4" />}
+                    </div>
+
+                    <div className="min-w-0 pt-0.5">
+                      <p className={cn("text-sm font-medium", stage.state === "pending" ? "text-slate-500" : "text-white")}>
+                        {stage.title}
+                        {stage.state === "active" ? (
+                          <span className="ml-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-200">
+                            In progress
+                          </span>
+                        ) : null}
+                        {stage.state === "done" ? (
+                          <span className="ml-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
+                            Completed
+                          </span>
+                        ) : null}
+                      </p>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">{stage.description}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-2.5 text-xs text-slate-400">
+            <p className="flex items-center gap-2 text-slate-300">
+              <Clock3 className="size-3.5" />
+              Your request is still open and cannot be replaced by another deposit request.
+            </p>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
 const manualTransferMethodIds = new Set(["flouci", "d17", "kashy"]);
 
 function isManualTransferMethod(method: PaymentMethod) {
@@ -465,6 +829,9 @@ function FlouciTransferHelpAccordion({ method }: { method: PaymentMethod }) {
 function FlouciStepOne({
   method,
   playerId,
+  playerRequestStatus,
+  openRequest,
+  onViewRequest,
   setPlayerId,
   playerLookupType,
   setPlayerLookupType,
@@ -475,6 +842,9 @@ function FlouciStepOne({
 }: {
   method: PaymentMethod;
   playerId: string;
+  playerRequestStatus: PlayerRequestLookupStatus;
+  openRequest: DepositRequest | null;
+  onViewRequest: (request: DepositRequest) => void;
   setPlayerId: React.Dispatch<React.SetStateAction<string>>;
   playerLookupType: PlayerLookupType;
   setPlayerLookupType: React.Dispatch<React.SetStateAction<PlayerLookupType>>;
@@ -586,6 +956,12 @@ function FlouciStepOne({
             </div>
           </div>
 
+          <PlayerRequestStatusNote
+            status={playerRequestStatus}
+            openRequest={openRequest}
+            onViewRequest={onViewRequest}
+          />
+
           <div>
             <FieldLabel>Deposit amount</FieldLabel>
             <Input
@@ -632,16 +1008,28 @@ function FlouciStepOne({
           ) : null}
 
           <Button
-            type="submit"
-            title={`Continue to ${method.name} payment`}
+            type={playerRequestStatus === "open" ? "button" : "submit"}
+            onClick={
+              playerRequestStatus === "open" && openRequest
+                ? () => onViewRequest(openRequest)
+                : undefined
+            }
+            disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
+            title={
+              playerRequestStatus === "open"
+                ? "View your open deposit request"
+                : `Continue to ${method.name} payment`
+            }
             className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
           >
             <CircleDollarSign className="size-4" />
             <span>
-              Do Deposit
+              {playerRequestStatus === "open" ? "View Request" : "Do Deposit"}
+              {playerRequestStatus !== "open" ? (
               <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
                 Net Amount: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} TND
               </span>
+              ) : null}
             </span>
           </Button>
         </form>
@@ -1811,6 +2199,10 @@ function FlouciDemoControls({
 
 function FlouciDepositFlow({
   method,
+  playerRequestStatus,
+  openRequest,
+  onViewRequest,
+  onRequestCreated,
   openMethods,
   onToggleMethods,
   onSelectMethod,
@@ -1822,6 +2214,10 @@ function FlouciDepositFlow({
   setAmount,
 }: {
   method: PaymentMethod;
+  playerRequestStatus: PlayerRequestLookupStatus;
+  openRequest: DepositRequest | null;
+  onViewRequest: (request: DepositRequest) => void;
+  onRequestCreated: () => DepositRequest;
   openMethods: boolean;
   onToggleMethods: () => void;
   onSelectMethod: (method: PaymentMethod) => void;
@@ -1898,6 +2294,15 @@ function FlouciDepositFlow({
   }, [step]);
 
   const continueToPayment = () => {
+    if (playerRequestStatus !== "available") {
+      setError(
+        playerRequestStatus === "open"
+          ? "You already have an open deposit request. View it before starting another deposit."
+          : "Checking your player request. Please wait a moment and try again.",
+      );
+      return;
+    }
+
     if (!playerId.trim()) {
       setError(
         playerLookupType === "playerId"
@@ -1916,6 +2321,7 @@ function FlouciDepositFlow({
     }
 
     setError("");
+    onRequestCreated();
     setDemoStatus("reviewing");
     setAiStatus("idle");
     setDetectedTransactionId("");
@@ -2067,6 +2473,9 @@ function FlouciDepositFlow({
             <FlouciStepOne
               method={method}
               playerId={playerId}
+              playerRequestStatus={playerRequestStatus}
+              openRequest={openRequest}
+              onViewRequest={onViewRequest}
               setPlayerId={setPlayerId}
               playerLookupType={playerLookupType}
               setPlayerLookupType={setPlayerLookupType}
@@ -2298,6 +2707,9 @@ function CardDepositHelpAccordion({ method }: { method: PaymentMethod }) {
 function CardDepositStepOne({
   method,
   playerId,
+  playerRequestStatus,
+  openRequest,
+  onViewRequest,
   setPlayerId,
   playerLookupType,
   setPlayerLookupType,
@@ -2308,6 +2720,9 @@ function CardDepositStepOne({
 }: {
   method: PaymentMethod;
   playerId: string;
+  playerRequestStatus: PlayerRequestLookupStatus;
+  openRequest: DepositRequest | null;
+  onViewRequest: (request: DepositRequest) => void;
   setPlayerId: React.Dispatch<React.SetStateAction<string>>;
   playerLookupType: PlayerLookupType;
   setPlayerLookupType: React.Dispatch<React.SetStateAction<PlayerLookupType>>;
@@ -2383,6 +2798,12 @@ function CardDepositStepOne({
           </div>
         </div>
 
+        <PlayerRequestStatusNote
+          status={playerRequestStatus}
+          openRequest={openRequest}
+          onViewRequest={onViewRequest}
+        />
+
         <div>
           <FieldLabel>Total card amount</FieldLabel>
           <Input
@@ -2429,16 +2850,28 @@ function CardDepositStepOne({
         ) : null}
 
         <Button
-          type="submit"
-          title={"Continue to " + method.name + " card payment"}
+          type={playerRequestStatus === "open" ? "button" : "submit"}
+          onClick={
+            playerRequestStatus === "open" && openRequest
+              ? () => onViewRequest(openRequest)
+              : undefined
+          }
+          disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
+          title={
+            playerRequestStatus === "open"
+              ? "View your open deposit request"
+              : "Continue to " + method.name + " card payment"
+          }
           className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
         >
           <CircleDollarSign className="size-4" />
           <span>
-            Do Deposit
+            {playerRequestStatus === "open" ? "View Request" : "Do Deposit"}
+            {playerRequestStatus !== "open" ? (
             <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
               Total Cards Value: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} {method.currency}
             </span>
+            ) : null}
           </span>
         </Button>
       </form>
@@ -2643,6 +3076,10 @@ function CardDepositTimeline({
 
 function CardDepositFlow({
   method,
+  playerRequestStatus,
+  openRequest,
+  onViewRequest,
+  onRequestCreated,
   openMethods,
   onToggleMethods,
   onSelectMethod,
@@ -2654,6 +3091,10 @@ function CardDepositFlow({
   setAmount,
 }: {
   method: PaymentMethod;
+  playerRequestStatus: PlayerRequestLookupStatus;
+  openRequest: DepositRequest | null;
+  onViewRequest: (request: DepositRequest) => void;
+  onRequestCreated: () => DepositRequest;
   openMethods: boolean;
   onToggleMethods: () => void;
   onSelectMethod: (method: PaymentMethod) => void;
@@ -2691,6 +3132,7 @@ function CardDepositFlow({
   React.useEffect(() => {
     setStep(1);
     setError("");
+    onRequestCreated();
     setCardNumbers([""]);
     setProofFile(null);
     setOcrStatus("idle");
@@ -2785,6 +3227,15 @@ function CardDepositFlow({
   };
 
   const continueToCards = () => {
+    if (playerRequestStatus !== "available") {
+      setError(
+        playerRequestStatus === "open"
+          ? "You already have an open deposit request. View it before starting another deposit."
+          : "Checking your player request. Please wait a moment and try again.",
+      );
+      return;
+    }
+
     if (!playerId.trim()) {
       setError(
         playerLookupType === "playerId"
@@ -2925,6 +3376,9 @@ function CardDepositFlow({
             <CardDepositStepOne
               method={method}
               playerId={playerId}
+              playerRequestStatus={playerRequestStatus}
+              openRequest={openRequest}
+              onViewRequest={onViewRequest}
               setPlayerId={setPlayerId}
               playerLookupType={playerLookupType}
               setPlayerLookupType={setPlayerLookupType}
@@ -3152,6 +3606,9 @@ function CardDepositFlow({
 function EDinarStepOne({
   method,
   playerId,
+  playerRequestStatus,
+  openRequest,
+  onViewRequest,
   setPlayerId,
   playerLookupType,
   setPlayerLookupType,
@@ -3162,6 +3619,9 @@ function EDinarStepOne({
 }: {
   method: PaymentMethod;
   playerId: string;
+  playerRequestStatus: PlayerRequestLookupStatus;
+  openRequest: DepositRequest | null;
+  onViewRequest: (request: DepositRequest) => void;
   setPlayerId: React.Dispatch<React.SetStateAction<string>>;
   playerLookupType: PlayerLookupType;
   setPlayerLookupType: React.Dispatch<React.SetStateAction<PlayerLookupType>>;
@@ -3278,6 +3738,12 @@ function EDinarStepOne({
           </div>
         </div>
 
+        <PlayerRequestStatusNote
+          status={playerRequestStatus}
+          openRequest={openRequest}
+          onViewRequest={onViewRequest}
+        />
+
         <div>
           <FieldLabel>Deposit amount</FieldLabel>
           <Input
@@ -3324,16 +3790,28 @@ function EDinarStepOne({
         ) : null}
 
         <Button
-          type="submit"
-          title={"Continue to " + method.name + " payment"}
+          type={playerRequestStatus === "open" ? "button" : "submit"}
+          onClick={
+            playerRequestStatus === "open" && openRequest
+              ? () => onViewRequest(openRequest)
+              : undefined
+          }
+          disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
+          title={
+            playerRequestStatus === "open"
+              ? "View your open deposit request"
+              : "Continue to " + method.name + " payment"
+          }
           className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
         >
           <CircleDollarSign className="size-4" />
           <span>
-            Do Deposit
+            {playerRequestStatus === "open" ? "View Request" : "Do Deposit"}
+            {playerRequestStatus !== "open" ? (
             <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
               Net Amount: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} TND
             </span>
+            ) : null}
           </span>
         </Button>
       </form>
@@ -3744,6 +4222,10 @@ function EDinarWaitingTimeline({
 
 function EDinarDepositFlow({
   method,
+  playerRequestStatus,
+  openRequest,
+  onViewRequest,
+  onRequestCreated,
   openMethods,
   onToggleMethods,
   onSelectMethod,
@@ -3755,6 +4237,10 @@ function EDinarDepositFlow({
   setAmount,
 }: {
   method: PaymentMethod;
+  playerRequestStatus: PlayerRequestLookupStatus;
+  openRequest: DepositRequest | null;
+  onViewRequest: (request: DepositRequest) => void;
+  onRequestCreated: () => DepositRequest;
   openMethods: boolean;
   onToggleMethods: () => void;
   onSelectMethod: (method: PaymentMethod) => void;
@@ -3816,6 +4302,15 @@ function EDinarDepositFlow({
   }, [step]);
 
   const continueToPayment = () => {
+    if (playerRequestStatus !== "available") {
+      setError(
+        playerRequestStatus === "open"
+          ? "You already have an open deposit request. View it before starting another deposit."
+          : "Checking your player request. Please wait a moment and try again.",
+      );
+      return;
+    }
+
     if (!playerId.trim()) {
       setError(
         playerLookupType === "playerId"
@@ -3842,6 +4337,7 @@ function EDinarDepositFlow({
     }
 
     setError("");
+    onRequestCreated();
     setAiStatus("idle");
     setDetectedTransactionId("");
     setSecondsLeft(15 * 60);
@@ -3947,6 +4443,9 @@ function EDinarDepositFlow({
             <EDinarStepOne
               method={method}
               playerId={playerId}
+              playerRequestStatus={playerRequestStatus}
+              openRequest={openRequest}
+              onViewRequest={onViewRequest}
               setPlayerId={setPlayerId}
               playerLookupType={playerLookupType}
               setPlayerLookupType={setPlayerLookupType}
@@ -4093,9 +4592,64 @@ export function CustomerPortal() {
   const [openMethods, setOpenMethods] = React.useState(false);
   const [depositStarted, setDepositStarted] = React.useState(false);
   const [error, setError] = React.useState("");
-
+  const [showRequestTracking, setShowRequestTracking] = React.useState(false);
+  const [trackingRequest, setTrackingRequest] = React.useState<DepositRequest | null>(null);
+  const { status: playerRequestStatus, openRequest } = usePlayerRequestLookup(
+    playerId,
+    playerLookupType,
+  );
   const minLabel = method.min.toLocaleString("en-US");
   const maxLabel = method.max.toLocaleString("en-US");
+
+  const openTrackingPage = (request: DepositRequest) => {
+    setTrackingRequest(request);
+    setShowRequestTracking(true);
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("request", request.id);
+    window.history.pushState({}, "", url);
+  };
+
+  const closeTrackingPage = () => {
+    setShowRequestTracking(false);
+    setTrackingRequest(null);
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete("request");
+    window.history.pushState({}, "", url);
+  };
+
+  const createCurrentPlayerRequest = () => {
+    const request = createOpenDepositRequest({
+      playerId,
+      playerLookupType,
+      method,
+      amount,
+    });
+
+    return request;
+  };
+
+  React.useEffect(() => {
+    const syncRequestFromUrl = () => {
+      const requestId = new URLSearchParams(window.location.search).get("request");
+
+      if (!requestId) {
+        setShowRequestTracking(false);
+        setTrackingRequest(null);
+        return;
+      }
+
+      const request = readOpenDepositRequests().find((item) => item.id === requestId) ?? null;
+      setTrackingRequest(request);
+      setShowRequestTracking(Boolean(request));
+    };
+
+    syncRequestFromUrl();
+    window.addEventListener("popstate", syncRequestFromUrl);
+
+    return () => window.removeEventListener("popstate", syncRequestFromUrl);
+  }, []);
 
   const selectMethod = (nextMethod: PaymentMethod) => {
     setMethod(nextMethod);
@@ -4131,10 +4685,23 @@ export function CustomerPortal() {
     setDepositStarted(true);
   };
 
+  if (showRequestTracking && trackingRequest) {
+    return (
+      <DepositRequestTrackingPage
+        request={trackingRequest}
+        onBack={closeTrackingPage}
+      />
+    );
+  }
+
   if (isEDinarMethod(method)) {
     return (
       <EDinarDepositFlow
         method={method}
+        playerRequestStatus={playerRequestStatus}
+        openRequest={openRequest}
+        onViewRequest={openTrackingPage}
+        onRequestCreated={createCurrentPlayerRequest}
         openMethods={openMethods}
         onToggleMethods={() => setOpenMethods((current) => !current)}
         onSelectMethod={selectMethod}
@@ -4152,6 +4719,10 @@ export function CustomerPortal() {
     return (
       <CardDepositFlow
         method={method}
+        playerRequestStatus={playerRequestStatus}
+        openRequest={openRequest}
+        onViewRequest={openTrackingPage}
+        onRequestCreated={createCurrentPlayerRequest}
         openMethods={openMethods}
         onToggleMethods={() => setOpenMethods((current) => !current)}
         onSelectMethod={selectMethod}
@@ -4169,6 +4740,10 @@ export function CustomerPortal() {
     return (
       <FlouciDepositFlow
         method={method}
+        playerRequestStatus={playerRequestStatus}
+        openRequest={openRequest}
+        onViewRequest={openTrackingPage}
+        onRequestCreated={createCurrentPlayerRequest}
         openMethods={openMethods}
         onToggleMethods={() => setOpenMethods((current) => !current)}
         onSelectMethod={selectMethod}
