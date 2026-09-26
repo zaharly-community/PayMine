@@ -1415,6 +1415,8 @@ function FlouciDepositFlow({
   onSelectMethod,
   playerId,
   setPlayerId,
+  playerLookupType,
+  setPlayerLookupType,
   amount,
   setAmount,
 }: {
@@ -1424,6 +1426,8 @@ function FlouciDepositFlow({
   onSelectMethod: (method: PaymentMethod) => void;
   playerId: string;
   setPlayerId: React.Dispatch<React.SetStateAction<string>>;
+  playerLookupType: PlayerLookupType;
+  setPlayerLookupType: React.Dispatch<React.SetStateAction<PlayerLookupType>>;
   amount: string;
   setAmount: React.Dispatch<React.SetStateAction<string>>;
 }) {
@@ -1774,6 +1778,8 @@ export function CustomerPortal() {
         onSelectMethod={selectMethod}
         playerId={playerId}
         setPlayerId={setPlayerId}
+        playerLookupType={playerLookupType}
+        setPlayerLookupType={setPlayerLookupType}
         amount={amount}
         setAmount={setAmount}
       />
