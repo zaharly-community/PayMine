@@ -2454,6 +2454,17 @@ function CardDepositFlow({
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
   const expired = secondsLeft <= 0;
 
+  const previewUrl = React.useMemo(
+    () => (proofFile ? URL.createObjectURL(proofFile) : ""),
+    [proofFile],
+  );
+
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   React.useEffect(() => {
     setStep(1);
     setError("");
@@ -2998,10 +3009,3 @@ function CardDepositFlow({
                 Exit
               </Button>
             </section>
-          ) : null}
-        </div>
-
-        <div className="mt-4 flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
-          <ShieldCheck className="size-3.5" />
-          Secure checkout
-          <ExternalLink className="size-3" />
