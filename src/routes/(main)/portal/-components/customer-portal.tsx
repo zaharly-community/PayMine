@@ -589,10 +589,6 @@ function FlouciStepTwo({
   onRequestChange: () => void;
   onConfirm: () => void;
 }) {
-  const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
-  const seconds = (secondsLeft % 60).toString().padStart(2, "0");
-  const expired = secondsLeft <= 0;
-
   const previewUrl = React.useMemo(
     () => (proofFile ? URL.createObjectURL(proofFile) : ""),
     [proofFile],
@@ -710,33 +706,6 @@ function FlouciStepTwo({
               >
                 <Copy className="size-4" />
               </Button>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Payment timer</p>
-                <p className="mt-0.5 text-xs text-slate-400">
-                  {expired ? "Payment session expired" : "Complete the transfer before time runs out"}
-                </p>
-              </div>
-              <div
-                className={cn(
-                  "rounded-md border px-3 py-2 text-xl font-semibold tabular-nums tracking-[0.08em]",
-                  expired
-                    ? "border-red-400/30 bg-red-500/10 text-red-300"
-                    : "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
-                )}
-              >
-                {minutes}:{seconds}
-              </div>
-            </div>
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-700">
-              <div
-                className={cn("h-full rounded-full transition-all", expired ? "bg-red-400" : "bg-emerald-400")}
-                style={{ width: Math.max(0, Math.min(100, (secondsLeft / (15 * 60)) * 100)) + "%" }}
-              />
             </div>
           </div>
 
@@ -1456,6 +1425,9 @@ function FlouciDepositFlow({
     "The transfer number and amount do not match the submitted payment. Please correct both fields and submit again.",
   );
   const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+  const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
+  const seconds = (secondsLeft % 60).toString().padStart(2, "0");
+  const expired = secondsLeft <= 0;
 
   React.useEffect(() => {
     if (!proofFile) {
@@ -1570,6 +1542,55 @@ function FlouciDepositFlow({
             onSelect={onSelectMethod}
           />
         </div>
+
+        {step === 2 ? (
+          <div className="mb-4 rounded-xl border border-slate-700/80 bg-slate-900/80 px-3 py-2.5 shadow-lg sm:px-4">
+            <div className="flex items-center gap-3">
+              <div
+                className={cn(
+                  "flex size-9 shrink-0 items-center justify-center rounded-lg border",
+                  expired
+                    ? "border-red-400/30 bg-red-500/10 text-red-300"
+                    : "border-emerald-400/25 bg-emerald-400/10 text-emerald-300",
+                )}
+              >
+                <Clock3 className="size-4" />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-medium text-slate-200">Complete payment</p>
+                  <span className={cn(
+                    "hidden text-[10px] sm:inline",
+                    expired ? "text-red-300" : "text-slate-500",
+                  )}>
+                    {expired ? "Session expired" : "Time remaining"}
+                  </span>
+                </div>
+                <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-800">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all duration-700",
+                      expired ? "bg-red-400" : "bg-emerald-400",
+                    )}
+                    style={{ width: Math.max(0, Math.min(100, (secondsLeft / (15 * 60)) * 100)) + "%" }}
+                  />
+                </div>
+              </div>
+
+              <div
+                className={cn(
+                  "shrink-0 rounded-lg border px-3 py-1.5 text-base font-semibold tabular-nums tracking-[0.08em]",
+                  expired
+                    ? "border-red-400/30 bg-red-500/10 text-red-300"
+                    : "border-emerald-400/25 bg-emerald-400/10 text-emerald-300 shadow-[0_0_18px_rgba(52,211,153,0.08)]",
+                )}
+              >
+                {minutes}:{seconds}
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <div className="flex-1">
           {step === 1 ? (
