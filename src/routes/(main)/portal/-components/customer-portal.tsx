@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Star,
   Upload,
+  ScanText,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -353,6 +354,7 @@ function FlouciStepOne({
 
 
 function AiOcrInspectionOverlay({ status }: { status: FlouciAiStatus }) {
+  // The page uses this keyframe for the OCR "use detected ID" CTA shimmer.
   const ocrStages = [
     "Locating text regions",
     "Reading transaction fields",
@@ -499,6 +501,8 @@ function FlouciStepTwo({
   proofFile,
   setProofFile,
   aiStatus,
+  detectedTransactionId,
+  onUseDetectedTransactionId,
   supervisorVerified,
   verificationScore,
   error,
@@ -515,6 +519,8 @@ function FlouciStepTwo({
   proofFile: File | null;
   setProofFile: React.Dispatch<React.SetStateAction<File | null>>;
   aiStatus: FlouciAiStatus;
+  detectedTransactionId: string;
+  onUseDetectedTransactionId: () => void;
   supervisorVerified: boolean;
   verificationScore: number;
   error: string;
@@ -674,15 +680,50 @@ function FlouciStepTwo({
 
           <div>
             <FieldLabel>Transaction ID</FieldLabel>
-            <Input
-              value={transactionId}
-              onChange={(event) => setTransactionId(event.target.value)}
-              placeholder="Enter your Flouci transaction ID"
-              title="Transaction ID"
-              autoComplete="off"
-              disabled={expired}
-              className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
-            />
+            <div className="flex items-stretch gap-2">
+              <div className="min-w-0 flex-1">
+                <Input
+                  value={transactionId}
+                  onChange={(event) => setTransactionId(event.target.value)}
+                  placeholder="Enter your Flouci transaction ID"
+                  title="Transaction ID"
+                  autoComplete="off"
+                  disabled={expired}
+                  className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+                />
+              </div>
+
+              {proofFile && aiStatus === "matched" && !transactionId.trim() && detectedTransactionId ? (
+                <Button
+                  type="button"
+                  onClick={onUseDetectedTransactionId}
+                  disabled={expired}
+                  title="Use the transaction ID detected by AI OCR"
+                  className="group relative h-12 shrink-0 overflow-hidden rounded-lg border border-cyan-300/40 bg-cyan-300/10 px-3 text-xs font-semibold text-cyan-100 shadow-[0_0_22px_rgba(34,211,238,0.16)] transition-all hover:border-cyan-200/60 hover:bg-cyan-300/15 hover:shadow-[0_0_28px_rgba(34,211,238,0.28)]"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-200/15 to-transparent animate-[flouci-ocr-cta-shimmer_1.8s_linear_infinite]" />
+                  <span className="relative flex items-center gap-2">
+                    <span className="flex size-7 items-center justify-center rounded-md border border-cyan-200/30 bg-cyan-300/10">
+                      <ScanText className="size-4 animate-pulse text-cyan-200" />
+                    </span>
+                    <span className="hidden sm:block">Use detected ID</span>
+                  </span>
+                </Button>
+              ) : null}
+            </div>
+
+            {proofFile && aiStatus === "matched" && !transactionId.trim() && detectedTransactionId ? (
+              <div className="mt-2 flex items-start gap-2 rounded-lg border border-cyan-300/25 bg-cyan-300/5 px-3 py-2.5 shadow-[0_0_18px_rgba(34,211,238,0.08)]">
+                <span className="relative mt-0.5 flex size-4 shrink-0 items-center justify-center">
+                  <span className="absolute size-3.5 rounded-full bg-cyan-300/25 animate-ping" />
+                  <ScanText className="relative size-3.5 text-cyan-200" />
+                </span>
+                <p className="text-[11px] leading-relaxed text-cyan-100/90">
+                  <span className="font-semibold text-cyan-100">AI OCR detected the Transaction ID from your payment photo.</span>{" "}
+                  Click <span className="font-semibold text-white">Use detected ID</span> to fill it automatically.
+                </p>
+              </div>
+            ) : null}
           </div>
 
           <div>
@@ -1331,6 +1372,7 @@ function FlouciDepositFlow({
   const [transactionId, setTransactionId] = React.useState("");
   const [proofFile, setProofFile] = React.useState<File | null>(null);
   const [aiStatus, setAiStatus] = React.useState<FlouciAiStatus>("idle");
+  const [detectedTransactionId, setDetectedTransactionId] = React.useState("");
   const [supervisorVerified, setSupervisorVerified] = React.useState(Boolean(flouciSupervisor?.verified));
   const verificationScore = getSupervisorVerificationScore(flouciSupervisor?.email ?? "");
   const [recipientNumber, setRecipientNumber] = React.useState(flouciRecipientNumbers[0]);
@@ -1345,12 +1387,16 @@ function FlouciDepositFlow({
   React.useEffect(() => {
     if (!proofFile) {
       setAiStatus("idle");
+      setDetectedTransactionId("");
       return;
     }
 
     setAiStatus("analyzing");
+    setDetectedTransactionId("");
+
     const timer = window.setTimeout(() => {
       setAiStatus("matched");
+      setDetectedTransactionId("FL-4289176035");
     }, 3200);
 
     return () => window.clearTimeout(timer);
@@ -1381,6 +1427,7 @@ function FlouciDepositFlow({
     setError("");
     setDemoStatus("reviewing");
     setAiStatus("idle");
+    setDetectedTransactionId("");
     setCorrectedTransferNumber(recipientNumber);
     setCorrectedAmount(amount);
     setSecondsLeft(15 * 60);
@@ -1469,6 +1516,8 @@ function FlouciDepositFlow({
               proofFile={proofFile}
               setProofFile={setProofFile}
               aiStatus={aiStatus}
+              detectedTransactionId={detectedTransactionId}
+              onUseDetectedTransactionId={() => setTransactionId(detectedTransactionId)}
               supervisorVerified={supervisorVerified}
               verificationScore={verificationScore}
               error={error}
