@@ -351,6 +351,121 @@ function FlouciStepOne({
   );
 }
 
+
+function AiImageInspectionOverlay({ status }: { status: FlouciAiStatus }) {
+  const scanSteps = [
+    "Scanning image",
+    "Reading transfer details",
+    "Checking transaction ID",
+    "Comparing payment data",
+  ];
+  const [phaseIndex, setPhaseIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    if (status !== "analyzing") {
+      setPhaseIndex(0);
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setPhaseIndex((current) => (current + 1) % scanSteps.length);
+    }, 650);
+
+    return () => window.clearInterval(timer);
+  }, [status]);
+
+  if (status === "idle") {
+    return null;
+  }
+
+  const analyzing = status === "analyzing";
+  const matched = status === "matched";
+
+  return (
+    <>
+      <style>
+        {\`
+          @keyframes flouci-ai-scan {
+            0% { top: -12%; opacity: 0; }
+            8% { opacity: 1; }
+            50% { opacity: 1; }
+            92% { opacity: 1; }
+            100% { top: 112%; opacity: 0; }
+          }
+          @keyframes flouci-ai-scan-glow {
+            0%, 100% { transform: scaleX(0.96); opacity: 0.35; }
+            50% { transform: scaleX(1); opacity: 0.8; }
+          }
+        \`}
+      </style>
+
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-0 overflow-hidden rounded-md",
+          analyzing ? "bg-slate-950/5" : "bg-emerald-400/5",
+        )}
+        aria-hidden="true"
+      >
+        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(to_right,rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.12)_1px,transparent_1px)] [background-size:24px_24px]" />
+
+        <div className="absolute inset-2">
+          <span className="absolute left-0 top-0 h-6 w-6 border-l border-t border-emerald-300/80" />
+          <span className="absolute right-0 top-0 h-6 w-6 border-r border-t border-emerald-300/80" />
+          <span className="absolute bottom-0 left-0 h-6 w-6 border-b border-l border-emerald-300/80" />
+          <span className="absolute bottom-0 right-0 h-6 w-6 border-b border-r border-emerald-300/80" />
+        </div>
+
+        {analyzing ? (
+          <>
+            <div
+              className="absolute left-2 right-2 h-12 rounded-full bg-gradient-to-b from-emerald-300/0 via-emerald-300/35 to-emerald-300/0 blur-[2px]"
+              style={{ animation: "flouci-ai-scan 2.4s linear infinite" }}
+            />
+            <div
+              className="absolute left-3 right-3 h-px bg-emerald-300 shadow-[0_0_16px_4px_rgba(110,231,183,0.45)]"
+              style={{ animation: "flouci-ai-scan 2.4s linear infinite" }}
+            />
+            <div className="absolute left-3 top-3 rounded-md border border-emerald-300/40 bg-slate-950/75 px-2.5 py-1.5 backdrop-blur-sm">
+              <div className="flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.9)] animate-pulse" />
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-200">
+                  AI inspection
+                </span>
+              </div>
+            </div>
+
+            <div className="absolute inset-x-0 bottom-3 flex justify-center">
+              <div className="flex items-center gap-2 rounded-full border border-emerald-300/20 bg-slate-950/80 px-3 py-1.5 backdrop-blur-sm">
+                <RefreshCw className="size-3.5 animate-spin text-emerald-300" />
+                <span className="text-[10px] font-medium text-slate-200">
+                  {scanSteps[phaseIndex]}
+                </span>
+              </div>
+            </div>
+
+            <div
+              className="absolute left-1/2 top-1/2 size-24 -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-300/20"
+              style={{ animation: "flouci-ai-scan-glow 1.8s ease-in-out infinite" }}
+            />
+            <div className="absolute left-1/2 top-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-300/35 bg-emerald-300/5" />
+          </>
+        ) : null}
+
+        {matched ? (
+          <div className="absolute left-3 top-3 rounded-md border border-emerald-300/40 bg-emerald-500/15 px-2.5 py-1.5 backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="size-3.5 text-emerald-300" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-200">
+                Match detected
+              </span>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
 function FlouciStepTwo({
   playerId,
   amount,
@@ -582,51 +697,50 @@ function FlouciStepTwo({
               />
 
               {previewUrl ? (
-                <div className="overflow-hidden rounded-md border border-slate-700 bg-slate-900">
+                <div className="relative overflow-hidden rounded-md border border-slate-700 bg-slate-900">
                   <img
                     src={previewUrl}
                     alt="Uploaded payment"
                     className="max-h-72 w-full object-contain"
                   />
+                  <AiImageInspectionOverlay status={aiStatus} />
                 </div>
               ) : null}
-            <div
-            className={cn(
-              "rounded-lg border px-3 py-2.5 text-xs",
-              aiStatus === "matched"
-                ? "border-emerald-400/20 bg-emerald-400/5"
-                : aiStatus === "unrecognized"
-                  ? "border-amber-400/20 bg-amber-400/5"
-                  : "border-slate-700 bg-slate-800/50",
-            )}
-          >
-            <div className="flex items-center gap-2">
-              <ShieldCheck
-                className={cn(
-                  "size-4",
-                  aiStatus === "matched"
-                    ? "text-emerald-300"
-                    : aiStatus === "unrecognized"
-                      ? "text-amber-300"
-                      : "text-slate-400",
-                )}
-              />
-              <p className="font-medium text-slate-200">AI transfer recognition</p>
-              {aiStatus === "analyzing" ? (
-                <span className="ml-auto text-[10px] text-slate-400">Analyzing...</span>
-              ) : null}
-            </div>
 
-            <p className="mt-1.5 leading-relaxed text-slate-400">
-              {aiStatus === "matched"
-                ? "AI recognized the transfer and detected a match with the submitted transaction details."
-                : aiStatus === "unrecognized"
-                  ? "AI could not confidently recognize the transfer details. The payment can continue to manual supervisor verification."
-                  : aiStatus === "analyzing"
-                    ? "AI is reading the uploaded payment photo and checking the transfer details."
-                    : "Upload a payment photo to let AI analyze the transfer evidence."}
-            </p>
-          </div>
+              <div
+                className={cn(
+                  "rounded-lg border px-3 py-2.5 text-xs transition-colors",
+                  aiStatus === "matched"
+                    ? "border-emerald-400/20 bg-emerald-400/5"
+                    : aiStatus === "unrecognized"
+                      ? "border-amber-400/20 bg-amber-400/5"
+                      : "border-slate-700 bg-slate-800/50",
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  {aiStatus === "matched" ? (
+                    <CheckCircle2 className="size-4 text-emerald-300" />
+                  ) : aiStatus === "unrecognized" ? (
+                    <ShieldCheck className="size-4 text-amber-300" />
+                  ) : (
+                    <RefreshCw className="size-4 animate-spin text-emerald-300" />
+                  )}
+                  <p className="font-medium text-slate-200">AI transfer recognition</p>
+                  {aiStatus === "analyzing" ? (
+                    <span className="ml-auto text-[10px] text-emerald-300">Scanning...</span>
+                  ) : aiStatus === "matched" ? (
+                    <span className="ml-auto text-[10px] text-emerald-300">Match found</span>
+                  ) : null}
+                </div>
+
+                <p className="mt-1.5 leading-relaxed text-slate-400">
+                  {aiStatus === "matched"
+                    ? "AI recognized the transfer and detected a match with the submitted transaction details."
+                    : aiStatus === "unrecognized"
+                      ? "AI could not confidently recognize the transfer details. The payment can continue to manual supervisor verification."
+                      : "AI is visually scanning the payment photo, reading the transfer details, and comparing them with the submitted transaction ID."}
+                </p>
+              </div>
 
 
             </label>
@@ -1237,7 +1351,7 @@ function FlouciDepositFlow({
     setAiStatus("analyzing");
     const timer = window.setTimeout(() => {
       setAiStatus("matched");
-    }, 900);
+    }, 3200);
 
     return () => window.clearTimeout(timer);
   }, [proofFile]);
