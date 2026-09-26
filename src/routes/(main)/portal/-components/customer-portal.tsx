@@ -354,7 +354,7 @@ function FlouciTransferHelpAccordion() {
             </div>
             <div
               className="absolute inset-x-2 top-1/2 h-px bg-cyan-200 shadow-[0_0_14px_3px_rgba(103,232,249,0.45)]"
-              style={{ animation: "flouci-ocr-scan 2.1s linear infinite" }}
+              style={{ animation: "flouci-ocr-help-scan 2.1s linear infinite" }}
             />
           </div>
           <div className="mt-2 grid grid-cols-2 gap-1.5">
@@ -377,7 +377,9 @@ function FlouciTransferHelpAccordion() {
   ];
 
   return (
-    <section className="mt-4 overflow-hidden rounded-lg border border-slate-700 bg-slate-900/45">
+    <>
+      <style>{'@keyframes flouci-ocr-help-scan { 0% { top: 8%; opacity: 0; } 10% { opacity: 1; } 50% { opacity: 1; } 90% { opacity: 1; } 100% { top: 92%; opacity: 0; } }'}</style>
+      <section className="mt-4 overflow-hidden rounded-lg border border-slate-700 bg-slate-900/45">
       <div className="flex items-center gap-2 border-b border-slate-800 px-3 py-2.5">
         <Info className="size-3.5 text-slate-300" />
         <div>
@@ -437,6 +439,7 @@ function FlouciTransferHelpAccordion() {
         })}
       </div>
     </section>
+    </>
   );
 }
 
