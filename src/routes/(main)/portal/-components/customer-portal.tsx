@@ -384,7 +384,7 @@ function AiImageInspectionOverlay({ status }: { status: FlouciAiStatus }) {
   return (
     <>
       <style>
-        {\`
+        {`
           @keyframes flouci-ai-scan {
             0% { top: -12%; opacity: 0; }
             8% { opacity: 1; }
@@ -396,7 +396,7 @@ function AiImageInspectionOverlay({ status }: { status: FlouciAiStatus }) {
             0%, 100% { transform: scaleX(0.96); opacity: 0.35; }
             50% { transform: scaleX(1); opacity: 0.8; }
           }
-        \`}
+        `}
       </style>
 
       <div
