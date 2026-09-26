@@ -4374,30 +4374,35 @@ function EDinarStepOne({
 }
 
 function EDinarCardPreview() {
-  const cardNumber = "6034 2112 4567 8901";
   const cardHolder = "MOHAMED TRABELSI";
 
   return (
     <div className="relative h-52 w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-slate-800 shadow-2xl sm:h-56">
       <div
-        className="absolute inset-0 flex flex-col justify-between rounded-2xl p-5 bg-primary text-primary-foreground"
+        className="absolute inset-0 flex flex-col justify-between rounded-2xl bg-primary p-5 text-primary-foreground"
         style={{ backfaceVisibility: "hidden" }}
       >
         <div className="flex items-start justify-between">
-          <span className="text-sm font-medium">E-DINAR CARD</span>
-          <span className="rounded-md border border-white/15 bg-white/10 px-2 py-1 text-[10px] font-semibold tracking-[0.12em]">
-            E-DINAR
-          </span>
+          <img
+            src="https://i0.wp.com/learning.symphony.tn/wp-content/uploads/2018/07/e-dinar.png?ssl=1"
+            alt="e-Dinar"
+            className="h-9 w-auto max-w-[120px] object-contain"
+            loading="eager"
+            referrerPolicy="no-referrer"
+          />
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/7/72/MasterCard_early_1990s_logo.png?utm_source=en.wikipedia.org&utm_campaign=index&utm_content=original"
+            alt="Mastercard"
+            className="h-9 w-auto max-w-[72px] rounded-sm object-contain"
+            loading="eager"
+            referrerPolicy="no-referrer"
+          />
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="h-8 w-11 rounded-md bg-gradient-to-br from-amber-300 to-amber-500 opacity-80" />
+          <div className="h-9 w-12 rounded-md bg-gradient-to-br from-amber-300 to-amber-500 opacity-85" />
           <Wifi className="size-5 rotate-90 opacity-60" />
         </div>
-
-        <p className="font-mono text-base tracking-widest tabular-nums">
-          {cardNumber}
-        </p>
 
         <div className="flex items-end justify-between">
           <div>
@@ -4465,19 +4470,8 @@ function EDinarStepTwo({
     <>
       <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
         <div className="space-y-4">
-          <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-3">
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">E-Dinar payment card</p>
-                <p className="mt-0.5 text-xs text-slate-300">
-                  Use this card information when completing the payment.
-                </p>
-              </div>
-              <PaymentMethodMark method={method} />
-            </div>
-            <div className="flex justify-center">
-              <EDinarCardPreview />
-            </div>
+          <div className="flex justify-center">
+            <EDinarCardPreview />
           </div>
 
           <div>
@@ -4487,7 +4481,7 @@ function EDinarStepTwo({
                 readOnly
                 value="6034 2112 4567 8901"
                 title="E-Dinar card number"
-                className="h-12 flex-1 border-0 bg-transparent px-3 font-mono text-sm tracking-[0.08em] text-slate-100 shadow-none focus-visible:ring-0"
+                className="h-14 flex-1 border-0 bg-transparent px-3 font-mono text-lg font-semibold tracking-[0.1em] text-slate-100 shadow-none focus-visible:ring-0"
               />
               <Button
                 type="button"
@@ -4496,9 +4490,9 @@ function EDinarStepTwo({
                 onClick={() => navigator.clipboard?.writeText("6034211245678901")}
                 disabled={expired}
                 title="Copy E-Dinar card number"
-                className="mr-1 my-1 size-10 rounded-md text-slate-200 hover:bg-slate-800 hover:text-white"
+                className="mr-1 my-1 size-12 rounded-md text-slate-200 hover:bg-slate-800 hover:text-white"
               >
-                <Copy className="size-4" />
+                <Copy className="size-4.5" />
               </Button>
             </div>
             <div className="mt-1.5 flex items-center justify-between gap-3 px-1 text-[10px]">
