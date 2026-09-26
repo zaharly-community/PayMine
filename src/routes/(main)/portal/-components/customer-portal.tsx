@@ -22,6 +22,7 @@ import {
   Mail,
   Plus,
   Trash2,
+  Wifi,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -243,6 +244,10 @@ const manualTransferMethodIds = new Set(["flouci", "d17", "kashy"]);
 
 function isManualTransferMethod(method: PaymentMethod) {
   return manualTransferMethodIds.has(method.id);
+}
+
+function isEDinarMethod(method: PaymentMethod) {
+  return method.id === "e-dinar";
 }
 
 const cardDepositMethodIds = new Set(["orange", "ooredoo", "tunisie-telecom"]);
@@ -3143,6 +3148,854 @@ function CardDepositFlow({
   );
 }
 
+
+function EDinarStepOne({
+  method,
+  playerId,
+  setPlayerId,
+  playerLookupType,
+  setPlayerLookupType,
+  amount,
+  setAmount,
+  error,
+  onContinue,
+}: {
+  method: PaymentMethod;
+  playerId: string;
+  setPlayerId: React.Dispatch<React.SetStateAction<string>>;
+  playerLookupType: PlayerLookupType;
+  setPlayerLookupType: React.Dispatch<React.SetStateAction<PlayerLookupType>>;
+  amount: string;
+  setAmount: React.Dispatch<React.SetStateAction<string>>;
+  error: string;
+  onContinue: () => void;
+}) {
+  const presets = [20, 50, 100, 200, 500, 1000];
+
+  return (
+    <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          onContinue();
+        }}
+        className="space-y-4"
+      >
+        <div>
+          <FieldLabel>
+            {playerLookupType === "playerId"
+              ? "Player ID"
+              : playerLookupType === "username"
+                ? "Username"
+                : "Email"}
+          </FieldLabel>
+
+          <div className="flex items-stretch gap-2">
+            <div className="min-w-0 flex-1">
+              <Input
+                type={playerLookupType === "email" ? "email" : "text"}
+                value={playerId}
+                onChange={(event) => setPlayerId(event.target.value)}
+                placeholder={
+                  playerLookupType === "playerId"
+                    ? "Enter your player ID"
+                    : playerLookupType === "username"
+                      ? "Enter your username"
+                      : "Enter your email address"
+                }
+                title={
+                  playerLookupType === "playerId"
+                    ? "Player ID"
+                    : playerLookupType === "username"
+                      ? "Username"
+                      : "Email"
+                }
+                autoComplete={playerLookupType === "email" ? "email" : "off"}
+                className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+              />
+            </div>
+
+            <div
+              className="flex h-12 shrink-0 items-center gap-1.5"
+              role="tablist"
+              aria-label="Player identification type"
+            >
+              {(
+                [
+                  ["playerId", "Player ID", Hash],
+                  ["username", "Username", UserRound],
+                  ["email", "Email", Mail],
+                ] as const
+              ).map(([type, label, Icon]) => {
+                const active = playerLookupType === type;
+
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    aria-label={label}
+                    title={label}
+                    onClick={() => {
+                      setPlayerLookupType(type);
+                      setPlayerId("");
+                    }}
+                    className={cn(
+                      "group flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg bg-slate-700/90 px-3 text-slate-400 transition-all",
+                      active
+                        ? "min-w-[92px] text-slate-100 shadow-[0_0_16px_rgba(255,255,255,0.04)]"
+                        : "w-12 hover:bg-slate-800 hover:text-slate-100",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "size-4 shrink-0 transition-colors",
+                        active
+                          ? "text-emerald-300"
+                          : "text-slate-400 group-hover:text-slate-200",
+                      )}
+                    />
+                    {active ? (
+                      <span className="truncate text-xs font-medium">{label}</span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-1.5 min-h-4 text-[10px] text-slate-500">
+            Using{" "}
+            <span className="font-medium text-slate-300">
+              {playerLookupType === "playerId"
+                ? "Player ID"
+                : playerLookupType === "username"
+                  ? "Username"
+                  : "Email"}
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <FieldLabel>Deposit amount</FieldLabel>
+          <Input
+            type="text"
+            inputMode="decimal"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            placeholder="Enter deposit amount"
+            title="Deposit amount"
+            className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+          />
+
+          <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
+            {presets.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => setAmount(String(preset))}
+                title="Select preset deposit amount"
+                className={cn(
+                  "rounded-md border px-2.5 py-2 text-xs font-medium tabular-nums transition-colors",
+                  Number(amount) === preset
+                    ? "border-emerald-400/60 bg-emerald-400/10 text-emerald-300"
+                    : "border-slate-700 bg-slate-800/60 text-slate-300 hover:border-slate-600 hover:bg-slate-800",
+                )}
+              >
+                {preset} TND
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-4 text-sm">
+          <span className="font-medium text-slate-400">Min/Max</span>
+          <span className="font-medium tabular-nums text-slate-100">
+            {method.min.toLocaleString("en-US")} - {method.max.toLocaleString("en-US")} {method.currency}
+          </span>
+        </div>
+
+        {error ? (
+          <div className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+            {error}
+          </div>
+        ) : null}
+
+        <Button
+          type="submit"
+          title={"Continue to " + method.name + " payment"}
+          className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+        >
+          <CircleDollarSign className="size-4" />
+          <span>
+            Do Deposit
+            <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
+              Net Amount: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} TND
+            </span>
+          </span>
+        </Button>
+      </form>
+    </section>
+  );
+}
+
+function EDinarCardPreview() {
+  const cardNumber = "6034 2112 4567 8901";
+  const cardHolder = "MOHAMED TRABELSI";
+
+  return (
+    <div className="relative h-52 w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-slate-800 shadow-2xl sm:h-56">
+      <div
+        className="absolute inset-0 flex flex-col justify-between rounded-2xl p-5 bg-primary text-primary-foreground"
+        style={{ backfaceVisibility: "hidden" }}
+      >
+        <div className="flex items-start justify-between">
+          <span className="text-sm font-medium">E-DINAR CARD</span>
+          <span className="rounded-md border border-white/15 bg-white/10 px-2 py-1 text-[10px] font-semibold tracking-[0.12em]">
+            E-DINAR
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-11 rounded-md bg-gradient-to-br from-amber-300 to-amber-500 opacity-80" />
+          <Wifi className="size-5 rotate-90 opacity-60" />
+        </div>
+
+        <p className="font-mono text-base tracking-widest tabular-nums">
+          {cardNumber}
+        </p>
+
+        <div className="flex items-end justify-between">
+          <div>
+            <span className="block text-[9px] uppercase tracking-[0.12em] text-primary-foreground/60">
+              Card holder
+            </span>
+            <span className="text-xs font-medium uppercase tracking-wide">{cardHolder}</span>
+          </div>
+          <span className="text-xs tabular-nums">09/28</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EDinarStepTwo({
+  method,
+  playerId,
+  amount,
+  secondsLeft,
+  transactionId,
+  setTransactionId,
+  proofFile,
+  setProofFile,
+  aiStatus,
+  detectedTransactionId,
+  onUseDetectedTransactionId,
+  error,
+  onConfirm,
+}: {
+  method: PaymentMethod;
+  playerId: string;
+  amount: string;
+  secondsLeft: number;
+  transactionId: string;
+  setTransactionId: React.Dispatch<React.SetStateAction<string>>;
+  proofFile: File | null;
+  setProofFile: React.Dispatch<React.SetStateAction<File | null>>;
+  aiStatus: FlouciAiStatus;
+  detectedTransactionId: string;
+  onUseDetectedTransactionId: () => void;
+  error: string;
+  onConfirm: () => void;
+}) {
+  const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
+  const seconds = (secondsLeft % 60).toString().padStart(2, "0");
+  const expired = secondsLeft <= 0;
+
+  const previewUrl = React.useMemo(
+    () => (proofFile ? URL.createObjectURL(proofFile) : ""),
+    [proofFile],
+  );
+
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setProofFile(event.target.files?.[0] ?? null);
+  };
+
+  return (
+    <>
+      <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+        <div className="space-y-4">
+          <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-3">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">E-Dinar payment card</p>
+                <p className="mt-0.5 text-xs text-slate-300">
+                  Use this card information when completing the payment.
+                </p>
+              </div>
+              <PaymentMethodMark method={method} />
+            </div>
+            <div className="flex justify-center">
+              <EDinarCardPreview />
+            </div>
+          </div>
+
+          <div>
+            <FieldLabel>Card number</FieldLabel>
+            <div className="flex overflow-hidden rounded-lg bg-slate-700/90">
+              <Input
+                readOnly
+                value="6034 2112 4567 8901"
+                title="E-Dinar card number"
+                className="h-12 flex-1 border-0 bg-transparent px-3 font-mono text-sm tracking-[0.08em] text-slate-100 shadow-none focus-visible:ring-0"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => navigator.clipboard?.writeText("6034211245678901")}
+                disabled={expired}
+                title="Copy E-Dinar card number"
+                className="mr-1 my-1 size-10 rounded-md text-slate-200 hover:bg-slate-800 hover:text-white"
+              >
+                <Copy className="size-4" />
+              </Button>
+            </div>
+            <div className="mt-1.5 flex items-center justify-between gap-3 px-1 text-[10px]">
+              <span className="text-slate-500">Card holder</span>
+              <span className="truncate font-medium uppercase text-slate-300">Mohamed Trabelsi</span>
+            </div>
+          </div>
+
+          <div>
+            <FieldLabel>Transaction ID</FieldLabel>
+            <div className="flex items-stretch gap-2">
+              <Input
+                value={transactionId}
+                onChange={(event) => setTransactionId(event.target.value)}
+                placeholder="Enter your E-Dinar transaction ID"
+                title="E-Dinar transaction ID"
+                autoComplete="off"
+                disabled={expired}
+                className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+              />
+
+              {proofFile && aiStatus === "matched" && !transactionId.trim() && detectedTransactionId ? (
+                <Button
+                  type="button"
+                  onClick={onUseDetectedTransactionId}
+                  disabled={expired}
+                  title="Use the transaction ID detected by AI OCR"
+                  className="group relative h-12 shrink-0 overflow-hidden rounded-lg border border-cyan-300/40 bg-cyan-300/10 px-3 text-xs font-semibold text-cyan-100 shadow-[0_0_22px_rgba(34,211,238,0.16)] transition-all hover:border-cyan-200/60 hover:bg-cyan-300/15"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-200/15 to-transparent animate-[flouci-ocr-cta-shimmer_1.8s_linear_infinite]" />
+                  <span className="relative flex items-center gap-2">
+                    <span className="flex size-7 items-center justify-center rounded-md border border-cyan-200/30 bg-cyan-300/10">
+                      <ScanText className="size-4 animate-pulse text-cyan-200" />
+                    </span>
+                    <span>Use detected ID</span>
+                  </span>
+                </Button>
+              ) : null}
+            </div>
+
+            {proofFile && aiStatus === "matched" && !transactionId.trim() && detectedTransactionId ? (
+              <div className="mt-2 flex items-start gap-2 rounded-lg border border-cyan-300/25 bg-cyan-300/5 px-3 py-2.5">
+                <ScanText className="mt-0.5 size-3.5 shrink-0 text-cyan-200" />
+                <p className="text-[11px] leading-relaxed text-cyan-100/90">
+                  <span className="font-semibold text-cyan-100">AI OCR detected the transaction ID from your payment photo.</span>{" "}
+                  Click <span className="font-semibold text-white">Use detected ID</span> to fill it automatically.
+                </p>
+              </div>
+            ) : null}
+          </div>
+
+          <div>
+            <FieldLabel>Payment photo</FieldLabel>
+            <label
+              title="Upload payment photo"
+              className={cn(
+                "flex min-h-64 cursor-pointer flex-col gap-2 rounded-lg border border-dashed border-slate-700 bg-slate-800/50 p-2.5 transition-colors hover:border-slate-600 hover:bg-slate-800",
+                expired && "pointer-events-none opacity-50",
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-slate-700 text-slate-300">
+                  <FileImage className="size-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-xs font-medium text-slate-200">
+                    {proofFile ? proofFile.name : "Upload payment photo"}
+                  </span>
+                  <span className="mt-0.5 block text-[10px] text-slate-500">
+                    JPG, PNG or WEBP · photo of the completed E-Dinar payment
+                  </span>
+                </span>
+                <Upload className="ml-auto size-4 shrink-0 text-slate-500" />
+              </div>
+
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="sr-only"
+                title="Upload payment photo"
+                onChange={handleFileChange}
+                disabled={expired}
+              />
+
+              {previewUrl ? (
+                <div className="relative overflow-hidden rounded-md border border-slate-700 bg-slate-900">
+                  <img
+                    src={previewUrl}
+                    alt="Uploaded E-Dinar payment"
+                    className={cn(
+                      "max-h-72 w-full object-contain transition-all duration-300",
+                      aiStatus === "analyzing" && "brightness-[0.88]",
+                    )}
+                  />
+                  <AiOcrInspectionOverlay status={aiStatus} />
+                </div>
+              ) : (
+                <div className="flex min-h-52 flex-1 items-center justify-center rounded-md border border-slate-700 bg-slate-900/60">
+                  <div className="text-center">
+                    <div className="mx-auto flex size-11 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-slate-300">
+                      <FileImage className="size-5" />
+                    </div>
+                    <p className="mt-3 text-xs font-medium text-slate-200">Upload payment photo</p>
+                    <p className="mt-1 text-[10px] text-slate-500">AI OCR will inspect the visible payment details</p>
+                  </div>
+                </div>
+              )}
+            </label>
+          </div>
+
+          <div className="space-y-2 text-xs leading-relaxed text-slate-300">
+            <p className="flex gap-2">
+              <Info className="mt-0.5 size-3.5 shrink-0 text-slate-200" />
+              Pay the exact amount of {Number(amount).toFixed(2)} {method.currency} using the E-Dinar card shown above.
+            </p>
+            <p className="text-slate-500">
+              Player ID: <span className="text-slate-300">{playerId}</span>
+            </p>
+          </div>
+
+          {error ? (
+            <div className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+              {error}
+            </div>
+          ) : null}
+
+          <Button
+            type="button"
+            onClick={onConfirm}
+            disabled={expired}
+            title="Confirm E-Dinar payment"
+            className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <CheckCircle2 className="size-4" />
+            Confirm payment
+          </Button>
+        </div>
+      </section>
+
+      <div className="mt-3 px-1 text-xs leading-relaxed text-slate-300 sm:text-sm">
+        <p>
+          After you confirm, your E-Dinar payment will stay under verification for up to 8 hours.
+        </p>
+      </div>
+    </>
+  );
+}
+
+function EDinarWaitingTimeline({
+  method,
+  playerId,
+  playerLookupType,
+  amount,
+  transactionId,
+}: {
+  method: PaymentMethod;
+  playerId: string;
+  playerLookupType: PlayerLookupType;
+  amount: string;
+  transactionId: string;
+}) {
+  const stages = [
+    {
+      title: "Payment submitted",
+      description: "Your E-Dinar payment proof and transaction reference were submitted successfully.",
+      icon: CheckCircle2,
+      state: "done",
+    },
+    {
+      title: "E-Dinar verification",
+      description: "The payment is being reviewed. Verification can take up to 8 hours.",
+      icon: ShieldCheck,
+      state: "active",
+    },
+    {
+      title: "Deposit credit",
+      description: "After verification, the deposit amount will be credited to your player balance.",
+      icon: CircleDollarSign,
+      state: "pending",
+    },
+  ] as const;
+
+  return (
+    <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+      <div className="mb-3 flex justify-center">
+        <img
+          src="https://assets-v2.lottiefiles.com/a/32092c6a-1187-11ee-82df-37dd938d41eb/9rtrQDUjoJ.gif"
+          alt="E-Dinar payment is being reviewed"
+          className="h-24 w-24 object-contain"
+          loading="eager"
+          referrerPolicy="no-referrer"
+        />
+      </div>
+
+      <div className="mb-5 text-center">
+        <p className="text-base font-semibold text-white">E-Dinar payment is being reviewed</p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-400">
+          {playerLookupType === "playerId"
+            ? "Player ID"
+            : playerLookupType === "username"
+              ? "Username"
+              : "Email"}
+          : {playerId} · {Number(amount).toFixed(2)} {method.currency}
+        </p>
+      </div>
+
+      <div className="mb-5 rounded-lg border border-amber-300/20 bg-amber-300/5 px-3 py-2.5">
+        <div className="flex items-center gap-2 text-amber-100">
+          <Clock3 className="size-3.5" />
+          <span className="text-xs font-semibold">Verification window: up to 8 hours</span>
+        </div>
+        <p className="mt-1 text-[10px] leading-relaxed text-slate-500">
+          Transaction ID: <span className="text-slate-300">{transactionId}</span>
+        </p>
+      </div>
+
+      <div className="relative pl-1">
+        {stages.map((stage, index) => {
+          const Icon = stage.icon;
+          const isLast = index === stages.length - 1;
+
+          return (
+            <div key={stage.title} className="relative pb-7 last:pb-0">
+              <div className="relative flex gap-4">
+                {!isLast ? (
+                  <div className="absolute left-[15px] top-8 h-[calc(100%-1rem)] w-px bg-slate-700" />
+                ) : null}
+
+                <div
+                  className={cn(
+                    "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border",
+                    stage.state === "done"
+                      ? "border-emerald-400 bg-emerald-400 text-slate-950"
+                      : stage.state === "active"
+                        ? "border-amber-400 bg-amber-400 text-slate-950"
+                        : "border-slate-700 bg-slate-800 text-slate-500",
+                  )}
+                >
+                  {stage.state === "done" ? (
+                    <Check className="size-4" />
+                  ) : (
+                    <Icon className="size-4" />
+                  )}
+                </div>
+
+                <div className="min-w-0 pt-0.5">
+                  <p
+                    className={cn(
+                      "text-sm font-medium",
+                      stage.state === "pending" ? "text-slate-500" : "text-white",
+                    )}
+                  >
+                    {stage.title}
+                    {stage.state === "active" ? (
+                      <span className="ml-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-200">
+                        In progress
+                      </span>
+                    ) : null}
+                    {stage.state === "done" ? (
+                      <span className="ml-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
+                        Completed
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">{stage.description}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function EDinarDepositFlow({
+  method,
+  openMethods,
+  onToggleMethods,
+  onSelectMethod,
+  playerId,
+  setPlayerId,
+  playerLookupType,
+  setPlayerLookupType,
+  amount,
+  setAmount,
+}: {
+  method: PaymentMethod;
+  openMethods: boolean;
+  onToggleMethods: () => void;
+  onSelectMethod: (method: PaymentMethod) => void;
+  playerId: string;
+  setPlayerId: React.Dispatch<React.SetStateAction<string>>;
+  playerLookupType: PlayerLookupType;
+  setPlayerLookupType: React.Dispatch<React.SetStateAction<PlayerLookupType>>;
+  amount: string;
+  setAmount: React.Dispatch<React.SetStateAction<string>>;
+}) {
+  const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const [error, setError] = React.useState("");
+  const [transactionId, setTransactionId] = React.useState("");
+  const [proofFile, setProofFile] = React.useState<File | null>(null);
+  const [aiStatus, setAiStatus] = React.useState<FlouciAiStatus>("idle");
+  const [detectedTransactionId, setDetectedTransactionId] = React.useState("");
+  const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+
+  const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
+  const seconds = (secondsLeft % 60).toString().padStart(2, "0");
+  const expired = secondsLeft <= 0;
+
+  React.useEffect(() => {
+    setStep(1);
+    setError("");
+    setTransactionId("");
+    setProofFile(null);
+    setAiStatus("idle");
+    setDetectedTransactionId("");
+    setSecondsLeft(15 * 60);
+  }, [method.id]);
+
+  React.useEffect(() => {
+    if (!proofFile) {
+      setAiStatus("idle");
+      setDetectedTransactionId("");
+      return;
+    }
+
+    setAiStatus("analyzing");
+    setDetectedTransactionId("");
+
+    const timer = window.setTimeout(() => {
+      setAiStatus("matched");
+      setDetectedTransactionId("ED-4289176035");
+    }, 3200);
+
+    return () => window.clearTimeout(timer);
+  }, [proofFile]);
+
+  React.useEffect(() => {
+    if (step !== 2) return;
+
+    const timer = window.setInterval(() => {
+      setSecondsLeft((current) => (current > 0 ? current - 1 : 0));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [step]);
+
+  const continueToPayment = () => {
+    if (!playerId.trim()) {
+      setError(
+        playerLookupType === "playerId"
+          ? "Enter your player ID."
+          : playerLookupType === "username"
+            ? "Enter your username."
+            : "Enter your email address.",
+      );
+      return;
+    }
+
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount < method.min || numericAmount > method.max) {
+      setError(
+        "Amount must be between " +
+          method.min.toLocaleString("en-US") +
+          " and " +
+          method.max.toLocaleString("en-US") +
+          " " +
+          method.currency +
+          ".",
+      );
+      return;
+    }
+
+    setError("");
+    setAiStatus("idle");
+    setDetectedTransactionId("");
+    setSecondsLeft(15 * 60);
+    setStep(2);
+  };
+
+  const confirmPayment = () => {
+    if (expired) {
+      setError("This payment session has expired. Go back and start a new deposit.");
+      return;
+    }
+
+    if (!transactionId.trim()) {
+      setError("Enter the E-Dinar transaction ID.");
+      return;
+    }
+
+    if (!proofFile) {
+      setError("Upload your payment proof before confirming.");
+      return;
+    }
+
+    setError("");
+    setStep(3);
+  };
+
+  return (
+    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
+        {step === 2 ? (
+          <div
+            className={cn(
+              "relative mb-3 overflow-hidden rounded-lg border px-3 py-2",
+              expired
+                ? "border-red-400/30 bg-red-500/5"
+                : "border-emerald-400/20 bg-slate-900/70",
+            )}
+          >
+            <div className="flex items-center gap-2.5">
+              <div
+                className={cn(
+                  "flex size-7 shrink-0 items-center justify-center rounded-md border",
+                  expired
+                    ? "border-red-400/30 bg-red-500/10 text-red-300"
+                    : "border-emerald-400/20 bg-emerald-400/5 text-emerald-300",
+                )}
+              >
+                <Clock3 className="size-3.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  {!expired ? (
+                    <span className="relative flex size-1.5 shrink-0">
+                      <span className="absolute size-1.5 animate-ping rounded-full bg-emerald-300/60" />
+                      <span className="relative size-1.5 rounded-full bg-emerald-300" />
+                    </span>
+                  ) : null}
+                  <p className="truncate text-[11px] font-medium text-slate-300">
+                    {expired ? "Payment session expired" : "Payment expires in"}
+                  </p>
+                </div>
+                <div className="mt-1.5 h-0.5 overflow-hidden rounded-full bg-slate-800">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all duration-700",
+                      expired ? "bg-red-400" : "bg-emerald-400",
+                    )}
+                    style={{ width: Math.max(0, Math.min(100, (secondsLeft / (15 * 60)) * 100)) + "%" }}
+                  />
+                </div>
+              </div>
+              <div
+                className={cn(
+                  "shrink-0 rounded-md border px-2.5 py-1 text-sm font-semibold tabular-nums tracking-[0.08em]",
+                  expired
+                    ? "border-red-400/30 bg-red-500/10 text-red-300"
+                    : "border-emerald-400/25 bg-emerald-400/10 text-emerald-300",
+                )}
+              >
+                {minutes}:{seconds}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {step === 2 ? (
+          <div className="mb-4 flex items-center justify-center">
+            <PaymentMethodMark method={method} />
+          </div>
+        ) : (
+          <div className="mb-4">
+            <PaymentMethodSelector
+              method={method}
+              open={openMethods}
+              onToggle={onToggleMethods}
+              onSelect={onSelectMethod}
+            />
+          </div>
+        )}
+
+        <div className="flex-1">
+          {step === 1 ? (
+            <EDinarStepOne
+              method={method}
+              playerId={playerId}
+              setPlayerId={setPlayerId}
+              playerLookupType={playerLookupType}
+              setPlayerLookupType={setPlayerLookupType}
+              amount={amount}
+              setAmount={setAmount}
+              error={error}
+              onContinue={continueToPayment}
+            />
+          ) : null}
+
+          {step === 2 ? (
+            <EDinarStepTwo
+              method={method}
+              playerId={playerId}
+              amount={amount}
+              secondsLeft={secondsLeft}
+              transactionId={transactionId}
+              setTransactionId={setTransactionId}
+              proofFile={proofFile}
+              setProofFile={setProofFile}
+              aiStatus={aiStatus}
+              detectedTransactionId={detectedTransactionId}
+              onUseDetectedTransactionId={() => setTransactionId(detectedTransactionId)}
+              error={error}
+              onConfirm={confirmPayment}
+            />
+          ) : null}
+
+          {step === 3 ? (
+            <EDinarWaitingTimeline
+              method={method}
+              playerId={playerId}
+              playerLookupType={playerLookupType}
+              amount={amount}
+              transactionId={transactionId}
+            />
+          ) : null}
+        </div>
+
+        <div className="mt-4 flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
+          <ShieldCheck className="size-3.5" />
+          Secure checkout
+          <ExternalLink className="size-3" />
+        </div>
+      </div>
+    </main>
+  );
+}
+
 function GenericDepositSummary({
   method,
   amount,
@@ -3277,6 +4130,23 @@ export function CustomerPortal() {
     setError("");
     setDepositStarted(true);
   };
+
+  if (isEDinarMethod(method)) {
+    return (
+      <EDinarDepositFlow
+        method={method}
+        openMethods={openMethods}
+        onToggleMethods={() => setOpenMethods((current) => !current)}
+        onSelectMethod={selectMethod}
+        playerId={playerId}
+        setPlayerId={setPlayerId}
+        playerLookupType={playerLookupType}
+        setPlayerLookupType={setPlayerLookupType}
+        amount={amount}
+        setAmount={setAmount}
+      />
+    );
+  }
 
   if (isCardDepositMethod(method)) {
     return (
