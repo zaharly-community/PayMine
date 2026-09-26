@@ -229,13 +229,19 @@ function FieldLabel({
   );
 }
 
-const flouciRecipientNumbers = ["22 345 678", "53 781 249", "29 614 832"];
+const walletRecipientNumbers = ["22 345 678", "53 781 249", "29 614 832"];
 
-const flouciRecipientOwners: Record<string, string> = {
+const walletRecipientOwners: Record<string, string> = {
   "22 345 678": "Mohamed Trabelsi",
   "53 781 249": "Yassine Ben Amor",
   "29 614 832": "Amine Jlassi",
 };
+
+const manualTransferMethodIds = new Set(["flouci", "d17", "kashy"]);
+
+function isManualTransferMethod(method: PaymentMethod) {
+  return manualTransferMethodIds.has(method.id);
+}
 
 type FlouciDemoStatus =
   | "reviewing"
@@ -257,7 +263,7 @@ function getSupervisorVerificationScore(email: string) {
   return Number(((seed % 101) / 10).toFixed(1));
 }
 
-function FlouciTransferHelpAccordion() {
+function FlouciTransferHelpAccordion({ method }: { method: PaymentMethod }) {
   const [openItem, setOpenItem] = React.useState<string | null>(null);
 
   const toggle = (item: string) => {
@@ -290,13 +296,13 @@ function FlouciTransferHelpAccordion() {
     },
     {
       id: "transfer",
-      title: "2. Create the Flouci transfer",
-      description: "Send the exact amount to the Flouci number displayed in the payment form.",
+      title: `2. Create the ${method.name} transfer`,
+      description: `Send the exact amount to the ${method.name} number displayed in the payment form.`,
       visual: (
         <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
           <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
             <span className="flex size-6 items-center justify-center rounded-md bg-slate-800 text-[9px] font-semibold text-slate-300">
-              F
+              {method.name.slice(0, 1)}
             </span>
             <span className="text-[10px] font-medium text-slate-200">New transfer</span>
           </div>
@@ -332,7 +338,7 @@ function FlouciTransferHelpAccordion() {
           <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between rounded-md bg-slate-900 px-2.5 py-2">
               <span className="text-[9px] text-slate-500">Transaction ID</span>
-              <span className="text-[9px] font-medium text-slate-200">FL-4289176035</span>
+              <span className="text-[9px] font-medium text-slate-200">TX-4289176035</span>
             </div>
             <div className="h-10 rounded-md border border-dashed border-slate-700 bg-slate-900/70" />
           </div>
@@ -383,7 +389,7 @@ function FlouciTransferHelpAccordion() {
       <div className="flex items-center gap-2 border-b border-slate-800 px-3 py-2.5">
         <Info className="size-3.5 text-slate-300" />
         <div>
-          <p className="text-[11px] font-medium text-slate-200">How to complete a Flouci transfer</p>
+          <p className="text-[11px] font-medium text-slate-200">How to complete a {method.name} transfer</p>
           <p className="text-[9px] text-slate-500">Open a step to see where each detail goes and how AI OCR checks the proof.</p>
         </div>
       </div>
@@ -444,6 +450,7 @@ function FlouciTransferHelpAccordion() {
 }
 
 function FlouciStepOne({
+  method,
   playerId,
   setPlayerId,
   playerLookupType,
@@ -453,6 +460,7 @@ function FlouciStepOne({
   error,
   onContinue,
 }: {
+  method: PaymentMethod;
   playerId: string;
   setPlayerId: React.Dispatch<React.SetStateAction<string>>;
   playerLookupType: PlayerLookupType;
@@ -612,7 +620,7 @@ function FlouciStepOne({
 
           <Button
             type="submit"
-            title="Continue to Flouci payment"
+            title={`Continue to ${method.name} payment`}
             className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
           >
             <CircleDollarSign className="size-4" />
@@ -626,7 +634,7 @@ function FlouciStepOne({
         </form>
       </section>
 
-      <FlouciTransferHelpAccordion />
+      <FlouciTransferHelpAccordion method={method} />
 
       <div className="mt-3 space-y-1 px-1 text-[10px] leading-relaxed text-slate-400 sm:text-xs">
         <p>Complete the transfer before continuing and keep the payment proof available for verification.</p>
@@ -775,6 +783,7 @@ function AiOcrInspectionOverlay({ status }: { status: FlouciAiStatus }) {
 
 
 function FlouciStepTwo({
+  method,
   playerId,
   amount,
   recipientNumber,
@@ -793,6 +802,7 @@ function FlouciStepTwo({
   onRequestChange,
   onConfirm,
 }: {
+  method: PaymentMethod;
   playerId: string;
   amount: string;
   recipientNumber: string;
@@ -843,14 +853,14 @@ function FlouciStepTwo({
       <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
         <div className="space-y-4">
           <div>
-          <FieldLabel>Flouci transfer number</FieldLabel>
+          <FieldLabel>{method.name} transfer number</FieldLabel>
           <div className="flex items-stretch gap-2">
             <div className="flex min-w-0 flex-1 overflow-hidden rounded-lg bg-slate-700/90">
               <Input
                 readOnly
                 value={recipientNumber}
-                placeholder="Flouci transfer number"
-                title="Flouci transfer number"
+                placeholder={`\${method.name} transfer number`}
+                title={`\${method.name} transfer number`}
                 className="h-12 flex-1 border-0 bg-transparent px-3 text-sm text-slate-100 shadow-none focus-visible:ring-0"
               />
               <Button
@@ -859,7 +869,7 @@ function FlouciStepTwo({
                 size="icon"
                 onClick={() => copy(recipientNumber.replace(/\s/g, ""))}
                 disabled={expired}
-                title="Copy Flouci transfer number"
+                title={`Copy \${method.name} transfer number`}
                 className="mr-1 my-1 size-10 shrink-0 rounded-md text-slate-200 hover:bg-slate-800 hover:text-white"
               >
                 <Copy className="size-4" />
@@ -871,7 +881,7 @@ function FlouciStepTwo({
               size="sm"
               onClick={onRequestChange}
               disabled={expired || changeRequested}
-              title="Request a different Flouci transfer number"
+              title={`Request a different \${method.name} transfer number`}
               className="h-12 shrink-0 rounded-lg border-slate-700 bg-slate-900/60 px-3 text-xs text-slate-200 hover:bg-slate-800"
             >
               {changeRequested ? <Check className="size-3.5" /> : <RefreshCw className="size-3.5" />}
@@ -883,7 +893,7 @@ function FlouciStepTwo({
             <span className="font-medium uppercase tracking-[0.08em] text-slate-600">Account owner</span>
             <span className="text-slate-700">·</span>
             <span className="truncate text-slate-300">
-              {flouciRecipientOwners[recipientNumber] ?? "Flouci account holder"}
+              {walletRecipientOwners[recipientNumber] ?? `${method.name} account holder`}
             </span>
           </div>
 
@@ -950,7 +960,7 @@ function FlouciStepTwo({
                 <Input
                   value={transactionId}
                   onChange={(event) => setTransactionId(event.target.value)}
-                  placeholder="Enter your Flouci transaction ID"
+                  placeholder={`Enter your \${method.name} transaction ID`}
                   title="Transaction ID"
                   autoComplete="off"
                   disabled={expired}
@@ -1055,7 +1065,7 @@ function FlouciStepTwo({
           <div className="space-y-2 text-xs leading-relaxed text-slate-300">
             <p className="flex gap-2">
               <Info className="mt-0.5 size-3.5 shrink-0 text-slate-200" />
-              Please transfer only the exact amount to the Flouci number displayed above.
+              Please transfer only the exact amount to the {method.name} number displayed above.
             </p>
             <p className="text-slate-500">
               Player ID: <span className="text-slate-300">{playerId}</span>
@@ -1072,7 +1082,7 @@ function FlouciStepTwo({
             type="button"
             onClick={onConfirm}
             disabled={expired}
-            title="Confirm Flouci transfer"
+            title={`Confirm \${method.name} transfer`}
             className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <CheckCircle2 className="size-4" />
@@ -1092,6 +1102,7 @@ function FlouciStepTwo({
 }
 
 function WaitingTimeline({
+  method,
   playerId,
   playerLookupType,
   amount,
@@ -1104,6 +1115,7 @@ function WaitingTimeline({
   supervisorNote,
   onSubmitCorrection,
 }: {
+  method: PaymentMethod;
   playerId: string;
   playerLookupType: PlayerLookupType;
   amount: string;
@@ -1308,12 +1320,12 @@ function WaitingTimeline({
 
             <div className="space-y-3">
               <div>
-                <FieldLabel>Flouci transfer number</FieldLabel>
+                <FieldLabel>{method.name} transfer number</FieldLabel>
                 <Input
                   value={correctedTransferNumber}
                   onChange={(event) => setCorrectedTransferNumber(event.target.value)}
-                  placeholder="Enter the correct Flouci transfer number"
-                  title="Correct Flouci transfer number"
+                  placeholder={`Enter the \${method.name} transfer number`}
+                  title={`Correct \${method.name} transfer number`}
                   className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
                 />
               </div>
@@ -1751,7 +1763,7 @@ function FlouciDemoControls({
           type="button"
           variant="ghost"
           onClick={() => setStep(1)}
-          title="Preview Flouci step one"
+          title="Preview payment step one"
           className="h-8 text-xs text-slate-400 hover:bg-slate-800 hover:text-white"
         >
           Step 1
@@ -1761,7 +1773,7 @@ function FlouciDemoControls({
           type="button"
           variant="ghost"
           onClick={() => setStep(2)}
-          title="Preview Flouci step two"
+          title="Preview payment step two"
           className="h-8 text-xs text-slate-400 hover:bg-slate-800 hover:text-white"
         >
           Step 2
@@ -1816,9 +1828,9 @@ function FlouciDepositFlow({
   const [detectedTransactionId, setDetectedTransactionId] = React.useState("");
   const [supervisorVerified, setSupervisorVerified] = React.useState(Boolean(flouciSupervisor?.verified));
   const verificationScore = getSupervisorVerificationScore(flouciSupervisor?.email ?? "");
-  const [recipientNumber, setRecipientNumber] = React.useState(flouciRecipientNumbers[0]);
+  const [recipientNumber, setRecipientNumber] = React.useState(walletRecipientNumbers[0]);
   const [changeRequested, setChangeRequested] = React.useState(false);
-  const [correctedTransferNumber, setCorrectedTransferNumber] = React.useState(flouciRecipientNumbers[0]);
+  const [correctedTransferNumber, setCorrectedTransferNumber] = React.useState(walletRecipientNumbers[0]);
   const [correctedAmount, setCorrectedAmount] = React.useState(amount);
   const [supervisorNote] = React.useState(
     "The transfer number and amount do not match the submitted payment. Please correct both fields and submit again.",
@@ -1840,11 +1852,12 @@ function FlouciDepositFlow({
 
     const timer = window.setTimeout(() => {
       setAiStatus("matched");
-      setDetectedTransactionId("FL-4289176035");
+      const prefix = method.id === "d17" ? "D17" : method.id === "kashy" ? "KSH" : "FL";
+      setDetectedTransactionId(`${prefix}-4289176035`);
     }, 3200);
 
     return () => window.clearTimeout(timer);
-  }, [proofFile]);
+  }, [proofFile, method.id]);
 
   React.useEffect(() => {
     if (step !== 2) return;
@@ -1994,9 +2007,18 @@ function FlouciDepositFlow({
         {step === 2 ? (
           <div className="mb-4 flex items-center justify-center">
             <img
-              src="https://flouci.com/static/img/gallery/Logos_flouci-horizontal-gradient.12157bd2c525.png"
-              alt="Flouci"
-              className="h-7 w-auto object-contain"
+              src={
+                method.id === "flouci"
+                  ? "https://flouci.com/static/img/gallery/Logos_flouci-horizontal-gradient.12157bd2c525.png"
+                  : method.logoUrl ?? ""
+              }
+              alt={method.name}
+              className={cn(
+                "object-contain",
+                method.id === "flouci"
+                  ? "h-7 w-auto"
+                  : "size-9 rounded-lg border border-white/10 bg-white p-1",
+              )}
               loading="eager"
               referrerPolicy="no-referrer"
             />
@@ -2015,6 +2037,7 @@ function FlouciDepositFlow({
         <div className="flex-1">
           {step === 1 ? (
             <FlouciStepOne
+              method={method}
               playerId={playerId}
               setPlayerId={setPlayerId}
               playerLookupType={playerLookupType}
@@ -2028,6 +2051,7 @@ function FlouciDepositFlow({
 
           {step === 2 ? (
             <FlouciStepTwo
+              method={method}
               playerId={playerId}
               amount={amount}
               recipientNumber={recipientNumber}
@@ -2050,6 +2074,7 @@ function FlouciDepositFlow({
 
           {step === 3 ? (
             <WaitingTimeline
+              method={method}
               playerId={playerId}
               playerLookupType={playerLookupType}
               amount={amount}
@@ -2218,7 +2243,7 @@ export function CustomerPortal() {
     setDepositStarted(true);
   };
 
-  if (method.id === "flouci") {
+  if (isManualTransferMethod(method)) {
     return (
       <FlouciDepositFlow
         method={method}
