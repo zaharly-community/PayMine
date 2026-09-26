@@ -199,7 +199,456 @@ function PaymentMethodSelector({
   );
 }
 
-function DepositSummary({
+
+function FieldLabel({
+  children,
+  required = true,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+}) {
+  return (
+    <label className="mb-1.5 block text-xs font-medium text-slate-200">
+      {children}
+      {required ? <span className="ml-1 text-slate-500">*</span> : null}
+    </label>
+  );
+}
+
+const flouciRecipientNumbers = ["22 345 678", "53 781 249", "29 614 832"];
+
+function FlouciSteps({ step }: { step: 1 | 2 | 3 }) {
+  const labels = ["Deposit details", "Make the transfer", "Waiting"];
+
+  return (
+    <div className="mb-5">
+      <div className="flex items-start">
+        {labels.map((label, index) => {
+          const itemStep = index + 1;
+          const active = itemStep <= step;
+
+          return (
+            <React.Fragment key={label}>
+              <div className="flex min-w-0 flex-1 flex-col items-center text-center">
+                <div
+                  className={cn(
+                    "flex size-8 items-center justify-center rounded-full border text-xs font-semibold transition-colors",
+                    active
+                      ? "border-emerald-400 bg-emerald-400 text-slate-950"
+                      : "border-slate-700 bg-slate-900 text-slate-500",
+                  )}
+                >
+                  {itemStep < step ? <Check className="size-4" /> : itemStep}
+                </div>
+                <span
+                  className={cn(
+                    "mt-2 hidden max-w-[110px] text-[10px] leading-tight sm:block",
+                    active ? "text-slate-200" : "text-slate-500",
+                  )}
+                >
+                  {label}
+                </span>
+              </div>
+
+              {index < labels.length - 1 ? (
+                <div
+                  className={cn(
+                    "mt-4 h-px flex-1",
+                    index + 1 < step ? "bg-emerald-400/70" : "bg-slate-700",
+                  )}
+                />
+              ) : null}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function FlouciStepOne({
+  playerId,
+  setPlayerId,
+  amount,
+  setAmount,
+  error,
+  onContinue,
+}: {
+  playerId: string;
+  setPlayerId: React.Dispatch<React.SetStateAction<string>>;
+  amount: string;
+  setAmount: React.Dispatch<React.SetStateAction<string>>;
+  error: string;
+  onContinue: () => void;
+}) {
+  const presets = [20, 50, 100, 200, 500, 1000];
+
+  return (
+    <section className="rounded-xl border border-slate-700/70 bg-slate-900/90 p-4 sm:p-6">
+      <div className="mb-5">
+        <p className="text-base font-semibold text-white">Flouci deposit</p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-400">
+          Enter your player ID and choose the amount you want to deposit.
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <FieldLabel>Player ID</FieldLabel>
+          <Input
+            value={playerId}
+            onChange={(event) => setPlayerId(event.target.value)}
+            placeholder="Enter your player ID"
+            title="Player ID"
+            autoComplete="off"
+            className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+          />
+        </div>
+
+        <div>
+          <FieldLabel>Deposit amount</FieldLabel>
+          <Input
+            type="text"
+            inputMode="decimal"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            placeholder="Enter deposit amount"
+            title="Deposit amount"
+            className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+          />
+
+          <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
+            {presets.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => setAmount(String(preset))}
+                title="Select deposit amount"
+                className={cn(
+                  "rounded-md border px-2.5 py-2 text-xs font-medium tabular-nums transition-colors",
+                  Number(amount) === preset
+                    ? "border-emerald-400/60 bg-emerald-400/10 text-emerald-300"
+                    : "border-slate-700 bg-slate-800/60 text-slate-300 hover:border-slate-600 hover:bg-slate-800",
+                )}
+              >
+                {preset} TND
+              </button>
+            ))}
+          </div>
+
+          <p className="mt-2 text-[11px] text-slate-500">Minimum 1 TND · Maximum 10,000 TND</p>
+        </div>
+
+        {error ? (
+          <div className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+            {error}
+          </div>
+        ) : null}
+
+        <Button
+          type="button"
+          onClick={onContinue}
+          className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+        >
+          Continue to payment
+          <ArrowRight className="size-4" />
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function FlouciStepTwo({
+  playerId,
+  amount,
+  recipientNumber,
+  secondsLeft,
+  changeRequested,
+  transactionId,
+  setTransactionId,
+  proofFile,
+  setProofFile,
+  error,
+  onRequestChange,
+  onConfirm,
+}: {
+  playerId: string;
+  amount: string;
+  recipientNumber: string;
+  secondsLeft: number;
+  changeRequested: boolean;
+  transactionId: string;
+  setTransactionId: React.Dispatch<React.SetStateAction<string>>;
+  proofFile: File | null;
+  setProofFile: React.Dispatch<React.SetStateAction<File | null>>;
+  error: string;
+  onRequestChange: () => void;
+  onConfirm: () => void;
+}) {
+  const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
+  const seconds = (secondsLeft % 60).toString().padStart(2, "0");
+  const expired = secondsLeft <= 0;
+
+  const copyNumber = async () => {
+    try {
+      await navigator.clipboard.writeText(recipientNumber.replace(/\s/g, ""));
+    } catch {
+      // Clipboard access may be blocked by the browser.
+    }
+  };
+
+  return (
+    <section className="rounded-xl border border-slate-700/70 bg-slate-900/90 p-4 sm:p-6">
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-base font-semibold text-white">Make the Flouci transfer</p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-400">
+            Transfer the exact amount to the displayed number before the session expires.
+          </p>
+        </div>
+
+        <div
+          className={cn(
+            "shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold tabular-nums",
+            expired
+              ? "border-red-400/30 bg-red-500/10 text-red-300"
+              : "border-amber-400/25 bg-amber-400/10 text-amber-200",
+          )}
+        >
+          {expired ? "Expired" : <>{minutes}:{seconds}</>}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-3">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Player ID</p>
+            <p className="mt-1 truncate text-sm font-medium text-white">{playerId}</p>
+          </div>
+
+          <div className="rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-3">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Amount</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-white">
+              {Number(amount).toFixed(2)} TND
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-slate-300">Transfer to this Flouci number</p>
+              <p className="mt-2 text-2xl font-semibold tracking-wide text-white">{recipientNumber}</p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={copyNumber}
+                disabled={expired}
+                title="Copy transfer number"
+                className="border-slate-700 bg-slate-900/60 text-slate-200 hover:bg-slate-800"
+              >
+                <Copy className="size-3.5" />
+                Copy
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onRequestChange}
+                disabled={expired || changeRequested}
+                title="Request a different transfer number"
+                className="border-slate-700 bg-slate-900/60 text-slate-200 hover:bg-slate-800"
+              >
+                {changeRequested ? <Check className="size-3.5" /> : <RefreshCw className="size-3.5" />}
+                {changeRequested ? "Request sent" : "Change number"}
+              </Button>
+            </div>
+          </div>
+
+          <p className="mt-3 flex gap-2 text-[11px] leading-relaxed text-slate-400">
+            <Info className="mt-0.5 size-3.5 shrink-0" />
+            {changeRequested
+              ? "Your request to change the transfer number has been recorded."
+              : "Use the displayed number only for this deposit session."}
+          </p>
+        </div>
+
+        <div>
+          <FieldLabel>Transaction ID</FieldLabel>
+          <Input
+            value={transactionId}
+            onChange={(event) => setTransactionId(event.target.value)}
+            placeholder="Enter the Flouci transaction ID"
+            title="Transaction ID"
+            autoComplete="off"
+            disabled={expired}
+            className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+          />
+        </div>
+
+        <div>
+          <FieldLabel>Transfer proof</FieldLabel>
+          <label
+            title="Upload transfer proof"
+            className={cn(
+              "flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-slate-700 bg-slate-800/50 px-3 py-3 transition-colors hover:border-slate-600 hover:bg-slate-800",
+              expired && "pointer-events-none opacity-50",
+            )}
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-slate-700 text-slate-300">
+              <FileImage className="size-4" />
+            </span>
+
+            <span className="min-w-0">
+              <span className="block truncate text-xs font-medium text-slate-200">
+                {proofFile ? proofFile.name : "Upload a screenshot or payment proof"}
+              </span>
+              <span className="mt-0.5 block text-[10px] text-slate-500">PNG, JPG or WEBP</span>
+            </span>
+
+            <Upload className="ml-auto size-4 shrink-0 text-slate-500" />
+
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="sr-only"
+              title="Upload transfer proof"
+              onChange={(event) => setProofFile(event.target.files?.[0] ?? null)}
+              disabled={expired}
+            />
+          </label>
+        </div>
+
+        {error ? (
+          <div className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+            {error}
+          </div>
+        ) : null}
+
+        <Button
+          type="button"
+          onClick={onConfirm}
+          disabled={expired}
+          className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <CheckCircle2 className="size-4" />
+          Confirm transfer
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function WaitingTimeline({
+  playerId,
+  amount,
+}: {
+  playerId: string;
+  amount: string;
+}) {
+  const stages = [
+    {
+      title: "Request verification",
+      description: "A supervisor is reviewing your transaction details and transfer proof.",
+      icon: ShieldCheck,
+      active: true,
+    },
+    {
+      title: "Deposit confirmation",
+      description: "The deposit will be confirmed after the supervisor approves the request.",
+      icon: CheckCircle2,
+      active: false,
+    },
+    {
+      title: "Transfer received",
+      description: "Once the transfer is received, the funds will be credited to your player balance.",
+      icon: CircleDollarSign,
+      active: false,
+    },
+  ];
+
+  return (
+    <section className="rounded-xl border border-slate-700/70 bg-slate-900/90 p-4 sm:p-6">
+      <div className="mb-6 text-center">
+        <div className="mx-auto flex size-12 items-center justify-center rounded-full border border-emerald-400/25 bg-emerald-400/10 text-emerald-300">
+          <Clock3 className="size-5" />
+        </div>
+        <p className="mt-3 text-base font-semibold text-white">Your deposit is being reviewed</p>
+        <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-slate-400">
+          Your request has been submitted successfully. Follow the status below.
+        </p>
+      </div>
+
+      <div className="mb-5 grid gap-2 sm:grid-cols-2">
+        <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Player ID</p>
+          <p className="mt-1 truncate text-sm font-medium text-white">{playerId}</p>
+        </div>
+        <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Deposit amount</p>
+          <p className="mt-1 text-sm font-semibold tabular-nums text-white">
+            {Number(amount).toFixed(2)} TND
+          </p>
+        </div>
+      </div>
+
+      <div className="relative pl-1">
+        {stages.map((stage, index) => {
+          const Icon = stage.icon;
+          const isLast = index === stages.length - 1;
+
+          return (
+            <div key={stage.title} className="relative flex gap-4 pb-7 last:pb-0">
+              {!isLast ? (
+                <div className="absolute left-[15px] top-8 h-[calc(100%-1rem)] w-px bg-slate-700" />
+              ) : null}
+
+              <div
+                className={cn(
+                  "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border",
+                  stage.active
+                    ? "border-emerald-400 bg-emerald-400 text-slate-950"
+                    : "border-slate-700 bg-slate-800 text-slate-500",
+                )}
+              >
+                {stage.active ? <Icon className="size-4" /> : <span className="text-xs">{index + 1}</span>}
+              </div>
+
+              <div className="min-w-0 pt-0.5">
+                <p className={cn("text-sm font-medium", stage.active ? "text-white" : "text-slate-500")}>
+                  {stage.title}
+                  {stage.active ? (
+                    <span className="ml-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
+                      In progress
+                    </span>
+                  ) : null}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">{stage.description}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5 text-xs text-slate-400">
+        <p className="flex items-center gap-2 text-slate-300">
+          <Clock3 className="size-3.5" />
+          Waiting for supervisor verification
+        </p>
+        <p className="mt-1">
+          No further action is required from you unless the supervisor requests a correction.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function GenericDepositSummary({
   method,
   amount,
   onBack,
@@ -208,8 +657,6 @@ function DepositSummary({
   amount: string;
   onBack: () => void;
 }) {
-  const numericAmount = Number(amount) || method.min;
-  const displayAmount = numericAmount.toFixed(2);
   const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
 
   React.useEffect(() => {
@@ -246,9 +693,7 @@ function DepositSummary({
             <div className="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/80 p-3">
               <PaymentMethodMark method={method} />
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">
-                  Payment method
-                </p>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Payment method</p>
                 <p className="mt-0.5 truncate text-sm font-medium text-white">{method.name}</p>
               </div>
             </div>
@@ -257,7 +702,7 @@ function DepositSummary({
               <p className="text-sm font-medium text-white">Deposit amount</p>
               <div className="mt-2 rounded-lg bg-slate-700/90 px-3 py-3">
                 <p className="text-lg font-semibold tabular-nums text-slate-100">
-                  {displayAmount} {method.currency}
+                  {Number(amount || method.min).toFixed(2)} {method.currency}
                 </p>
               </div>
             </div>
@@ -292,9 +737,146 @@ function DepositSummary({
   );
 }
 
+function FlouciDepositFlow({
+  method,
+  openMethods,
+  onToggleMethods,
+  onSelectMethod,
+  playerId,
+  setPlayerId,
+  amount,
+  setAmount,
+}: {
+  method: PaymentMethod;
+  openMethods: boolean;
+  onToggleMethods: () => void;
+  onSelectMethod: (method: PaymentMethod) => void;
+  playerId: string;
+  setPlayerId: React.Dispatch<React.SetStateAction<string>>;
+  amount: string;
+  setAmount: React.Dispatch<React.SetStateAction<string>>;
+}) {
+  const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const [error, setError] = React.useState("");
+  const [transactionId, setTransactionId] = React.useState("");
+  const [proofFile, setProofFile] = React.useState<File | null>(null);
+  const [recipientIndex] = React.useState(0);
+  const [changeRequested, setChangeRequested] = React.useState(false);
+  const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+
+  React.useEffect(() => {
+    if (step !== 2) return;
+
+    const timer = window.setInterval(() => {
+      setSecondsLeft((current) => (current > 0 ? current - 1 : 0));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [step]);
+
+  const continueToPayment = () => {
+    if (!playerId.trim()) {
+      setError("Enter your player ID.");
+      return;
+    }
+
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount < 1 || numericAmount > 10000) {
+      setError("Amount must be between 1 and 10,000 TND.");
+      return;
+    }
+
+    setError("");
+    setSecondsLeft(15 * 60);
+    setStep(2);
+  };
+
+  const requestChange = () => {
+    setChangeRequested(true);
+  };
+
+  const confirmTransfer = () => {
+    if (secondsLeft <= 0) {
+      setError("This payment session has expired. Go back and start a new deposit.");
+      return;
+    }
+
+    if (!transactionId.trim()) {
+      setError("Enter the Flouci transaction ID.");
+      return;
+    }
+
+    if (!proofFile) {
+      setError("Upload your transfer proof before confirming.");
+      return;
+    }
+
+    setError("");
+    setStep(3);
+  };
+
+  return (
+    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-3xl flex-col">
+        {step === 1 ? (
+          <div className="mb-4">
+            <PaymentMethodSelector
+              method={method}
+              open={openMethods}
+              onToggle={onToggleMethods}
+              onSelect={onSelectMethod}
+            />
+          </div>
+        ) : null}
+
+        <FlouciSteps step={step} />
+
+        {step === 1 ? (
+          <FlouciStepOne
+            playerId={playerId}
+            setPlayerId={setPlayerId}
+            amount={amount}
+            setAmount={setAmount}
+            error={error}
+            onContinue={continueToPayment}
+          />
+        ) : null}
+
+        {step === 2 ? (
+          <FlouciStepTwo
+            playerId={playerId}
+            amount={amount}
+            recipientNumber={flouciRecipientNumbers[recipientIndex]}
+            secondsLeft={secondsLeft}
+            changeRequested={changeRequested}
+            transactionId={transactionId}
+            setTransactionId={setTransactionId}
+            proofFile={proofFile}
+            setProofFile={setProofFile}
+            error={error}
+            onRequestChange={requestChange}
+            onConfirm={confirmTransfer}
+          />
+        ) : null}
+
+        {step === 3 ? <WaitingTimeline playerId={playerId} amount={amount} /> : null}
+
+        {step !== 3 ? (
+          <div className="mt-4 flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
+            <ShieldCheck className="size-3.5" />
+            Secure checkout
+            <ExternalLink className="size-3" />
+          </div>
+        ) : null}
+      </div>
+    </main>
+  );
+}
+
 export function CustomerPortal() {
   const [method, setMethod] = React.useState(paymentMethods[0]);
   const [amount, setAmount] = React.useState(String(paymentMethods[0].min));
+  const [playerId, setPlayerId] = React.useState("");
   const [openMethods, setOpenMethods] = React.useState(false);
   const [depositStarted, setDepositStarted] = React.useState(false);
   const [error, setError] = React.useState("");
@@ -302,10 +884,18 @@ export function CustomerPortal() {
   const minLabel = method.min.toLocaleString("en-US");
   const maxLabel = method.max.toLocaleString("en-US");
 
+  const selectMethod = (nextMethod: PaymentMethod) => {
+    setMethod(nextMethod);
+    setAmount(String(nextMethod.min));
+    setError("");
+    setDepositStarted(false);
+  };
+
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const numericAmount = Number(amount);
+
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
       setError("Enter a valid amount.");
       return;
@@ -328,9 +918,24 @@ export function CustomerPortal() {
     setDepositStarted(true);
   };
 
+  if (method.id === "flouci") {
+    return (
+      <FlouciDepositFlow
+        method={method}
+        openMethods={openMethods}
+        onToggleMethods={() => setOpenMethods((current) => !current)}
+        onSelectMethod={selectMethod}
+        playerId={playerId}
+        setPlayerId={setPlayerId}
+        amount={amount}
+        setAmount={setAmount}
+      />
+    );
+  }
+
   if (depositStarted) {
     return (
-      <DepositSummary
+      <GenericDepositSummary
         method={method}
         amount={amount}
         onBack={() => setDepositStarted(false)}
@@ -347,26 +952,30 @@ export function CustomerPortal() {
               method={method}
               open={openMethods}
               onToggle={() => setOpenMethods((current) => !current)}
-              onSelect={(nextMethod) => {
-                setMethod(nextMethod);
-                setAmount(String(nextMethod.min));
-                setError("");
-              }}
+              onSelect={selectMethod}
             />
 
-            <form onSubmit={submit} className="rounded-xl border border-slate-700 bg-slate-900/90 p-4 sm:p-5">
-              <div className="rounded-lg bg-slate-700/90 px-3 py-2">
-                <Input
-                  type="text"
-                  inputMode="decimal"
-                  value={amount}
-                  onChange={(event) => {
-                    setAmount(event.target.value);
-                    setError("");
-                  }}
-                  aria-label="Deposit amount"
-                  className="h-8 border-0 bg-transparent p-0 text-base text-slate-100 shadow-none focus-visible:ring-0"
-                />
+            <form
+              onSubmit={submit}
+              className="rounded-xl border border-slate-700 bg-slate-900/90 p-4 sm:p-5"
+            >
+              <div>
+                <FieldLabel>Deposit amount</FieldLabel>
+                <div className="rounded-lg bg-slate-700/90 px-3 py-2">
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    value={amount}
+                    onChange={(event) => {
+                      setAmount(event.target.value);
+                      setError("");
+                    }}
+                    placeholder="Enter deposit amount"
+                    title="Deposit amount"
+                    aria-label="Deposit amount"
+                    className="h-8 border-0 bg-transparent p-0 text-base text-slate-100 shadow-none focus-visible:ring-0"
+                  />
+                </div>
               </div>
 
               <div className="mt-4 flex items-center justify-between gap-4 text-sm">
@@ -390,7 +999,8 @@ export function CustomerPortal() {
                 <span>
                   Do Deposit
                   <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
-                    Net Amount: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"}{" "}
+                    Net Amount:{" "}
+                    {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"}{" "}
                     {method.currency}
                   </span>
                 </span>
