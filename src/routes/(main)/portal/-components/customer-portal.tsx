@@ -886,6 +886,20 @@ function WaitingTimeline({
   supervisorNote: string;
   onSubmitCorrection: () => void;
 }) {
+  const [postAction, setPostAction] = React.useState<"review" | "report" | null>(null);
+  const [rating, setRating] = React.useState(0);
+  const [reviewText, setReviewText] = React.useState("");
+  const [reportReason, setReportReason] = React.useState("");
+  const [reportDetails, setReportDetails] = React.useState("");
+
+  const reportReasons = [
+    "Transfer not received",
+    "Request processing is taking too long",
+    "Incorrect transfer amount",
+    "Supervisor requested incorrect payment details",
+    "Other issue",
+  ];
+
   const stages = [
     {
       title: "Request verification",
@@ -1147,50 +1161,178 @@ function WaitingTimeline({
         </div>
       {status === "received" ? (
         <div className="mt-4 border-t border-slate-700 pt-4">
-          <div className="flex items-center gap-3">
-            <img
-              src={flouciSupervisor?.avatarUrl || ""}
-              alt=""
-              className="size-9 rounded-full object-cover ring-1 ring-white/10"
-              referrerPolicy="no-referrer"
-            />
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Supervisor</p>
-              <p className="truncate text-xs font-medium text-slate-100">{flouciSupervisor?.name ?? "Supervisor"}</p>
-            </div>
-            <span className="text-[10px] text-emerald-300">Transfer completed</span>
-          </div>
+          {postAction === null ? (
+            <>
+              <div className="flex items-center gap-3">
+                <img
+                  src={flouciSupervisor?.avatarUrl || ""}
+                  alt=""
+                  className="size-9 rounded-full object-cover ring-1 ring-white/10"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Supervisor</p>
+                  <p className="truncate text-xs font-medium text-slate-100">{flouciSupervisor?.name ?? "Supervisor"}</p>
+                </div>
+                <span className="text-[10px] text-emerald-300">Transfer completed</span>
+              </div>
 
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <Button
-              type="button"
-              variant="outline"
-              title="Rate supervisor"
-              onClick={() => window.alert("Supervisor rating")}
-              className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:bg-slate-800"
-            >
-              <Star className="size-3.5" />
-              Rate supervisor
-            </Button>
-            <Button
-              type="button"
-              title="Start another deposit"
-              onClick={() => window.location.reload()}
-              className="h-10 bg-emerald-400 text-xs font-medium text-slate-950 hover:bg-emerald-300"
-            >
-              <RefreshCw className="size-3.5" />
-              Deposit again
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              title="Exit deposit flow"
-              onClick={() => window.history.back()}
-              className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:bg-slate-800"
-            >
-              Exit
-            </Button>
-          </div>
+              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  title="Review supervisor"
+                  onClick={() => setPostAction("review")}
+                  className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:border-amber-400/40 hover:bg-slate-800 hover:text-white"
+                >
+                  <Star className="size-3.5" />
+                  Review Supervisor
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  title="Report an issue"
+                  onClick={() => setPostAction("report")}
+                  className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:border-red-400/40 hover:bg-slate-800 hover:text-white"
+                >
+                  <Info className="size-3.5" />
+                  Report
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  title="Exit deposit flow"
+                  onClick={() => window.history.back()}
+                  className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:bg-slate-800"
+                >
+                  Exit
+                </Button>
+              </div>
+            </>
+          ) : null}
+
+          {postAction === "review" ? (
+            <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-white">Review Supervisor</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    How was your experience with {flouciSupervisor?.name ?? "the supervisor"}?
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setPostAction(null)}
+                  className="h-8 px-2 text-xs text-slate-400 hover:text-white"
+                >
+                  Back
+                </Button>
+              </div>
+
+              <div className="mt-4 flex justify-center gap-1.5">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setRating(value)}
+                    aria-label={value + " star" + (value === 1 ? "" : "s")}
+                    className="rounded-md p-1.5 transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40"
+                  >
+                    <Star
+                      className={cn(
+                        "size-7 transition-colors",
+                        value <= rating
+                          ? "fill-amber-300 text-amber-300"
+                          : "text-slate-600 hover:text-amber-200",
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-4">
+                <FieldLabel required={false}>Your review</FieldLabel>
+                <textarea
+                  value={reviewText}
+                  onChange={(event) => setReviewText(event.target.value)}
+                  placeholder="Tell us about your experience..."
+                  rows={4}
+                  className="w-full resize-none rounded-lg border border-slate-700 bg-slate-700/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-colors focus:border-amber-400/40 focus:ring-2 focus:ring-amber-400/10"
+                />
+              </div>
+
+              <Button
+                type="button"
+                disabled={rating === 0}
+                onClick={() => setPostAction(null)}
+                className="mt-3 h-10 w-full bg-amber-300 text-sm font-medium text-slate-950 hover:bg-amber-200 disabled:opacity-40"
+              >
+                <Star className="size-4" />
+                Submit review
+              </Button>
+            </div>
+          ) : null}
+
+          {postAction === "report" ? (
+            <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-white">Report an issue</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Select what happened so the team can review your case.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setPostAction(null)}
+                  className="h-8 px-2 text-xs text-slate-400 hover:text-white"
+                >
+                  Back
+                </Button>
+              </div>
+
+              <div className="mt-4 space-y-2">
+                {reportReasons.map((reason) => (
+                  <button
+                    key={reason}
+                    type="button"
+                    onClick={() => setReportReason(reason)}
+                    className={cn(
+                      "w-full rounded-lg border px-3 py-2.5 text-left text-xs transition-colors",
+                      reportReason === reason
+                        ? "border-red-400/40 bg-red-500/10 text-red-200"
+                        : "border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600 hover:bg-slate-800",
+                    )}
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-4">
+                <FieldLabel required={false}>Additional details</FieldLabel>
+                <textarea
+                  value={reportDetails}
+                  onChange={(event) => setReportDetails(event.target.value)}
+                  placeholder="Add any details that can help us investigate..."
+                  rows={4}
+                  className="w-full resize-none rounded-lg border border-slate-700 bg-slate-700/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-colors focus:border-red-400/40 focus:ring-2 focus:ring-red-400/10"
+                />
+              </div>
+
+              <Button
+                type="button"
+                disabled={!reportReason}
+                onClick={() => setPostAction(null)}
+                className="mt-3 h-10 w-full bg-red-400 text-sm font-medium text-slate-950 hover:bg-red-300 disabled:opacity-40"
+              >
+                <Info className="size-4" />
+                Submit report
+              </Button>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
