@@ -14,12 +14,15 @@ import {
   Info,
   RefreshCw,
   ShieldCheck,
+  Star,
   Upload,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "cn";
+
+import { distributors } from "@/routes/(main)/dashboard/distributors/-components/data";
 
 type PaymentMethod = {
   id: string;
@@ -234,6 +237,15 @@ type FlouciDemoStatus =
 
 type FlouciAiStatus = "idle" | "analyzing" | "matched" | "unrecognized";
 
+const flouciSupervisor =
+  distributors.find((distributor) => distributor.type === "Supervisor") ?? distributors[0];
+
+function getSupervisorVerificationScore(email: string) {
+  let seed = 0;
+  for (const char of email) seed += char.charCodeAt(0);
+  return Number(((seed % 101) / 10).toFixed(1));
+}
+
 function FlouciStepOne({
   playerId,
   setPlayerId,
@@ -404,8 +416,9 @@ function FlouciStepTwo({
       <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
         <div className="space-y-4">
           <div>
-            <FieldLabel>Flouci transfer number</FieldLabel>
-            <div className="flex overflow-hidden rounded-lg bg-slate-700/90">
+          <FieldLabel>Flouci transfer number</FieldLabel>
+          <div className="flex items-stretch gap-2">
+            <div className="flex min-w-0 flex-1 overflow-hidden rounded-lg bg-slate-700/90">
               <Input
                 readOnly
                 value={recipientNumber}
@@ -420,59 +433,56 @@ function FlouciStepTwo({
                 onClick={() => copy(recipientNumber.replace(/\s/g, ""))}
                 disabled={expired}
                 title="Copy Flouci transfer number"
-                className="mr-1 my-1 size-10 rounded-md text-slate-200 hover:bg-slate-800 hover:text-white"
+                className="mr-1 my-1 size-10 shrink-0 rounded-md text-slate-200 hover:bg-slate-800 hover:text-white"
               >
                 <Copy className="size-4" />
               </Button>
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onRequestChange}
+              disabled={expired || changeRequested}
+              title="Request a different Flouci transfer number"
+              className="h-12 shrink-0 rounded-lg border-slate-700 bg-slate-900/60 px-3 text-xs text-slate-200 hover:bg-slate-800"
+            >
+              {changeRequested ? <Check className="size-3.5" /> : <RefreshCw className="size-3.5" />}
+              {changeRequested ? "Request sent" : "Change number"}
+            </Button>
+          </div>
 
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-              <span className="text-[11px] text-slate-500">
-                Use this number only for this deposit.
-              </span>
-              <div className="flex items-center gap-2">
-                <span
-                  className={cn(
-                    "rounded-full border px-2 py-1 text-[10px] font-semibold",
-                    supervisorVerified
-                      ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-300"
-                      : "border-red-400/25 bg-red-500/10 text-red-300",
-                  )}
-                >
-                  {supervisorVerified ? "Supervisor verified" : "Not verified"}
-                </span>
-                <span className="text-[10px] tabular-nums text-slate-500">
-                  Score {verificationScore}/100
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2">
-              <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">
-                Destination verification
-              </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-                {supervisorVerified
-                  ? "This transfer number has been reviewed by the supervisor for this payment session."
-                  : "This transfer number has not been verified by the supervisor for this payment session."}
-              </p>
-            </div>
-
-            <div className="mt-2 flex justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onRequestChange}
-                disabled={expired || changeRequested}
-                title="Request a different Flouci transfer number"
-                className="border-slate-700 bg-slate-900/60 text-slate-200 hover:bg-slate-800"
+          <div className="mt-2 flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+            <div className="relative shrink-0">
+              <img
+                src={flouciSupervisor?.avatarUrl || ""}
+                alt=""
+                className="size-9 rounded-full object-cover ring-1 ring-white/10"
+                referrerPolicy="no-referrer"
+              />
+              <span
+                className={cn(
+                  "absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full border-2 border-slate-900 text-[9px] text-white",
+                  supervisorVerified ? "bg-blue-600" : "bg-slate-600",
+                )}
+                title={supervisorVerified ? "Supervisor verified" : "Supervisor not verified"}
               >
-                {changeRequested ? <Check className="size-3.5" /> : <RefreshCw className="size-3.5" />}
-                {changeRequested ? "Request sent" : "Change number"}
-              </Button>
+                {supervisorVerified ? <Check className="size-2.5" /> : "!"}
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Supervisor</p>
+              <p className="truncate text-xs font-medium text-slate-100">{flouciSupervisor?.name ?? "Supervisor"}</p>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Verification score</p>
+              <p className="text-xs font-semibold tabular-nums text-slate-100">{verificationScore.toFixed(1)}/10</p>
+              <p className={cn("text-[10px]", supervisorVerified ? "text-emerald-300" : "text-slate-500")}>
+                {supervisorVerified ? "Verified" : "Not verified"}
+              </p>
             </div>
           </div>
+        </div>
 
           <div>
             <FieldLabel>Transfer amount</FieldLabel>
@@ -498,13 +508,31 @@ function FlouciStepTwo({
             </div>
           </div>
 
-          <div>
-            <p className="mb-1.5 flex items-center justify-between text-xs font-medium text-slate-400">
-              <span>Awaiting payment</span>
-              <span className={cn("tabular-nums font-semibold", expired ? "text-red-300" : "text-white")}>
+          <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Payment timer</p>
+                <p className="mt-0.5 text-xs text-slate-400">
+                  {expired ? "Payment session expired" : "Complete the transfer before time runs out"}
+                </p>
+              </div>
+              <div
+                className={cn(
+                  "rounded-md border px-3 py-2 text-xl font-semibold tabular-nums tracking-[0.08em]",
+                  expired
+                    ? "border-red-400/30 bg-red-500/10 text-red-300"
+                    : "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
+                )}
+              >
                 {minutes}:{seconds}
-              </span>
-            </p>
+              </div>
+            </div>
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-700">
+              <div
+                className={cn("h-full rounded-full transition-all", expired ? "bg-red-400" : "bg-emerald-400")}
+                style={{ width: Math.max(0, Math.min(100, (secondsLeft / (15 * 60)) * 100)) + "%" }}
+              />
+            </div>
           </div>
 
           <div>
@@ -525,7 +553,7 @@ function FlouciStepTwo({
             <label
               title="Upload payment photo"
               className={cn(
-                "flex min-h-12 cursor-pointer flex-col gap-2 rounded-lg border border-dashed border-slate-700 bg-slate-800/50 p-2.5 transition-colors hover:border-slate-600 hover:bg-slate-800",
+                "flex min-h-64 cursor-pointer flex-col gap-2 rounded-lg border border-dashed border-slate-700 bg-slate-800/50 p-2.5 transition-colors hover:border-slate-600 hover:bg-slate-800",
                 expired && "pointer-events-none opacity-50",
               )}
             >
@@ -558,14 +586,11 @@ function FlouciStepTwo({
                   <img
                     src={previewUrl}
                     alt="Uploaded payment"
-                    className="max-h-44 w-full object-contain"
+                    className="max-h-72 w-full object-contain"
                   />
                 </div>
               ) : null}
-            </label>
-          </div>
-
-          <div
+            <div
             className={cn(
               "rounded-lg border px-3 py-2.5 text-xs",
               aiStatus === "matched"
@@ -601,6 +626,10 @@ function FlouciStepTwo({
                     ? "AI is reading the uploaded payment photo and checking the transfer details."
                     : "Upload a payment photo to let AI analyze the transfer evidence."}
             </p>
+          </div>
+
+
+            </label>
           </div>
 
           <div className="space-y-2 text-xs leading-relaxed text-slate-300">
@@ -919,6 +948,55 @@ function WaitingTimeline({
                       : "Waiting for supervisor verification"}
           </p>
         </div>
+      {status === "received" ? (
+        <div className="mt-4 border-t border-slate-700 pt-4">
+          <div className="flex items-center gap-3">
+            <img
+              src={flouciSupervisor?.avatarUrl || ""}
+              alt=""
+              className="size-9 rounded-full object-cover ring-1 ring-white/10"
+              referrerPolicy="no-referrer"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Supervisor</p>
+              <p className="truncate text-xs font-medium text-slate-100">{flouciSupervisor?.name ?? "Supervisor"}</p>
+            </div>
+            <span className="text-[10px] text-emerald-300">Transfer completed</span>
+          </div>
+
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <Button
+              type="button"
+              variant="outline"
+              title="Rate supervisor"
+              onClick={() => window.alert("Supervisor rating")}
+              className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:bg-slate-800"
+            >
+              <Star className="size-3.5" />
+              Rate supervisor
+            </Button>
+            <Button
+              type="button"
+              title="Start another deposit"
+              onClick={() => window.location.reload()}
+              className="h-10 bg-emerald-400 text-xs font-medium text-slate-950 hover:bg-emerald-300"
+            >
+              <RefreshCw className="size-3.5" />
+              Deposit again
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              title="Exit deposit flow"
+              onClick={() => window.history.back()}
+              className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:bg-slate-800"
+            >
+              Exit
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       </section>
     </>
   );
@@ -1139,8 +1217,8 @@ function FlouciDepositFlow({
   const [transactionId, setTransactionId] = React.useState("");
   const [proofFile, setProofFile] = React.useState<File | null>(null);
   const [aiStatus, setAiStatus] = React.useState<FlouciAiStatus>("idle");
-  const [supervisorVerified, setSupervisorVerified] = React.useState(true);
-  const [verificationScore] = React.useState(98);
+  const [supervisorVerified, setSupervisorVerified] = React.useState(Boolean(flouciSupervisor?.verified));
+  const verificationScore = getSupervisorVerificationScore(flouciSupervisor?.email ?? "");
   const [recipientNumber, setRecipientNumber] = React.useState(flouciRecipientNumbers[0]);
   const [changeRequested, setChangeRequested] = React.useState(false);
   const [correctedTransferNumber, setCorrectedTransferNumber] = React.useState(flouciRecipientNumbers[0]);
