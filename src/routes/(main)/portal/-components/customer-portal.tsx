@@ -311,7 +311,7 @@ function FlouciStepOne({
               </div>
 
               <div
-                className="flex h-12 shrink-0 items-stretch gap-1 rounded-lg border border-slate-700 bg-slate-900/60 p-1"
+                className="flex h-12 shrink-0 items-center gap-1.5"
                 role="tablist"
                 aria-label="Player identification type"
               >
@@ -321,36 +321,43 @@ function FlouciStepOne({
                     ["username", "Username", UserRound],
                     ["email", "Email", Mail],
                   ] as const
-                ).map(([type, label, Icon]) => (
-                  <button
-                    key={type}
-                    type="button"
-                    role="tab"
-                    aria-selected={playerLookupType === type}
-                    aria-label={label}
-                    title={label}
-                    onClick={() => {
-                      setPlayerLookupType(type);
-                      setPlayerId("");
-                    }}
-                    className={cn(
-                      "group flex size-10 items-center justify-center rounded-md border transition-all",
-                      playerLookupType === type
-                        ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300 shadow-[0_0_16px_rgba(52,211,153,0.10)]"
-                        : "border-transparent text-slate-500 hover:border-slate-700 hover:bg-slate-800 hover:text-slate-200",
-                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
-                    )}
-                  >
-                    <Icon
+                ).map(([type, label, Icon]) => {
+                  const active = playerLookupType === type;
+
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      aria-label={label}
+                      title={label}
+                      onClick={() => {
+                        setPlayerLookupType(type);
+                        setPlayerId("");
+                      }}
                       className={cn(
-                        "size-4 transition-all",
-                        playerLookupType === type
-                          ? "text-emerald-300"
-                          : "text-slate-500 group-hover:text-slate-300",
+                        "group flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg bg-slate-700/90 px-3 text-slate-400 transition-all",
+                        active
+                          ? "min-w-[92px] text-slate-100 shadow-[0_0_16px_rgba(255,255,255,0.04)]"
+                          : "w-12 hover:bg-slate-800 hover:text-slate-100",
+                        "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
                       )}
-                    />
-                  </button>
-                ))}
+                    >
+                      <Icon
+                        className={cn(
+                          "size-4 shrink-0 transition-colors",
+                          active
+                            ? "text-emerald-300"
+                            : "text-slate-400 group-hover:text-slate-200",
+                        )}
+                      />
+                      {active ? (
+                        <span className="truncate text-xs font-medium">{label}</span>
+                      ) : null}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
