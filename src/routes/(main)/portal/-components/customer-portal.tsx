@@ -1564,36 +1564,32 @@ function FlouciStepOne({
             status={playerRequestStatus}
             openRequest={openRequest}
           />
+          {playerRequestStatus === "open" && openRequest ? (
+          <Link
+            to="/portal/tracking-depoist"
+            search={{ request: openRequest.id }}
+            title="View your open deposit request"
+            className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-amber-300 text-sm font-medium text-slate-950 transition-colors hover:bg-amber-200"
+          >
+            <CircleDollarSign className="size-4" />
+            <span>View Request</span>
+          </Link>
+        ) : (
           <Button
-            type={playerRequestStatus === "open" ? "button" : "submit"}
-            onClick={
-              playerRequestStatus === "open" && openRequest
-                ? () => onViewRequest(openRequest)
-                : undefined
-            }
+            type="submit"
             disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
-            title={
-              playerRequestStatus === "open"
-                ? "View your open deposit request"
-                : `Continue to ${method.name} payment`
-            }
-            className={cn(
-            "h-10 w-full rounded-md text-sm font-medium text-slate-950",
-            playerRequestStatus === "open"
-              ? "bg-amber-300 hover:bg-amber-200"
-              : "bg-emerald-400 hover:bg-emerald-300",
-          )}
+            title={"Continue to " + method.name + " payment"}
+            className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
           >
             <CircleDollarSign className="size-4" />
             <span>
-              {playerRequestStatus === "open" ? "View Request" : "Do Deposit"}
-              {playerRequestStatus !== "open" ? (
+              Do Deposit
               <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
                 Net Amount: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} TND
               </span>
-              ) : null}
             </span>
           </Button>
+        )}
         </form>
       </section>
 
@@ -3413,36 +3409,32 @@ function CardDepositStepOne({
           status={playerRequestStatus}
           openRequest={openRequest}
         />
-        <Button
-          type={playerRequestStatus === "open" ? "button" : "submit"}
-          onClick={
-            playerRequestStatus === "open" && openRequest
-              ? () => onViewRequest(openRequest)
-              : undefined
-          }
-          disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
-          title={
-            playerRequestStatus === "open"
-              ? "View your open deposit request"
-              : "Continue to " + method.name + " card payment"
-          }
-          className={cn(
-            "h-10 w-full rounded-md text-sm font-medium text-slate-950",
-            playerRequestStatus === "open"
-              ? "bg-amber-300 hover:bg-amber-200"
-              : "bg-emerald-400 hover:bg-emerald-300",
-          )}
-        >
-          <CircleDollarSign className="size-4" />
-          <span>
-            {playerRequestStatus === "open" ? "View Request" : "Do Deposit"}
-            {playerRequestStatus !== "open" ? (
-            <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
-              Total Cards Value: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} {method.currency}
+        {playerRequestStatus === "open" && openRequest ? (
+          <Link
+            to="/portal/tracking-depoist"
+            search={{ request: openRequest.id }}
+            title="View your open deposit request"
+            className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-amber-300 text-sm font-medium text-slate-950 transition-colors hover:bg-amber-200"
+          >
+            <CircleDollarSign className="size-4" />
+            <span>View Request</span>
+          </Link>
+        ) : (
+          <Button
+            type="submit"
+            disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
+            title={"Continue to " + method.name + " payment"}
+            className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+          >
+            <CircleDollarSign className="size-4" />
+            <span>
+              Do Deposit
+              <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
+                Total Cards Value: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} {method.currency}
+              </span>
             </span>
-            ) : null}
-          </span>
-        </Button>
+          </Button>
+        )}
       </form>
     </section>
 
@@ -4350,36 +4342,32 @@ function EDinarStepOne({
           status={playerRequestStatus}
           openRequest={openRequest}
         />
-        <Button
-          type={playerRequestStatus === "open" ? "button" : "submit"}
-          onClick={
-            playerRequestStatus === "open" && openRequest
-              ? () => onViewRequest(openRequest)
-              : undefined
-          }
-          disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
-          title={
-            playerRequestStatus === "open"
-              ? "View your open deposit request"
-              : "Continue to " + method.name + " payment"
-          }
-          className={cn(
-            "h-10 w-full rounded-md text-sm font-medium text-slate-950",
-            playerRequestStatus === "open"
-              ? "bg-amber-300 hover:bg-amber-200"
-              : "bg-emerald-400 hover:bg-emerald-300",
-          )}
-        >
-          <CircleDollarSign className="size-4" />
-          <span>
-            {playerRequestStatus === "open" ? "View Request" : "Do Deposit"}
-            {playerRequestStatus !== "open" ? (
-            <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
-              Net Amount: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} TND
+        {playerRequestStatus === "open" && openRequest ? (
+          <Link
+            to="/portal/tracking-depoist"
+            search={{ request: openRequest.id }}
+            title="View your open deposit request"
+            className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-amber-300 text-sm font-medium text-slate-950 transition-colors hover:bg-amber-200"
+          >
+            <CircleDollarSign className="size-4" />
+            <span>View Request</span>
+          </Link>
+        ) : (
+          <Button
+            type="submit"
+            disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
+            title={"Continue to " + method.name + " payment"}
+            className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+          >
+            <CircleDollarSign className="size-4" />
+            <span>
+              Do Deposit
+              <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
+                Net Amount: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} TND
+              </span>
             </span>
-            ) : null}
-          </span>
-        </Button>
+          </Button>
+        )}
       </form>
     </section>
   );
