@@ -257,6 +257,189 @@ function getSupervisorVerificationScore(email: string) {
   return Number(((seed % 101) / 10).toFixed(1));
 }
 
+function FlouciTransferHelpAccordion() {
+  const [openItem, setOpenItem] = React.useState<string | null>(null);
+
+  const toggle = (item: string) => {
+    setOpenItem((current) => (current === item ? null : item));
+  };
+
+  const items = [
+    {
+      id: "identity",
+      title: "1. Enter your player information",
+      description: "Use the identifier you normally use to access your account.",
+      visual: (
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
+          <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+            <div className="size-6 rounded-md bg-slate-800" />
+            <div className="h-2 w-24 rounded bg-slate-800" />
+          </div>
+          <div className="mt-3 space-y-2">
+            <div className="h-2 w-20 rounded bg-slate-800" />
+            <div className="flex h-9 items-center gap-2 rounded-md border border-emerald-400/25 bg-emerald-400/5 px-2.5">
+              <UserRound className="size-3.5 text-emerald-300" />
+              <span className="text-[10px] text-slate-300">Player ID / Username / Email</span>
+            </div>
+            <p className="text-[9px] leading-relaxed text-slate-500">
+              Select the matching identifier above and enter the value in the field.
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "transfer",
+      title: "2. Create the Flouci transfer",
+      description: "Send the exact amount to the Flouci number displayed in the payment form.",
+      visual: (
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
+          <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+            <span className="flex size-6 items-center justify-center rounded-md bg-slate-800 text-[9px] font-semibold text-slate-300">
+              F
+            </span>
+            <span className="text-[10px] font-medium text-slate-200">New transfer</span>
+          </div>
+          <div className="mt-3 space-y-2">
+            <div>
+              <p className="mb-1 text-[9px] text-slate-500">Recipient</p>
+              <div className="flex h-8 items-center rounded-md border border-cyan-300/20 bg-cyan-300/5 px-2 text-[10px] font-medium text-cyan-100">
+                22 345 678
+              </div>
+            </div>
+            <div>
+              <p className="mb-1 text-[9px] text-slate-500">Amount</p>
+              <div className="flex h-8 items-center rounded-md border border-cyan-300/20 bg-cyan-300/5 px-2 text-[10px] font-medium text-cyan-100">
+                100.00 TND
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "proof",
+      title: "3. Keep the transfer proof",
+      description: "After completing the transfer, keep the receipt and transaction reference visible.",
+      visual: (
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span className="text-[10px] font-medium text-slate-200">Transfer completed</span>
+            <span className="rounded-full bg-emerald-400/10 px-2 py-0.5 text-[8px] font-semibold text-emerald-300">
+              Success
+            </span>
+          </div>
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center justify-between rounded-md bg-slate-900 px-2.5 py-2">
+              <span className="text-[9px] text-slate-500">Transaction ID</span>
+              <span className="text-[9px] font-medium text-slate-200">FL-4289176035</span>
+            </div>
+            <div className="h-10 rounded-md border border-dashed border-slate-700 bg-slate-900/70" />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "ocr",
+      title: "4. AI OCR checks the payment photo",
+      description: "OCR reads visible text from the receipt, extracts key fields, and compares them with your request.",
+      visual: (
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
+          <div className="relative overflow-hidden rounded-md border border-slate-700 bg-slate-900 p-3">
+            <div className="space-y-2 opacity-80">
+              <div className="h-2 w-28 rounded bg-slate-700" />
+              <div className="h-2 w-20 rounded bg-slate-700" />
+              <div className="h-6 w-full rounded border border-cyan-300/30 bg-cyan-300/5" />
+              <div className="h-6 w-3/4 rounded border border-cyan-300/30 bg-cyan-300/5" />
+            </div>
+            <div
+              className="absolute inset-x-2 top-1/2 h-px bg-cyan-200 shadow-[0_0_14px_3px_rgba(103,232,249,0.45)]"
+              style={{ animation: "flouci-ocr-scan 2.1s linear infinite" }}
+            />
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            <span className="rounded-md border border-cyan-300/20 bg-cyan-300/5 px-2 py-1 text-[9px] text-cyan-100">
+              Transaction ID
+            </span>
+            <span className="rounded-md border border-cyan-300/20 bg-cyan-300/5 px-2 py-1 text-[9px] text-cyan-100">
+              Amount
+            </span>
+            <span className="rounded-md border border-cyan-300/20 bg-cyan-300/5 px-2 py-1 text-[9px] text-cyan-100">
+              Recipient
+            </span>
+            <span className="rounded-md border border-cyan-300/20 bg-cyan-300/5 px-2 py-1 text-[9px] text-cyan-100">
+              Date / time
+            </span>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <section className="mt-4 overflow-hidden rounded-lg border border-slate-700 bg-slate-900/45">
+      <div className="flex items-center gap-2 border-b border-slate-800 px-3 py-2.5">
+        <Info className="size-3.5 text-slate-300" />
+        <div>
+          <p className="text-[11px] font-medium text-slate-200">How to complete a Flouci transfer</p>
+          <p className="text-[9px] text-slate-500">Open a step to see where each detail goes and how AI OCR checks the proof.</p>
+        </div>
+      </div>
+
+      <div className="divide-y divide-slate-800">
+        {items.map((item) => {
+          const open = openItem === item.id;
+
+          return (
+            <div key={item.id}>
+              <button
+                type="button"
+                onClick={() => toggle(item.id)}
+                aria-expanded={open}
+                className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-slate-800/60"
+              >
+                <span
+                  className={cn(
+                    "flex size-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold",
+                    open ? "bg-emerald-400/10 text-emerald-300" : "bg-slate-800 text-slate-500",
+                  )}
+                >
+                  {item.id === "ocr" ? <ScanText className="size-3" /> : item.id === "identity" ? "1" : item.id === "transfer" ? "2" : "3"}
+                </span>
+
+                <span className="min-w-0 flex-1">
+                  <span className={cn("block text-[11px] font-medium", open ? "text-slate-100" : "text-slate-300")}>
+                    {item.title}
+                  </span>
+                  {!open ? <span className="mt-0.5 block truncate text-[9px] text-slate-500">{item.description}</span> : null}
+                </span>
+
+                <ChevronDown className={cn("size-3.5 shrink-0 text-slate-500 transition-transform", open && "rotate-180 text-slate-300")} />
+              </button>
+
+              {open ? (
+                <div className="grid grid-cols-1 gap-3 bg-slate-950/20 px-3 pb-3 sm:grid-cols-[minmax(0,1fr)_180px] sm:items-start">
+                  <div className="pt-0.5">
+                    <p className="text-[10px] leading-relaxed text-slate-400">{item.description}</p>
+                    {item.id === "ocr" ? (
+                      <div className="mt-2 rounded-md border border-cyan-300/15 bg-cyan-300/5 px-2.5 py-2">
+                        <p className="text-[9px] leading-relaxed text-cyan-100/90">
+                          The scan can identify the transaction reference from the image. When a match is found, the player can use the detected ID instead of typing it manually.
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div>{item.visual}</div>
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function FlouciStepOne({
   playerId,
   setPlayerId,
@@ -440,12 +623,11 @@ function FlouciStepOne({
         </form>
       </section>
 
-      <div className="mt-5 space-y-1 px-1 text-xs leading-relaxed text-slate-300 sm:text-sm">
-        <p>To make a deposit, please fill in all the required fields below.</p>
-        <p>
-          Note* Make sure to select the correct payment method and enter the correct
-          information before submitting your deposit.
-        </p>
+      <FlouciTransferHelpAccordion />
+
+      <div className="mt-3 space-y-1 px-1 text-[10px] leading-relaxed text-slate-400 sm:text-xs">
+        <p>Complete the transfer before continuing and keep the payment proof available for verification.</p>
+        <p>Note* Make sure the recipient number and amount exactly match the instructions above.</p>
       </div>
     </>
   );
