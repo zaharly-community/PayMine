@@ -589,6 +589,10 @@ function FlouciStepTwo({
   onRequestChange: () => void;
   onConfirm: () => void;
 }) {
+  const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
+  const seconds = (secondsLeft % 60).toString().padStart(2, "0");
+  const expired = secondsLeft <= 0;
+
   const previewUrl = React.useMemo(
     () => (proofFile ? URL.createObjectURL(proofFile) : ""),
     [proofFile],
