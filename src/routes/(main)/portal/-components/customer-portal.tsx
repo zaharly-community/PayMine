@@ -240,14 +240,15 @@ const walletRecipientOwners: Record<string, string> = {
 };
 
 const manualTransferMethodIds = new Set(["flouci", "d17", "kashy"]);
+
+function isManualTransferMethod(method: PaymentMethod) {
+  return manualTransferMethodIds.has(method.id);
+}
+
 const cardDepositMethodIds = new Set(["orange", "ooredoo", "tunisie-telecom"]);
 
 function isCardDepositMethod(method: PaymentMethod) {
   return cardDepositMethodIds.has(method.id);
-}
-
-function isManualTransferMethod(method: PaymentMethod) {
-  return manualTransferMethodIds.has(method.id);
 }
 
 type FlouciDemoStatus =
@@ -1881,17 +1882,6 @@ function FlouciDepositFlow({
     return () => window.clearTimeout(timer);
   }, [proofFile, method.id]);
 
-  const previewUrl = React.useMemo(
-    () => (proofFile ? URL.createObjectURL(proofFile) : ""),
-    [proofFile],
-  );
-
-  React.useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
-
   React.useEffect(() => {
     if (step !== 2) return;
 
@@ -2180,20 +2170,10 @@ function CardDepositStepOne({
 
   return (
     <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          onContinue();
-        }}
-        className="space-y-4"
-      >
+      <form onSubmit={(event) => { event.preventDefault(); onContinue(); }} className="space-y-4">
         <div>
           <FieldLabel>
-            {playerLookupType === "playerId"
-              ? "Player ID"
-              : playerLookupType === "username"
-                ? "Username"
-                : "Email"}
+            {playerLookupType === "playerId" ? "Player ID" : playerLookupType === "username" ? "Username" : "Email"}
           </FieldLabel>
 
           <div className="flex items-stretch gap-2">
@@ -2209,23 +2189,13 @@ function CardDepositStepOne({
                       ? "Enter your username"
                       : "Enter your email address"
                 }
-                title={
-                  playerLookupType === "playerId"
-                    ? "Player ID"
-                    : playerLookupType === "username"
-                      ? "Username"
-                      : "Email"
-                }
+                title={playerLookupType === "playerId" ? "Player ID" : playerLookupType === "username" ? "Username" : "Email"}
                 autoComplete={playerLookupType === "email" ? "email" : "off"}
                 className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
               />
             </div>
 
-            <div
-              className="flex h-12 shrink-0 items-center gap-1.5"
-              role="tablist"
-              aria-label="Player identification type"
-            >
+            <div className="flex h-12 shrink-0 items-center gap-1.5" role="tablist" aria-label="Player identification type">
               {(
                 [
                   ["playerId", "Player ID", Hash],
@@ -2249,38 +2219,16 @@ function CardDepositStepOne({
                     }}
                     className={cn(
                       "group flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg bg-slate-700/90 px-3 text-slate-400 transition-all",
-                      active
-                        ? "min-w-[92px] text-slate-100 shadow-[0_0_16px_rgba(255,255,255,0.04)]"
-                        : "w-12 hover:bg-slate-800 hover:text-slate-100",
+                      active ? "min-w-[92px] text-slate-100 shadow-[0_0_16px_rgba(255,255,255,0.04)]" : "w-12 hover:bg-slate-800 hover:text-slate-100",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
                     )}
                   >
-                    <Icon
-                      className={cn(
-                        "size-4 shrink-0 transition-colors",
-                        active
-                          ? "text-emerald-300"
-                          : "text-slate-400 group-hover:text-slate-200",
-                      )}
-                    />
-                    {active ? (
-                      <span className="truncate text-xs font-medium">{label}</span>
-                    ) : null}
+                    <Icon className={cn("size-4 shrink-0 transition-colors", active ? "text-emerald-300" : "text-slate-400 group-hover:text-slate-200")} />
+                    {active ? <span className="truncate text-xs font-medium">{label}</span> : null}
                   </button>
                 );
               })}
             </div>
-          </div>
-
-          <div className="mt-1.5 min-h-4 text-[10px] text-slate-500">
-            Using{" "}
-            <span className="font-medium text-slate-300">
-              {playerLookupType === "playerId"
-                ? "Player ID"
-                : playerLookupType === "username"
-                  ? "Username"
-                  : "Email"}
-            </span>
           </div>
         </div>
 
@@ -2331,16 +2279,14 @@ function CardDepositStepOne({
 
         <Button
           type="submit"
-          title={`Continue to ${method.name} card payment`}
+          title={"Continue to " + method.name + " card payment"}
           className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
         >
           <CircleDollarSign className="size-4" />
           <span>
             Do Deposit
             <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
-              Total Cards Value:{" "}
-              {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"}{" "}
-              {method.currency}
+              Total Cards Value: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} {method.currency}
             </span>
           </span>
         </Button>
@@ -2392,6 +2338,7 @@ function CardDepositOcrOverlay({ status }: { status: CardOcrStatus }) {
               {stages[stageIndex]}
             </span>
           </div>
+
           <div className="absolute inset-x-5 top-1/2 -translate-y-1/2">
             <div className="relative h-28 rounded-md border border-cyan-300/30">
               <span className="absolute left-0 top-0 h-7 w-7 border-l-2 border-t-2 border-cyan-300/90" />
@@ -2448,8 +2395,8 @@ function CardDepositFlow({
   const [ocrStatus, setOcrStatus] = React.useState<CardOcrStatus>("idle");
   const [detectedCards, setDetectedCards] = React.useState<string[]>([]);
   const [cardReviewStatus, setCardReviewStatus] = React.useState<"reviewing" | "completed">("reviewing");
-
   const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+
   const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
   const expired = secondsLeft <= 0;
@@ -2508,10 +2455,9 @@ function CardDepositFlow({
   }, [step]);
 
   const usedCardIndexes = React.useMemo(
-    () =>
-      cardNumbers
-        .map((value, index) => (normalizeCardNumber(value) === usedCardNumber ? index : -1))
-        .filter((index) => index >= 0),
+    () => cardNumbers
+      .map((value, index) => (normalizeCardNumber(value) === usedCardNumber ? index : -1))
+      .filter((index) => index >= 0),
     [cardNumbers],
   );
 
@@ -2523,30 +2469,21 @@ function CardDepositFlow({
     if (!normalizedIncoming.length) return;
 
     setCardNumbers((current) => {
-      const existing = new Set(
-        current
-          .map((value) => normalizeCardNumber(value))
-          .filter(Boolean),
-      );
+      const existing = new Set(current.map((value) => normalizeCardNumber(value)).filter(Boolean));
       const next = [...current];
-      const firstBlankIndex = next.findIndex((value) => !normalizeCardNumber(value));
-
-      let insertAt = firstBlankIndex >= 0 ? firstBlankIndex : next.length;
+      let insertAt = next.findIndex((value) => !normalizeCardNumber(value));
+      if (insertAt < 0) insertAt = next.length;
 
       for (const value of normalizedIncoming) {
         const normalized = normalizeCardNumber(value);
         if (!normalized || existing.has(normalized)) continue;
-
         if (insertAt >= next.length) next.push("");
         next[insertAt] = formatCardNumber(normalized);
         existing.add(normalized);
         insertAt += 1;
       }
 
-      if (next[next.length - 1] && normalizeCardNumber(next[next.length - 1]).length > 0) {
-        next.push("");
-      }
-
+      if (normalizeCardNumber(next[next.length - 1])) next.push("");
       return next;
     });
   };
@@ -2557,26 +2494,18 @@ function CardDepositFlow({
     setCardNumbers((current) => {
       const next = [...current];
       next[index] = formatted;
-
-      if (formatted && normalizeCardNumber(next[next.length - 1]).length > 0) {
-        next.push("");
-      }
-
+      if (formatted && normalizeCardNumber(next[next.length - 1])) next.push("");
       return next;
     });
   };
 
-  const addCardInput = () => {
-    setCardNumbers((current) => [...current, ""]);
-  };
+  const addCardInput = () => setCardNumbers((current) => [...current, ""]);
 
   const deleteCardInput = (index: number) => {
     if (index === 0) return;
-
-    setCardNumbers((current) => {
-      if (current.length <= 1) return current;
-      return current.filter((_, cardIndex) => cardIndex !== index);
-    });
+    setCardNumbers((current) =>
+      current.length <= 1 ? current : current.filter((_, i) => i !== index),
+    );
   };
 
   const continueToCards = () => {
@@ -2594,7 +2523,13 @@ function CardDepositFlow({
     const numericAmount = Number(amount);
     if (!Number.isFinite(numericAmount) || numericAmount < method.min || numericAmount > method.max) {
       setError(
-        `Total card amount must be between ${method.min.toLocaleString("en-US")} and ${method.max.toLocaleString("en-US")} ${method.currency}.`,
+        "Total card amount must be between " +
+          method.min.toLocaleString("en-US") +
+          " and " +
+          method.max.toLocaleString("en-US") +
+          " " +
+          method.currency +
+          ".",
       );
       return;
     }
@@ -2604,25 +2539,23 @@ function CardDepositFlow({
     setProofFile(null);
     setOcrStatus("idle");
     setDetectedCards([]);
-    setSecondsLeft(15 * 60);
     setCardReviewStatus("reviewing");
+    setSecondsLeft(15 * 60);
     setStep(2);
   };
 
   const confirmCards = () => {
-    const enteredCards = cardNumbers
-      .map(normalizeCardNumber)
-      .filter(Boolean);
+    const firstCard = normalizeCardNumber(cardNumbers[0] ?? "");
+    const enteredCards = cardNumbers.map(normalizeCardNumber).filter(Boolean);
 
     if (expired) {
       setError("This payment session has expired. Go back and start a new deposit.");
-      setCardReviewStatus("reviewing");
       setStep(3);
       return;
     }
 
-    if (!enteredCards.length) {
-      setError("Enter at least one card number.");
+    if (!firstCard) {
+      setError("Enter the first card number.");
       return;
     }
 
@@ -2640,7 +2573,6 @@ function CardDepositFlow({
       setError("One or more card codes have already been used.");
       return;
     }
-
 
     setError("");
     setCardReviewStatus("reviewing");
@@ -2660,7 +2592,7 @@ function CardDepositFlow({
     <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
         {step === 2 ? (
-          <div className="mb-3 flex items-center justify-center">
+          <div className="mb-4 flex items-center justify-center">
             <PaymentMethodMark method={method} />
           </div>
         ) : (
@@ -2678,20 +2610,14 @@ function CardDepositFlow({
           <div
             className={cn(
               "relative mb-3 overflow-hidden rounded-lg border px-3 py-2",
-              expired
-                ? "border-red-400/30 bg-red-500/5"
-                : "border-emerald-400/20 bg-slate-900/70",
+              expired ? "border-red-400/30 bg-red-500/5" : "border-emerald-400/20 bg-slate-900/70",
             )}
           >
             <div className="flex items-center gap-2.5">
-              <div
-                className={cn(
-                  "flex size-7 shrink-0 items-center justify-center rounded-md border",
-                  expired
-                    ? "border-red-400/30 bg-red-500/10 text-red-300"
-                    : "border-emerald-400/20 bg-emerald-400/5 text-emerald-300",
-                )}
-              >
+              <div className={cn(
+                "flex size-7 shrink-0 items-center justify-center rounded-md border",
+                expired ? "border-red-400/30 bg-red-500/10 text-red-300" : "border-emerald-400/20 bg-emerald-400/5 text-emerald-300",
+              )}>
                 <Clock3 className="size-3.5" />
               </div>
               <div className="min-w-0 flex-1">
@@ -2708,14 +2634,10 @@ function CardDepositFlow({
                   />
                 </div>
               </div>
-              <div
-                className={cn(
-                  "shrink-0 rounded-md border px-2.5 py-1 text-sm font-semibold tabular-nums tracking-[0.08em]",
-                  expired
-                    ? "border-red-400/30 bg-red-500/10 text-red-300"
-                    : "border-emerald-400/25 bg-emerald-400/10 text-emerald-300",
-                )}
-              >
+              <div className={cn(
+                "shrink-0 rounded-md border px-2.5 py-1 text-sm font-semibold tabular-nums tracking-[0.08em]",
+                expired ? "border-red-400/30 bg-red-500/10 text-red-300" : "border-emerald-400/25 bg-emerald-400/10 text-emerald-300",
+              )}>
                 {minutes}:{seconds}
               </div>
             </div>
@@ -2748,8 +2670,7 @@ function CardDepositFlow({
                     </p>
                   </div>
                   <p className="text-[10px] text-slate-500">
-                    {cardNumbers.filter((value) => normalizeCardNumber(value)).length} card
-                    {cardNumbers.filter((value) => normalizeCardNumber(value)).length === 1 ? "" : "s"}
+                    {cardNumbers.filter((value) => normalizeCardNumber(value)).length} cards entered
                   </p>
                 </div>
 
@@ -2761,8 +2682,7 @@ function CardDepositFlow({
 
                   <div className="space-y-2">
                     {cardNumbers.map((value, index) => {
-                      const state = cardState(value);
-                      const isUsed = state === "used";
+                      const isUsed = cardState(value) === "used";
 
                       return (
                         <div key={index} className="flex items-start gap-2">
@@ -2771,7 +2691,7 @@ function CardDepositFlow({
                               value={value}
                               onChange={(event) => updateCard(index, event.target.value)}
                               placeholder="0000 0000 0000 0000"
-                              title={index === 0 ? "First card number" : `Card number ${index + 1}`}
+                              title={index === 0 ? "First card number" : "Card number " + (index + 1)}
                               autoComplete="off"
                               maxLength={19}
                               className={cn(
@@ -2814,7 +2734,7 @@ function CardDepositFlow({
                   </div>
 
                   <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
-                    The first input is always required. As soon as you enter a card number, the next input is created automatically.
+                    The first input is required. Entering any card number creates the next input automatically.
                   </p>
                 </div>
 
@@ -2836,7 +2756,7 @@ function CardDepositFlow({
                           {proofFile ? proofFile.name : "Upload card photo"}
                         </span>
                         <span className="mt-0.5 block text-[10px] text-slate-500">
-                          OCR can recognize one or more card numbers from the photo
+                          Optional · OCR can recognize one or more card numbers from the photo
                         </span>
                       </span>
                       <Upload className="ml-auto size-4 shrink-0 text-slate-500" />
@@ -2879,11 +2799,9 @@ function CardDepositFlow({
                       <div className="flex items-center gap-2">
                         <ScanText className="size-4 text-cyan-200" />
                         <div>
-                          <p className="text-xs font-semibold text-cyan-100">
-                            {detectedCards.length} cards detected
-                          </p>
+                          <p className="text-xs font-semibold text-cyan-100">{detectedCards.length} cards detected</p>
                           <p className="text-[10px] text-slate-500">
-                            You can fill one card or all detected cards. Manual and OCR entries can be mixed; duplicate card numbers are ignored.
+                            Use one or all detected cards. Manual and OCR entries can be mixed; duplicate numbers are ignored.
                           </p>
                         </div>
                       </div>
@@ -2923,7 +2841,7 @@ function CardDepositFlow({
                   type="button"
                   onClick={confirmCards}
                   disabled={expired || usedCardIndexes.length > 0}
-                  title={\`Confirm \${method.name} card numbers\`}
+                  title={"Confirm " + method.name + " card numbers"}
                   className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <CheckCircle2 className="size-4" />
@@ -2950,30 +2868,21 @@ function CardDepositFlow({
                   <p className="mt-1 text-xs leading-relaxed text-slate-400">
                     Player ID: {playerId} · {Number(amount).toFixed(2)} {method.currency}
                   </p>
-                  <p className="mx-auto mt-3 max-w-md text-xs leading-relaxed text-slate-500">
-                    Your card numbers were submitted for verification. The team will check the card codes before crediting the deposit.
-                  </p>
                 </>
               ) : (
                 <>
                   <div className="mb-3 flex justify-center">
-                    <div className="flex h-24 w-24 items-center justify-center overflow-hidden">
-                      <iframe
-                        src="https://lottiefiles.com/free-animation/check-jSOmPyr6eH"
-                        title="Card deposit completed animation"
-                        className="h-24 w-24 border-0"
-                        scrolling="no"
-                        loading="eager"
-                      />
-                    </div>
+                    <iframe
+                      src="https://lottiefiles.com/free-animation/check-jSOmPyr6eH"
+                      title="Card deposit completed animation"
+                      className="h-24 w-24 border-0"
+                      scrolling="no"
+                      loading="eager"
+                    />
                   </div>
                   <p className="text-base font-semibold text-white">Deposit completed</p>
                   <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                    {cardNumbers.filter((value) => normalizeCardNumber(value)).length} card
-                    {cardNumbers.filter((value) => normalizeCardNumber(value)).length === 1 ? "" : "s"} · {Number(amount).toFixed(2)} {method.currency}
-                  </p>
-                  <p className="mx-auto mt-3 max-w-md text-xs leading-relaxed text-slate-500">
-                    The submitted card codes passed the front-end checks and the deposit is ready to be credited.
+                    {cardNumbers.filter((value) => normalizeCardNumber(value)).length} cards · {Number(amount).toFixed(2)} {method.currency}
                   </p>
                 </>
               )}
@@ -3009,3 +2918,275 @@ function CardDepositFlow({
                 Exit
               </Button>
             </section>
+          ) : null}
+        </div>
+
+        <div className="mt-4 flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
+          <ShieldCheck className="size-3.5" />
+          Secure checkout
+          <ExternalLink className="size-3" />
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function GenericDepositSummary({
+  method,
+  amount,
+  onBack,
+}: {
+  method: PaymentMethod;
+  amount: string;
+  onBack: () => void;
+}) {
+  const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+
+  React.useEffect(() => {
+    const timer = window.setInterval(() => {
+      setSecondsLeft((current) => (current > 0 ? current - 1 : 0));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
+  const seconds = (secondsLeft % 60).toString().padStart(2, "0");
+
+  return (
+    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-3xl flex-col">
+        <div className="mb-4 flex items-center justify-between">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="text-slate-300 hover:bg-slate-800 hover:text-white"
+          >
+            <ArrowLeft /> Back
+          </Button>
+          <span className="rounded-full border border-white/10 bg-slate-900/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+            Deposit
+          </span>
+        </div>
+
+        <section className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-4 sm:p-6">
+          <div className="space-y-5">
+            <div className="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/80 p-3">
+              <PaymentMethodMark method={method} />
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Payment method</p>
+                <p className="mt-0.5 truncate text-sm font-medium text-white">{method.name}</p>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-white">Deposit amount</p>
+              <div className="mt-2 rounded-lg bg-slate-700/90 px-3 py-3">
+                <p className="text-lg font-semibold tabular-nums text-slate-100">
+                  {Number(amount || method.min).toFixed(2)} {method.currency}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-xs leading-relaxed text-slate-300">
+              <p className="flex gap-2">
+                <Info className="mt-0.5 size-3.5 shrink-0 text-slate-200" />
+                {method.note}
+              </p>
+              <p className="flex gap-2">
+                <Clock3 className="mt-0.5 size-3.5 shrink-0 text-slate-200" />
+                Session expires in{" "}
+                <span className="font-medium tabular-nums text-white">
+                  {minutes}:{seconds}
+                </span>
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-2 text-xs text-slate-400">
+              <div className="flex items-center gap-2 text-slate-300">
+                <ShieldCheck className="size-3.5" />
+                Secure payment session
+              </div>
+              <p className="mt-1">
+                Follow the payment instructions provided by the selected method to complete this deposit.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+export function CustomerPortal() {
+  const [method, setMethod] = React.useState(paymentMethods[0]);
+  const [amount, setAmount] = React.useState(String(paymentMethods[0].min));
+  const [playerId, setPlayerId] = React.useState("");
+  const [playerLookupType, setPlayerLookupType] = React.useState<PlayerLookupType>("playerId");
+  const [openMethods, setOpenMethods] = React.useState(false);
+  const [depositStarted, setDepositStarted] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  const minLabel = method.min.toLocaleString("en-US");
+  const maxLabel = method.max.toLocaleString("en-US");
+
+  const selectMethod = (nextMethod: PaymentMethod) => {
+    setMethod(nextMethod);
+    setAmount(String(nextMethod.min));
+    setError("");
+    setDepositStarted(false);
+  };
+
+  const submit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const numericAmount = Number(amount);
+
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      setError("Enter a valid amount.");
+      return;
+    }
+
+    if (numericAmount < method.min || numericAmount > method.max) {
+      setError(
+        "Amount must be between " +
+          minLabel +
+          " and " +
+          maxLabel +
+          " " +
+          method.currency +
+          ".",
+      );
+      return;
+    }
+
+    setError("");
+    setDepositStarted(true);
+  };
+
+  if (isCardDepositMethod(method)) {
+    return (
+      <CardDepositFlow
+        method={method}
+        openMethods={openMethods}
+        onToggleMethods={() => setOpenMethods((current) => !current)}
+        onSelectMethod={selectMethod}
+        playerId={playerId}
+        setPlayerId={setPlayerId}
+        playerLookupType={playerLookupType}
+        setPlayerLookupType={setPlayerLookupType}
+        amount={amount}
+        setAmount={setAmount}
+      />
+    );
+  }
+
+  if (isManualTransferMethod(method)) {
+    return (
+      <FlouciDepositFlow
+        method={method}
+        openMethods={openMethods}
+        onToggleMethods={() => setOpenMethods((current) => !current)}
+        onSelectMethod={selectMethod}
+        playerId={playerId}
+        setPlayerId={setPlayerId}
+        playerLookupType={playerLookupType}
+        setPlayerLookupType={setPlayerLookupType}
+        amount={amount}
+        setAmount={setAmount}
+      />
+    );
+  }
+
+  if (depositStarted) {
+    return (
+      <GenericDepositSummary
+        method={method}
+        amount={amount}
+        onBack={() => setDepositStarted(false)}
+      />
+    );
+  }
+
+  return (
+    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-3xl items-center justify-center">
+        <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+          <div className="space-y-4">
+            <PaymentMethodSelector
+              method={method}
+              open={openMethods}
+              onToggle={() => setOpenMethods((current) => !current)}
+              onSelect={selectMethod}
+            />
+
+            <form
+              onSubmit={submit}
+              className="rounded-xl border border-slate-700 bg-slate-900/90 p-4 sm:p-5"
+            >
+              <div>
+                <FieldLabel>Deposit amount</FieldLabel>
+                <div className="rounded-lg bg-slate-700/90 px-3 py-2">
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    value={amount}
+                    onChange={(event) => {
+                      setAmount(event.target.value);
+                      setError("");
+                    }}
+                    placeholder="Enter deposit amount"
+                    title="Deposit amount"
+                    aria-label="Deposit amount"
+                    className="h-12 border-0 bg-transparent p-0 text-sm text-slate-100 placeholder:text-slate-500 shadow-none focus-visible:ring-0"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-4 text-sm">
+                <span className="font-medium text-slate-400">Min/Max</span>
+                <span className="font-medium tabular-nums text-slate-100">
+                  {minLabel} - {maxLabel} {method.currency}
+                </span>
+              </div>
+
+              {error ? (
+                <div className="mt-3 rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+                  {error}
+                </div>
+              ) : null}
+
+              <Button
+                type="submit"
+                className="mt-4 h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+              >
+                <CircleDollarSign className="size-4" />
+                <span>
+                  Do Deposit
+                  <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
+                    Net Amount:{" "}
+                    {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"}{" "}
+                    {method.currency}
+                  </span>
+                </span>
+              </Button>
+            </form>
+
+            <div className="space-y-2 px-1 text-xs leading-relaxed text-slate-300 sm:text-sm">
+              <p>Choose your payment method and enter the amount you want to deposit.</p>
+              <p className="text-slate-400">{method.note}</p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
+              <ShieldCheck className="size-3.5" />
+              Secure checkout
+              <ExternalLink className="size-3" />
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
