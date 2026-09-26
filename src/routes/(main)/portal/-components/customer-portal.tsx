@@ -2,14 +2,12 @@ import * as React from "react";
 
 import {
   ArrowLeft,
-  Check,
   ChevronDown,
   CircleDollarSign,
   Clock3,
-  Copy,
   ExternalLink,
   Info,
-  QrCode,
+  ShieldCheck,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
