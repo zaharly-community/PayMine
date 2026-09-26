@@ -2,12 +2,19 @@ import * as React from "react";
 
 import {
   ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCircle2,
   ChevronDown,
   CircleDollarSign,
   Clock3,
+  Copy,
   ExternalLink,
+  FileImage,
   Info,
+  RefreshCw,
   ShieldCheck,
+  Upload,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
