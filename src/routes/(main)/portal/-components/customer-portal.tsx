@@ -1179,6 +1179,30 @@ function WaitingTimeline({
   return (
     <>
       <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+        {status === "reviewing" ? (
+          <div className="mb-3 flex justify-center">
+            <img
+              src="https://assets-v2.lottiefiles.com/a/32092c6a-1187-11ee-82df-37dd938d41eb/9rtrQDUjoJ.gif"
+              alt="Deposit is being reviewed"
+              className="h-24 w-24 object-contain"
+              loading="eager"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+        ) : null}
+
+        {status === "received" ? (
+          <div className="mb-3 flex justify-center">
+            <iframe
+              src="https://lottiefiles.com/free-animation/check-jSOmPyr6eH"
+              title="Deposit completed animation"
+              className="h-24 w-24 border-0"
+              scrolling="no"
+              loading="eager"
+            />
+          </div>
+        ) : null}
+
         <div className="mb-5 text-center">
           <p className="text-base font-semibold text-white">
             {status === "received"
@@ -1197,8 +1221,7 @@ function WaitingTimeline({
             {playerLookupType === "playerId"
               ? "Player ID"
               : playerLookupType === "username"
-                ? "Username"
-                : "Email"}
+                ? "Username"                : "Email"}
             : {playerId} · {Number(amount).toFixed(2)} TND
           </p>
         </div>
