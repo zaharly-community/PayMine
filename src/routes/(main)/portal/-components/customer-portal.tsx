@@ -406,83 +406,84 @@ function FlouciStepTwo({
 
   return (
     <section className="rounded-[7px] border border-[#2f3031] bg-[#1d1e1f] p-4">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <p className="text-base font-semibold text-white">Make the Flouci transfer</p>
-          <p className="mt-1 text-xs leading-relaxed text-slate-400">
-            Transfer the exact amount to the displayed number before the session expires.
-          </p>
-        </div>
-
-        <div
-          className={cn(
-            "shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold tabular-nums",
-            expired
-              ? "border-red-400/30 bg-red-500/10 text-red-300"
-              : "border-amber-400/25 bg-amber-400/10 text-amber-200",
-          )}
-        >
-          {expired ? "Expired" : <>{minutes}:{seconds}</>}
-        </div>
-      </div>
-
       <div className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-3">
-            <p className="text-[10px] uppercase tracking-[0.08em] text-[#8c8c8d]">Player ID</p>
-            <p className="mt-1 truncate text-sm font-medium text-white">{playerId}</p>
+        <div>
+          <p className="text-sm font-semibold text-white">Flouci payment</p>
+          <p className="mt-1 text-xs leading-relaxed text-[#b0b0b1]">
+            Transfer the exact amount to the number below, then submit your transaction details.
+          </p>
+        </div>
+
+        <div>
+          <FieldLabel>Flouci transfer number</FieldLabel>
+          <div className="flex h-12 overflow-hidden rounded-[5px] bg-[#343536]">
+            <Input
+              readOnly
+              value={recipientNumber}
+              placeholder="Transfer number"
+              title="Flouci transfer number"
+              className="h-12 flex-1 border-0 bg-transparent px-3 text-sm text-white shadow-none focus-visible:ring-0"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={copyNumber}
+              disabled={expired}
+              title="Copy Flouci transfer number"
+              className="mr-1 my-1 size-10 rounded-[5px] text-[#ededee] hover:bg-[#3f4041] hover:text-white"
+            >
+              <Copy className="size-4" />
+            </Button>
           </div>
 
-          <div className="rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-3">
-            <p className="text-[10px] uppercase tracking-[0.08em] text-[#8c8c8d]">Amount</p>
-            <p className="mt-1 text-sm font-semibold tabular-nums text-white">
-              {Number(amount).toFixed(2)} TND
-            </p>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <span className="text-[11px] text-[#8c8c8d]">
+              Use this number only for this deposit.
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onRequestChange}
+              disabled={expired || changeRequested}
+              title="Request a different Flouci transfer number"
+              className="h-9 shrink-0 rounded-[5px] border-[#343536] bg-[#242526] px-3 text-xs text-white hover:bg-[#343536]"
+            >
+              {changeRequested ? <Check className="size-3.5" /> : <RefreshCw className="size-3.5" />}
+              {changeRequested ? "Request sent" : "Change number"}
+            </Button>
           </div>
         </div>
 
-        <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-medium text-slate-300">Transfer to this Flouci number</p>
-              <p className="mt-2 text-2xl font-semibold tracking-wide text-white">{recipientNumber}</p>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={copyNumber}
-                disabled={expired}
-                title="Copy transfer number"
-                className="border-[#3b3c3d] bg-[#2f3031] text-white hover:bg-[#393a3b]"
-              >
-                <Copy className="size-3.5" />
-                Copy
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onRequestChange}
-                disabled={expired || changeRequested}
-                title="Request a different transfer number"
-                className="border-[#3b3c3d] bg-[#2f3031] text-white hover:bg-[#393a3b]"
-              >
-                {changeRequested ? <Check className="size-3.5" /> : <RefreshCw className="size-3.5" />}
-                {changeRequested ? "Request sent" : "Change number"}
-              </Button>
-            </div>
+        <div>
+          <FieldLabel>Transfer amount</FieldLabel>
+          <div className="flex h-12 overflow-hidden rounded-[5px] bg-[#343536]">
+            <Input
+              readOnly
+              value={Number(amount).toFixed(2) + " TND"}
+              placeholder="Amount"
+              title="Transfer amount"
+              className="h-12 flex-1 border-0 bg-transparent px-3 text-sm text-white shadow-none focus-visible:ring-0"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(Number(amount).toFixed(2));
+                } catch {
+                  // Clipboard access may be blocked by the browser.
+                }
+              }}
+              disabled={expired}
+              title="Copy transfer amount"
+              className="mr-1 my-1 size-10 rounded-[5px] text-[#ededee] hover:bg-[#3f4041] hover:text-white"
+            >
+              <Copy className="size-4" />
+            </Button>
           </div>
-
-          <p className="mt-3 flex gap-2 text-[11px] leading-relaxed text-slate-400">
-            <Info className="mt-0.5 size-3.5 shrink-0" />
-            {changeRequested
-              ? "Your request to change the transfer number has been recorded."
-              : "Use the displayed number only for this deposit session."}
-          </p>
         </div>
 
         <div>
@@ -503,23 +504,22 @@ function FlouciStepTwo({
           <label
             title="Upload transfer proof"
             className={cn(
-              "flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-slate-700 bg-slate-800/50 px-3 py-3 transition-colors hover:border-slate-600 hover:bg-slate-800",
+              "flex h-12 cursor-pointer items-center gap-3 rounded-[5px] border border-dashed border-[#3f4041] bg-[#343536] px-3 transition-colors hover:border-[#555657] hover:bg-[#3a3b3c]",
               expired && "pointer-events-none opacity-50",
             )}
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-slate-700 text-slate-300">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-[5px] bg-[#2f3031] text-[#d0d0d1]">
               <FileImage className="size-4" />
             </span>
-
             <span className="min-w-0">
-              <span className="block truncate text-xs font-medium text-slate-200">
+              <span className="block truncate text-xs font-medium text-[#ededee]">
                 {proofFile ? proofFile.name : "Upload a screenshot or payment proof"}
               </span>
-              <span className="mt-0.5 block text-[10px] text-slate-500">PNG, JPG or WEBP</span>
+              <span className="mt-0.5 block text-[10px] text-[#8c8c8d]">
+                PNG, JPG or WEBP
+              </span>
             </span>
-
-            <Upload className="ml-auto size-4 shrink-0 text-slate-500" />
-
+            <Upload className="ml-auto size-4 shrink-0 text-[#8c8c8d]" />
             <input
               type="file"
               accept="image/png,image/jpeg,image/webp"
@@ -531,8 +531,25 @@ function FlouciStepTwo({
           </label>
         </div>
 
+        <div className="space-y-2 text-xs leading-relaxed text-[#b0b0b1]">
+          <p className="flex gap-2">
+            <Info className="mt-0.5 size-3.5 shrink-0 text-[#ededee]" />
+            Please transfer only the exact amount to the Flouci number displayed above.
+          </p>
+          <p className="flex gap-2 font-medium text-[#d0d0d1]">
+            <Clock3 className="mt-0.5 size-3.5 shrink-0" />
+            {expired ? "Payment Expired" : "Awaiting Payment"}{" "}
+            <span className={cn(expired ? "text-red-300" : "text-white", "tabular-nums")}>
+              {minutes}:{seconds}
+            </span>
+          </p>
+          <p className="text-[#8c8c8d]">
+            Player ID: <span className="text-[#d0d0d1]">{playerId}</span>
+          </p>
+        </div>
+
         {error ? (
-          <div className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+          <div className="rounded-[5px] border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
             {error}
           </div>
         ) : null}
@@ -541,7 +558,8 @@ function FlouciStepTwo({
           type="button"
           onClick={onConfirm}
           disabled={expired}
-          className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+          title="Confirm Flouci transfer"
+          className="h-12 w-full rounded-[5px] bg-[#109121] text-sm font-semibold text-white hover:bg-[#0c7f1c] disabled:cursor-not-allowed disabled:bg-[#343536] disabled:text-[#8c8c8d]"
         >
           <CheckCircle2 className="size-4" />
           Confirm transfer
@@ -635,15 +653,15 @@ function WaitingTimeline({
                     </span>
                   ) : null}
                 </p>
-                <p className="mt-1 text-xs leading-relaxed text-slate-500">{stage.description}</p>
+                <p className="mt-1 text-xs leading-relaxed text-[#8c8c8d]">{stage.description}</p>
               </div>
             </div>
           );
         })}
       </div>
 
-      <div className="mt-6 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5 text-xs text-slate-400">
-        <p className="flex items-center gap-2 text-slate-300">
+      <div className="mt-6 rounded-[5px] border border-[#2f3031] bg-[#242526] px-3 py-2.5 text-xs text-[#b0b0b1]">
+        <p className="flex items-center gap-2 text-[#d0d0d1]">
           <Clock3 className="size-3.5" />
           Waiting for supervisor verification
         </p>
