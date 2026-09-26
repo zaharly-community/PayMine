@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-import { CustomerPortal } from "./-components/customer-portal";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/(main)/portal")({
-  component: CustomerPortal,
+  component: PortalLayout,
 });
+
+function PortalLayout() {
+  return <Outlet />;
+}
