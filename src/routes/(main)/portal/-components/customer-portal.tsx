@@ -229,6 +229,7 @@ type FlouciDemoStatus =
   | "approved"
   | "received"
   | "correction"
+  | "edited"
   | "expired";
 
 function FlouciStepOne({
@@ -542,29 +543,59 @@ function WaitingTimeline({
   playerId,
   amount,
   status,
+  recipientNumber,
+  correctedTransferNumber,
+  setCorrectedTransferNumber,
+  correctedAmount,
+  setCorrectedAmount,
+  supervisorNote,
+  onSubmitCorrection,
 }: {
   playerId: string;
   amount: string;
   status: FlouciDemoStatus;
+  recipientNumber: string;
+  correctedTransferNumber: string;
+  setCorrectedTransferNumber: React.Dispatch<React.SetStateAction<string>>;
+  correctedAmount: string;
+  setCorrectedAmount: React.Dispatch<React.SetStateAction<string>>;
+  supervisorNote: string;
+  onSubmitCorrection: () => void;
 }) {
   const stages = [
     {
       title: "Request verification",
       description:
         status === "correction"
-          ? "The supervisor requested a correction to the submitted transaction."
-          : "The supervisor is reviewing your transaction details and transfer proof.",
+          ? "The supervisor found information that must be corrected before continuing."
+          : status === "edited"
+            ? "The supervisor reviewed the request and updated the payment details directly."
+            : "The supervisor is reviewing your transaction details and transfer proof.",
       icon: ShieldCheck,
-      state: status === "reviewing" ? "active" : ["approved", "received"].includes(status) ? "done" : "pending",
+      state:
+        status === "reviewing" || status === "correction"
+          ? "active"
+          : ["approved", "received", "edited"].includes(status)
+            ? "done"
+            : "pending",
     },
     {
       title: "Deposit confirmation",
       description:
         status === "approved"
           ? "The supervisor approved the deposit request."
-          : "The deposit will be confirmed after supervisor approval.",
+          : status === "edited"
+            ? "The supervisor changed the payment details directly. The updated request is ready for the next check."
+            : "The deposit will be confirmed after supervisor approval.",
       icon: CheckCircle2,
-      state: status === "approved" ? "active" : status === "received" ? "done" : "pending",
+      state:
+        status === "approved"
+          ? "active"
+          : status === "received"
+            ? "done"
+            : status === "edited"
+              ? "active"
+              : "pending",
     },
     {
       title: "Transfer received",
@@ -588,9 +619,11 @@ function WaitingTimeline({
                 ? "Deposit approved"
                 : status === "correction"
                   ? "Correction required"
-                  : status === "expired"
-                    ? "Payment expired"
-                    : "Your deposit is being reviewed"}
+                  : status === "edited"
+                    ? "Payment details updated"
+                    : status === "expired"
+                      ? "Payment expired"
+                      : "Your deposit is being reviewed"}
           </p>
           <p className="mt-1 text-xs leading-relaxed text-slate-400">
             Player ID: {playerId} · {Number(amount).toFixed(2)} TND
@@ -601,70 +634,186 @@ function WaitingTimeline({
           {stages.map((stage, index) => {
             const Icon = stage.icon;
             const isLast = index === stages.length - 1;
+            const blurStage = status === "correction" && index > 0;
 
             return (
-              <div key={stage.title} className="relative flex gap-4 pb-7 last:pb-0">
-                {!isLast ? (
-                  <div className="absolute left-[15px] top-8 h-[calc(100%-1rem)] w-px bg-slate-700" />
-                ) : null}
+              <div key={stage.title} className="relative pb-7 last:pb-0">
+                <div className="relative flex gap-4">
+                  {!isLast ? (
+                    <div className="absolute left-[15px] top-8 h-[calc(100%-1rem)] w-px bg-slate-700" />
+                  ) : null}
 
-                <div
-                  className={cn(
-                    "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border",
-                    stage.state === "done"
-                      ? "border-emerald-400 bg-emerald-400 text-slate-950"
-                      : stage.state === "active"
-                        ? "border-amber-400 bg-amber-400 text-slate-950"
-                        : status === "correction" && index === 0
-                          ? "border-red-400 bg-red-400 text-slate-950"
-                          : "border-slate-700 bg-slate-800 text-slate-500",
-                  )}
-                >
-                  {stage.state === "done" ? (
-                    <Check className="size-4" />
-                  ) : (
-                    <Icon className="size-4" />
-                  )}
-                </div>
-
-                <div className="min-w-0 pt-0.5">
-                  <p
+                  <div
                     className={cn(
-                      "text-sm font-medium",
-                      stage.state === "pending" ? "text-slate-500" : "text-white",
+                      "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border",
+                      stage.state === "done"
+                        ? "border-emerald-400 bg-emerald-400 text-slate-950"
+                        : stage.state === "active"
+                          ? "border-amber-400 bg-amber-400 text-slate-950"
+                          : status === "correction" && index === 0
+                            ? "border-red-400 bg-red-400 text-slate-950"
+                            : "border-slate-700 bg-slate-800 text-slate-500",
                     )}
                   >
-                    {status === "correction" && index === 0 ? "Correction required" : stage.title}
-                    {stage.state === "active" ? (
-                      <span className="ml-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-200">
-                        In progress
-                      </span>
-                    ) : null}
                     {stage.state === "done" ? (
-                      <span className="ml-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
-                        Completed
-                      </span>
-                    ) : null}
-                  </p>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-500">{stage.description}</p>
+                      <Check className="size-4" />
+                    ) : (
+                      <Icon className="size-4" />
+                    )}
+                  </div>
+
+                  <div className="min-w-0 pt-0.5">
+                    <p
+                      className={cn(
+                        "text-sm font-medium",
+                        stage.state === "pending" ? "text-slate-500" : "text-white",
+                      )}
+                    >
+                      {status === "correction" && index === 0 ? "Correction required" : stage.title}
+                      {stage.state === "active" ? (
+                        <span className="ml-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-200">
+                          In progress
+                        </span>
+                      ) : null}
+                      {stage.state === "done" ? (
+                        <span className="ml-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
+                          Completed
+                        </span>
+                      ) : null}
+                      {status === "edited" && index === 1 ? (
+                        <span className="ml-2 rounded-full border border-blue-400/20 bg-blue-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-blue-200">
+                          Updated
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500">{stage.description}</p>
+                  </div>
                 </div>
+
+                {blurStage ? (
+                  <div
+                    className="pointer-events-none absolute inset-0 z-20 rounded-md bg-gradient-to-b from-slate-900/5 via-slate-950/50 to-slate-950/90 backdrop-blur-[2.5px]"
+                    aria-hidden="true"
+                  />
+                ) : null}
               </div>
             );
           })}
         </div>
 
-        <div className="mt-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5 text-xs text-slate-400">
+        {status === "correction" ? (
+          <div className="mt-1 rounded-lg border border-red-400/20 bg-red-500/5 p-3">
+            <div className="mb-3">
+              <p className="text-sm font-medium text-white">Correction required</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                Please correct the fields identified by the supervisor and submit the request again.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <FieldLabel>Flouci transfer number</FieldLabel>
+                <Input
+                  value={correctedTransferNumber}
+                  onChange={(event) => setCorrectedTransferNumber(event.target.value)}
+                  placeholder="Enter the correct Flouci transfer number"
+                  title="Correct Flouci transfer number"
+                  className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+                />
+              </div>
+
+              <div>
+                <FieldLabel>Transfer amount</FieldLabel>
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  value={correctedAmount}
+                  onChange={(event) => setCorrectedAmount(event.target.value)}
+                  placeholder="Enter the correct transfer amount"
+                  title="Correct transfer amount"
+                  className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+                />
+              </div>
+
+              <div>
+                <FieldLabel required={false}>Note from supervisor</FieldLabel>
+                <div
+                  title="Supervisor correction note"
+                  className="rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-3 text-xs leading-relaxed text-slate-300"
+                >
+                  {supervisorNote}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-2 text-[11px] text-slate-500">
+                Current transfer number: <span className="text-slate-300">{recipientNumber}</span>
+              </div>
+
+              <Button
+                type="button"
+                onClick={onSubmitCorrection}
+                title="Submit corrected payment details"
+                className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+              >
+                <CheckCircle2 className="size-4" />
+                Submit correction
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {status === "edited" ? (
+          <div className="mt-1 rounded-lg border border-blue-400/20 bg-blue-500/5 p-3">
+            <p className="text-sm font-medium text-white">Updated by supervisor</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-400">
+              The supervisor modified the request directly. The changes are shown below.
+            </p>
+
+            <div className="mt-3 space-y-2">
+              <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Transfer number</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Previous: <span className="text-slate-300">{recipientNumber}</span>
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Updated: <span className="font-medium text-white">53 781 249</span>
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Transfer amount</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Previous: <span className="text-slate-300">{Number(amount).toFixed(2)} TND</span>
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Updated: <span className="font-medium text-white">95.00 TND</span>
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Supervisor note</p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-300">
+                  Amount adjusted and transfer number updated by the supervisor.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="mt-4 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5 text-xs text-slate-400">
           <p className="flex items-center gap-2 text-slate-300">
             <Clock3 className="size-3.5" />
             {status === "received"
               ? "Transfer received"
               : status === "approved"
                 ? "Waiting for transfer"
-                : status === "correction"
-                  ? "Please review the submitted details and send a correction"
-                  : status === "expired"
-                    ? "This payment session has expired"
-                    : "Waiting for supervisor verification"}
+                : status === "edited"
+                  ? "Waiting with updated payment details"
+                  : status === "correction"
+                    ? "Correction requested by supervisor"
+                    : status === "expired"
+                      ? "This payment session has expired"
+                      : "Waiting for supervisor verification"}
           </p>
         </div>
       </section>
@@ -692,9 +841,10 @@ function FlouciDemoControls({
         Flow preview / test states
       </p>
       <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-        These buttons are for checking how the Flouci flow transforms between statuses.
+        These controls are for previewing each possible supervisor/payment outcome.
       </p>
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-6">
         <Button
           type="button"
           variant="outline"
@@ -707,6 +857,7 @@ function FlouciDemoControls({
         >
           Reviewing
         </Button>
+
         <Button
           type="button"
           variant="outline"
@@ -719,6 +870,7 @@ function FlouciDemoControls({
         >
           Approved
         </Button>
+
         <Button
           type="button"
           variant="outline"
@@ -731,6 +883,7 @@ function FlouciDemoControls({
         >
           Received
         </Button>
+
         <Button
           type="button"
           variant="outline"
@@ -743,6 +896,20 @@ function FlouciDemoControls({
         >
           Correction
         </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setDemo("edited")}
+          title="Preview supervisor directly edited state"
+          className={cn(
+            "h-9 border-slate-700 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800",
+            status === "edited" && "border-blue-400/40 bg-blue-500/10 text-blue-200",
+          )}
+        >
+          Supervisor edited
+        </Button>
+
         <Button
           type="button"
           variant="outline"
@@ -767,6 +934,7 @@ function FlouciDemoControls({
         >
           Step 1
         </Button>
+
         <Button
           type="button"
           variant="ghost"
@@ -776,6 +944,7 @@ function FlouciDemoControls({
         >
           Step 2
         </Button>
+
         <Button
           type="button"
           variant="ghost"
@@ -817,8 +986,13 @@ function FlouciDepositFlow({
   const [error, setError] = React.useState("");
   const [transactionId, setTransactionId] = React.useState("");
   const [proofFile, setProofFile] = React.useState<File | null>(null);
-  const [recipientIndex] = React.useState(0);
+  const [recipientNumber, setRecipientNumber] = React.useState(flouciRecipientNumbers[0]);
   const [changeRequested, setChangeRequested] = React.useState(false);
+  const [correctedTransferNumber, setCorrectedTransferNumber] = React.useState(flouciRecipientNumbers[0]);
+  const [correctedAmount, setCorrectedAmount] = React.useState(amount);
+  const [supervisorNote] = React.useState(
+    "The transfer number and amount do not match the submitted payment. Please correct both fields and submit again.",
+  );
   const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
 
   React.useEffect(() => {
@@ -845,12 +1019,31 @@ function FlouciDepositFlow({
 
     setError("");
     setDemoStatus("reviewing");
+    setCorrectedTransferNumber(recipientNumber);
+    setCorrectedAmount(amount);
     setSecondsLeft(15 * 60);
     setStep(2);
   };
 
   const requestChange = () => {
     setChangeRequested(true);
+  };
+
+  const submitCorrection = () => {
+    const numericAmount = Number(correctedAmount);
+
+    if (!correctedTransferNumber.trim()) {
+      return;
+    }
+
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      return;
+    }
+
+    setRecipientNumber(correctedTransferNumber);
+    setAmount(correctedAmount);
+    setError("");
+    setDemoStatus("reviewing");
   };
 
   const confirmTransfer = () => {
@@ -876,7 +1069,7 @@ function FlouciDepositFlow({
     setStep(3);
   };
 
-  const currentRecipient = flouciRecipientNumbers[recipientIndex];
+
 
   return (
     <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
@@ -906,7 +1099,7 @@ function FlouciDepositFlow({
             <FlouciStepTwo
               playerId={playerId}
               amount={amount}
-              recipientNumber={currentRecipient}
+              recipientNumber={recipientNumber}
               secondsLeft={secondsLeft}
               changeRequested={changeRequested}
               transactionId={transactionId}
@@ -924,6 +1117,13 @@ function FlouciDepositFlow({
               playerId={playerId}
               amount={amount}
               status={demoStatus}
+              recipientNumber={recipientNumber}
+              correctedTransferNumber={correctedTransferNumber}
+              setCorrectedTransferNumber={setCorrectedTransferNumber}
+              correctedAmount={correctedAmount}
+              setCorrectedAmount={setCorrectedAmount}
+              supervisorNote={supervisorNote}
+              onSubmitCorrection={submitCorrection}
             />
           ) : null}
         </div>
