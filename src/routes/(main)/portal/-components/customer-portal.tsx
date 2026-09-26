@@ -4399,9 +4399,23 @@ function EDinarCardPreview() {
           />
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-12 rounded-md bg-gradient-to-br from-amber-300 to-amber-500 opacity-85" />
-          <Wifi className="size-5 rotate-90 opacity-60" />
+        <div className="flex overflow-hidden rounded-lg bg-slate-700/90">
+          <Input
+            readOnly
+            value="6034 2112 4567 8901"
+            title="E-Dinar card number"
+            className="h-14 flex-1 border-0 bg-transparent px-3 font-mono text-lg font-semibold tracking-[0.1em] text-slate-100 shadow-none focus-visible:ring-0"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => navigator.clipboard?.writeText("6034211245678901")}
+            title="Copy E-Dinar card number"
+            className="mr-1 my-1 size-12 rounded-md text-slate-200 hover:bg-slate-800 hover:text-white"
+          >
+            <Copy className="size-4.5" />
+          </Button>
         </div>
 
         <div className="flex items-end justify-between">
@@ -4472,33 +4486,6 @@ function EDinarStepTwo({
         <div className="space-y-4">
           <div className="flex justify-center">
             <EDinarCardPreview />
-          </div>
-
-          <div>
-            <FieldLabel>Card number</FieldLabel>
-            <div className="flex overflow-hidden rounded-lg bg-slate-700/90">
-              <Input
-                readOnly
-                value="6034 2112 4567 8901"
-                title="E-Dinar card number"
-                className="h-14 flex-1 border-0 bg-transparent px-3 font-mono text-lg font-semibold tracking-[0.1em] text-slate-100 shadow-none focus-visible:ring-0"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => navigator.clipboard?.writeText("6034211245678901")}
-                disabled={expired}
-                title="Copy E-Dinar card number"
-                className="mr-1 my-1 size-12 rounded-md text-slate-200 hover:bg-slate-800 hover:text-white"
-              >
-                <Copy className="size-4.5" />
-              </Button>
-            </div>
-            <div className="mt-1.5 flex items-center justify-between gap-3 px-1 text-[10px]">
-              <span className="text-slate-500">Card holder</span>
-              <span className="truncate font-medium uppercase text-slate-300">Mohamed Trabelsi</span>
-            </div>
           </div>
 
           <div>
