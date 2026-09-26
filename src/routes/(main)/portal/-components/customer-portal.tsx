@@ -232,6 +232,8 @@ type FlouciDemoStatus =
   | "edited"
   | "expired";
 
+type FlouciAiStatus = "idle" | "analyzing" | "matched" | "unrecognized";
+
 function FlouciStepOne({
   playerId,
   setPlayerId,
@@ -347,6 +349,9 @@ function FlouciStepTwo({
   setTransactionId,
   proofFile,
   setProofFile,
+  aiStatus,
+  supervisorVerified,
+  verificationScore,
   error,
   onRequestChange,
   onConfirm,
@@ -360,6 +365,9 @@ function FlouciStepTwo({
   setTransactionId: React.Dispatch<React.SetStateAction<string>>;
   proofFile: File | null;
   setProofFile: React.Dispatch<React.SetStateAction<File | null>>;
+  aiStatus: FlouciAiStatus;
+  supervisorVerified: boolean;
+  verificationScore: number;
   error: string;
   onRequestChange: () => void;
   onConfirm: () => void;
@@ -368,12 +376,27 @@ function FlouciStepTwo({
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
   const expired = secondsLeft <= 0;
 
+  const previewUrl = React.useMemo(
+    () => (proofFile ? URL.createObjectURL(proofFile) : ""),
+    [proofFile],
+  );
+
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   const copy = async (value: string) => {
     try {
       await navigator.clipboard.writeText(value);
     } catch {
       // Clipboard access may be blocked by the browser.
     }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setProofFile(event.target.files?.[0] ?? null);
   };
 
   return (
@@ -403,10 +426,39 @@ function FlouciStepTwo({
               </Button>
             </div>
 
-            <div className="mt-2 flex items-center justify-between gap-3">
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
               <span className="text-[11px] text-slate-500">
                 Use this number only for this deposit.
               </span>
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    "rounded-full border px-2 py-1 text-[10px] font-semibold",
+                    supervisorVerified
+                      ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-300"
+                      : "border-red-400/25 bg-red-500/10 text-red-300",
+                  )}
+                >
+                  {supervisorVerified ? "Supervisor verified" : "Not verified"}
+                </span>
+                <span className="text-[10px] tabular-nums text-slate-500">
+                  Score {verificationScore}/100
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2">
+              <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">
+                Destination verification
+              </p>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+                {supervisorVerified
+                  ? "This transfer number has been reviewed by the supervisor for this payment session."
+                  : "This transfer number has not been verified by the supervisor for this payment session."}
+              </p>
+            </div>
+
+            <div className="mt-2 flex justify-end">
               <Button
                 type="button"
                 variant="outline"
@@ -469,35 +521,86 @@ function FlouciStepTwo({
           </div>
 
           <div>
-            <FieldLabel>Transfer proof</FieldLabel>
+            <FieldLabel>Payment photo</FieldLabel>
             <label
-              title="Upload transfer proof"
+              title="Upload payment photo"
               className={cn(
-                "flex h-12 cursor-pointer items-center gap-3 rounded-lg border border-dashed border-slate-700 bg-slate-800/50 px-3 transition-colors hover:border-slate-600 hover:bg-slate-800",
+                "flex min-h-12 cursor-pointer flex-col gap-2 rounded-lg border border-dashed border-slate-700 bg-slate-800/50 p-2.5 transition-colors hover:border-slate-600 hover:bg-slate-800",
                 expired && "pointer-events-none opacity-50",
               )}
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-slate-700 text-slate-300">
-                <FileImage className="size-4" />
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate text-xs font-medium text-slate-200">
-                  {proofFile ? proofFile.name : "Upload transfer proof"}
+              <div className="flex items-center gap-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-slate-700 text-slate-300">
+                  <FileImage className="size-4" />
                 </span>
-                <span className="mt-0.5 block text-[10px] text-slate-500">
-                  PNG, JPG or WEBP
+                <span className="min-w-0">
+                  <span className="block truncate text-xs font-medium text-slate-200">
+                    {proofFile ? proofFile.name : "Upload payment photo"}
+                  </span>
+                  <span className="mt-0.5 block text-[10px] text-slate-500">
+                    JPG, PNG or WEBP · photo of the completed transfer
+                  </span>
                 </span>
-              </span>
-              <Upload className="ml-auto size-4 shrink-0 text-slate-500" />
+                <Upload className="ml-auto size-4 shrink-0 text-slate-500" />
+              </div>
+
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
                 className="sr-only"
-                title="Upload transfer proof"
-                onChange={(event) => setProofFile(event.target.files?.[0] ?? null)}
+                title="Upload payment photo"
+                onChange={handleFileChange}
                 disabled={expired}
               />
+
+              {previewUrl ? (
+                <div className="overflow-hidden rounded-md border border-slate-700 bg-slate-900">
+                  <img
+                    src={previewUrl}
+                    alt="Uploaded payment"
+                    className="max-h-44 w-full object-contain"
+                  />
+                </div>
+              ) : null}
             </label>
+          </div>
+
+          <div
+            className={cn(
+              "rounded-lg border px-3 py-2.5 text-xs",
+              aiStatus === "matched"
+                ? "border-emerald-400/20 bg-emerald-400/5"
+                : aiStatus === "unrecognized"
+                  ? "border-amber-400/20 bg-amber-400/5"
+                  : "border-slate-700 bg-slate-800/50",
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <ShieldCheck
+                className={cn(
+                  "size-4",
+                  aiStatus === "matched"
+                    ? "text-emerald-300"
+                    : aiStatus === "unrecognized"
+                      ? "text-amber-300"
+                      : "text-slate-400",
+                )}
+              />
+              <p className="font-medium text-slate-200">AI transfer recognition</p>
+              {aiStatus === "analyzing" ? (
+                <span className="ml-auto text-[10px] text-slate-400">Analyzing...</span>
+              ) : null}
+            </div>
+
+            <p className="mt-1.5 leading-relaxed text-slate-400">
+              {aiStatus === "matched"
+                ? "AI recognized the transfer and detected a match with the submitted transaction details."
+                : aiStatus === "unrecognized"
+                  ? "AI could not confidently recognize the transfer details. The payment can continue to manual supervisor verification."
+                  : aiStatus === "analyzing"
+                    ? "AI is reading the uploaded payment photo and checking the transfer details."
+                    : "Upload a payment photo to let AI analyze the transfer evidence."}
+            </p>
           </div>
 
           <div className="space-y-2 text-xs leading-relaxed text-slate-300">
@@ -825,10 +928,14 @@ function FlouciDemoControls({
   status,
   setStatus,
   setStep,
+  setAiStatus,
+  setSupervisorVerified,
 }: {
   status: FlouciDemoStatus;
   setStatus: React.Dispatch<React.SetStateAction<FlouciDemoStatus>>;
   setStep: React.Dispatch<React.SetStateAction<1 | 2 | 3>>;
+  setAiStatus: React.Dispatch<React.SetStateAction<FlouciAiStatus>>;
+  setSupervisorVerified: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const setDemo = (next: FlouciDemoStatus) => {
     setStatus(next);
@@ -924,6 +1031,51 @@ function FlouciDemoControls({
         </Button>
       </div>
 
+
+      <div className="mt-3 border-t border-slate-700 pt-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+          AI / verification preview
+        </p>
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setAiStatus("matched")}
+            title="Preview AI recognized and matched transfer"
+            className="h-9 border-slate-700 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800"
+          >
+            AI matched
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setAiStatus("unrecognized")}
+            title="Preview AI could not recognize transfer"
+            className="h-9 border-slate-700 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800"
+          >
+            AI unrecognized
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setSupervisorVerified(true)}
+            title="Preview supervisor verified destination"
+            className="h-9 border-slate-700 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800"
+          >
+            Verified
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setSupervisorVerified(false)}
+            title="Preview unverified destination"
+            className="h-9 border-slate-700 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800"
+          >
+            Not verified
+          </Button>
+        </div>
+      </div>
+
       <div className="mt-2 grid grid-cols-3 gap-2">
         <Button
           type="button"
@@ -986,6 +1138,9 @@ function FlouciDepositFlow({
   const [error, setError] = React.useState("");
   const [transactionId, setTransactionId] = React.useState("");
   const [proofFile, setProofFile] = React.useState<File | null>(null);
+  const [aiStatus, setAiStatus] = React.useState<FlouciAiStatus>("idle");
+  const [supervisorVerified, setSupervisorVerified] = React.useState(true);
+  const [verificationScore] = React.useState(98);
   const [recipientNumber, setRecipientNumber] = React.useState(flouciRecipientNumbers[0]);
   const [changeRequested, setChangeRequested] = React.useState(false);
   const [correctedTransferNumber, setCorrectedTransferNumber] = React.useState(flouciRecipientNumbers[0]);
@@ -994,6 +1149,20 @@ function FlouciDepositFlow({
     "The transfer number and amount do not match the submitted payment. Please correct both fields and submit again.",
   );
   const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+
+  React.useEffect(() => {
+    if (!proofFile) {
+      setAiStatus("idle");
+      return;
+    }
+
+    setAiStatus("analyzing");
+    const timer = window.setTimeout(() => {
+      setAiStatus("matched");
+    }, 900);
+
+    return () => window.clearTimeout(timer);
+  }, [proofFile]);
 
   React.useEffect(() => {
     if (step !== 2) return;
@@ -1019,6 +1188,7 @@ function FlouciDepositFlow({
 
     setError("");
     setDemoStatus("reviewing");
+    setAiStatus("idle");
     setCorrectedTransferNumber(recipientNumber);
     setCorrectedAmount(amount);
     setSecondsLeft(15 * 60);
@@ -1106,6 +1276,9 @@ function FlouciDepositFlow({
               setTransactionId={setTransactionId}
               proofFile={proofFile}
               setProofFile={setProofFile}
+              aiStatus={aiStatus}
+              supervisorVerified={supervisorVerified}
+              verificationScore={verificationScore}
               error={error}
               onRequestChange={requestChange}
               onConfirm={confirmTransfer}
@@ -1132,6 +1305,8 @@ function FlouciDepositFlow({
           status={demoStatus}
           setStatus={setDemoStatus}
           setStep={setStep}
+          setAiStatus={setAiStatus}
+          setSupervisorVerified={setSupervisorVerified}
         />
 
         <div className="mt-4 flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
