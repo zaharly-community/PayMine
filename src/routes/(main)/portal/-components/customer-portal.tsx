@@ -17,6 +17,9 @@ import {
   Star,
   Upload,
   ScanText,
+  Hash,
+  UserRound,
+  Mail,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -277,17 +280,17 @@ function FlouciStepOne({
             <FieldLabel>Player identification</FieldLabel>
 
             <nav
-              className="flex items-center gap-2.5"
+              className="flex flex-wrap items-center gap-2"
               aria-label="Player identification type"
               role="tablist"
             >
               {(
                 [
-                  ["playerId", "Player ID"],
-                  ["username", "Username"],
-                  ["email", "Email"],
+                  ["playerId", "Player ID", Hash],
+                  ["username", "Username", UserRound],
+                  ["email", "Email", Mail],
                 ] as const
-              ).map(([type, label]) => (
+              ).map(([type, label, Icon]) => (
                 <button
                   key={type}
                   type="button"
@@ -298,14 +301,18 @@ function FlouciStepOne({
                     setPlayerId("");
                   }}
                   className={cn(
-                    "min-w-0 rounded-lg border px-4 py-2.5 text-xs font-medium transition-all sm:px-5 sm:text-sm",
-                    "border-slate-700 bg-slate-800/60 text-slate-400 hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100",
-                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40",
-                    playerLookupType === type &&
-                      "border-emerald-400/60 bg-emerald-400/10 text-emerald-300 shadow-[0_0_18px_rgba(52,211,153,0.08)]",
+                    "group inline-flex h-10 items-center justify-center gap-2 rounded-lg border px-4 text-xs font-medium transition-all sm:px-5 sm:text-sm",
+                    playerLookupType === type
+                      ? "border-emerald-400/60 bg-emerald-400/10 text-emerald-300 shadow-[0_0_20px_rgba(52,211,153,0.10)]"
+                      : "border-slate-700 bg-slate-800/40 text-slate-400 hover:border-slate-600 hover:bg-slate-800/80 hover:text-slate-100",
+                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
                   )}
                 >
-                  {label}
+                  <Icon className={cn(
+                    "size-3.5 transition-colors",
+                    playerLookupType === type ? "text-emerald-300" : "text-slate-500 group-hover:text-slate-300",
+                  )} />
+                  <span>{label}</span>
                 </button>
               ))}
             </nav>
