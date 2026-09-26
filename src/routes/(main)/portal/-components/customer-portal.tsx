@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Input } from "@/components/ui/input";
 import { cn } from "cn";
 
@@ -158,9 +159,10 @@ function PaymentMethodSelector({
           const selected = item.id === method.id;
 
           return (
-            <button
+            <Link
               key={item.id}
-              type="button"
+              to="/portal/$method"
+              params={{ method: item.id }}
               onClick={() => onSelect(item)}
               className={cn(
                 "group flex min-w-[104px] shrink-0 flex-col items-center gap-1.5 rounded-lg border px-2.5 py-2 transition-colors",
@@ -168,15 +170,16 @@ function PaymentMethodSelector({
                   ? "border-white/25 bg-slate-800/80"
                   : "border-white/8 bg-slate-900/60 hover:border-white/15 hover:bg-slate-800/60",
               )}
-              aria-pressed={selected}
+              aria-current={selected ? "page" : undefined}
             >
               <PaymentMethodMark method={item} />
               <span className="max-w-full truncate text-[10px] font-medium text-slate-200">
                 {item.name}
               </span>
-            </button>
+            </Link>
           );
         })}
+
         <button
           type="button"
           onClick={onToggle}
@@ -191,9 +194,10 @@ function PaymentMethodSelector({
         <div className="absolute inset-x-0 top-full z-20 mt-2 rounded-xl border border-white/10 bg-slate-900 p-2 shadow-2xl">
           <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
             {paymentMethods.map((item) => (
-              <button
+              <Link
                 key={item.id + "-menu"}
-                type="button"
+                to="/portal/$method"
+                params={{ method: item.id }}
                 onClick={() => {
                   onSelect(item);
                   onToggle();
@@ -207,7 +211,7 @@ function PaymentMethodSelector({
               >
                 <PaymentMethodMark method={item} />
                 <span className="min-w-0 truncate">{item.name}</span>
-              </button>
+              </Link>
             ))}
           </div>
         </div>
@@ -215,7 +219,6 @@ function PaymentMethodSelector({
     </div>
   );
 }
-
 
 function FieldLabel({
   children,
@@ -1128,8 +1131,17 @@ export function DepositRequestTrackingRoute() {
     return () => window.removeEventListener("popstate", sync);
   }, []);
 
+  const navigate = useNavigate();
   const goBack = () => {
-    window.location.assign(request ? `/portal/${request.methodId}` : "/portal");
+    if (request) {
+      void navigate({
+        to: "/portal/$method",
+        params: { method: request.methodId },
+      });
+      return;
+    }
+
+    void navigate({ to: "/portal" });
   };
 
   if (!request) {
@@ -1143,7 +1155,7 @@ export function DepositRequestTrackingRoute() {
             </p>
             <Button
               type="button"
-              onClick={() => window.location.assign("/portal")}
+              onClick={() => void navigate({ to: "/portal" })}
               className="mt-4 h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
             >
               Back to portal
@@ -5140,7 +5152,10 @@ function GenericDepositSummary({
 
 export function CustomerPortal({ initialMethodId }: { initialMethodId?: string } = {}) {
   const [method, setMethod] = React.useState<PaymentMethod>(() => paymentMethods.find((item) => item.id === initialMethodId) ?? paymentMethods[0]);
-  const [amount, setAmount] = React.useState(String(paymentMethods[0].min));
+  const [amount, setAmount] = React.useState(() =>
+    String((paymentMethods.find((item) => item.id === initialMethodId) ?? paymentMethods[0]).min),
+  );
+  const navigate = useNavigate();
   const [playerId, setPlayerId] = React.useState("");
   const [playerLookupType, setPlayerLookupType] = React.useState<PlayerLookupType>("playerId");
   const [openMethods, setOpenMethods] = React.useState(false);
@@ -5156,9 +5171,10 @@ export function CustomerPortal({ initialMethodId }: { initialMethodId?: string }
   const maxLabel = method.max.toLocaleString("en-US");
 
   const openTrackingPage = (request: DepositRequest) => {
-    window.location.assign(
-      `/portal/tracking-depoist?request=${encodeURIComponent(request.id)}`,
-    );
+    void navigate({
+      to: "/portal/tracking-depoist",
+      search: { request: request.id },
+    });
   };
 
   const openCurrentRequestTracking = () => {
@@ -5181,10 +5197,10 @@ export function CustomerPortal({ initialMethodId }: { initialMethodId?: string }
   };
 
   const selectMethod = (nextMethod: PaymentMethod) => {
+    setMethod(nextMethod);
     setAmount(String(nextMethod.min));
     setError("");
     setDepositStarted(false);
-    window.location.assign(`/portal/${nextMethod.id}`);
   };
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
