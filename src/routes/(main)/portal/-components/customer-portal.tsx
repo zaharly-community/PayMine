@@ -432,13 +432,58 @@ function PlayerRequestStatusNote({
   return null;
 }
 
-function DepositRequestTrackingPage({
+export function DepositRequestTrackingPage({
   request,
   onBack,
 }: {
   request: DepositRequest;
   onBack: () => void;
 }) {
+  type TrackingStatus =
+    | "reviewing"
+    | "approved"
+    | "received"
+    | "correction"
+    | "edited"
+    | "expired";
+
+  const [status, setStatus] = React.useState<TrackingStatus>("reviewing");
+  const method =
+    paymentMethods.find((item) => item.id === request.methodId) ??
+    ({
+      id: request.methodId,
+      name: request.methodName,
+      min: 1,
+      max: 10000,
+      currency: request.currency,
+      logoClass: "bg-white",
+      note: "",
+    } satisfies PaymentMethod);
+
+  const isCardMethod = isCardDepositMethod(method);
+  const isEDinar = isEDinarMethod(method);
+  const paymentFieldLabel = isCardMethod
+    ? `${method.name} card number`
+    : isEDinar
+      ? "E-Dinar account number"
+      : `${method.name} transfer number`;
+  const currentPaymentValue = isCardMethod
+    ? "1111 2222 3333 4444"
+    : isEDinar
+      ? "6034 2112 4567 8901"
+      : walletRecipientNumbers[0];
+
+  const [correctedPaymentValue, setCorrectedPaymentValue] = React.useState(currentPaymentValue);
+  const [correctedAmount, setCorrectedAmount] = React.useState(request.amount);
+  const [supervisorNote] = React.useState(
+    "The payment details do not match the submitted proof. Please correct the highlighted details and submit the request again.",
+  );
+  const [postAction, setPostAction] = React.useState<"review" | "report" | null>(null);
+  const [rating, setRating] = React.useState(0);
+  const [reviewText, setReviewText] = React.useState("");
+  const [reportReason, setReportReason] = React.useState("");
+  const [reportDetails, setReportDetails] = React.useState("");
+
   const createdAt = new Date(request.createdAt);
   const formattedCreatedAt = Number.isNaN(createdAt.getTime())
     ? request.createdAt
@@ -450,27 +495,67 @@ function DepositRequestTrackingPage({
         minute: "2-digit",
       });
 
-  const isEDinar = request.methodId === "e-dinar";
+  const correctionSubmit = () => {
+    if (!correctedPaymentValue.trim()) return;
+
+    const numericAmount = Number(correctedAmount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) return;
+
+    setStatus("reviewing");
+  };
+
+  const statusTitle =
+    status === "received"
+      ? "Deposit completed"
+      : status === "approved"
+        ? "Deposit approved"
+        : status === "correction"
+          ? "Correction required"
+          : status === "edited"
+            ? "Payment details updated"
+            : status === "expired"
+              ? "Payment expired"
+              : "Your deposit is being reviewed";
 
   const stages = [
     {
       title: "Request submitted",
-      description: "Your deposit request is registered and awaiting payment verification.",
+      description:
+        status === "correction"
+          ? "The request was submitted, but the supervisor requires corrected payment details."
+          : "Your deposit request is registered and linked to this payment session.",
       state: "done" as const,
       icon: CheckCircle2,
     },
     {
       title: "Payment verification",
-      description: isEDinar
-        ? "Your E-Dinar payment is under review. Verification can take up to 8 hours."
-        : "Your payment details and proof are being reviewed.",
-      state: "active" as const,
+      description:
+        status === "correction"
+          ? "Verification is paused until you submit the requested correction."
+          : status === "edited"
+            ? "The supervisor updated the payment details and the request is ready for another verification check."
+            : isEDinar
+              ? "Your E-Dinar payment is under review. Verification can take up to 8 hours."
+              : "Your payment details and proof are being reviewed by the payment team.",
+      state:
+        status === "reviewing" || status === "correction" || status === "edited"
+          ? "active"
+          : status === "approved" || status === "received"
+            ? "done"
+            : "pending",
       icon: ShieldCheck,
     },
     {
       title: "Deposit credit",
-      description: "The deposit will be credited to your player balance after verification.",
-      state: "pending" as const,
+      description:
+        status === "received"
+          ? "The transfer was received and the deposit can be credited to the player balance."
+          : status === "approved"
+            ? "The deposit is approved and waiting for the payment confirmation to complete."
+            : status === "edited"
+              ? "The updated payment details must be verified before the balance can be credited."
+              : "The deposit will be credited to the player balance after verification.",
+      state: status === "received" ? "done" : status === "approved" ? "active" : "pending",
       icon: CircleDollarSign,
     },
   ];
@@ -491,28 +576,77 @@ function DepositRequestTrackingPage({
           </Button>
 
           <span className="rounded-full border border-white/10 bg-slate-900/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-            Deposit request
+            Deposit tracking
           </span>
         </div>
 
         <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
-          <div className="mb-4 flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/60 p-3">
-            <PaymentMethodMark
-              method={{
-                id: request.methodId,
-                name: request.methodName,
-                min: 1,
-                max: 10000,
-                currency: request.currency,
-                logoUrl: paymentMethods.find((item) => item.id === request.methodId)?.logoUrl,
-                logoClass: paymentMethods.find((item) => item.id === request.methodId)?.logoClass ?? "bg-white",
-                note: "",
-              }}
-            />
-            <div className="min-w-0">
+          {status === "reviewing" ? (
+            <div className="mb-3 flex justify-center">
+              <img
+                src="https://assets-v2.lottiefiles.com/a/32092c6a-1187-11ee-82df-37dd938d41eb/9rtrQDUjoJ.gif"
+                alt="Deposit is being reviewed"
+                className="h-20 w-20 object-contain"
+                loading="eager"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          ) : null}
+
+          {status === "received" ? (
+            <div className="mb-3 flex justify-center">
+              <iframe
+                src="https://lottiefiles.com/free-animation/check-jSOmPyr6eH"
+                title="Deposit completed animation"
+                className="h-20 w-20 border-0"
+                scrolling="no"
+                loading="eager"
+              />
+            </div>
+          ) : null}
+
+          <div className="mb-5 text-center">
+            <p className="text-base font-semibold text-white">{statusTitle}</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-400">
+              {request.playerLookupType === "playerId"
+                ? "Player ID"
+                : request.playerLookupType === "username"
+                  ? "Username"
+                  : "Email"}{" "}
+              · {request.playerId} · {Number(request.amount).toFixed(2)} {request.currency}
+            </p>
+          </div>
+
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/60 p-3">
+            <PaymentMethodMark method={method} />
+            <div className="min-w-0 flex-1">
               <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Payment method</p>
               <p className="truncate text-sm font-medium text-white">{request.methodName}</p>
             </div>
+            <span
+              className={cn(
+                "shrink-0 rounded-full border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wide",
+                status === "received"
+                  ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
+                  : status === "correction"
+                    ? "border-red-400/20 bg-red-500/10 text-red-300"
+                    : status === "edited"
+                      ? "border-blue-400/20 bg-blue-400/10 text-blue-200"
+                      : "border-amber-400/20 bg-amber-400/10 text-amber-200",
+              )}
+            >
+              {status === "received"
+                ? "Completed"
+                : status === "correction"
+                  ? "Correction"
+                  : status === "edited"
+                    ? "Updated"
+                    : status === "approved"
+                      ? "Approved"
+                      : status === "expired"
+                        ? "Expired"
+                        : "Open"}
+            </span>
           </div>
 
           <div className="mb-5 grid grid-cols-2 gap-2">
@@ -552,6 +686,7 @@ function DepositRequestTrackingPage({
             {stages.map((stage, index) => {
               const Icon = stage.icon;
               const isLast = index === stages.length - 1;
+              const blurStage = status === "correction" && index > 0;
 
               return (
                 <div key={stage.title} className="relative pb-7 last:pb-0">
@@ -567,44 +702,459 @@ function DepositRequestTrackingPage({
                           ? "border-emerald-400 bg-emerald-400 text-slate-950"
                           : stage.state === "active"
                             ? "border-amber-400 bg-amber-400 text-slate-950"
-                            : "border-slate-700 bg-slate-800 text-slate-500",
+                            : status === "correction" && index === 0
+                              ? "border-red-400 bg-red-400 text-slate-950"
+                              : "border-slate-700 bg-slate-800 text-slate-500",
                       )}
                     >
                       {stage.state === "done" ? <Check className="size-4" /> : <Icon className="size-4" />}
                     </div>
 
                     <div className="min-w-0 pt-0.5">
-                      <p className={cn("text-sm font-medium", stage.state === "pending" ? "text-slate-500" : "text-white")}>
-                        {stage.title}
+                      <p
+                        className={cn(
+                          "text-sm font-medium",
+                          stage.state === "pending" ? "text-slate-500" : "text-white",
+                        )}
+                      >
+                        {status === "correction" && index === 0 ? "Correction required" : stage.title}
                         {stage.state === "active" ? (
                           <span className="ml-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-200">
                             In progress
                           </span>
                         ) : null}
                         {stage.state === "done" ? (
-                          <span className="ml-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
+                          <span className="ml-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
                             Completed
+                          </span>
+                        ) : null}
+                        {status === "edited" && index === 1 ? (
+                          <span className="ml-2 rounded-full border border-blue-400/20 bg-blue-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-blue-200">
+                            Updated
                           </span>
                         ) : null}
                       </p>
                       <p className="mt-1 text-xs leading-relaxed text-slate-500">{stage.description}</p>
                     </div>
                   </div>
+
+                  {blurStage ? (
+                    <div
+                      className="pointer-events-none absolute inset-0 z-20 rounded-md bg-gradient-to-b from-slate-900/5 via-slate-950/50 to-slate-950/90 backdrop-blur-[2.5px]"
+                      aria-hidden="true"
+                    />
+                  ) : null}
                 </div>
               );
             })}
           </div>
 
-          <div className="mt-4 rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-2.5 text-xs text-slate-400">
+          {status === "correction" ? (
+            <div className="mt-1 rounded-lg border border-red-400/20 bg-red-500/5 p-3">
+              <div className="mb-3">
+                <p className="text-sm font-medium text-white">Correction required by supervisor</p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                  Update the requested payment details below. The corrected request will return to verification.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <FieldLabel>{paymentFieldLabel}</FieldLabel>
+                  <Input
+                    value={correctedPaymentValue}
+                    onChange={(event) => setCorrectedPaymentValue(event.target.value)}
+                    placeholder={`Enter the correct ${paymentFieldLabel.toLowerCase()}`}
+                    title={`Correct ${paymentFieldLabel}`}
+                    className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div>
+                  <FieldLabel>Payment amount</FieldLabel>
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    value={correctedAmount}
+                    onChange={(event) => setCorrectedAmount(event.target.value)}
+                    placeholder="Enter the correct payment amount"
+                    title="Correct payment amount"
+                    className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div>
+                  <FieldLabel required={false}>Note from supervisor</FieldLabel>
+                  <div className="rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-3 text-xs leading-relaxed text-slate-300">
+                    {supervisorNote}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-2 text-[11px] text-slate-500">
+                  Current payment detail: <span className="text-slate-300">{currentPaymentValue}</span>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={correctionSubmit}
+                  title="Submit corrected payment details"
+                  className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+                >
+                  <CheckCircle2 className="size-4" />
+                  Submit correction
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
+          {status === "edited" ? (
+            <div className="mt-1 rounded-lg border border-blue-400/20 bg-blue-500/5 p-3">
+              <p className="text-sm font-medium text-white">Updated by supervisor</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                The supervisor changed this request directly. The updated payment details are shown below.
+              </p>
+
+              <div className="mt-3 space-y-2">
+                <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                  <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Payment detail</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Previous: <span className="text-slate-300">{currentPaymentValue}</span>
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Updated: <span className="font-medium text-white">
+                      {isCardMethod ? "5555 6666 7777 8888" : isEDinar ? "6034 2112 9988 7700" : walletRecipientNumbers[1]}
+                    </span>
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                  <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Payment amount</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Previous: <span className="text-slate-300">{Number(request.amount).toFixed(2)} {request.currency}</span>
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Updated: <span className="font-medium text-white">95.00 {request.currency}</span>
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                  <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Supervisor note</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-300">
+                    Payment details updated by the supervisor and sent back for verification.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="mt-4 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5 text-xs text-slate-400">
             <p className="flex items-center gap-2 text-slate-300">
               <Clock3 className="size-3.5" />
-              Your request is still open and cannot be replaced by another deposit request.
+              {status === "received"
+                ? "Transfer received"
+                : status === "approved"
+                  ? "Waiting for transfer"
+                  : status === "edited"
+                    ? "Waiting with updated payment details"
+                    : status === "correction"
+                      ? "Correction requested by supervisor"
+                      : status === "expired"
+                        ? "This payment session has expired"
+                        : "Waiting for supervisor verification"}
             </p>
           </div>
+
+          {status === "received" ? (
+            <div className="mt-4 border-t border-slate-700 pt-4">
+              {postAction === null ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={flouciSupervisor?.avatarUrl || ""}
+                      alt=""
+                      className="size-9 rounded-full object-cover ring-1 ring-white/10"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Supervisor</p>
+                      <p className="truncate text-xs font-medium text-slate-100">{flouciSupervisor?.name ?? "Supervisor"}</p>
+                    </div>
+                    <span className="text-[10px] text-emerald-300">Transfer completed</span>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      title="Review supervisor"
+                      onClick={() => setPostAction("review")}
+                      className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:border-amber-400/40 hover:bg-slate-800 hover:text-white"
+                    >
+                      <Star className="size-3.5" />
+                      Review Supervisor
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      title="Report an issue"
+                      onClick={() => setPostAction("report")}
+                      className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:border-red-400/40 hover:bg-slate-800 hover:text-white"
+                    >
+                      <Info className="size-3.5" />
+                      Report
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      title="Exit deposit flow"
+                      onClick={onBack}
+                      className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:bg-slate-800"
+                    >
+                      Exit
+                    </Button>
+                  </div>
+                </>
+              ) : null}
+
+              {postAction === "review" ? (
+                <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-white">Review Supervisor</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        How was your experience with {flouciSupervisor?.name ?? "the supervisor"}?
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setPostAction(null)}
+                      className="h-8 px-2 text-xs text-slate-400 hover:text-white"
+                    >
+                      Back
+                    </Button>
+                  </div>
+
+                  <div className="mt-4 flex justify-center gap-1.5">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setRating(value)}
+                        aria-label={value + " stars"}
+                        className="rounded-md p-1.5 transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40"
+                      >
+                        <Star
+                          className={cn(
+                            "size-7 transition-colors",
+                            value <= rating
+                              ? "fill-amber-300 text-amber-300"
+                              : "text-slate-600 hover:text-amber-200",
+                          )}
+                        />
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-4">
+                    <FieldLabel required={false}>Your review</FieldLabel>
+                    <textarea
+                      value={reviewText}
+                      onChange={(event) => setReviewText(event.target.value)}
+                      placeholder="Tell us about your experience..."
+                      rows={4}
+                      className="w-full resize-none rounded-lg border border-slate-700 bg-slate-700/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-colors focus:border-amber-400/40 focus:ring-2 focus:ring-amber-400/10"
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    disabled={rating === 0}
+                    onClick={() => setPostAction(null)}
+                    className="mt-3 h-10 w-full bg-amber-300 text-sm font-medium text-slate-950 hover:bg-amber-200 disabled:opacity-40"
+                  >
+                    <Star className="size-4" />
+                    Submit review
+                  </Button>
+                </div>
+              ) : null}
+
+              {postAction === "report" ? (
+                <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-white">Report an issue</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Select what happened so the team can review your case.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setPostAction(null)}
+                      className="h-8 px-2 text-xs text-slate-400 hover:text-white"
+                    >
+                      Back
+                    </Button>
+                  </div>
+
+                  <div className="mt-4 space-y-2">
+                    {[
+                      "Transfer not received",
+                      "Request processing is taking too long",
+                      "Incorrect payment amount",
+                      "Supervisor requested incorrect payment details",
+                      "Other issue",
+                    ].map((reason) => (
+                      <button
+                        key={reason}
+                        type="button"
+                        onClick={() => setReportReason(reason)}
+                        className={cn(
+                          "w-full rounded-lg border px-3 py-2.5 text-left text-xs transition-colors",
+                          reportReason === reason
+                            ? "border-red-400/40 bg-red-500/10 text-red-200"
+                            : "border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600 hover:bg-slate-800",
+                        )}
+                      >
+                        {reason}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-4">
+                    <FieldLabel required={false}>Additional details</FieldLabel>
+                    <textarea
+                      value={reportDetails}
+                      onChange={(event) => setReportDetails(event.target.value)}
+                      placeholder="Add any details that can help us investigate..."
+                      rows={4}
+                      className="w-full resize-none rounded-lg border border-slate-700 bg-slate-700/50 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-colors focus:border-red-400/40 focus:ring-2 focus:ring-red-400/10"
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    disabled={!reportReason}
+                    onClick={() => setPostAction(null)}
+                    className="mt-3 h-10 w-full bg-red-400 text-sm font-medium text-slate-950 hover:bg-red-300 disabled:opacity-40"
+                  >
+                    <Info className="size-4" />
+                    Submit report
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          <details className="mt-5 rounded-lg border border-dashed border-slate-700 bg-slate-900/50 p-3">
+            <summary className="cursor-pointer text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              Flow preview / test states
+            </summary>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-6">
+              {([
+                ["reviewing", "Reviewing"],
+                ["approved", "Approved"],
+                ["received", "Received"],
+                ["correction", "Correction"],
+                ["edited", "Supervisor edited"],
+                ["expired", "Expired"],
+              ] as const).map(([value, label]) => (
+                <Button
+                  key={value}
+                  type="button"
+                  variant="outline"
+                  onClick={() => setStatus(value)}
+                  className={cn(
+                    "h-9 border-slate-700 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800",
+                    status === value && "border-slate-500 bg-slate-800 text-white",
+                  )}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </details>
         </section>
+
+        <div className="mt-4 flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
+          <ShieldCheck className="size-3.5" />
+          Secure checkout
+          <ExternalLink className="size-3" />
+        </div>
       </div>
     </main>
   );
+}
+
+export function DepositRequestTrackingRoute() {
+  const [request, setRequest] = React.useState<DepositRequest | null>(null);
+
+  React.useEffect(() => {
+    const sync = () => {
+      const requestId = new URLSearchParams(window.location.search).get("request");
+
+      if (!requestId) {
+        setRequest(readOpenDepositRequests()[0] ?? null);
+        return;
+      }
+
+      const stored = readOpenDepositRequests().find((item) => item.id === requestId) ?? null;
+      if (stored) {
+        setRequest(stored);
+        return;
+      }
+
+      if (requestId === "DEP-DEMO-0000000") {
+        setRequest({
+          id: "DEP-DEMO-0000000",
+          playerId: "0000000",
+          playerLookupType: "playerId",
+          methodId: "flouci",
+          methodName: "Flouci",
+          amount: "150.00",
+          currency: "TND",
+          createdAt: "2026-09-26T11:00:00.000Z",
+          status: "open",
+        });
+        return;
+      }
+
+      setRequest(null);
+    };
+
+    sync();
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, []);
+
+  const goBack = () => {
+    window.location.assign(request ? `/portal/${request.methodId}` : "/portal");
+  };
+
+  if (!request) {
+    return (
+      <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+        <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl items-center justify-center">
+          <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-5 text-center shadow-2xl">
+            <p className="text-sm font-semibold text-white">Deposit request not found</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Open the tracking page from an active deposit request.
+            </p>
+            <Button
+              type="button"
+              onClick={() => window.location.assign("/portal")}
+              className="mt-4 h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+            >
+              Back to portal
+            </Button>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  return <DepositRequestTrackingPage request={request} onBack={goBack} />;
 }
 
 const manualTransferMethodIds = new Set(["flouci", "d17", "kashy"]);
@@ -2199,6 +2749,7 @@ function FlouciDepositFlow({
   playerRequestStatus,
   openRequest,
   onViewRequest,
+  onOpenTracking,
   onRequestCreated,
   openMethods,
   onToggleMethods,
@@ -2214,6 +2765,7 @@ function FlouciDepositFlow({
   playerRequestStatus: PlayerRequestLookupStatus;
   openRequest: DepositRequest | null;
   onViewRequest: (request: DepositRequest) => void;
+  onOpenTracking: () => void;
   onRequestCreated: () => DepositRequest;
   openMethods: boolean;
   onToggleMethods: () => void;
@@ -2369,6 +2921,7 @@ function FlouciDepositFlow({
 
     setError("");
     setDemoStatus("reviewing");
+    onOpenTracking();
     setStep(3);
   };
 
@@ -3080,6 +3633,7 @@ function CardDepositFlow({
   playerRequestStatus,
   openRequest,
   onViewRequest,
+  onOpenTracking,
   onRequestCreated,
   openMethods,
   onToggleMethods,
@@ -3095,6 +3649,7 @@ function CardDepositFlow({
   playerRequestStatus: PlayerRequestLookupStatus;
   openRequest: DepositRequest | null;
   onViewRequest: (request: DepositRequest) => void;
+  onOpenTracking: () => void;
   onRequestCreated: () => DepositRequest;
   openMethods: boolean;
   onToggleMethods: () => void;
@@ -3304,6 +3859,7 @@ function CardDepositFlow({
 
     setError("");
     setCardReviewStatus("reviewing");
+    onOpenTracking();
     setStep(3);
   };
 
@@ -4220,6 +4776,7 @@ function EDinarDepositFlow({
   playerRequestStatus,
   openRequest,
   onViewRequest,
+  onOpenTracking,
   onRequestCreated,
   openMethods,
   onToggleMethods,
@@ -4235,6 +4792,7 @@ function EDinarDepositFlow({
   playerRequestStatus: PlayerRequestLookupStatus;
   openRequest: DepositRequest | null;
   onViewRequest: (request: DepositRequest) => void;
+  onOpenTracking: () => void;
   onRequestCreated: () => DepositRequest;
   openMethods: boolean;
   onToggleMethods: () => void;
@@ -4356,6 +4914,7 @@ function EDinarDepositFlow({
     }
 
     setError("");
+    onOpenTracking();
     setStep(3);
   };
 
@@ -4579,16 +5138,14 @@ function GenericDepositSummary({
   );
 }
 
-export function CustomerPortal() {
-  const [method, setMethod] = React.useState(paymentMethods[0]);
+export function CustomerPortal({ initialMethodId }: { initialMethodId?: string } = {}) {
+  const [method, setMethod] = React.useState<PaymentMethod>(() => paymentMethods.find((item) => item.id === initialMethodId) ?? paymentMethods[0]);
   const [amount, setAmount] = React.useState(String(paymentMethods[0].min));
   const [playerId, setPlayerId] = React.useState("");
   const [playerLookupType, setPlayerLookupType] = React.useState<PlayerLookupType>("playerId");
   const [openMethods, setOpenMethods] = React.useState(false);
   const [depositStarted, setDepositStarted] = React.useState(false);
   const [error, setError] = React.useState("");
-  const [showRequestTracking, setShowRequestTracking] = React.useState(false);
-  const [trackingRequest, setTrackingRequest] = React.useState<DepositRequest | null>(null);
   const [requestLookupRefresh, setRequestLookupRefresh] = React.useState(0);
   const { status: playerRequestStatus, openRequest } = usePlayerRequestLookup(
     playerId,
@@ -4599,21 +5156,16 @@ export function CustomerPortal() {
   const maxLabel = method.max.toLocaleString("en-US");
 
   const openTrackingPage = (request: DepositRequest) => {
-    setTrackingRequest(request);
-    setShowRequestTracking(true);
-
-    const url = new URL(window.location.href);
-    url.searchParams.set("request", request.id);
-    window.history.pushState({}, "", url);
+    window.location.assign(
+      `/portal/tracking-depoist?request=${encodeURIComponent(request.id)}`,
+    );
   };
 
-  const closeTrackingPage = () => {
-    setShowRequestTracking(false);
-    setTrackingRequest(null);
-
-    const url = new URL(window.location.href);
-    url.searchParams.delete("request");
-    window.history.pushState({}, "", url);
+  const openCurrentRequestTracking = () => {
+    const request = findOpenDepositRequest(playerId, playerLookupType);
+    if (request) {
+      openTrackingPage(request);
+    }
   };
 
   const createCurrentPlayerRequest = () => {
@@ -4628,32 +5180,11 @@ export function CustomerPortal() {
     return request;
   };
 
-  React.useEffect(() => {
-    const syncRequestFromUrl = () => {
-      const requestId = new URLSearchParams(window.location.search).get("request");
-
-      if (!requestId) {
-        setShowRequestTracking(false);
-        setTrackingRequest(null);
-        return;
-      }
-
-      const request = readOpenDepositRequests().find((item) => item.id === requestId) ?? null;
-      setTrackingRequest(request);
-      setShowRequestTracking(Boolean(request));
-    };
-
-    syncRequestFromUrl();
-    window.addEventListener("popstate", syncRequestFromUrl);
-
-    return () => window.removeEventListener("popstate", syncRequestFromUrl);
-  }, []);
-
   const selectMethod = (nextMethod: PaymentMethod) => {
-    setMethod(nextMethod);
     setAmount(String(nextMethod.min));
     setError("");
     setDepositStarted(false);
+    window.location.assign(`/portal/${nextMethod.id}`);
   };
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -4683,15 +5214,6 @@ export function CustomerPortal() {
     setDepositStarted(true);
   };
 
-  if (showRequestTracking && trackingRequest) {
-    return (
-      <DepositRequestTrackingPage
-        request={trackingRequest}
-        onBack={closeTrackingPage}
-      />
-    );
-  }
-
   if (isEDinarMethod(method)) {
     return (
       <EDinarDepositFlow
@@ -4699,6 +5221,7 @@ export function CustomerPortal() {
         playerRequestStatus={playerRequestStatus}
         openRequest={openRequest}
         onViewRequest={openTrackingPage}
+        onOpenTracking={openCurrentRequestTracking}
         onRequestCreated={createCurrentPlayerRequest}
         openMethods={openMethods}
         onToggleMethods={() => setOpenMethods((current) => !current)}
@@ -4720,6 +5243,7 @@ export function CustomerPortal() {
         playerRequestStatus={playerRequestStatus}
         openRequest={openRequest}
         onViewRequest={openTrackingPage}
+        onOpenTracking={openCurrentRequestTracking}
         onRequestCreated={createCurrentPlayerRequest}
         openMethods={openMethods}
         onToggleMethods={() => setOpenMethods((current) => !current)}
@@ -4741,6 +5265,7 @@ export function CustomerPortal() {
         playerRequestStatus={playerRequestStatus}
         openRequest={openRequest}
         onViewRequest={openTrackingPage}
+        onOpenTracking={openCurrentRequestTracking}
         onRequestCreated={createCurrentPlayerRequest}
         openMethods={openMethods}
         onToggleMethods={() => setOpenMethods((current) => !current)}
