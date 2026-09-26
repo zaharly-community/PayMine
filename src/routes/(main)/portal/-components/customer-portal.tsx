@@ -237,6 +237,7 @@ type FlouciDemoStatus =
   | "expired";
 
 type FlouciAiStatus = "idle" | "analyzing" | "matched" | "unrecognized";
+type PlayerLookupType = "playerId" | "username" | "email";
 
 const flouciSupervisor =
   distributors.find((distributor) => distributor.type === "Supervisor") ?? distributors[0];
@@ -250,6 +251,8 @@ function getSupervisorVerificationScore(email: string) {
 function FlouciStepOne({
   playerId,
   setPlayerId,
+  playerLookupType,
+  setPlayerLookupType,
   amount,
   setAmount,
   error,
@@ -257,6 +260,8 @@ function FlouciStepOne({
 }: {
   playerId: string;
   setPlayerId: React.Dispatch<React.SetStateAction<string>>;
+  playerLookupType: PlayerLookupType;
+  setPlayerLookupType: React.Dispatch<React.SetStateAction<PlayerLookupType>>;
   amount: string;
   setAmount: React.Dispatch<React.SetStateAction<string>>;
   error: string;
@@ -269,15 +274,64 @@ function FlouciStepOne({
       <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
         <form onSubmit={(event) => { event.preventDefault(); onContinue(); }} className="space-y-4">
           <div>
-            <FieldLabel>Player ID</FieldLabel>
-            <Input
-              value={playerId}
-              onChange={(event) => setPlayerId(event.target.value)}
-              placeholder="Enter your player ID"
-              title="Player ID"
-              autoComplete="off"
-              className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
-            />
+            <FieldLabel>Player identification</FieldLabel>
+
+            <nav
+              className="relative z-0 flex overflow-hidden rounded-xl border border-slate-700 bg-slate-900/70"
+              aria-label="Player identification type"
+              role="tablist"
+            >
+              {(
+                [
+                  ["playerId", "Player ID"],
+                  ["username", "Username"],
+                  ["email", "Email"],
+                ] as const
+              ).map(([type, label]) => (
+                <button
+                  key={type}
+                  type="button"
+                  role="tab"
+                  aria-selected={playerLookupType === type}
+                  onClick={() => {
+                    setPlayerLookupType(type);
+                    setPlayerId("");
+                  }}
+                  className={cn(
+                    "relative min-w-0 flex-1 overflow-hidden border-s border-slate-700 py-3 px-3 text-center text-xs font-medium transition-all first:border-s-0 sm:py-3.5 sm:px-4 sm:text-sm",
+                    "bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-slate-100 focus:z-10 focus:outline-none",
+                    playerLookupType === type &&
+                      "border-b-2 border-emerald-400 bg-slate-800/90 text-white",
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+
+            <div className="mt-2">
+              <Input
+                type={playerLookupType === "email" ? "email" : "text"}
+                value={playerId}
+                onChange={(event) => setPlayerId(event.target.value)}
+                placeholder={
+                  playerLookupType === "playerId"
+                    ? "Enter your player ID"
+                    : playerLookupType === "username"
+                      ? "Enter your username"
+                      : "Enter your email address"
+                }
+                title={
+                  playerLookupType === "playerId"
+                    ? "Player ID"
+                    : playerLookupType === "username"
+                      ? "Username"
+                      : "Email"
+                }
+                autoComplete={playerLookupType === "email" ? "email" : "off"}
+                className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+              />
+            </div>
           </div>
 
           <div>
@@ -828,6 +882,7 @@ function FlouciStepTwo({
 
 function WaitingTimeline({
   playerId,
+  playerLookupType,
   amount,
   status,
   recipientNumber,
@@ -839,6 +894,7 @@ function WaitingTimeline({
   onSubmitCorrection,
 }: {
   playerId: string;
+  playerLookupType: PlayerLookupType;
   amount: string;
   status: FlouciDemoStatus;
   recipientNumber: string;
@@ -913,7 +969,12 @@ function WaitingTimeline({
                       : "Your deposit is being reviewed"}
           </p>
           <p className="mt-1 text-xs leading-relaxed text-slate-400">
-            Player ID: {playerId} · {Number(amount).toFixed(2)} TND
+            {playerLookupType === "playerId"
+              ? "Player ID"
+              : playerLookupType === "username"
+                ? "Username"
+                : "Email"}
+            : {playerId} · {Number(amount).toFixed(2)} TND
           </p>
         </div>
 
@@ -1414,7 +1475,13 @@ function FlouciDepositFlow({
 
   const continueToPayment = () => {
     if (!playerId.trim()) {
-      setError("Enter your player ID.");
+      setError(
+        playerLookupType === "playerId"
+          ? "Enter your player ID."
+          : playerLookupType === "username"
+            ? "Enter your username."
+            : "Enter your email address.",
+      );
       return;
     }
 
@@ -1497,6 +1564,8 @@ function FlouciDepositFlow({
             <FlouciStepOne
               playerId={playerId}
               setPlayerId={setPlayerId}
+              playerLookupType={playerLookupType}
+              setPlayerLookupType={setPlayerLookupType}
               amount={amount}
               setAmount={setAmount}
               error={error}
@@ -1529,6 +1598,7 @@ function FlouciDepositFlow({
           {step === 3 ? (
             <WaitingTimeline
               playerId={playerId}
+              playerLookupType={playerLookupType}
               amount={amount}
               status={demoStatus}
               recipientNumber={recipientNumber}
@@ -1653,6 +1723,7 @@ export function CustomerPortal() {
   const [method, setMethod] = React.useState(paymentMethods[0]);
   const [amount, setAmount] = React.useState(String(paymentMethods[0].min));
   const [playerId, setPlayerId] = React.useState("");
+  const [playerLookupType, setPlayerLookupType] = React.useState<PlayerLookupType>("playerId");
   const [openMethods, setOpenMethods] = React.useState(false);
   const [depositStarted, setDepositStarted] = React.useState(false);
   const [error, setError] = React.useState("");
