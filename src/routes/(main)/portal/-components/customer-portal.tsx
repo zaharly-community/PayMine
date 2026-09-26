@@ -1851,7 +1851,7 @@ function FlouciDepositFlow({
     setChangeRequested(false);
     setRecipientNumber(walletRecipientNumbers[0]);
     setCorrectedTransferNumber(walletRecipientNumbers[0]);
-    setCorrectedAmount(amount);
+    setCorrectedAmount(String(method.min));
     setSecondsLeft(15 * 60);
   }, [method.id]);
 
@@ -1942,7 +1942,7 @@ function FlouciDepositFlow({
     }
 
     if (!transactionId.trim()) {
-      setError("Enter the Flouci transaction ID.");
+      setError(`Enter the ${method.name} transaction ID.`);
       return;
     }
 
