@@ -859,8 +859,8 @@ function FlouciStepTwo({
               <Input
                 readOnly
                 value={recipientNumber}
-                placeholder={`\${method.name} transfer number`}
-                title={`\${method.name} transfer number`}
+                placeholder={`${method.name} transfer number`}
+                title={`${method.name} transfer number`}
                 className="h-12 flex-1 border-0 bg-transparent px-3 text-sm text-slate-100 shadow-none focus-visible:ring-0"
               />
               <Button
@@ -869,7 +869,7 @@ function FlouciStepTwo({
                 size="icon"
                 onClick={() => copy(recipientNumber.replace(/\s/g, ""))}
                 disabled={expired}
-                title={`Copy \${method.name} transfer number`}
+                title={`Copy ${method.name} transfer number`}
                 className="mr-1 my-1 size-10 shrink-0 rounded-md text-slate-200 hover:bg-slate-800 hover:text-white"
               >
                 <Copy className="size-4" />
@@ -881,7 +881,7 @@ function FlouciStepTwo({
               size="sm"
               onClick={onRequestChange}
               disabled={expired || changeRequested}
-              title={`Request a different \${method.name} transfer number`}
+              title={`Request a different ${method.name} transfer number`}
               className="h-12 shrink-0 rounded-lg border-slate-700 bg-slate-900/60 px-3 text-xs text-slate-200 hover:bg-slate-800"
             >
               {changeRequested ? <Check className="size-3.5" /> : <RefreshCw className="size-3.5" />}
@@ -960,7 +960,7 @@ function FlouciStepTwo({
                 <Input
                   value={transactionId}
                   onChange={(event) => setTransactionId(event.target.value)}
-                  placeholder={`Enter your \${method.name} transaction ID`}
+                  placeholder={`Enter your ${method.name} transaction ID`}
                   title="Transaction ID"
                   autoComplete="off"
                   disabled={expired}
@@ -1082,7 +1082,7 @@ function FlouciStepTwo({
             type="button"
             onClick={onConfirm}
             disabled={expired}
-            title={`Confirm \${method.name} transfer`}
+            title={`Confirm ${method.name} transfer`}
             className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <CheckCircle2 className="size-4" />
@@ -1324,8 +1324,8 @@ function WaitingTimeline({
                 <Input
                   value={correctedTransferNumber}
                   onChange={(event) => setCorrectedTransferNumber(event.target.value)}
-                  placeholder={`Enter the \${method.name} transfer number`}
-                  title={`Correct \${method.name} transfer number`}
+                  placeholder={`Enter the ${method.name} transfer number`}
+                  title={`Correct ${method.name} transfer number`}
                   className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
                 />
               </div>
@@ -1839,6 +1839,21 @@ function FlouciDepositFlow({
   const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
   const expired = secondsLeft <= 0;
+
+  React.useEffect(() => {
+    setStep(1);
+    setDemoStatus("reviewing");
+    setError("");
+    setTransactionId("");
+    setProofFile(null);
+    setAiStatus("idle");
+    setDetectedTransactionId("");
+    setChangeRequested(false);
+    setRecipientNumber(walletRecipientNumbers[0]);
+    setCorrectedTransferNumber(walletRecipientNumbers[0]);
+    setCorrectedAmount(amount);
+    setSecondsLeft(15 * 60);
+  }, [method.id]);
 
   React.useEffect(() => {
     if (!proofFile) {
