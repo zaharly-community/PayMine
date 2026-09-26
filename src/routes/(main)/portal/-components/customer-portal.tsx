@@ -3132,7 +3132,6 @@ function CardDepositFlow({
   React.useEffect(() => {
     setStep(1);
     setError("");
-    onRequestCreated();
     setCardNumbers([""]);
     setProofFile(null);
     setOcrStatus("idle");
@@ -3262,6 +3261,7 @@ function CardDepositFlow({
     }
 
     setError("");
+    onRequestCreated();
     setCardNumbers([""]);
     setProofFile(null);
     setOcrStatus("idle");
