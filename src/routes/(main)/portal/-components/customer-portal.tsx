@@ -1534,40 +1534,40 @@ function FlouciDepositFlow({
   return (
     <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
-        <div className="mb-4">
-          <PaymentMethodSelector
-            method={method}
-            open={openMethods}
-            onToggle={onToggleMethods}
-            onSelect={onSelectMethod}
-          />
-        </div>
-
         {step === 2 ? (
-          <div className="mb-4 rounded-xl border border-slate-700/80 bg-slate-900/80 px-3 py-2.5 shadow-lg sm:px-4">
-            <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "relative mb-3 overflow-hidden rounded-lg border px-3 py-2",
+              expired
+                ? "border-red-400/30 bg-red-500/5"
+                : "border-emerald-400/20 bg-slate-900/70",
+            )}
+          >
+            <div className="flex items-center gap-2.5">
               <div
                 className={cn(
-                  "flex size-9 shrink-0 items-center justify-center rounded-lg border",
+                  "flex size-7 shrink-0 items-center justify-center rounded-md border",
                   expired
                     ? "border-red-400/30 bg-red-500/10 text-red-300"
-                    : "border-emerald-400/25 bg-emerald-400/10 text-emerald-300",
+                    : "border-emerald-400/20 bg-emerald-400/5 text-emerald-300",
                 )}
               >
-                <Clock3 className="size-4" />
+                <Clock3 className="size-3.5" />
               </div>
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="text-xs font-medium text-slate-200">Complete payment</p>
-                  <span className={cn(
-                    "hidden text-[10px] sm:inline",
-                    expired ? "text-red-300" : "text-slate-500",
-                  )}>
-                    {expired ? "Session expired" : "Time remaining"}
-                  </span>
+                  {!expired ? (
+                    <span className="relative flex size-1.5 shrink-0">
+                      <span className="absolute size-1.5 animate-ping rounded-full bg-emerald-300/60" />
+                      <span className="relative size-1.5 rounded-full bg-emerald-300" />
+                    </span>
+                  ) : null}
+                  <p className="truncate text-[11px] font-medium text-slate-300">
+                    {expired ? "Payment session expired" : "Payment expires in"}
+                  </p>
                 </div>
-                <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-800">
+                <div className="mt-1.5 h-0.5 overflow-hidden rounded-full bg-slate-800">
                   <div
                     className={cn(
                       "h-full rounded-full transition-all duration-700",
@@ -1580,10 +1580,10 @@ function FlouciDepositFlow({
 
               <div
                 className={cn(
-                  "shrink-0 rounded-lg border px-3 py-1.5 text-base font-semibold tabular-nums tracking-[0.08em]",
+                  "shrink-0 rounded-md border px-2.5 py-1 text-sm font-semibold tabular-nums tracking-[0.08em]",
                   expired
                     ? "border-red-400/30 bg-red-500/10 text-red-300"
-                    : "border-emerald-400/25 bg-emerald-400/10 text-emerald-300 shadow-[0_0_18px_rgba(52,211,153,0.08)]",
+                    : "border-emerald-400/25 bg-emerald-400/10 text-emerald-300 shadow-[0_0_14px_rgba(52,211,153,0.08)]",
                 )}
               >
                 {minutes}:{seconds}
@@ -1591,6 +1591,15 @@ function FlouciDepositFlow({
             </div>
           </div>
         ) : null}
+
+        <div className="mb-4">
+          <PaymentMethodSelector
+            method={method}
+            open={openMethods}
+            onToggle={onToggleMethods}
+            onSelect={onSelectMethod}
+          />
+        </div>
 
         <div className="flex-1">
           {step === 1 ? (
