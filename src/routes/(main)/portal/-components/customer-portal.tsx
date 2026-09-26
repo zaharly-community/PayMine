@@ -2145,6 +2145,151 @@ function formatCardNumber(value: string) {
 
 const usedCardNumber = "0000000000000000";
 
+
+function CardDepositHelpAccordion({ method }: { method: PaymentMethod }) {
+  const [openItem, setOpenItem] = React.useState<string | null>(null);
+
+  const items = [
+    {
+      id: "identity",
+      title: "1. Enter your player information",
+      description: "Choose Player ID, Username or Email, then enter the identifier linked to your gaming account.",
+      visual: (
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
+          <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+            <Hash className="size-3.5 text-slate-400" />
+            <span className="text-[10px] font-medium text-slate-200">Player account</span>
+          </div>
+          <div className="mt-3 flex h-9 items-center rounded-md border border-emerald-400/25 bg-emerald-400/5 px-2.5 text-[10px] text-emerald-100">
+            Player ID / Username / Email
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "cards",
+      title: `2. Prepare your ${method.name} recharge cards`,
+      description: `Use valid ${method.name} recharge cards whose combined value matches the total amount you entered.`,
+      visual: (
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
+          <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+            <PaymentMethodMark method={method} />
+            <span className="text-[10px] font-medium text-slate-200">{method.name} recharge card</span>
+          </div>
+          <div className="mt-3 rounded-md border border-cyan-300/20 bg-cyan-300/5 px-2.5 py-2.5">
+            <p className="text-[9px] uppercase tracking-[0.08em] text-slate-500">Card value</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-cyan-100">50 TND</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "codes",
+      title: "3. Enter the card numbers",
+      description: "Enter each 16-digit card code. A new input appears automatically after you start filling the current one.",
+      visual: (
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
+          <div className="space-y-2">
+            <div className="flex h-8 items-center rounded-md border border-emerald-400/25 bg-emerald-400/5 px-2.5 text-[10px] font-medium text-emerald-100">
+              1111 2222 3333 4444
+            </div>
+            <div className="flex h-8 items-center rounded-md border border-slate-700 bg-slate-900/80 px-2.5 text-[10px] text-slate-500">
+              0000 0000 0000 0000
+            </div>
+          </div>
+          <p className="mt-2 text-[9px] text-slate-500">The first input cannot be deleted.</p>
+        </div>
+      ),
+    },
+    {
+      id: "ocr",
+      title: "4. Scan the cards with AI OCR",
+      description: "Upload a clear photo and OCR can recognize one or multiple card numbers for faster entry.",
+      visual: (
+        <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3">
+          <div className="relative overflow-hidden rounded-md border border-slate-700 bg-slate-900 p-3">
+            <div className="space-y-2 opacity-80">
+              <div className="h-2 w-24 rounded bg-slate-700" />
+              <div className="h-5 w-full rounded border border-cyan-300/30 bg-cyan-300/5" />
+              <div className="h-5 w-4/5 rounded border border-cyan-300/30 bg-cyan-300/5" />
+            </div>
+            <div className="absolute inset-x-2 top-1/2 h-px bg-cyan-200 shadow-[0_0_14px_3px_rgba(103,232,249,0.45)]" />
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            <span className="rounded-md border border-cyan-300/20 bg-cyan-300/5 px-2 py-1 text-[9px] text-cyan-100">Enter all</span>
+            <span className="rounded-md border border-slate-700 bg-slate-900/80 px-2 py-1 text-[9px] text-slate-300">Enter one</span>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <section className="mt-4 overflow-hidden rounded-lg border border-slate-700 bg-slate-900/45">
+      <div className="flex items-center gap-2 border-b border-slate-800 px-3 py-2.5">
+        <Info className="size-3.5 text-slate-300" />
+        <div>
+          <p className="text-[11px] font-medium text-slate-200">How to complete {method.name} card deposit</p>
+          <p className="text-[9px] text-slate-500">Open a step to see how the card entry and OCR process works.</p>
+        </div>
+      </div>
+
+      <div className="divide-y divide-slate-800">
+        {items.map((item, index) => {
+          const open = openItem === item.id;
+
+          return (
+            <div key={item.id}>
+              <button
+                type="button"
+                onClick={() => setOpenItem((current) => (current === item.id ? null : item.id))}
+                aria-expanded={open}
+                className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-slate-800/60"
+              >
+                <span
+                  className={cn(
+                    "flex size-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold",
+                    open ? "bg-emerald-400/10 text-emerald-300" : "bg-slate-800 text-slate-500",
+                  )}
+                >
+                  {item.id === "ocr" ? <ScanText className="size-3" /> : index + 1}
+                </span>
+
+                <span className="min-w-0 flex-1">
+                  <span className={cn("block text-[11px] font-medium", open ? "text-slate-100" : "text-slate-300")}>
+                    {item.title}
+                  </span>
+                  {!open ? (
+                    <span className="mt-0.5 block truncate text-[9px] text-slate-500">{item.description}</span>
+                  ) : null}
+                </span>
+
+                <ChevronDown className={cn("size-3.5 shrink-0 text-slate-500 transition-transform", open && "rotate-180 text-slate-300")} />
+              </button>
+
+              {open ? (
+                <div className="grid grid-cols-1 gap-3 bg-slate-950/20 px-3 pb-3 sm:grid-cols-[minmax(0,1fr)_180px] sm:items-start">
+                  <div className="pt-0.5">
+                    <p className="text-[10px] leading-relaxed text-slate-400">{item.description}</p>
+                    {item.id === "ocr" ? (
+                      <div className="mt-2 rounded-md border border-cyan-300/15 bg-cyan-300/5 px-2.5 py-2">
+                        <p className="text-[9px] leading-relaxed text-cyan-100/90">
+                          You can combine manual card entry with OCR. Duplicate card numbers are ignored.
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div>{item.visual}</div>
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function CardDepositStepOne({
   method,
   playerId,
@@ -2169,7 +2314,8 @@ function CardDepositStepOne({
   const presets = [10, 20, 50, 100, 200, 500];
 
   return (
-    <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+    <>
+      <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
       <form onSubmit={(event) => { event.preventDefault(); onContinue(); }} className="space-y-4">
         <div>
           <FieldLabel>
@@ -2292,6 +2438,9 @@ function CardDepositStepOne({
         </Button>
       </form>
     </section>
+
+      <CardDepositHelpAccordion method={method} />
+    </>
   );
 }
 
@@ -2362,6 +2511,128 @@ function CardDepositOcrOverlay({ status }: { status: CardOcrStatus }) {
         </div>
       )}
     </div>
+  );
+}
+
+
+function CardDepositTimeline({
+  method,
+  playerId,
+  amount,
+  status,
+  cardCount,
+}: {
+  method: PaymentMethod;
+  playerId: string;
+  amount: string;
+  status: "reviewing" | "completed";
+  cardCount: number;
+}) {
+  const completed = status === "completed";
+
+  const stages = [
+    {
+      title: "Card submission",
+      description: "Your card numbers were received and the deposit request is now in the verification queue.",
+      state: "done" as const,
+      icon: CheckCircle2,
+    },
+    {
+      title: "Card validation",
+      description: completed
+        ? "The submitted card codes passed the current validation checks."
+        : "The team is validating the submitted card codes and their usage status.",
+      state: completed ? "done" as const : "active" as const,
+      icon: ShieldCheck,
+    },
+    {
+      title: "Deposit credit",
+      description: completed
+        ? "The deposit is ready to be credited to the player balance."
+        : "The balance will be credited after the card validation is completed.",
+      state: completed ? "done" as const : "pending" as const,
+      icon: CircleDollarSign,
+    },
+  ];
+
+  return (
+    <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+      <div className="mb-3 flex justify-center">
+        {completed ? (
+          <iframe
+            src="https://lottiefiles.com/free-animation/check-jSOmPyr6eH"
+            title="Card deposit completed animation"
+            className="h-24 w-24 border-0"
+            scrolling="no"
+            loading="eager"
+          />
+        ) : (
+          <img
+            src="https://assets-v2.lottiefiles.com/a/32092c6a-1187-11ee-82df-37dd938d41eb/9rtrQDUjoJ.gif"
+            alt="Card deposit is being reviewed"
+            className="h-24 w-24 object-contain"
+            loading="eager"
+            referrerPolicy="no-referrer"
+          />
+        )}
+      </div>
+
+      <div className="mb-5 text-center">
+        <p className="text-base font-semibold text-white">
+          {completed ? "Deposit completed" : "Card deposit is being reviewed"}
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-400">
+          {playerId} · {Number(amount).toFixed(2)} {method.currency} · {cardCount} card{cardCount === 1 ? "" : "s"}
+        </p>
+      </div>
+
+      <div className="relative pl-1">
+        {stages.map((stage, index) => {
+          const Icon = stage.icon;
+          const isLast = index === stages.length - 1;
+
+          return (
+            <div key={stage.title} className="relative pb-7 last:pb-0">
+              <div className="relative flex gap-4">
+                {!isLast ? (
+                  <div className="absolute left-[15px] top-8 h-[calc(100%-1rem)] w-px bg-slate-700" />
+                ) : null}
+
+                <div
+                  className={cn(
+                    "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border",
+                    stage.state === "done"
+                      ? "border-emerald-400 bg-emerald-400 text-slate-950"
+                      : stage.state === "active"
+                        ? "border-amber-400 bg-amber-400 text-slate-950"
+                        : "border-slate-700 bg-slate-800 text-slate-500",
+                  )}
+                >
+                  {stage.state === "done" ? <Check className="size-4" /> : <Icon className="size-4" />}
+                </div>
+
+                <div className="min-w-0 pt-0.5">
+                  <p className={cn("text-sm font-medium", stage.state === "pending" ? "text-slate-500" : "text-white")}>
+                    {stage.title}
+                    {stage.state === "active" ? (
+                      <span className="ml-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-200">
+                        In progress
+                      </span>
+                    ) : null}
+                    {stage.state === "done" ? (
+                      <span className="ml-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
+                        Completed
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">{stage.description}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -2852,74 +3123,14 @@ function CardDepositFlow({
           ) : null}
 
           {step === 3 ? (
-            <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 text-center shadow-2xl sm:p-5">
-              {cardReviewStatus === "reviewing" ? (
-                <>
-                  <div className="mb-3 flex justify-center">
-                    <img
-                      src="https://assets-v2.lottiefiles.com/a/32092c6a-1187-11ee-82df-37dd938d41eb/9rtrQDUjoJ.gif"
-                      alt="Card deposit is being reviewed"
-                      className="h-24 w-24 object-contain"
-                      loading="eager"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                  <p className="text-base font-semibold text-white">Card deposit is being reviewed</p>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                    Player ID: {playerId} · {Number(amount).toFixed(2)} {method.currency}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="mb-3 flex justify-center">
-                    <iframe
-                      src="https://lottiefiles.com/free-animation/check-jSOmPyr6eH"
-                      title="Card deposit completed animation"
-                      className="h-24 w-24 border-0"
-                      scrolling="no"
-                      loading="eager"
-                    />
-                  </div>
-                  <p className="text-base font-semibold text-white">Deposit completed</p>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                    {cardNumbers.filter((value) => normalizeCardNumber(value)).length} cards · {Number(amount).toFixed(2)} {method.currency}
-                  </p>
-                </>
-              )}
-
-              <div className="mt-5 grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCardReviewStatus("reviewing")}
-                  className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:bg-slate-800"
-                >
-                  Reviewing
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCardReviewStatus("completed")}
-                  className={cn(
-                    "h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:bg-slate-800",
-                    cardReviewStatus === "completed" && "border-emerald-400/50 bg-emerald-400/10 text-emerald-300",
-                  )}
-                >
-                  Completed
-                </Button>
-              </div>
-
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => window.history.back()}
-                className="mt-2 h-9 w-full text-xs text-slate-400 hover:bg-slate-800 hover:text-white"
-              >
-                Exit
-              </Button>
-            </section>
+            <CardDepositTimeline
+              method={method}
+              playerId={playerId}
+              amount={amount}
+              status={cardReviewStatus}
+              cardCount={cardNumbers.filter((value) => normalizeCardNumber(value)).length}
+            />
           ) : null}
-        </div>
 
         <div className="mt-4 flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
           <ShieldCheck className="size-3.5" />
