@@ -339,6 +339,7 @@ function createOpenDepositRequest({
 function usePlayerRequestLookup(
   playerId: string,
   playerLookupType: PlayerLookupType,
+  refreshKey = 0,
 ) {
   const [status, setStatus] = React.useState<PlayerRequestLookupStatus>("idle");
   const [openRequest, setOpenRequest] = React.useState<DepositRequest | null>(null);
@@ -362,7 +363,7 @@ function usePlayerRequestLookup(
     }, 450);
 
     return () => window.clearTimeout(timer);
-  }, [playerId, playerLookupType]);
+  }, [playerId, playerLookupType, refreshKey]);
 
   return { status, openRequest };
 }
@@ -4594,9 +4595,11 @@ export function CustomerPortal() {
   const [error, setError] = React.useState("");
   const [showRequestTracking, setShowRequestTracking] = React.useState(false);
   const [trackingRequest, setTrackingRequest] = React.useState<DepositRequest | null>(null);
+  const [requestLookupRefresh, setRequestLookupRefresh] = React.useState(0);
   const { status: playerRequestStatus, openRequest } = usePlayerRequestLookup(
     playerId,
     playerLookupType,
+    requestLookupRefresh,
   );
   const minLabel = method.min.toLocaleString("en-US");
   const maxLabel = method.max.toLocaleString("en-US");
@@ -4627,6 +4630,7 @@ export function CustomerPortal() {
       amount,
     });
 
+    setRequestLookupRefresh((current) => current + 1);
     return request;
   };
 
