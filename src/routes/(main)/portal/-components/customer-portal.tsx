@@ -111,7 +111,7 @@ function PaymentMethodMark({ method }: { method: PaymentMethod }) {
   return (
     <span
       className={cn(
-        "flex size-8 items-center justify-center overflow-hidden rounded-full border border-white/10 text-[9px] font-semibold tracking-tight",
+        "flex size-8 items-center justify-center overflow-hidden rounded-full border border-[#343536] text-[9px] font-semibold tracking-tight",
         method.logoClass,
       )}
     >
@@ -153,15 +153,15 @@ function PaymentMethodSelector({
               type="button"
               onClick={() => onSelect(item)}
               className={cn(
-                "group flex min-w-[104px] shrink-0 flex-col items-center gap-1.5 rounded-lg border px-2.5 py-2 transition-colors",
+                "group flex min-w-[48px] shrink-0 flex-col items-center gap-1 rounded-[5px] border border-[#343536] px-1.5 py-1.5 transition-colors sm:min-w-[54px]",
                 selected
-                  ? "border-white/25 bg-slate-800/80"
-                  : "border-white/8 bg-slate-900/60 hover:border-white/15 hover:bg-slate-800/60",
+                  ? "border-[#4b4c4d] bg-[#242526]"
+                  : "border-[#343536] bg-[#1d1e1f] hover:border-[#4b4c4d] hover:bg-[#242526]",
               )}
               aria-pressed={selected}
             >
               <PaymentMethodMark method={item} />
-              <span className="max-w-full truncate text-[10px] font-medium text-slate-200">
+              <span className="max-w-full truncate text-[8px] font-medium text-[#ededee]">
                 {item.name}
               </span>
             </button>
@@ -239,10 +239,10 @@ function FlouciSteps({ step }: { step: 1 | 2 | 3 }) {
               <div className="flex min-w-0 flex-1 flex-col items-center text-center">
                 <div
                   className={cn(
-                    "flex size-8 items-center justify-center rounded-full border text-xs font-semibold transition-colors",
+                    "flex size-7 items-center justify-center rounded-full border text-[10px] font-semibold transition-colors",
                     active
-                      ? "border-emerald-400 bg-emerald-400 text-slate-950"
-                      : "border-slate-700 bg-slate-900 text-slate-500",
+                      ? "border-[#109121] bg-[#109121] text-white"
+                      : "border-[#343536] bg-[#1d1e1f] text-[#8c8c8d]",
                   )}
                 >
                   {itemStep < step ? <Check className="size-4" /> : itemStep}
@@ -250,7 +250,7 @@ function FlouciSteps({ step }: { step: 1 | 2 | 3 }) {
                 <span
                   className={cn(
                     "mt-2 hidden max-w-[110px] text-[10px] leading-tight sm:block",
-                    active ? "text-slate-200" : "text-slate-500",
+                    active ? "text-[#ededee]" : "text-[#8c8c8d]",
                   )}
                 >
                   {label}
@@ -260,8 +260,8 @@ function FlouciSteps({ step }: { step: 1 | 2 | 3 }) {
               {index < labels.length - 1 ? (
                 <div
                   className={cn(
-                    "mt-4 h-px flex-1",
-                    index + 1 < step ? "bg-emerald-400/70" : "bg-slate-700",
+                    "mt-3.5 h-px flex-1",
+                    index + 1 < step ? "bg-[#109121]" : "bg-[#343536]",
                   )}
                 />
               ) : null}
@@ -291,7 +291,7 @@ function FlouciStepOne({
   const presets = [20, 50, 100, 200, 500, 1000];
 
   return (
-    <section className="rounded-xl border border-slate-700/70 bg-slate-900/90 p-4 sm:p-6">
+    <section className="rounded-[7px] border border-[#2f3031] bg-[#1d1e1f] p-4">
       <div className="mb-5">
         <p className="text-base font-semibold text-white">Flouci deposit</p>
         <p className="mt-1 text-xs leading-relaxed text-slate-400">
@@ -308,7 +308,7 @@ function FlouciStepOne({
             placeholder="Enter your player ID"
             title="Player ID"
             autoComplete="off"
-            className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+            className="h-12 border-[#343536] bg-[#343536] text-white placeholder:text-[#8c8c8d] shadow-none focus-visible:border-[#4b4c4d] focus-visible:ring-0"
           />
         </div>
 
@@ -321,7 +321,7 @@ function FlouciStepOne({
             onChange={(event) => setAmount(event.target.value)}
             placeholder="Enter deposit amount"
             title="Deposit amount"
-            className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+            className="h-12 border-[#343536] bg-[#343536] text-white placeholder:text-[#8c8c8d] shadow-none focus-visible:border-[#4b4c4d] focus-visible:ring-0"
           />
 
           <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
@@ -332,10 +332,10 @@ function FlouciStepOne({
                 onClick={() => setAmount(String(preset))}
                 title="Select deposit amount"
                 className={cn(
-                  "rounded-md border px-2.5 py-2 text-xs font-medium tabular-nums transition-colors",
+                  "h-10 rounded-[5px] border px-2.5 text-xs font-medium tabular-nums transition-colors",
                   Number(amount) === preset
-                    ? "border-emerald-400/60 bg-emerald-400/10 text-emerald-300"
-                    : "border-slate-700 bg-slate-800/60 text-slate-300 hover:border-slate-600 hover:bg-slate-800",
+                    ? "border-[#109121] bg-[#109121]/10 text-[#79d383]"
+                    : "border-[#343536] bg-[#343536] text-[#d2d2d3] hover:border-[#4b4c4d] hover:bg-[#3a3b3c]",
                 )}
               >
                 {preset} TND
@@ -355,7 +355,7 @@ function FlouciStepOne({
         <Button
           type="button"
           onClick={onContinue}
-          className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+          className="h-12 w-full rounded-[5px] bg-[#109121] text-sm font-semibold text-white hover:bg-[#0c7f1c]"
         >
           Continue to payment
           <ArrowRight className="size-4" />
@@ -405,7 +405,7 @@ function FlouciStepTwo({
   };
 
   return (
-    <section className="rounded-xl border border-slate-700/70 bg-slate-900/90 p-4 sm:p-6">
+    <section className="rounded-[7px] border border-[#2f3031] bg-[#1d1e1f] p-4">
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
           <p className="text-base font-semibold text-white">Make the Flouci transfer</p>
@@ -429,12 +429,12 @@ function FlouciStepTwo({
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-3">
-            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Player ID</p>
+            <p className="text-[10px] uppercase tracking-[0.08em] text-[#8c8c8d]">Player ID</p>
             <p className="mt-1 truncate text-sm font-medium text-white">{playerId}</p>
           </div>
 
           <div className="rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-3">
-            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Amount</p>
+            <p className="text-[10px] uppercase tracking-[0.08em] text-[#8c8c8d]">Amount</p>
             <p className="mt-1 text-sm font-semibold tabular-nums text-white">
               {Number(amount).toFixed(2)} TND
             </p>
@@ -456,7 +456,7 @@ function FlouciStepTwo({
                 onClick={copyNumber}
                 disabled={expired}
                 title="Copy transfer number"
-                className="border-slate-700 bg-slate-900/60 text-slate-200 hover:bg-slate-800"
+                className="border-[#3b3c3d] bg-[#2f3031] text-white hover:bg-[#393a3b]"
               >
                 <Copy className="size-3.5" />
                 Copy
@@ -469,7 +469,7 @@ function FlouciStepTwo({
                 onClick={onRequestChange}
                 disabled={expired || changeRequested}
                 title="Request a different transfer number"
-                className="border-slate-700 bg-slate-900/60 text-slate-200 hover:bg-slate-800"
+                className="border-[#3b3c3d] bg-[#2f3031] text-white hover:bg-[#393a3b]"
               >
                 {changeRequested ? <Check className="size-3.5" /> : <RefreshCw className="size-3.5" />}
                 {changeRequested ? "Request sent" : "Change number"}
@@ -494,7 +494,7 @@ function FlouciStepTwo({
             title="Transaction ID"
             autoComplete="off"
             disabled={expired}
-            className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+            className="h-12 border-[#343536] bg-[#343536] text-white placeholder:text-[#8c8c8d] shadow-none focus-visible:border-[#4b4c4d] focus-visible:ring-0"
           />
         </div>
 
@@ -580,7 +580,7 @@ function WaitingTimeline({
   ];
 
   return (
-    <section className="rounded-xl border border-slate-700/70 bg-slate-900/90 p-4 sm:p-6">
+    <section className="rounded-[7px] border border-[#2f3031] bg-[#1d1e1f] p-4">
       <div className="mb-6 text-center">
         <div className="mx-auto flex size-12 items-center justify-center rounded-full border border-emerald-400/25 bg-emerald-400/10 text-emerald-300">
           <Clock3 className="size-5" />
@@ -593,11 +593,11 @@ function WaitingTimeline({
 
       <div className="mb-5 grid gap-2 sm:grid-cols-2">
         <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Player ID</p>
+          <p className="text-[10px] uppercase tracking-[0.08em] text-[#8c8c8d]">Player ID</p>
           <p className="mt-1 truncate text-sm font-medium text-white">{playerId}</p>
         </div>
         <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Deposit amount</p>
+          <p className="text-[10px] uppercase tracking-[0.08em] text-[#8c8c8d]">Deposit amount</p>
           <p className="mt-1 text-sm font-semibold tabular-nums text-white">
             {Number(amount).toFixed(2)} TND
           </p>
@@ -619,15 +619,15 @@ function WaitingTimeline({
                 className={cn(
                   "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border",
                   stage.active
-                    ? "border-emerald-400 bg-emerald-400 text-slate-950"
-                    : "border-slate-700 bg-slate-800 text-slate-500",
+                    ? "border-[#109121] bg-[#109121] text-white"
+                    : "border-[#343536] bg-[#343536] text-[#8c8c8d]",
                 )}
               >
                 {stage.active ? <Icon className="size-4" /> : <span className="text-xs">{index + 1}</span>}
               </div>
 
               <div className="min-w-0 pt-0.5">
-                <p className={cn("text-sm font-medium", stage.active ? "text-white" : "text-slate-500")}>
+                <p className={cn("text-sm font-medium", stage.active ? "text-white" : "text-[#8c8c8d]")}>
                   {stage.title}
                   {stage.active ? (
                     <span className="ml-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
@@ -678,8 +678,8 @@ function GenericDepositSummary({
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
 
   return (
-    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
-      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-3xl flex-col">
+    <main className="min-h-dvh bg-[#1d1e1f] px-4 py-4 text-white sm:px-5">
+      <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col">
         <div className="mb-4 flex items-center justify-between">
           <Button
             type="button"
@@ -700,13 +700,13 @@ function GenericDepositSummary({
             <div className="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/80 p-3">
               <PaymentMethodMark method={method} />
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Payment method</p>
+                <p className="text-[10px] uppercase tracking-[0.08em] text-[#8c8c8d]">Payment method</p>
                 <p className="mt-0.5 truncate text-sm font-medium text-white">{method.name}</p>
               </div>
             </div>
 
             <div>
-              <p className="text-sm font-medium text-white">Deposit amount</p>
+              <p className="text-sm font-semibold text-white">Deposit amount</p>
               <div className="mt-2 rounded-lg bg-slate-700/90 px-3 py-3">
                 <p className="text-lg font-semibold tabular-nums text-slate-100">
                   {Number(amount || method.min).toFixed(2)} {method.currency}
@@ -823,8 +823,8 @@ function FlouciDepositFlow({
   };
 
   return (
-    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
-      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-3xl flex-col">
+    <main className="min-h-dvh bg-[#1d1e1f] px-4 py-4 text-white sm:px-5">
+      <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col">
         {step === 1 ? (
           <div className="mb-4">
             <PaymentMethodSelector
@@ -951,7 +951,7 @@ export function CustomerPortal() {
   }
 
   return (
-    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+    <main className="min-h-dvh bg-[#1d1e1f] px-4 py-4 text-white sm:px-5">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-3xl items-center justify-center">
         <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
           <div className="space-y-4">
@@ -1016,7 +1016,7 @@ export function CustomerPortal() {
 
             <div className="space-y-2 px-1 text-xs leading-relaxed text-slate-300 sm:text-sm">
               <p>Choose your payment method and enter the amount you want to deposit.</p>
-              <p className="text-slate-400">{method.note}</p>
+              <p className="text-[#b0b0b1]">{method.note}</p>
             </div>
 
             <div className="flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
