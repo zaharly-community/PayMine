@@ -681,7 +681,7 @@ function FlouciStepTwo({
               title="Transaction ID"
               autoComplete="off"
               disabled={expired}
-              className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+              className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
             />
           </div>
 
