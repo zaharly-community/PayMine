@@ -275,7 +275,7 @@ function FlouciStepOne({
               placeholder="Enter your player ID"
               title="Player ID"
               autoComplete="off"
-              className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+              className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
             />
           </div>
 
@@ -288,7 +288,7 @@ function FlouciStepOne({
               onChange={(event) => setAmount(event.target.value)}
               placeholder="Enter deposit amount"
               title="Deposit amount"
-              className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+              className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
             />
 
             <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
@@ -964,7 +964,7 @@ function WaitingTimeline({
                   onChange={(event) => setCorrectedTransferNumber(event.target.value)}
                   placeholder="Enter the correct Flouci transfer number"
                   title="Correct Flouci transfer number"
-                  className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+                  className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
                 />
               </div>
 
@@ -977,7 +977,7 @@ function WaitingTimeline({
                   onChange={(event) => setCorrectedAmount(event.target.value)}
                   placeholder="Enter the correct transfer amount"
                   title="Correct transfer amount"
-                  className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+                  className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
                 />
               </div>
 
@@ -1700,7 +1700,7 @@ export function CustomerPortal() {
                     placeholder="Enter deposit amount"
                     title="Deposit amount"
                     aria-label="Deposit amount"
-                    className="h-8 border-0 bg-transparent p-0 text-base text-slate-100 shadow-none focus-visible:ring-0"
+                    className="h-12 border-0 bg-transparent p-0 text-sm text-slate-100 placeholder:text-slate-500 shadow-none focus-visible:ring-0"
                   />
                 </div>
               </div>
