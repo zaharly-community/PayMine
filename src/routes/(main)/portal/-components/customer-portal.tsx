@@ -277,68 +277,92 @@ function FlouciStepOne({
       <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
         <form onSubmit={(event) => { event.preventDefault(); onContinue(); }} className="space-y-4">
           <div>
-            <FieldLabel>Player identification</FieldLabel>
+            <FieldLabel>
+              {playerLookupType === "playerId"
+                ? "Player ID"
+                : playerLookupType === "username"
+                  ? "Username"
+                  : "Email"}
+            </FieldLabel>
 
-            <nav
-              className="flex flex-wrap items-center gap-2"
-              aria-label="Player identification type"
-              role="tablist"
-            >
-              {(
-                [
-                  ["playerId", "Player ID", Hash],
-                  ["username", "Username", UserRound],
-                  ["email", "Email", Mail],
-                ] as const
-              ).map(([type, label, Icon]) => (
-                <button
-                  key={type}
-                  type="button"
-                  role="tab"
-                  aria-selected={playerLookupType === type}
-                  onClick={() => {
-                    setPlayerLookupType(type);
-                    setPlayerId("");
-                  }}
-                  className={cn(
-                    "group inline-flex h-10 items-center justify-center gap-2 rounded-lg border px-4 text-xs font-medium transition-all sm:px-5 sm:text-sm",
-                    playerLookupType === type
-                      ? "border-emerald-400/60 bg-emerald-400/10 text-emerald-300 shadow-[0_0_20px_rgba(52,211,153,0.10)]"
-                      : "border-slate-700 bg-slate-800/40 text-slate-400 hover:border-slate-600 hover:bg-slate-800/80 hover:text-slate-100",
-                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
-                  )}
-                >
-                  <Icon className={cn(
-                    "size-3.5 transition-colors",
-                    playerLookupType === type ? "text-emerald-300" : "text-slate-500 group-hover:text-slate-300",
-                  )} />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </nav>
+            <div className="flex items-stretch gap-2">
+              <div className="min-w-0 flex-1">
+                <Input
+                  type={playerLookupType === "email" ? "email" : "text"}
+                  value={playerId}
+                  onChange={(event) => setPlayerId(event.target.value)}
+                  placeholder={
+                    playerLookupType === "playerId"
+                      ? "Enter your player ID"
+                      : playerLookupType === "username"
+                        ? "Enter your username"
+                        : "Enter your email address"
+                  }
+                  title={
+                    playerLookupType === "playerId"
+                      ? "Player ID"
+                      : playerLookupType === "username"
+                        ? "Username"
+                        : "Email"
+                  }
+                  autoComplete={playerLookupType === "email" ? "email" : "off"}
+                  className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+                />
+              </div>
 
-            <div className="mt-2">
-              <Input
-                type={playerLookupType === "email" ? "email" : "text"}
-                value={playerId}
-                onChange={(event) => setPlayerId(event.target.value)}
-                placeholder={
-                  playerLookupType === "playerId"
-                    ? "Enter your player ID"
-                    : playerLookupType === "username"
-                      ? "Enter your username"
-                      : "Enter your email address"
-                }
-                title={
-                  playerLookupType === "playerId"
-                    ? "Player ID"
-                    : playerLookupType === "username"
-                      ? "Username"
-                      : "Email"
-                }
-                autoComplete={playerLookupType === "email" ? "email" : "off"}
-                className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
-              />
+              <div
+                className="flex h-12 shrink-0 items-stretch gap-1 rounded-lg border border-slate-700 bg-slate-900/60 p-1"
+                role="tablist"
+                aria-label="Player identification type"
+              >
+                {(
+                  [
+                    ["playerId", "Player ID", Hash],
+                    ["username", "Username", UserRound],
+                    ["email", "Email", Mail],
+                  ] as const
+                ).map(([type, label, Icon]) => (
+                  <button
+                    key={type}
+                    type="button"
+                    role="tab"
+                    aria-selected={playerLookupType === type}
+                    aria-label={label}
+                    title={label}
+                    onClick={() => {
+                      setPlayerLookupType(type);
+                      setPlayerId("");
+                    }}
+                    className={cn(
+                      "group flex size-10 items-center justify-center rounded-md border transition-all",
+                      playerLookupType === type
+                        ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300 shadow-[0_0_16px_rgba(52,211,153,0.10)]"
+                        : "border-transparent text-slate-500 hover:border-slate-700 hover:bg-slate-800 hover:text-slate-200",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "size-4 transition-all",
+                        playerLookupType === type
+                          ? "text-emerald-300"
+                          : "text-slate-500 group-hover:text-slate-300",
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-1.5 min-h-4 text-[10px] text-slate-500">
+              Using{" "}
+              <span className="font-medium text-slate-300">
+                {playerLookupType === "playerId"
+                  ? "Player ID"
+                  : playerLookupType === "username"
+                    ? "Username"
+                    : "Email"}
+              </span>
             </div>
           </div>
 
