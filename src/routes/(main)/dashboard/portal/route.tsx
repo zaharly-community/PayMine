@@ -4,6 +4,7 @@ import { Globe2, Link2, Palette, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PaymentFormBuilder } from "./-components/payment-form-builder";
+import { PortalAnalytics } from "./-components/portal-analytics";
 import { defaultPaymentForms } from "./-components/portal-data";
 
 export const Route = createFileRoute("/(main)/dashboard/portal")({ component: Page });
@@ -21,6 +22,7 @@ function Page() {
     </div>
 
     <PaymentFormBuilder initialForms={defaultPaymentForms} />
+    <PortalAnalytics />
     <div className="rounded-xl border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">Default mock data is provided for UI preview only. Publishing, payment processing and credential storage are not connected to a backend.</div>
   </section>;
 }
