@@ -111,7 +111,7 @@ function PaymentMethodMark({ method }: { method: PaymentMethod }) {
   return (
     <span
       className={cn(
-        "flex size-8 items-center justify-center overflow-hidden rounded-full border border-[#343536] text-[9px] font-semibold tracking-tight",
+        "flex size-8 items-center justify-center overflow-hidden rounded-full border border-white/10 text-[9px] font-semibold tracking-tight",
         method.logoClass,
       )}
     >
@@ -153,15 +153,15 @@ function PaymentMethodSelector({
               type="button"
               onClick={() => onSelect(item)}
               className={cn(
-                "group flex min-w-[48px] shrink-0 flex-col items-center gap-1 rounded-[5px] border border-[#343536] px-1.5 py-1.5 transition-colors sm:min-w-[54px]",
+                "group flex min-w-[104px] shrink-0 flex-col items-center gap-1.5 rounded-lg border px-2.5 py-2 transition-colors",
                 selected
-                  ? "border-[#4b4c4d] bg-[#242526]"
-                  : "border-[#343536] bg-[#1d1e1f] hover:border-[#4b4c4d] hover:bg-[#242526]",
+                  ? "border-white/25 bg-slate-800/80"
+                  : "border-white/8 bg-slate-900/60 hover:border-white/15 hover:bg-slate-800/60",
               )}
               aria-pressed={selected}
             >
               <PaymentMethodMark method={item} />
-              <span className="max-w-full truncate text-[8px] font-medium text-[#ededee]">
+              <span className="max-w-full truncate text-[10px] font-medium text-slate-200">
                 {item.name}
               </span>
             </button>
@@ -224,54 +224,12 @@ function FieldLabel({
 
 const flouciRecipientNumbers = ["22 345 678", "53 781 249", "29 614 832"];
 
-function FlouciSteps({ step }: { step: 1 | 2 | 3 }) {
-  const labels = ["Deposit details", "Make the transfer", "Waiting"];
-
-  return (
-    <div className="mb-5">
-      <div className="flex items-start">
-        {labels.map((label, index) => {
-          const itemStep = index + 1;
-          const active = itemStep <= step;
-
-          return (
-            <React.Fragment key={label}>
-              <div className="flex min-w-0 flex-1 flex-col items-center text-center">
-                <div
-                  className={cn(
-                    "flex size-7 items-center justify-center rounded-full border text-[10px] font-semibold transition-colors",
-                    active
-                      ? "border-[#109121] bg-[#109121] text-white"
-                      : "border-[#343536] bg-[#1d1e1f] text-[#8c8c8d]",
-                  )}
-                >
-                  {itemStep < step ? <Check className="size-4" /> : itemStep}
-                </div>
-                <span
-                  className={cn(
-                    "mt-2 hidden max-w-[110px] text-[10px] leading-tight sm:block",
-                    active ? "text-[#ededee]" : "text-[#8c8c8d]",
-                  )}
-                >
-                  {label}
-                </span>
-              </div>
-
-              {index < labels.length - 1 ? (
-                <div
-                  className={cn(
-                    "mt-3.5 h-px flex-1",
-                    index + 1 < step ? "bg-[#109121]" : "bg-[#343536]",
-                  )}
-                />
-              ) : null}
-            </React.Fragment>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+type FlouciDemoStatus =
+  | "reviewing"
+  | "approved"
+  | "received"
+  | "correction"
+  | "expired";
 
 function FlouciStepOne({
   playerId,
@@ -291,77 +249,90 @@ function FlouciStepOne({
   const presets = [20, 50, 100, 200, 500, 1000];
 
   return (
-    <section className="rounded-[7px] border border-[#2f3031] bg-[#1d1e1f] p-4">
-      <div className="mb-5">
-        <p className="text-base font-semibold text-white">Flouci deposit</p>
-        <p className="mt-1 text-xs leading-relaxed text-slate-400">
-          Enter your player ID and choose the amount you want to deposit.
+    <>
+      <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+        <form onSubmit={(event) => { event.preventDefault(); onContinue(); }} className="space-y-4">
+          <div>
+            <FieldLabel>Player ID</FieldLabel>
+            <Input
+              value={playerId}
+              onChange={(event) => setPlayerId(event.target.value)}
+              placeholder="Enter your player ID"
+              title="Player ID"
+              autoComplete="off"
+              className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+            />
+          </div>
+
+          <div>
+            <FieldLabel>Deposit amount</FieldLabel>
+            <Input
+              type="text"
+              inputMode="decimal"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+              placeholder="Enter deposit amount"
+              title="Deposit amount"
+              className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+            />
+
+            <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
+              {presets.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setAmount(String(preset))}
+                  title="Select preset deposit amount"
+                  className={cn(
+                    "rounded-md border px-2.5 py-2 text-xs font-medium tabular-nums transition-colors",
+                    Number(amount) === preset
+                      ? "border-emerald-400/60 bg-emerald-400/10 text-emerald-300"
+                      : "border-slate-700 bg-slate-800/60 text-slate-300 hover:border-slate-600 hover:bg-slate-800",
+                  )}
+                >
+                  {preset} TND
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 text-sm">
+            <span className="font-medium text-slate-400">Min/Max</span>
+            <span className="font-medium tabular-nums text-slate-100">
+              1 - 10,000 TND
+            </span>
+          </div>
+
+          {error ? (
+            <div className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+              {error}
+            </div>
+          ) : null}
+
+          <Button
+            type="submit"
+            title="Continue to Flouci payment"
+            className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+          >
+            <CircleDollarSign className="size-4" />
+            <span>
+              Do Deposit
+              <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
+                Net Amount: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} TND
+              </span>
+            </span>
+          </Button>
+        </form>
+      </section>
+
+      <div className="mt-5 space-y-1 px-1 text-xs leading-relaxed text-slate-300 sm:text-sm">
+        <p>To make a deposit, please fill in all the required fields below.</p>
+        <p>
+          Note* Make sure to select the correct payment method and enter the correct
+          information before submitting your deposit.
         </p>
       </div>
-
-      <div className="space-y-4">
-        <div>
-          <FieldLabel>Player ID</FieldLabel>
-          <Input
-            value={playerId}
-            onChange={(event) => setPlayerId(event.target.value)}
-            placeholder="Enter your player ID"
-            title="Player ID"
-            autoComplete="off"
-            className="h-12 border-[#343536] bg-[#343536] text-white placeholder:text-[#8c8c8d] shadow-none focus-visible:border-[#4b4c4d] focus-visible:ring-0"
-          />
-        </div>
-
-        <div>
-          <FieldLabel>Deposit amount</FieldLabel>
-          <Input
-            type="text"
-            inputMode="decimal"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            placeholder="Enter deposit amount"
-            title="Deposit amount"
-            className="h-12 border-[#343536] bg-[#343536] text-white placeholder:text-[#8c8c8d] shadow-none focus-visible:border-[#4b4c4d] focus-visible:ring-0"
-          />
-
-          <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
-            {presets.map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => setAmount(String(preset))}
-                title="Select deposit amount"
-                className={cn(
-                  "h-10 rounded-[5px] border px-2.5 text-xs font-medium tabular-nums transition-colors",
-                  Number(amount) === preset
-                    ? "border-[#109121] bg-[#109121]/10 text-[#79d383]"
-                    : "border-[#343536] bg-[#343536] text-[#d2d2d3] hover:border-[#4b4c4d] hover:bg-[#3a3b3c]",
-                )}
-              >
-                {preset} TND
-              </button>
-            ))}
-          </div>
-
-          <p className="mt-2 text-[11px] text-slate-500">Minimum 1 TND · Maximum 10,000 TND</p>
-        </div>
-
-        {error ? (
-          <div className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-            {error}
-          </div>
-        ) : null}
-
-        <Button
-          type="button"
-          onClick={onContinue}
-          className="h-12 w-full rounded-[5px] bg-[#109121] text-sm font-semibold text-white hover:bg-[#0c7f1c]"
-        >
-          Continue to payment
-          <ArrowRight className="size-4" />
-        </Button>
-      </div>
-    </section>
+    </>
   );
 }
 
@@ -396,280 +367,580 @@ function FlouciStepTwo({
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
   const expired = secondsLeft <= 0;
 
-  const copyNumber = async () => {
+  const copy = async (value: string) => {
     try {
-      await navigator.clipboard.writeText(recipientNumber.replace(/\s/g, ""));
+      await navigator.clipboard.writeText(value);
     } catch {
       // Clipboard access may be blocked by the browser.
     }
   };
 
   return (
-    <section className="rounded-[7px] border border-[#2f3031] bg-[#1d1e1f] p-4">
-      <div className="space-y-4">
-        <div>
-          <p className="text-sm font-semibold text-white">Flouci payment</p>
-          <p className="mt-1 text-xs leading-relaxed text-[#b0b0b1]">
-            Transfer the exact amount to the number below, then submit your transaction details.
-          </p>
-        </div>
+    <>
+      <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+        <div className="space-y-4">
+          <div>
+            <FieldLabel>Flouci transfer number</FieldLabel>
+            <div className="flex overflow-hidden rounded-lg bg-slate-700/90">
+              <Input
+                readOnly
+                value={recipientNumber}
+                placeholder="Flouci transfer number"
+                title="Flouci transfer number"
+                className="h-12 flex-1 border-0 bg-transparent px-3 text-sm text-slate-100 shadow-none focus-visible:ring-0"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => copy(recipientNumber.replace(/\s/g, ""))}
+                disabled={expired}
+                title="Copy Flouci transfer number"
+                className="mr-1 my-1 size-10 rounded-md text-slate-200 hover:bg-slate-800 hover:text-white"
+              >
+                <Copy className="size-4" />
+              </Button>
+            </div>
 
-        <div>
-          <FieldLabel>Flouci transfer number</FieldLabel>
-          <div className="flex h-12 overflow-hidden rounded-[5px] bg-[#343536]">
-            <Input
-              readOnly
-              value={recipientNumber}
-              placeholder="Transfer number"
-              title="Flouci transfer number"
-              className="h-12 flex-1 border-0 bg-transparent px-3 text-sm text-white shadow-none focus-visible:ring-0"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={copyNumber}
-              disabled={expired}
-              title="Copy Flouci transfer number"
-              className="mr-1 my-1 size-10 rounded-[5px] text-[#ededee] hover:bg-[#3f4041] hover:text-white"
-            >
-              <Copy className="size-4" />
-            </Button>
-          </div>
-
-          <div className="mt-2 flex items-center justify-between gap-3">
-            <span className="text-[11px] text-[#8c8c8d]">
-              Use this number only for this deposit.
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onRequestChange}
-              disabled={expired || changeRequested}
-              title="Request a different Flouci transfer number"
-              className="h-9 shrink-0 rounded-[5px] border-[#343536] bg-[#242526] px-3 text-xs text-white hover:bg-[#343536]"
-            >
-              {changeRequested ? <Check className="size-3.5" /> : <RefreshCw className="size-3.5" />}
-              {changeRequested ? "Request sent" : "Change number"}
-            </Button>
-          </div>
-        </div>
-
-        <div>
-          <FieldLabel>Transfer amount</FieldLabel>
-          <div className="flex h-12 overflow-hidden rounded-[5px] bg-[#343536]">
-            <Input
-              readOnly
-              value={Number(amount).toFixed(2) + " TND"}
-              placeholder="Amount"
-              title="Transfer amount"
-              className="h-12 flex-1 border-0 bg-transparent px-3 text-sm text-white shadow-none focus-visible:ring-0"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(Number(amount).toFixed(2));
-                } catch {
-                  // Clipboard access may be blocked by the browser.
-                }
-              }}
-              disabled={expired}
-              title="Copy transfer amount"
-              className="mr-1 my-1 size-10 rounded-[5px] text-[#ededee] hover:bg-[#3f4041] hover:text-white"
-            >
-              <Copy className="size-4" />
-            </Button>
-          </div>
-        </div>
-
-        <div>
-          <FieldLabel>Transaction ID</FieldLabel>
-          <Input
-            value={transactionId}
-            onChange={(event) => setTransactionId(event.target.value)}
-            placeholder="Enter the Flouci transaction ID"
-            title="Transaction ID"
-            autoComplete="off"
-            disabled={expired}
-            className="h-12 border-[#343536] bg-[#343536] text-white placeholder:text-[#8c8c8d] shadow-none focus-visible:border-[#4b4c4d] focus-visible:ring-0"
-          />
-        </div>
-
-        <div>
-          <FieldLabel>Transfer proof</FieldLabel>
-          <label
-            title="Upload transfer proof"
-            className={cn(
-              "flex h-12 cursor-pointer items-center gap-3 rounded-[5px] border border-dashed border-[#3f4041] bg-[#343536] px-3 transition-colors hover:border-[#555657] hover:bg-[#3a3b3c]",
-              expired && "pointer-events-none opacity-50",
-            )}
-          >
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-[5px] bg-[#2f3031] text-[#d0d0d1]">
-              <FileImage className="size-4" />
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-xs font-medium text-[#ededee]">
-                {proofFile ? proofFile.name : "Upload a screenshot or payment proof"}
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <span className="text-[11px] text-slate-500">
+                Use this number only for this deposit.
               </span>
-              <span className="mt-0.5 block text-[10px] text-[#8c8c8d]">
-                PNG, JPG or WEBP
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onRequestChange}
+                disabled={expired || changeRequested}
+                title="Request a different Flouci transfer number"
+                className="border-slate-700 bg-slate-900/60 text-slate-200 hover:bg-slate-800"
+              >
+                {changeRequested ? <Check className="size-3.5" /> : <RefreshCw className="size-3.5" />}
+                {changeRequested ? "Request sent" : "Change number"}
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <FieldLabel>Transfer amount</FieldLabel>
+            <div className="flex overflow-hidden rounded-lg bg-slate-700/90">
+              <Input
+                readOnly
+                value={Number(amount).toFixed(2) + " TND"}
+                placeholder="Transfer amount"
+                title="Transfer amount"
+                className="h-12 flex-1 border-0 bg-transparent px-3 text-sm text-slate-100 shadow-none focus-visible:ring-0"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => copy(Number(amount).toFixed(2))}
+                disabled={expired}
+                title="Copy transfer amount"
+                className="mr-1 my-1 size-10 rounded-md text-slate-200 hover:bg-slate-800 hover:text-white"
+              >
+                <Copy className="size-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-1.5 flex items-center justify-between text-xs font-medium text-slate-400">
+              <span>Awaiting payment</span>
+              <span className={cn("tabular-nums font-semibold", expired ? "text-red-300" : "text-white")}>
+                {minutes}:{seconds}
               </span>
-            </span>
-            <Upload className="ml-auto size-4 shrink-0 text-[#8c8c8d]" />
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              className="sr-only"
+            </p>
+          </div>
+
+          <div>
+            <FieldLabel>Transaction ID</FieldLabel>
+            <Input
+              value={transactionId}
+              onChange={(event) => setTransactionId(event.target.value)}
+              placeholder="Enter your Flouci transaction ID"
+              title="Transaction ID"
+              autoComplete="off"
+              disabled={expired}
+              className="border-slate-700 bg-slate-800/70 text-slate-100 placeholder:text-slate-500"
+            />
+          </div>
+
+          <div>
+            <FieldLabel>Transfer proof</FieldLabel>
+            <label
               title="Upload transfer proof"
-              onChange={(event) => setProofFile(event.target.files?.[0] ?? null)}
-              disabled={expired}
-            />
-          </label>
-        </div>
-
-        <div className="space-y-2 text-xs leading-relaxed text-[#b0b0b1]">
-          <p className="flex gap-2">
-            <Info className="mt-0.5 size-3.5 shrink-0 text-[#ededee]" />
-            Please transfer only the exact amount to the Flouci number displayed above.
-          </p>
-          <p className="flex gap-2 font-medium text-[#d0d0d1]">
-            <Clock3 className="mt-0.5 size-3.5 shrink-0" />
-            {expired ? "Payment Expired" : "Awaiting Payment"}{" "}
-            <span className={cn(expired ? "text-red-300" : "text-white", "tabular-nums")}>
-              {minutes}:{seconds}
-            </span>
-          </p>
-          <p className="text-[#8c8c8d]">
-            Player ID: <span className="text-[#d0d0d1]">{playerId}</span>
-          </p>
-        </div>
-
-        {error ? (
-          <div className="rounded-[5px] border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-            {error}
+              className={cn(
+                "flex h-12 cursor-pointer items-center gap-3 rounded-lg border border-dashed border-slate-700 bg-slate-800/50 px-3 transition-colors hover:border-slate-600 hover:bg-slate-800",
+                expired && "pointer-events-none opacity-50",
+              )}
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-slate-700 text-slate-300">
+                <FileImage className="size-4" />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-xs font-medium text-slate-200">
+                  {proofFile ? proofFile.name : "Upload transfer proof"}
+                </span>
+                <span className="mt-0.5 block text-[10px] text-slate-500">
+                  PNG, JPG or WEBP
+                </span>
+              </span>
+              <Upload className="ml-auto size-4 shrink-0 text-slate-500" />
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="sr-only"
+                title="Upload transfer proof"
+                onChange={(event) => setProofFile(event.target.files?.[0] ?? null)}
+                disabled={expired}
+              />
+            </label>
           </div>
-        ) : null}
 
-        <Button
-          type="button"
-          onClick={onConfirm}
-          disabled={expired}
-          title="Confirm Flouci transfer"
-          className="h-12 w-full rounded-[5px] bg-[#109121] text-sm font-semibold text-white hover:bg-[#0c7f1c] disabled:cursor-not-allowed disabled:bg-[#343536] disabled:text-[#8c8c8d]"
-        >
-          <CheckCircle2 className="size-4" />
-          Confirm transfer
-        </Button>
+          <div className="space-y-2 text-xs leading-relaxed text-slate-300">
+            <p className="flex gap-2">
+              <Info className="mt-0.5 size-3.5 shrink-0 text-slate-200" />
+              Please transfer only the exact amount to the Flouci number displayed above.
+            </p>
+            <p className="text-slate-500">
+              Player ID: <span className="text-slate-300">{playerId}</span>
+            </p>
+          </div>
+
+          {error ? (
+            <div className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+              {error}
+            </div>
+          ) : null}
+
+          <Button
+            type="button"
+            onClick={onConfirm}
+            disabled={expired}
+            title="Confirm Flouci transfer"
+            className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <CheckCircle2 className="size-4" />
+            Confirm transfer
+          </Button>
+        </div>
+      </section>
+
+      <div className="mt-5 px-1 text-xs leading-relaxed text-slate-300 sm:text-sm">
+        <p>
+          Complete the transfer before the timer expires. After confirmation, your
+          request will be sent for supervisor verification.
+        </p>
       </div>
-    </section>
+    </>
   );
 }
 
 function WaitingTimeline({
   playerId,
   amount,
+  status,
 }: {
   playerId: string;
   amount: string;
+  status: FlouciDemoStatus;
 }) {
   const stages = [
     {
       title: "Request verification",
-      description: "A supervisor is reviewing your transaction details and transfer proof.",
+      description:
+        status === "correction"
+          ? "The supervisor requested a correction to the submitted transaction."
+          : "The supervisor is reviewing your transaction details and transfer proof.",
       icon: ShieldCheck,
-      active: true,
+      state: status === "reviewing" ? "active" : ["approved", "received"].includes(status) ? "done" : "pending",
     },
     {
       title: "Deposit confirmation",
-      description: "The deposit will be confirmed after the supervisor approves the request.",
+      description:
+        status === "approved"
+          ? "The supervisor approved the deposit request."
+          : "The deposit will be confirmed after supervisor approval.",
       icon: CheckCircle2,
-      active: false,
+      state: status === "approved" ? "active" : status === "received" ? "done" : "pending",
     },
     {
       title: "Transfer received",
-      description: "Once the transfer is received, the funds will be credited to your player balance.",
+      description:
+        status === "received"
+          ? "The transfer was received and the deposit can be credited to the player."
+          : "Once the transfer is received, the funds will be credited to the player balance.",
       icon: CircleDollarSign,
-      active: false,
+      state: status === "received" ? "done" : "pending",
     },
   ];
 
   return (
-    <section className="rounded-[7px] border border-[#2f3031] bg-[#1d1e1f] p-4">
-      <div className="mb-6 text-center">
-        <div className="mx-auto flex size-12 items-center justify-center rounded-full border border-emerald-400/25 bg-emerald-400/10 text-emerald-300">
-          <Clock3 className="size-5" />
-        </div>
-        <p className="mt-3 text-base font-semibold text-white">Your deposit is being reviewed</p>
-        <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-slate-400">
-          Your request has been submitted successfully. Follow the status below.
-        </p>
-      </div>
-
-      <div className="mb-5 grid gap-2 sm:grid-cols-2">
-        <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
-          <p className="text-[10px] uppercase tracking-[0.08em] text-[#8c8c8d]">Player ID</p>
-          <p className="mt-1 truncate text-sm font-medium text-white">{playerId}</p>
-        </div>
-        <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
-          <p className="text-[10px] uppercase tracking-[0.08em] text-[#8c8c8d]">Deposit amount</p>
-          <p className="mt-1 text-sm font-semibold tabular-nums text-white">
-            {Number(amount).toFixed(2)} TND
+    <>
+      <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+        <div className="mb-5 text-center">
+          <p className="text-base font-semibold text-white">
+            {status === "received"
+              ? "Deposit completed"
+              : status === "approved"
+                ? "Deposit approved"
+                : status === "correction"
+                  ? "Correction required"
+                  : status === "expired"
+                    ? "Payment expired"
+                    : "Your deposit is being reviewed"}
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-400">
+            Player ID: {playerId} · {Number(amount).toFixed(2)} TND
           </p>
         </div>
-      </div>
 
-      <div className="relative pl-1">
-        {stages.map((stage, index) => {
-          const Icon = stage.icon;
-          const isLast = index === stages.length - 1;
+        <div className="relative pl-1">
+          {stages.map((stage, index) => {
+            const Icon = stage.icon;
+            const isLast = index === stages.length - 1;
 
-          return (
-            <div key={stage.title} className="relative flex gap-4 pb-7 last:pb-0">
-              {!isLast ? (
-                <div className="absolute left-[15px] top-8 h-[calc(100%-1rem)] w-px bg-slate-700" />
-              ) : null}
+            return (
+              <div key={stage.title} className="relative flex gap-4 pb-7 last:pb-0">
+                {!isLast ? (
+                  <div className="absolute left-[15px] top-8 h-[calc(100%-1rem)] w-px bg-slate-700" />
+                ) : null}
 
-              <div
-                className={cn(
-                  "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border",
-                  stage.active
-                    ? "border-[#109121] bg-[#109121] text-white"
-                    : "border-[#343536] bg-[#343536] text-[#8c8c8d]",
-                )}
-              >
-                {stage.active ? <Icon className="size-4" /> : <span className="text-xs">{index + 1}</span>}
+                <div
+                  className={cn(
+                    "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border",
+                    stage.state === "done"
+                      ? "border-emerald-400 bg-emerald-400 text-slate-950"
+                      : stage.state === "active"
+                        ? "border-amber-400 bg-amber-400 text-slate-950"
+                        : status === "correction" && index === 0
+                          ? "border-red-400 bg-red-400 text-slate-950"
+                          : "border-slate-700 bg-slate-800 text-slate-500",
+                  )}
+                >
+                  {stage.state === "done" ? (
+                    <Check className="size-4" />
+                  ) : (
+                    <Icon className="size-4" />
+                  )}
+                </div>
+
+                <div className="min-w-0 pt-0.5">
+                  <p
+                    className={cn(
+                      "text-sm font-medium",
+                      stage.state === "pending" ? "text-slate-500" : "text-white",
+                    )}
+                  >
+                    {status === "correction" && index === 0 ? "Correction required" : stage.title}
+                    {stage.state === "active" ? (
+                      <span className="ml-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-200">
+                        In progress
+                      </span>
+                    ) : null}
+                    {stage.state === "done" ? (
+                      <span className="ml-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
+                        Completed
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">{stage.description}</p>
+                </div>
               </div>
+            );
+          })}
+        </div>
 
-              <div className="min-w-0 pt-0.5">
-                <p className={cn("text-sm font-medium", stage.active ? "text-white" : "text-[#8c8c8d]")}>
-                  {stage.title}
-                  {stage.active ? (
-                    <span className="ml-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
-                      In progress
-                    </span>
-                  ) : null}
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-[#8c8c8d]">{stage.description}</p>
-              </div>
-            </div>
-          );
-        })}
+        <div className="mt-2 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5 text-xs text-slate-400">
+          <p className="flex items-center gap-2 text-slate-300">
+            <Clock3 className="size-3.5" />
+            {status === "received"
+              ? "Transfer received"
+              : status === "approved"
+                ? "Waiting for transfer"
+                : status === "correction"
+                  ? "Please review the submitted details and send a correction"
+                  : status === "expired"
+                    ? "This payment session has expired"
+                    : "Waiting for supervisor verification"}
+          </p>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function FlouciDemoControls({
+  status,
+  setStatus,
+  setStep,
+}: {
+  status: FlouciDemoStatus;
+  setStatus: React.Dispatch<React.SetStateAction<FlouciDemoStatus>>;
+  setStep: React.Dispatch<React.SetStateAction<1 | 2 | 3>>;
+}) {
+  const setDemo = (next: FlouciDemoStatus) => {
+    setStatus(next);
+    setStep(3);
+  };
+
+  return (
+    <div className="mt-5 rounded-xl border border-dashed border-slate-700 bg-slate-900/50 p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+        Flow preview / test states
+      </p>
+      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+        These buttons are for checking how the Flouci flow transforms between statuses.
+      </p>
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setDemo("reviewing")}
+          title="Preview supervisor reviewing state"
+          className={cn(
+            "h-9 border-slate-700 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800",
+            status === "reviewing" && "border-slate-500 bg-slate-800 text-white",
+          )}
+        >
+          Reviewing
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setDemo("approved")}
+          title="Preview supervisor approved state"
+          className={cn(
+            "h-9 border-slate-700 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800",
+            status === "approved" && "border-emerald-400/50 bg-emerald-400/10 text-emerald-300",
+          )}
+        >
+          Approved
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setDemo("received")}
+          title="Preview transfer received state"
+          className={cn(
+            "h-9 border-slate-700 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800",
+            status === "received" && "border-emerald-400/50 bg-emerald-400/10 text-emerald-300",
+          )}
+        >
+          Received
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setDemo("correction")}
+          title="Preview correction required state"
+          className={cn(
+            "h-9 border-slate-700 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800",
+            status === "correction" && "border-red-400/40 bg-red-500/10 text-red-300",
+          )}
+        >
+          Correction
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setDemo("expired")}
+          title="Preview expired state"
+          className={cn(
+            "h-9 border-slate-700 bg-slate-900/60 text-xs text-slate-300 hover:bg-slate-800",
+            status === "expired" && "border-red-400/40 bg-red-500/10 text-red-300",
+          )}
+        >
+          Expired
+        </Button>
       </div>
 
-      <div className="mt-6 rounded-[5px] border border-[#2f3031] bg-[#242526] px-3 py-2.5 text-xs text-[#b0b0b1]">
-        <p className="flex items-center gap-2 text-[#d0d0d1]">
-          <Clock3 className="size-3.5" />
-          Waiting for supervisor verification
-        </p>
-        <p className="mt-1">
-          No further action is required from you unless the supervisor requests a correction.
-        </p>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setStep(1)}
+          title="Preview Flouci step one"
+          className="h-8 text-xs text-slate-400 hover:bg-slate-800 hover:text-white"
+        >
+          Step 1
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setStep(2)}
+          title="Preview Flouci step two"
+          className="h-8 text-xs text-slate-400 hover:bg-slate-800 hover:text-white"
+        >
+          Step 2
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            setStatus("reviewing");
+            setStep(3);
+          }}
+          title="Preview waiting timeline"
+          className="h-8 text-xs text-slate-400 hover:bg-slate-800 hover:text-white"
+        >
+          Waiting
+        </Button>
       </div>
-    </section>
+    </div>
+  );
+}
+
+function FlouciDepositFlow({
+  method,
+  openMethods,
+  onToggleMethods,
+  onSelectMethod,
+  playerId,
+  setPlayerId,
+  amount,
+  setAmount,
+}: {
+  method: PaymentMethod;
+  openMethods: boolean;
+  onToggleMethods: () => void;
+  onSelectMethod: (method: PaymentMethod) => void;
+  playerId: string;
+  setPlayerId: React.Dispatch<React.SetStateAction<string>>;
+  amount: string;
+  setAmount: React.Dispatch<React.SetStateAction<string>>;
+}) {
+  const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const [demoStatus, setDemoStatus] = React.useState<FlouciDemoStatus>("reviewing");
+  const [error, setError] = React.useState("");
+  const [transactionId, setTransactionId] = React.useState("");
+  const [proofFile, setProofFile] = React.useState<File | null>(null);
+  const [recipientIndex] = React.useState(0);
+  const [changeRequested, setChangeRequested] = React.useState(false);
+  const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+
+  React.useEffect(() => {
+    if (step !== 2) return;
+
+    const timer = window.setInterval(() => {
+      setSecondsLeft((current) => (current > 0 ? current - 1 : 0));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [step]);
+
+  const continueToPayment = () => {
+    if (!playerId.trim()) {
+      setError("Enter your player ID.");
+      return;
+    }
+
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount < 1 || numericAmount > 10000) {
+      setError("Amount must be between 1 and 10,000 TND.");
+      return;
+    }
+
+    setError("");
+    setDemoStatus("reviewing");
+    setSecondsLeft(15 * 60);
+    setStep(2);
+  };
+
+  const requestChange = () => {
+    setChangeRequested(true);
+  };
+
+  const confirmTransfer = () => {
+    if (secondsLeft <= 0) {
+      setError("This payment session has expired. Go back and start a new deposit.");
+      setDemoStatus("expired");
+      setStep(3);
+      return;
+    }
+
+    if (!transactionId.trim()) {
+      setError("Enter the Flouci transaction ID.");
+      return;
+    }
+
+    if (!proofFile) {
+      setError("Upload your transfer proof before confirming.");
+      return;
+    }
+
+    setError("");
+    setDemoStatus("reviewing");
+    setStep(3);
+  };
+
+  const currentRecipient = flouciRecipientNumbers[recipientIndex];
+
+  return (
+    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
+        <div className="mb-4">
+          <PaymentMethodSelector
+            method={method}
+            open={openMethods}
+            onToggle={onToggleMethods}
+            onSelect={onSelectMethod}
+          />
+        </div>
+
+        <div className="flex-1">
+          {step === 1 ? (
+            <FlouciStepOne
+              playerId={playerId}
+              setPlayerId={setPlayerId}
+              amount={amount}
+              setAmount={setAmount}
+              error={error}
+              onContinue={continueToPayment}
+            />
+          ) : null}
+
+          {step === 2 ? (
+            <FlouciStepTwo
+              playerId={playerId}
+              amount={amount}
+              recipientNumber={currentRecipient}
+              secondsLeft={secondsLeft}
+              changeRequested={changeRequested}
+              transactionId={transactionId}
+              setTransactionId={setTransactionId}
+              proofFile={proofFile}
+              setProofFile={setProofFile}
+              error={error}
+              onRequestChange={requestChange}
+              onConfirm={confirmTransfer}
+            />
+          ) : null}
+
+          {step === 3 ? (
+            <WaitingTimeline
+              playerId={playerId}
+              amount={amount}
+              status={demoStatus}
+            />
+          ) : null}
+        </div>
+
+        <FlouciDemoControls
+          status={demoStatus}
+          setStatus={setDemoStatus}
+          setStep={setStep}
+        />
+
+        <div className="mt-4 flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
+          <ShieldCheck className="size-3.5" />
+          Secure checkout
+          <ExternalLink className="size-3" />
+        </div>
+      </div>
+    </main>
   );
 }
 
@@ -696,8 +967,8 @@ function GenericDepositSummary({
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
 
   return (
-    <main className="min-h-dvh bg-[#1d1e1f] px-4 py-4 text-white sm:px-5">
-      <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col">
+    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-3xl flex-col">
         <div className="mb-4 flex items-center justify-between">
           <Button
             type="button"
@@ -718,13 +989,13 @@ function GenericDepositSummary({
             <div className="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/80 p-3">
               <PaymentMethodMark method={method} />
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.08em] text-[#8c8c8d]">Payment method</p>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Payment method</p>
                 <p className="mt-0.5 truncate text-sm font-medium text-white">{method.name}</p>
               </div>
             </div>
 
             <div>
-              <p className="text-sm font-semibold text-white">Deposit amount</p>
+              <p className="text-sm font-medium text-white">Deposit amount</p>
               <div className="mt-2 rounded-lg bg-slate-700/90 px-3 py-3">
                 <p className="text-lg font-semibold tabular-nums text-slate-100">
                   {Number(amount || method.min).toFixed(2)} {method.currency}
@@ -841,8 +1112,8 @@ function FlouciDepositFlow({
   };
 
   return (
-    <main className="min-h-dvh bg-[#1d1e1f] px-4 py-4 text-white sm:px-5">
-      <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col">
+    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-3xl flex-col">
         {step === 1 ? (
           <div className="mb-4">
             <PaymentMethodSelector
@@ -969,7 +1240,7 @@ export function CustomerPortal() {
   }
 
   return (
-    <main className="min-h-dvh bg-[#1d1e1f] px-4 py-4 text-white sm:px-5">
+    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-3xl items-center justify-center">
         <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
           <div className="space-y-4">
@@ -1034,7 +1305,7 @@ export function CustomerPortal() {
 
             <div className="space-y-2 px-1 text-xs leading-relaxed text-slate-300 sm:text-sm">
               <p>Choose your payment method and enter the amount you want to deposit.</p>
-              <p className="text-[#b0b0b1]">{method.note}</p>
+              <p className="text-slate-400">{method.note}</p>
             </div>
 
             <div className="flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
