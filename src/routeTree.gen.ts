@@ -43,6 +43,9 @@ import { Route as mainDashboardPlayersProfileRouteRouteImport } from './routes/(
 import { Route as mainDashboardDistributorsRouteRouteImport } from './routes/(main)/dashboard/distributors/route'
 import { Route as mainDashboardDistributorsAccountRouteRouteImport } from './routes/(main)/dashboard/distributors_.account'
 import { Route as mainDashboardAccountsRouteRouteImport } from './routes/(main)/dashboard/accounts/route'
+import { Route as mainPortalRouteRouteImport } from './routes/(main)/portal/route'
+import { Route as mainPortalMethodRouteRouteImport } from './routes/(main)/portal/$method/route'
+import { Route as mainPortalTrackingDepoistRouteRouteImport } from './routes/(main)/portal/tracking-depoist/route'
 import { Route as mainAuthV1LoginRouteRouteImport } from './routes/(main)/auth/v1/login/route'
 import { Route as mainAuthV1RegisterRouteRouteImport } from './routes/(main)/auth/v1/register/route'
 import { Route as mainAuthV2LoginRouteRouteImport } from './routes/(main)/auth/v2/login/route'
@@ -223,6 +226,22 @@ const mainDashboardAccountsRouteRoute = mainDashboardAccountsRouteRouteImport.up
   path: '/accounts',
   getParentRoute: () => mainDashboardRouteRoute,
 } as any)
+
+const mainPortalRouteRoute = mainPortalRouteRouteImport.update({
+  id: '/(main)/portal',
+  path: '/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const mainPortalMethodRouteRoute = mainPortalMethodRouteRouteImport.update({
+  id: '/$method',
+  path: '/$method',
+  getParentRoute: () => mainPortalRouteRoute,
+} as any)
+const mainPortalTrackingDepoistRouteRoute = mainPortalTrackingDepoistRouteRouteImport.update({
+  id: '/tracking-depoist',
+  path: '/tracking-depoist',
+  getParentRoute: () => mainPortalRouteRoute,
+} as any)
 const mainAuthV1LoginRouteRoute = mainAuthV1LoginRouteRouteImport.update({
   id: '/(main)/auth/v1/login',
   path: '/auth/v1/login',
@@ -285,7 +304,16 @@ export interface FileRoutesByFullPath {
   '/dashboard/distributors': typeof mainDashboardDistributorsRouteRoute
   '/dashboard/distributors/account': typeof mainDashboardDistributorsAccountRouteRoute
   '/dashboard/accounts': typeof mainDashboardAccountsRouteRoute
-  '/dashboard/$': typeof mainDashboardSplatRoute
+  '/portal': typeof mainPortalRouteRouteWithChildren
+  '/portal/$method': typeof mainPortalMethodRouteRoute
+  '/portal/tracking-depoist': typeof mainPortalTrackingDepoistRouteRoute
+  '/dashboard/  '/dashboard/': typeof mainDashboardIndexRoute
+  '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
+  '/auth/v1/register': typeof mainAuthV1RegisterRouteRoute
+  '/auth/v2/login': typeof mainAuthV2LoginRouteRoute
+  '/auth/v2/register': typeof mainAuthV2RegisterRouteRoute
+}
+: typeof mainDashboardSplatRoute
   '/dashboard/': typeof mainDashboardIndexRoute
   '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
   '/auth/v1/register': typeof mainAuthV1RegisterRouteRoute
@@ -310,6 +338,9 @@ export interface FileRoutesByTo {
   '/dashboard/players/$playerId': typeof mainDashboardPlayersProfileRouteRoute
   '/dashboard/distributors': typeof mainDashboardDistributorsRouteRouteWithChildren
   '/dashboard/distributors/account': typeof mainDashboardDistributorsAccountRouteRoute
+  '/portal': typeof mainPortalRouteRouteWithChildren
+  '/portal/$method': typeof mainPortalMethodRouteRoute
+  '/portal/tracking-depoist': typeof mainPortalTrackingDepoistRouteRoute
   '/dashboard/': typeof mainDashboardIndexRoute
   '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
   '/auth/v1/register': typeof mainAuthV1RegisterRouteRoute
@@ -351,6 +382,9 @@ export interface FileRoutesById {
   '/(main)/dashboard/distributors': typeof mainDashboardDistributorsRouteRoute
   '/(main)/dashboard/distributors_/account': typeof mainDashboardDistributorsAccountRouteRoute
   '/(main)/dashboard/accounts': typeof mainDashboardAccountsRouteRoute
+  '/(main)/portal': typeof mainPortalRouteRouteWithChildren
+  '/(main)/portal/$method': typeof mainPortalMethodRouteRoute
+  '/(main)/portal/tracking-depoist': typeof mainPortalTrackingDepoistRouteRoute
   '/(main)/dashboard/': typeof mainDashboardIndexRoute
   '/(main)/auth/v1/login': typeof mainAuthV1LoginRouteRoute
   '/(main)/auth/v1/register': typeof mainAuthV1RegisterRouteRoute
@@ -406,6 +440,9 @@ export interface FileRouteTypes {
     | '/dashboard/distributors/account'
     | '/dashboard/accounts'
     | '/dashboard/$'
+    | '/portal'
+    | '/portal/$method'
+    | '/portal/tracking-depoist'
     | '/dashboard/'
     | '/auth/v1/login'
     | '/auth/v1/register'
@@ -422,6 +459,9 @@ export interface FileRouteTypes {
     | '/dashboard/withdrawls/analytics'
     | '/dashboard/distributors'
     | '/dashboard/'
+    | '/portal'
+    | '/portal/$method'
+    | '/portal/tracking-depoist'
     | '/dashboard'
     | '/auth/v1/login'
     | '/auth/v1/register'
@@ -454,6 +494,9 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/players'
     | '/(main)/dashboard/players/$playerId'
     | '/(main)/dashboard/distributors'
+    | '/(main)/portal'
+    | '/(main)/portal/$method'
+    | '/(main)/portal/tracking-depoist'
     | '/(main)/dashboard/'
     | '/(main)/auth/v1/login'
     | '/(main)/auth/v1/register'
@@ -498,6 +541,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard'
       preLoaderRoute: typeof mainDashboardRouteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/(main)/portal': {
+      id: '/(main)/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof mainPortalRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(main)/portal/$method': {
+      id: '/(main)/portal/$method'
+      path: '/$method'
+      fullPath: '/portal/$method'
+      preLoaderRoute: typeof mainPortalMethodRouteRouteImport
+      parentRoute: typeof mainPortalRouteRoute
+    }
+    '/(main)/portal/tracking-depoist': {
+      id: '/(main)/portal/tracking-depoist'
+      path: '/tracking-depoist'
+      fullPath: '/portal/tracking-depoist'
+      preLoaderRoute: typeof mainPortalTrackingDepoistRouteRouteImport
+      parentRoute: typeof mainPortalRouteRoute
     }
     '/(main)/mail': {
       id: '/(main)/mail'
@@ -6043,6 +6107,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   mainChatRouteRoute: typeof mainChatRouteRoute
   mainDashboardRouteRoute: typeof mainDashboardRouteRouteWithChildren
+  mainPortalRouteRoute: typeof mainPortalRouteRouteWithChildren
   mainMailRouteRoute: typeof mainMailRouteRoute
   mainUnauthorizedRoute: typeof mainUnauthorizedRoute
   externalIndexRoute: typeof externalIndexRoute
@@ -6267,6 +6332,19 @@ const mainDashboardDepositsRouteRouteChildren: mainDashboardDepositsRouteRouteCh
 const mainDashboardDepositsRouteRouteWithChildren =
   mainDashboardDepositsRouteRoute._addFileChildren(mainDashboardDepositsRouteRouteChildren)
 
+interface mainPortalRouteRouteChildren {
+  mainPortalMethodRouteRoute: typeof mainPortalMethodRouteRoute
+  mainPortalTrackingDepoistRouteRoute: typeof mainPortalTrackingDepoistRouteRoute
+}
+
+const mainPortalRouteRouteChildren: mainPortalRouteRouteChildren = {
+  mainPortalMethodRouteRoute: mainPortalMethodRouteRoute,
+  mainPortalTrackingDepoistRouteRoute: mainPortalTrackingDepoistRouteRoute,
+}
+
+const mainPortalRouteRouteWithChildren =
+  mainPortalRouteRoute._addFileChildren(mainPortalRouteRouteChildren)
+
 interface mainDashboardRouteRouteChildren {
   mainDashboardAnalyticsRouteRoute: typeof mainDashboardAnalyticsRouteRoute
   mainDashboardDepositsRouteRoute: typeof mainDashboardDepositsRouteRoute
@@ -6305,6 +6383,7 @@ const mainAuthV2RouteRouteWithChildren = mainAuthV2RouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   mainChatRouteRoute: mainChatRouteRoute,
   mainDashboardRouteRoute: mainDashboardRouteRouteWithChildren,
+  mainPortalRouteRoute: mainPortalRouteRouteWithChildren,
   mainMailRouteRoute: mainMailRouteRoute,
   mainUnauthorizedRoute: mainUnauthorizedRoute,
   externalIndexRoute: externalIndexRoute,
