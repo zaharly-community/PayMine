@@ -740,7 +740,7 @@ function FlouciStepTwo({
                     <p className="mt-1 text-[10px] text-slate-500">AI OCR will inspect the visible transfer details</p>
                   </div>
                 </div>
-              )
+              )}
 
 
             </label>
