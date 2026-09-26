@@ -381,9 +381,11 @@ function AiOcrInspectionOverlay({ status }: { status: FlouciAiStatus }) {
   const unrecognized = status === "unrecognized";
 
   return (
-    <div
-      className={cn(
-        "pointer-events-none absolute inset-0 overflow-hidden rounded-md",
+    <>
+      <style>{'@keyframes flouci-ocr-scan { 0% { top: 7%; opacity: 0; } 8% { opacity: 1; } 50% { opacity: 1; } 92% { opacity: 1; } 100% { top: 93%; opacity: 0; } }'}</style>
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-0 overflow-hidden rounded-md",
         analyzing && "bg-slate-950/10",
         matched && "bg-emerald-400/5",
         unrecognized && "bg-amber-400/5",
@@ -480,7 +482,8 @@ function AiOcrInspectionOverlay({ status }: { status: FlouciAiStatus }) {
           </div>
         </div>
       ) : null}
-    </div>
+      </div>
+    </>
   );
 }
 
