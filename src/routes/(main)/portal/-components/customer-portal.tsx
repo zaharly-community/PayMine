@@ -290,6 +290,35 @@ function writeOpenDepositRequests(requests: DepositRequest[]) {
   }
 }
 
+const trackingDemoRequests: Record<string, DepositRequest> = {
+  "DEP-DEMO-0000000": {
+    id: "DEP-DEMO-0000000",
+    playerId: "0000000",
+    playerLookupType: "playerId",
+    methodId: "flouci",
+    methodName: "Flouci",
+    amount: "150.00",
+    currency: "TND",
+    createdAt: "2026-09-26T11:00:00.000Z",
+    status: "open",
+  },
+  "DEP-MUIF4S1X": {
+    id: "DEP-MUIF4S1X",
+    playerId: "0000000",
+    playerLookupType: "playerId",
+    methodId: "flouci",
+    methodName: "Flouci",
+    amount: "150.00",
+    currency: "TND",
+    createdAt: "2026-09-26T11:05:00.000Z",
+    status: "open",
+  },
+};
+
+function getTrackingDemoDepositRequest(requestId: string) {
+  return trackingDemoRequests[requestId] ?? null;
+}
+
 function findOpenDepositRequest(
   playerId: string,
   playerLookupType: PlayerLookupType,
@@ -300,17 +329,7 @@ function findOpenDepositRequest(
   // Temporary design-preview trigger:
   // Player ID 0000000 always behaves as if an open deposit request exists.
   if (playerLookupType === "playerId" && normalized === "0000000") {
-    return {
-      id: "DEP-DEMO-0000000",
-      playerId: "0000000",
-      playerLookupType: "playerId",
-      methodId: "flouci",
-      methodName: "Flouci",
-      amount: "150.00",
-      currency: "TND",
-      createdAt: "2026-09-26T11:00:00.000Z",
-      status: "open",
-    } satisfies DepositRequest;
+    return getTrackingDemoDepositRequest("DEP-DEMO-0000000");
   }
 
   return (
@@ -1103,27 +1122,11 @@ export function DepositRequestTrackingRoute() {
       }
 
       const stored = readOpenDepositRequests().find((item) => item.id === requestId) ?? null;
-      if (stored) {
-        setRequest(stored);
-        return;
-      }
+      const demo = getTrackingDemoDepositRequest(requestId);
 
-      if (requestId === "DEP-DEMO-0000000") {
-        setRequest({
-          id: "DEP-DEMO-0000000",
-          playerId: "0000000",
-          playerLookupType: "playerId",
-          methodId: "flouci",
-          methodName: "Flouci",
-          amount: "150.00",
-          currency: "TND",
-          createdAt: "2026-09-26T11:00:00.000Z",
-          status: "open",
-        });
-        return;
-      }
-
-      setRequest(null);
+      // Tracking is one shared page for every deposit method.
+      // A known local request wins; demo IDs keep direct preview URLs usable.
+      setRequest(stored ?? demo);
     };
 
     sync();
