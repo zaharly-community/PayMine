@@ -3131,6 +3131,7 @@ function CardDepositFlow({
               cardCount={cardNumbers.filter((value) => normalizeCardNumber(value)).length}
             />
           ) : null}
+        </div>
 
         <div className="mt-4 flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
           <ShieldCheck className="size-3.5" />
