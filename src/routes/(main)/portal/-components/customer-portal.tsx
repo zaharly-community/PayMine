@@ -20,6 +20,8 @@ import {
   Hash,
   UserRound,
   Mail,
+  Plus,
+  Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -238,6 +240,11 @@ const walletRecipientOwners: Record<string, string> = {
 };
 
 const manualTransferMethodIds = new Set(["flouci", "d17", "kashy"]);
+const cardDepositMethodIds = new Set(["orange", "ooredoo", "tunisie-telecom"]);
+
+function isCardDepositMethod(method: PaymentMethod) {
+  return cardDepositMethodIds.has(method.id);
+}
 
 function isManualTransferMethod(method: PaymentMethod) {
   return manualTransferMethodIds.has(method.id);
@@ -2123,6 +2130,880 @@ function FlouciDepositFlow({
   );
 }
 
+
+type CardOcrStatus = "idle" | "analyzing" | "matched";
+
+function normalizeCardNumber(value: string) {
+  return value.replace(/\D/g, "").slice(0, 16);
+}
+
+function formatCardNumber(value: string) {
+  const digits = normalizeCardNumber(value);
+  return digits.replace(/(.{4})/g, "$1 ").trim();
+}
+
+const usedCardNumber = "0000000000000000";
+
+function CardDepositStepOne({
+  method,
+  playerId,
+  setPlayerId,
+  playerLookupType,
+  setPlayerLookupType,
+  amount,
+  setAmount,
+  error,
+  onContinue,
+}: {
+  method: PaymentMethod;
+  playerId: string;
+  setPlayerId: React.Dispatch<React.SetStateAction<string>>;
+  playerLookupType: PlayerLookupType;
+  setPlayerLookupType: React.Dispatch<React.SetStateAction<PlayerLookupType>>;
+  amount: string;
+  setAmount: React.Dispatch<React.SetStateAction<string>>;
+  error: string;
+  onContinue: () => void;
+}) {
+  const presets = [10, 20, 50, 100, 200, 500];
+
+  return (
+    <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          onContinue();
+        }}
+        className="space-y-4"
+      >
+        <div>
+          <FieldLabel>
+            {playerLookupType === "playerId"
+              ? "Player ID"
+              : playerLookupType === "username"
+                ? "Username"
+                : "Email"}
+          </FieldLabel>
+
+          <div className="flex items-stretch gap-2">
+            <div className="min-w-0 flex-1">
+              <Input
+                type={playerLookupType === "email" ? "email" : "text"}
+                value={playerId}
+                onChange={(event) => setPlayerId(event.target.value)}
+                placeholder={
+                  playerLookupType === "playerId"
+                    ? "Enter your player ID"
+                    : playerLookupType === "username"
+                      ? "Enter your username"
+                      : "Enter your email address"
+                }
+                title={
+                  playerLookupType === "playerId"
+                    ? "Player ID"
+                    : playerLookupType === "username"
+                      ? "Username"
+                      : "Email"
+                }
+                autoComplete={playerLookupType === "email" ? "email" : "off"}
+                className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+              />
+            </div>
+
+            <div
+              className="flex h-12 shrink-0 items-center gap-1.5"
+              role="tablist"
+              aria-label="Player identification type"
+            >
+              {(
+                [
+                  ["playerId", "Player ID", Hash],
+                  ["username", "Username", UserRound],
+                  ["email", "Email", Mail],
+                ] as const
+              ).map(([type, label, Icon]) => {
+                const active = playerLookupType === type;
+
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    aria-label={label}
+                    title={label}
+                    onClick={() => {
+                      setPlayerLookupType(type);
+                      setPlayerId("");
+                    }}
+                    className={cn(
+                      "group flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg bg-slate-700/90 px-3 text-slate-400 transition-all",
+                      active
+                        ? "min-w-[92px] text-slate-100 shadow-[0_0_16px_rgba(255,255,255,0.04)]"
+                        : "w-12 hover:bg-slate-800 hover:text-slate-100",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "size-4 shrink-0 transition-colors",
+                        active
+                          ? "text-emerald-300"
+                          : "text-slate-400 group-hover:text-slate-200",
+                      )}
+                    />
+                    {active ? (
+                      <span className="truncate text-xs font-medium">{label}</span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-1.5 min-h-4 text-[10px] text-slate-500">
+            Using{" "}
+            <span className="font-medium text-slate-300">
+              {playerLookupType === "playerId"
+                ? "Player ID"
+                : playerLookupType === "username"
+                  ? "Username"
+                  : "Email"}
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <FieldLabel>Total card amount</FieldLabel>
+          <Input
+            type="text"
+            inputMode="decimal"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            placeholder="Enter total value of the cards"
+            title="Total card amount"
+            className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+          />
+
+          <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
+            {presets.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => setAmount(String(preset))}
+                title="Select preset card amount"
+                className={cn(
+                  "rounded-md border px-2.5 py-2 text-xs font-medium tabular-nums transition-colors",
+                  Number(amount) === preset
+                    ? "border-emerald-400/60 bg-emerald-400/10 text-emerald-300"
+                    : "border-slate-700 bg-slate-800/60 text-slate-300 hover:border-slate-600 hover:bg-slate-800",
+                )}
+              >
+                {preset} TND
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-4 text-sm">
+          <span className="font-medium text-slate-400">Min/Max</span>
+          <span className="font-medium tabular-nums text-slate-100">
+            {method.min.toLocaleString("en-US")} - {method.max.toLocaleString("en-US")} {method.currency}
+          </span>
+        </div>
+
+        {error ? (
+          <div className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+            {error}
+          </div>
+        ) : null}
+
+        <Button
+          type="submit"
+          title={\`Continue to \${method.name} card payment\`}
+          className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
+        >
+          <CircleDollarSign className="size-4" />
+          <span>
+            Do Deposit
+            <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
+              Total Cards Value:{" "}
+              {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"}{" "}
+              {method.currency}
+            </span>
+          </span>
+        </Button>
+      </form>
+    </section>
+  );
+}
+
+function CardDepositOcrOverlay({ status }: { status: CardOcrStatus }) {
+  const stages = [
+    "Locating card numbers",
+    "Reading card digits",
+    "Validating 16-digit codes",
+    "Checking used card status",
+  ];
+  const [stageIndex, setStageIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    if (status !== "analyzing") {
+      setStageIndex(0);
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setStageIndex((current) => (current + 1) % stages.length);
+    }, 700);
+
+    return () => window.clearInterval(timer);
+  }, [status]);
+
+  if (status === "idle") return null;
+
+  return (
+    <div
+      className={cn(
+        "pointer-events-none absolute inset-0 overflow-hidden rounded-md",
+        status === "analyzing" && "bg-slate-950/10",
+        status === "matched" && "bg-emerald-400/5",
+      )}
+      aria-hidden="true"
+    >
+      {status === "analyzing" ? (
+        <>
+          <div className="absolute inset-x-4 top-3 flex items-center justify-between gap-2">
+            <span className="rounded-full border border-cyan-300/30 bg-slate-950/80 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-200 backdrop-blur-md">
+              AI OCR
+            </span>
+            <span className="truncate rounded-full border border-white/10 bg-slate-950/75 px-2.5 py-1.5 text-[10px] text-slate-200 backdrop-blur-md">
+              {stages[stageIndex]}
+            </span>
+          </div>
+          <div className="absolute inset-x-5 top-1/2 -translate-y-1/2">
+            <div className="relative h-28 rounded-md border border-cyan-300/30">
+              <span className="absolute left-0 top-0 h-7 w-7 border-l-2 border-t-2 border-cyan-300/90" />
+              <span className="absolute right-0 top-0 h-7 w-7 border-r-2 border-t-2 border-cyan-300/90" />
+              <span className="absolute bottom-0 left-0 h-7 w-7 border-b-2 border-l-2 border-cyan-300/90" />
+              <span className="absolute bottom-0 right-0 h-7 w-7 border-b-2 border-r-2 border-cyan-300/90" />
+              <div
+                className="absolute inset-x-3 h-px bg-cyan-200 shadow-[0_0_14px_3px_rgba(103,232,249,0.45)]"
+                style={{ animation: "flouci-ocr-scan 2.1s linear infinite" }}
+              />
+              <div className="absolute left-[12%] top-[28%] h-7 w-[72%] rounded-sm border border-cyan-300/60 bg-cyan-300/10" />
+              <div className="absolute left-[18%] top-[57%] h-7 w-[58%] rounded-sm border border-cyan-300/60 bg-cyan-300/10" />
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="absolute inset-x-4 bottom-3 flex justify-center">
+          <div className="rounded-full border border-emerald-300/25 bg-slate-950/80 px-3 py-1.5 text-[10px] font-medium text-emerald-200 backdrop-blur-md">
+            OCR detected card numbers
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CardDepositFlow({
+  method,
+  openMethods,
+  onToggleMethods,
+  onSelectMethod,
+  playerId,
+  setPlayerId,
+  playerLookupType,
+  setPlayerLookupType,
+  amount,
+  setAmount,
+}: {
+  method: PaymentMethod;
+  openMethods: boolean;
+  onToggleMethods: () => void;
+  onSelectMethod: (method: PaymentMethod) => void;
+  playerId: string;
+  setPlayerId: React.Dispatch<React.SetStateAction<string>>;
+  playerLookupType: PlayerLookupType;
+  setPlayerLookupType: React.Dispatch<React.SetStateAction<PlayerLookupType>>;
+  amount: string;
+  setAmount: React.Dispatch<React.SetStateAction<string>>;
+}) {
+  const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const [error, setError] = React.useState("");
+  const [cardNumbers, setCardNumbers] = React.useState<string[]>([""]);
+  const [proofFile, setProofFile] = React.useState<File | null>(null);
+  const [ocrStatus, setOcrStatus] = React.useState<CardOcrStatus>("idle");
+  const [detectedCards, setDetectedCards] = React.useState<string[]>([]);
+  const [cardReviewStatus, setCardReviewStatus] = React.useState<"reviewing" | "completed">("reviewing");
+
+  const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+  const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
+  const seconds = (secondsLeft % 60).toString().padStart(2, "0");
+  const expired = secondsLeft <= 0;
+
+  React.useEffect(() => {
+    setStep(1);
+    setError("");
+    setCardNumbers([""]);
+    setProofFile(null);
+    setOcrStatus("idle");
+    setDetectedCards([]);
+    setCardReviewStatus("reviewing");
+    setSecondsLeft(15 * 60);
+  }, [method.id]);
+
+  React.useEffect(() => {
+    if (!proofFile) {
+      setOcrStatus("idle");
+      setDetectedCards([]);
+      return;
+    }
+
+    setOcrStatus("analyzing");
+    setDetectedCards([]);
+
+    const timer = window.setTimeout(() => {
+      setOcrStatus("matched");
+      setDetectedCards([
+        "1111 2222 3333 4444",
+        "5555 6666 7777 8888",
+      ]);
+    }, 3200);
+
+    return () => window.clearTimeout(timer);
+  }, [proofFile]);
+
+  React.useEffect(() => {
+    if (step !== 2) return;
+
+    const timer = window.setInterval(() => {
+      setSecondsLeft((current) => (current > 0 ? current - 1 : 0));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [step]);
+
+  const usedCardIndexes = React.useMemo(
+    () =>
+      cardNumbers
+        .map((value, index) => (normalizeCardNumber(value) === usedCardNumber ? index : -1))
+        .filter((index) => index >= 0),
+    [cardNumbers],
+  );
+
+  const appendCards = (values: string[]) => {
+    const normalizedIncoming = values
+      .map((value) => formatCardNumber(value))
+      .filter((value) => normalizeCardNumber(value).length > 0);
+
+    if (!normalizedIncoming.length) return;
+
+    setCardNumbers((current) => {
+      const existing = new Set(
+        current
+          .map((value) => normalizeCardNumber(value))
+          .filter(Boolean),
+      );
+      const next = [...current];
+      const firstBlankIndex = next.findIndex((value) => !normalizeCardNumber(value));
+
+      let insertAt = firstBlankIndex >= 0 ? firstBlankIndex : next.length;
+
+      for (const value of normalizedIncoming) {
+        const normalized = normalizeCardNumber(value);
+        if (!normalized || existing.has(normalized)) continue;
+
+        if (insertAt >= next.length) next.push("");
+        next[insertAt] = formatCardNumber(normalized);
+        existing.add(normalized);
+        insertAt += 1;
+      }
+
+      if (next[next.length - 1] && normalizeCardNumber(next[next.length - 1]).length > 0) {
+        next.push("");
+      }
+
+      return next;
+    });
+  };
+
+  const updateCard = (index: number, value: string) => {
+    const formatted = formatCardNumber(value);
+
+    setCardNumbers((current) => {
+      const next = [...current];
+      next[index] = formatted;
+
+      if (formatted && normalizeCardNumber(next[next.length - 1]).length > 0) {
+        next.push("");
+      }
+
+      return next;
+    });
+  };
+
+  const addCardInput = () => {
+    setCardNumbers((current) => [...current, ""]);
+  };
+
+  const deleteCardInput = (index: number) => {
+    if (index === 0) return;
+
+    setCardNumbers((current) => {
+      if (current.length <= 1) return current;
+      return current.filter((_, cardIndex) => cardIndex !== index);
+    });
+  };
+
+  const continueToCards = () => {
+    if (!playerId.trim()) {
+      setError(
+        playerLookupType === "playerId"
+          ? "Enter your player ID."
+          : playerLookupType === "username"
+            ? "Enter your username."
+            : "Enter your email address.",
+      );
+      return;
+    }
+
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount < method.min || numericAmount > method.max) {
+      setError(
+        \`Total card amount must be between \${method.min.toLocaleString("en-US")} and \${method.max.toLocaleString("en-US")} \${method.currency}.\`,
+      );
+      return;
+    }
+
+    setError("");
+    setCardNumbers([""]);
+    setProofFile(null);
+    setOcrStatus("idle");
+    setDetectedCards([]);
+    setSecondsLeft(15 * 60);
+    setCardReviewStatus("reviewing");
+    setStep(2);
+  };
+
+  const confirmCards = () => {
+    const enteredCards = cardNumbers
+      .map(normalizeCardNumber)
+      .filter(Boolean);
+
+    if (expired) {
+      setError("This payment session has expired. Go back and start a new deposit.");
+      setCardReviewStatus("reviewing");
+      setStep(3);
+      return;
+    }
+
+    if (!enteredCards.length) {
+      setError("Enter at least one card number.");
+      return;
+    }
+
+    if (enteredCards.some((value) => value.length !== 16)) {
+      setError("Each card number must contain 16 digits.");
+      return;
+    }
+
+    if (new Set(enteredCards).size !== enteredCards.length) {
+      setError("The same card number cannot be entered more than once.");
+      return;
+    }
+
+    if (enteredCards.some((value) => value === usedCardNumber)) {
+      setError("One or more card codes have already been used.");
+      return;
+    }
+
+    if (!proofFile) {
+      setError("Upload a photo of the card codes before confirming.");
+      return;
+    }
+
+    setError("");
+    setCardReviewStatus("reviewing");
+    setStep(3);
+  };
+
+  const cardState = (value: string) => {
+    const normalized = normalizeCardNumber(value);
+    return normalized === usedCardNumber
+      ? "used"
+      : normalized.length === 16
+        ? "ready"
+        : "incomplete";
+  };
+
+  return (
+    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
+        {step === 2 ? (
+          <div className="mb-3 flex items-center justify-center">
+            <PaymentMethodMark method={method} />
+          </div>
+        ) : (
+          <div className="mb-4">
+            <PaymentMethodSelector
+              method={method}
+              open={openMethods}
+              onToggle={onToggleMethods}
+              onSelect={onSelectMethod}
+            />
+          </div>
+        )}
+
+        {step === 2 ? (
+          <div
+            className={cn(
+              "relative mb-3 overflow-hidden rounded-lg border px-3 py-2",
+              expired
+                ? "border-red-400/30 bg-red-500/5"
+                : "border-emerald-400/20 bg-slate-900/70",
+            )}
+          >
+            <div className="flex items-center gap-2.5">
+              <div
+                className={cn(
+                  "flex size-7 shrink-0 items-center justify-center rounded-md border",
+                  expired
+                    ? "border-red-400/30 bg-red-500/10 text-red-300"
+                    : "border-emerald-400/20 bg-emerald-400/5 text-emerald-300",
+                )}
+              >
+                <Clock3 className="size-3.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[11px] font-medium text-slate-300">
+                  {expired ? "Payment session expired" : "Payment expires in"}
+                </p>
+                <div className="mt-1.5 h-0.5 overflow-hidden rounded-full bg-slate-800">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all duration-700",
+                      expired ? "bg-red-400" : "bg-emerald-400",
+                    )}
+                    style={{ width: Math.max(0, Math.min(100, (secondsLeft / (15 * 60)) * 100)) + "%" }}
+                  />
+                </div>
+              </div>
+              <div
+                className={cn(
+                  "shrink-0 rounded-md border px-2.5 py-1 text-sm font-semibold tabular-nums tracking-[0.08em]",
+                  expired
+                    ? "border-red-400/30 bg-red-500/10 text-red-300"
+                    : "border-emerald-400/25 bg-emerald-400/10 text-emerald-300",
+                )}
+              >
+                {minutes}:{seconds}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="flex-1">
+          {step === 1 ? (
+            <CardDepositStepOne
+              method={method}
+              playerId={playerId}
+              setPlayerId={setPlayerId}
+              playerLookupType={playerLookupType}
+              setPlayerLookupType={setPlayerLookupType}
+              amount={amount}
+              setAmount={setAmount}
+              error={error}
+              onContinue={continueToCards}
+            />
+          ) : null}
+
+          {step === 2 ? (
+            <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Total card amount</p>
+                    <p className="mt-0.5 text-sm font-semibold tabular-nums text-white">
+                      {Number(amount).toFixed(2)} {method.currency}
+                    </p>
+                  </div>
+                  <p className="text-[10px] text-slate-500">
+                    {cardNumbers.filter((value) => normalizeCardNumber(value)).length} card
+                    {cardNumbers.filter((value) => normalizeCardNumber(value)).length === 1 ? "" : "s"}
+                  </p>
+                </div>
+
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <FieldLabel>Card numbers</FieldLabel>
+                    <span className="text-[10px] text-slate-500">16 digits · XXXX XXXX XXXX XXXX</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {cardNumbers.map((value, index) => {
+                      const state = cardState(value);
+                      const isUsed = state === "used";
+
+                      return (
+                        <div key={index} className="flex items-start gap-2">
+                          <div className="min-w-0 flex-1">
+                            <Input
+                              value={value}
+                              onChange={(event) => updateCard(index, event.target.value)}
+                              placeholder="0000 0000 0000 0000"
+                              title={index === 0 ? "First card number" : \`Card number \${index + 1}\`}
+                              autoComplete="off"
+                              maxLength={19}
+                              className={cn(
+                                "h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500",
+                                isUsed && "border-red-400/50 bg-red-500/10",
+                              )}
+                            />
+                            {isUsed ? (
+                              <p className="mt-1 text-[10px] font-medium text-red-300">
+                                This card code has already been used.
+                              </p>
+                            ) : null}
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={addCardInput}
+                            title="Add another card"
+                            className="size-12 shrink-0 border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+                          >
+                            <Plus className="size-4" />
+                          </Button>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => deleteCardInput(index)}
+                            disabled={index === 0}
+                            title={index === 0 ? "The first card cannot be deleted" : "Delete card"}
+                            className="size-12 shrink-0 border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
+                    The first input is always required. As soon as you enter a card number, the next input is created automatically.
+                  </p>
+                </div>
+
+                <div>
+                  <FieldLabel>Card photo / OCR</FieldLabel>
+                  <label
+                    title="Upload card photo for OCR"
+                    className={cn(
+                      "flex min-h-48 cursor-pointer flex-col gap-2 rounded-lg border border-dashed border-slate-700 bg-slate-800/50 p-2.5 transition-colors hover:border-slate-600 hover:bg-slate-800",
+                      expired && "pointer-events-none opacity-50",
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-slate-700 text-slate-300">
+                        <ScanText className="size-4" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-xs font-medium text-slate-200">
+                          {proofFile ? proofFile.name : "Upload card photo"}
+                        </span>
+                        <span className="mt-0.5 block text-[10px] text-slate-500">
+                          OCR can recognize one or more card numbers from the photo
+                        </span>
+                      </span>
+                      <Upload className="ml-auto size-4 shrink-0 text-slate-500" />
+                    </div>
+
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="sr-only"
+                      title="Upload card photo"
+                      onChange={(event) => setProofFile(event.target.files?.[0] ?? null)}
+                      disabled={expired}
+                    />
+
+                    <div className="relative flex min-h-32 flex-1 items-center justify-center overflow-hidden rounded-md border border-slate-700 bg-slate-900/60">
+                      {proofFile ? (
+                        <div className="relative h-full w-full">
+                          <img
+                            src={URL.createObjectURL(proofFile)}
+                            alt="Uploaded card photo"
+                            className={cn(
+                              "max-h-52 w-full object-contain transition-all duration-300",
+                              ocrStatus === "analyzing" && "brightness-[0.88]",
+                            )}
+                          />
+                          <CardDepositOcrOverlay status={ocrStatus} />
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <FileImage className="mx-auto size-6 text-slate-500" />
+                          <p className="mt-2 text-xs font-medium text-slate-300">Upload a photo of the cards</p>
+                          <p className="mt-1 text-[10px] text-slate-500">AI OCR will read visible card numbers</p>
+                        </div>
+                      )}
+                    </div>
+                  </label>
+
+                  {ocrStatus === "matched" && detectedCards.length ? (
+                    <div className="mt-2 rounded-lg border border-cyan-300/20 bg-cyan-300/5 p-3">
+                      <div className="flex items-center gap-2">
+                        <ScanText className="size-4 text-cyan-200" />
+                        <div>
+                          <p className="text-xs font-semibold text-cyan-100">
+                            {detectedCards.length} cards detected
+                          </p>
+                          <p className="text-[10px] text-slate-500">
+                            You can fill one card or all detected cards. Existing card numbers are not duplicated.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                        <Button
+                          type="button"
+                          onClick={() => appendCards(detectedCards)}
+                          title="Enter all detected cards"
+                          className="h-10 flex-1 border border-cyan-300/30 bg-cyan-300/10 text-xs font-semibold text-cyan-100 hover:bg-cyan-300/15"
+                        >
+                          <ScanText className="size-3.5" />
+                          Enter all detected cards
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => appendCards([detectedCards[0]])}
+                          title="Enter one detected card"
+                          className="h-10 flex-1 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:bg-slate-800"
+                        >
+                          <Plus className="size-3.5" />
+                          Enter one detected card
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                {error ? (
+                  <div className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+                    {error}
+                  </div>
+                ) : null}
+
+                <Button
+                  type="button"
+                  onClick={confirmCards}
+                  disabled={expired || usedCardIndexes.length > 0}
+                  title={\`Confirm \${method.name} card numbers\`}
+                  className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <CheckCircle2 className="size-4" />
+                  Confirm cards
+                </Button>
+              </div>
+            </section>
+          ) : null}
+
+          {step === 3 ? (
+            <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 text-center shadow-2xl sm:p-5">
+              {cardReviewStatus === "reviewing" ? (
+                <>
+                  <div className="mb-3 flex justify-center">
+                    <img
+                      src="https://assets-v2.lottiefiles.com/a/32092c6a-1187-11ee-82df-37dd938d41eb/9rtrQDUjoJ.gif"
+                      alt="Card deposit is being reviewed"
+                      className="h-24 w-24 object-contain"
+                      loading="eager"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <p className="text-base font-semibold text-white">Card deposit is being reviewed</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                    Player ID: {playerId} · {Number(amount).toFixed(2)} {method.currency}
+                  </p>
+                  <p className="mx-auto mt-3 max-w-md text-xs leading-relaxed text-slate-500">
+                    Your card numbers were submitted for verification. The team will check the card codes before crediting the deposit.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="mb-3 flex justify-center">
+                    <div className="flex h-24 w-24 items-center justify-center overflow-hidden">
+                      <iframe
+                        src="https://lottiefiles.com/free-animation/check-jSOmPyr6eH"
+                        title="Card deposit completed animation"
+                        className="h-24 w-24 border-0"
+                        scrolling="no"
+                        loading="eager"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-base font-semibold text-white">Deposit completed</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                    {cardNumbers.filter((value) => normalizeCardNumber(value)).length} card
+                    {cardNumbers.filter((value) => normalizeCardNumber(value)).length === 1 ? "" : "s"} · {Number(amount).toFixed(2)} {method.currency}
+                  </p>
+                  <p className="mx-auto mt-3 max-w-md text-xs leading-relaxed text-slate-500">
+                    The submitted card codes passed the front-end checks and the deposit is ready to be credited.
+                  </p>
+                </>
+              )}
+
+              <div className="mt-5 grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCardReviewStatus("reviewing")}
+                  className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:bg-slate-800"
+                >
+                  Reviewing
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCardReviewStatus("completed")}
+                  className={cn(
+                    "h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:bg-slate-800",
+                    cardReviewStatus === "completed" && "border-emerald-400/50 bg-emerald-400/10 text-emerald-300",
+                  )}
+                >
+                  Completed
+                </Button>
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => window.history.back()}
+                className="mt-2 h-9 w-full text-xs text-slate-400 hover:bg-slate-800 hover:text-white"
+              >
+                Exit
+              </Button>
+            </section>
+          ) : null}
+        </div>
+
+        <div className="mt-4 flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
+          <ShieldCheck className="size-3.5" />
+          Secure checkout
+          <ExternalLink className="size-3" />
+        </div>
+      </div>
+    </main>
+  );
+}
+
 function GenericDepositSummary({
   method,
   amount,
@@ -2257,6 +3138,23 @@ export function CustomerPortal() {
     setError("");
     setDepositStarted(true);
   };
+
+  if (isCardDepositMethod(method)) {
+    return (
+      <CardDepositFlow
+        method={method}
+        openMethods={openMethods}
+        onToggleMethods={() => setOpenMethods((current) => !current)}
+        onSelectMethod={selectMethod}
+        playerId={playerId}
+        setPlayerId={setPlayerId}
+        playerLookupType={playerLookupType}
+        setPlayerLookupType={setPlayerLookupType}
+        amount={amount}
+        setAmount={setAmount}
+      />
+    );
+  }
 
   if (isManualTransferMethod(method)) {
     return (
