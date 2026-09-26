@@ -384,7 +384,7 @@ function AiOcrInspectionOverlay({ status }: { status: FlouciAiStatus }) {
 
   return (
     <>
-      <style>{'@keyframes flouci-ocr-scan { 0% { top: 7%; opacity: 0; } 8% { opacity: 1; } 50% { opacity: 1; } 92% { opacity: 1; } 100% { top: 93%; opacity: 0; } }'}</style>
+      <style>{'@keyframes flouci-ocr-scan { 0% { top: 7%; opacity: 0; } 8% { opacity: 1; } 50% { opacity: 1; } 92% { opacity: 1; } 100% { top: 93%; opacity: 0; } } @keyframes flouci-ocr-cta-shimmer { 0% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }'}</style>
       <div
         className={cn(
           "pointer-events-none absolute inset-0 overflow-hidden rounded-md",
