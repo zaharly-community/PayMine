@@ -44,6 +44,7 @@ import { Route as mainDashboardDistributorsRouteRouteImport } from './routes/(ma
 import { Route as mainDashboardDistributorsAccountRouteRouteImport } from './routes/(main)/dashboard/distributors_.account'
 import { Route as mainDashboardAccountsRouteRouteImport } from './routes/(main)/dashboard/accounts/route'
 import { Route as mainPortalRouteRouteImport } from './routes/(main)/portal/route'
+import { Route as mainPortalIndexRouteImport } from './routes/(main)/portal/index'
 import { Route as mainPortalMethodRouteRouteImport } from './routes/(main)/portal/$method/route'
 import { Route as mainPortalTrackingDepoistRouteRouteImport } from './routes/(main)/portal/tracking-depoist/route'
 import { Route as mainAuthV1LoginRouteRouteImport } from './routes/(main)/auth/v1/login/route'
@@ -232,6 +233,11 @@ const mainPortalRouteRoute = mainPortalRouteRouteImport.update({
   path: '/portal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const mainPortalIndexRoute = mainPortalIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => mainPortalRouteRoute,
+} as any)
 const mainPortalMethodRouteRoute = mainPortalMethodRouteRouteImport.update({
   id: '/$method',
   path: '/$method',
@@ -305,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/distributors/account': typeof mainDashboardDistributorsAccountRouteRoute
   '/dashboard/accounts': typeof mainDashboardAccountsRouteRoute
   '/portal': typeof mainPortalRouteRouteWithChildren
+  '/portal/': typeof mainPortalIndexRoute
   '/portal/$method': typeof mainPortalMethodRouteRoute
   '/portal/tracking-depoist': typeof mainPortalTrackingDepoistRouteRoute
   '/dashboard/  '/dashboard/': typeof mainDashboardIndexRoute
@@ -339,6 +346,7 @@ export interface FileRoutesByTo {
   '/dashboard/distributors': typeof mainDashboardDistributorsRouteRouteWithChildren
   '/dashboard/distributors/account': typeof mainDashboardDistributorsAccountRouteRoute
   '/portal': typeof mainPortalRouteRouteWithChildren
+  '/portal/': typeof mainPortalIndexRoute
   '/portal/$method': typeof mainPortalMethodRouteRoute
   '/portal/tracking-depoist': typeof mainPortalTrackingDepoistRouteRoute
   '/dashboard/': typeof mainDashboardIndexRoute
@@ -383,6 +391,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/distributors_/account': typeof mainDashboardDistributorsAccountRouteRoute
   '/(main)/dashboard/accounts': typeof mainDashboardAccountsRouteRoute
   '/(main)/portal': typeof mainPortalRouteRouteWithChildren
+  '/(main)/portal/': typeof mainPortalIndexRoute
   '/(main)/portal/$method': typeof mainPortalMethodRouteRoute
   '/(main)/portal/tracking-depoist': typeof mainPortalTrackingDepoistRouteRoute
   '/(main)/dashboard/': typeof mainDashboardIndexRoute
@@ -441,6 +450,7 @@ export interface FileRouteTypes {
     | '/dashboard/accounts'
     | '/dashboard/$'
     | '/portal'
+    | '/portal/'
     | '/portal/$method'
     | '/portal/tracking-depoist'
     | '/dashboard/'
@@ -460,6 +470,7 @@ export interface FileRouteTypes {
     | '/dashboard/distributors'
     | '/dashboard/'
     | '/portal'
+    | '/portal/'
     | '/portal/$method'
     | '/portal/tracking-depoist'
     | '/dashboard'
@@ -495,6 +506,7 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/players/$playerId'
     | '/(main)/dashboard/distributors'
     | '/(main)/portal'
+    | '/(main)/portal/'
     | '/(main)/portal/$method'
     | '/(main)/portal/tracking-depoist'
     | '/(main)/dashboard/'
@@ -548,6 +560,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal'
       preLoaderRoute: typeof mainPortalRouteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/(main)/portal/': {
+      id: '/(main)/portal/'
+      path: '/'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof mainPortalIndexRouteImport
+      parentRoute: typeof mainPortalRouteRoute
     }
     '/(main)/portal/$method': {
       id: '/(main)/portal/$method'
@@ -975,11 +994,13 @@ const mainDashboardPlayersRouteRouteWithChildren =
 
 
 interface mainPortalRouteRouteChildren {
+  mainPortalIndexRoute: typeof mainPortalIndexRoute
   mainPortalMethodRouteRoute: typeof mainPortalMethodRouteRoute
   mainPortalTrackingDepoistRouteRoute: typeof mainPortalTrackingDepoistRouteRoute
 }
 
 const mainPortalRouteRouteChildren: mainPortalRouteRouteChildren = {
+  mainPortalIndexRoute: mainPortalIndexRoute,
   mainPortalMethodRouteRoute: mainPortalMethodRouteRoute,
   mainPortalTrackingDepoistRouteRoute: mainPortalTrackingDepoistRouteRoute,
 }
