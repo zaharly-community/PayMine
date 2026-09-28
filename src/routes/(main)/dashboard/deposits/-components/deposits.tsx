@@ -8,7 +8,7 @@ import {
   useTable,
 } from "@tanstack/react-table";
 
-import { Check, Cog, Download, GripVertical, Plus, Search } from "lucide-react";
+import { Check, Cog, Download, GripVertical, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
