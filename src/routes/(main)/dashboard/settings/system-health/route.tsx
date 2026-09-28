@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity, BellRing, DatabaseBackup, Gauge } from "lucide-react";
+import { Activity, DatabaseBackup, Gauge } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
