@@ -2884,6 +2884,51 @@ function FlouciDepositFlow({
   }, [cardNumbers]);
 
   React.useEffect(() => {
+    const timers: number[] = [];
+
+    setCardRecognition((current) => {
+      const next: Record<number, CardRecognitionStatus> = {};
+
+      cardNumbers.forEach((value, index) => {
+        const normalized = normalizeCardNumber(value);
+        if (normalized.length === 16) {
+          next[index] = current[index] === "available" || current[index] === "duplicate"
+            ? current[index]
+            : "checking";
+        } else {
+          next[index] = "idle";
+        }
+      });
+
+      const same =
+        Object.keys(current).length === Object.keys(next).length &&
+        Object.keys(next).every((key) => current[Number(key)] === next[Number(key)]);
+
+      return same ? current : next;
+    });
+
+    cardNumbers.forEach((value, index) => {
+      const normalized = normalizeCardNumber(value);
+
+      if (normalized.length !== 16) return;
+
+      // Simulated AI/system lookup. The known test card is treated as registered.
+      timers.push(
+        window.setTimeout(() => {
+          const registered = recognizeRegisteredCard(normalized);
+
+          setCardRecognition((current) => ({
+            ...current,
+            [index]: registered ? "duplicate" : "available",
+          }));
+        }, 1600),
+      );
+    });
+
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [cardNumbers]);
+
+  React.useEffect(() => {
     if (step !== 2) return;
 
     const timer = window.setInterval(() => {
