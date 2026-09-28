@@ -2884,31 +2884,6 @@ function FlouciDepositFlow({
   }, [cardNumbers]);
 
   React.useEffect(() => {
-    const timers: number[] = [];
-
-    cardNumbers.forEach((value, index) => {
-      const normalized = normalizeCardNumber(value);
-
-      if (normalized.length !== 16) return;
-
-      // Simulated AI/system lookup. This timer is cancelled automatically if the
-      // player edits the card before the result is ready.
-      timers.push(
-        window.setTimeout(() => {
-          const registered = recognizeRegisteredCard(normalized);
-
-          setCardRecognition((current) => ({
-            ...current,
-            [index]: registered ? "duplicate" : "available",
-          }));
-        }, 1600),
-      );
-    });
-
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [cardNumbers]);
-
-  React.useEffect(() => {
     if (step !== 2) return;
 
     const timer = window.setInterval(() => {
@@ -3750,6 +3725,7 @@ function CardDepositFlow({
   const [ocrStatus, setOcrStatus] = React.useState<CardOcrStatus>("idle");
   const [detectedCards, setDetectedCards] = React.useState<string[]>([]);
   const [cardRecognition, setCardRecognition] = React.useState<Record<number, CardRecognitionStatus>>({});
+  const recognitionTimers = React.useRef<Record<number, number>>({});
   const [cardReviewStatus, setCardReviewStatus] = React.useState<"reviewing" | "completed">("reviewing");
   const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
 
@@ -3769,6 +3745,9 @@ function CardDepositFlow({
   }, [previewUrl]);
 
   React.useEffect(() => {
+    Object.values(recognitionTimers.current).forEach((timer) => window.clearTimeout(timer));
+    recognitionTimers.current = {};
+
     setStep(1);
     setError("");
     setCardNumbers([""]);
@@ -3778,6 +3757,10 @@ function CardDepositFlow({
     setCardRecognition({});
     setCardReviewStatus("reviewing");
     setSecondsLeft(15 * 60);
+
+    return () => {
+      Object.values(recognitionTimers.current).forEach((timer) => window.clearTimeout(timer));
+    };
   }, [method.id]);
 
   React.useEffect(() => {
@@ -3849,11 +3832,29 @@ function CardDepositFlow({
     const formatted = formatCardNumber(value);
     const normalized = normalizeCardNumber(formatted);
 
-    // Show the recognizer immediately only when the card is complete.
+    const previousTimer = recognitionTimers.current[index];
+    if (previousTimer) {
+      window.clearTimeout(previousTimer);
+      delete recognitionTimers.current[index];
+    }
+
     setCardRecognition((current) => ({
       ...current,
       [index]: normalized.length === 16 ? "checking" : "idle",
     }));
+
+    if (normalized.length === 16) {
+      recognitionTimers.current[index] = window.setTimeout(() => {
+        const registered = recognizeRegisteredCard(normalized);
+
+        setCardRecognition((current) => ({
+          ...current,
+          [index]: registered ? "duplicate" : "available",
+        }));
+
+        delete recognitionTimers.current[index];
+      }, 1400);
+    }
 
     setCardNumbers((current) => {
       const next = [...current];
@@ -4073,7 +4074,7 @@ function CardDepositFlow({
                               autoComplete="off"
                               maxLength={19}
                               className={cn(
-                                "h-12 border-slate-700 bg-slate-700/50 px-3 pr-40 text-sm text-slate-100 placeholder:text-slate-500",
+                                "h-12 border-slate-700 bg-slate-700/50 px-3 pr-10 text-sm text-slate-100 placeholder:text-slate-500",
                                 cardRecognition[index] === "checking" && "border-cyan-300/40 bg-slate-700/60",
                                 cardRecognition[index] === "available" && "border-emerald-400/45 bg-emerald-400/5 focus-visible:border-emerald-400/60",
                                 cardRecognition[index] === "duplicate" && "border-red-400/60 bg-red-500/10",
@@ -4082,38 +4083,27 @@ function CardDepositFlow({
                             {cardRecognition[index] === "checking" ||
                             cardRecognition[index] === "available" ||
                             cardRecognition[index] === "duplicate" ? (
-                              <div
+                              <img
+                                src={
+                                  cardRecognition[index] === "checking"
+                                    ? "https://img.icons8.com/?size=64&id=A9DjciQK0qqc&format=png&color=22d3ee"
+                                    : cardRecognition[index] === "available"
+                                      ? "https://img.icons8.com/?size=64&id=iH4tJvSyj9uA&format=png&color=34d399"
+                                      : "https://img.icons8.com/?size=64&id=dF5jn1JKszyE&format=png&color=f87171"
+                                }
+                                alt=""
+                                title={
+                                  cardRecognition[index] === "checking"
+                                    ? "Checking card in registered-card system"
+                                    : cardRecognition[index] === "available"
+                                      ? "Card allowed"
+                                      : "Card already registered"
+                                }
                                 className={cn(
-                                  "pointer-events-none absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1.5 rounded-md border px-2 py-1 text-[9px] font-semibold backdrop-blur-sm",
-                                  cardRecognition[index] === "checking" &&
-                                    "border-cyan-300/30 bg-cyan-300/10 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.08)]",
-                                  cardRecognition[index] === "available" &&
-                                    "border-emerald-300/25 bg-emerald-300/10 text-emerald-200",
-                                  cardRecognition[index] === "duplicate" &&
-                                    "border-red-300/25 bg-red-300/10 text-red-200",
+                                  "pointer-events-auto absolute right-3 top-1/2 size-5 -translate-y-1/2 object-contain",
+                                  cardRecognition[index] === "checking" && "animate-spin",
                                 )}
-                              >
-                                {cardRecognition[index] === "checking" ? (
-                                  <span
-                                    className="relative flex size-5 items-center justify-center"
-                                    title="AI recognizer is checking this card"
-                                  >
-                                    <span className="absolute size-5 rounded-full border border-cyan-300/20" />
-                                    <span className="absolute size-5 animate-ping rounded-full border border-cyan-300/45" />
-                                    <RefreshCw className="relative size-3.5 animate-spin text-cyan-200" />
-                                  </span>
-                                ) : cardRecognition[index] === "available" ? (
-                                  <>
-                                    <CheckCircle2 className="size-3.5" />
-                                    <span>Allowed</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Info className="size-3.5" />
-                                    <span>Duplicate</span>
-                                  </>
-                                )}
-                              </div>
+                              />
                             ) : null}
                           </div>
 
