@@ -1,7 +1,7 @@
 export type VerificationStatus = "Pending" | "Processing" | "Approved" | "Canceled" | "Waiting Correction" | "In Process";
 export type DepositStatus = "Pending" | "Processing" | "Completed" | "Canceled";
 
-export type PaymentMethod = "Flouci" | "D17" | "Kashy" | "Tunisie Telecom" | "Orange" | "Ooredoo";
+export type PaymentMethod = "Flouci" | "D17" | "Kashy" | "Tunisie Telecom" | "Orange" | "Ooredoo" | "E-Dinar";
 
 export type Processor = {
   name: string;
