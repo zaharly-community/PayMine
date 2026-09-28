@@ -16,7 +16,6 @@ import {
   KeyRound,
   Link2,
   LockKeyhole,
-  Mail,
   Megaphone,
   PanelTop,
   Percent,
@@ -467,7 +466,6 @@ function FeatureCard({ feature, onToggle, onManage }: { feature: Feature; onTogg
   return (
     <article
       className={"rounded-xl border p-4 transition-colors " + (feature.enabled ? "bg-card hover:border-primary/30" : "bg-muted/20")}
-      style={{ "--fm-cat-fg": "currentColor" } as React.CSSProperties}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
