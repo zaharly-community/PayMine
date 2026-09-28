@@ -2886,27 +2886,6 @@ function FlouciDepositFlow({
   React.useEffect(() => {
     const timers: number[] = [];
 
-    setCardRecognition((current) => {
-      const next: Record<number, CardRecognitionStatus> = {};
-
-      cardNumbers.forEach((value, index) => {
-        const normalized = normalizeCardNumber(value);
-        if (normalized.length === 16) {
-          next[index] = current[index] === "available" || current[index] === "duplicate"
-            ? current[index]
-            : "checking";
-        } else {
-          next[index] = "idle";
-        }
-      });
-
-      const same =
-        Object.keys(current).length === Object.keys(next).length &&
-        Object.keys(next).every((key) => current[Number(key)] === next[Number(key)]);
-
-      return same ? current : next;
-    });
-
     cardNumbers.forEach((value, index) => {
       const normalized = normalizeCardNumber(value);
 
@@ -2917,10 +2896,18 @@ function FlouciDepositFlow({
         window.setTimeout(() => {
           const registered = recognizeRegisteredCard(normalized);
 
-          setCardRecognition((current) => ({
-            ...current,
-            [index]: registered ? "duplicate" : "available",
-          }));
+          // Only publish the result if this field still contains the same 16-digit code.
+          setCardNumbers((latest) => {
+            const latestNormalized = normalizeCardNumber(latest[index] ?? "");
+            if (latestNormalized !== normalized) return latest;
+
+            setCardRecognition((current) => ({
+              ...current,
+              [index]: registered ? "duplicate" : "available",
+            }));
+
+            return latest;
+          });
         }, 1600),
       );
     });
@@ -3867,6 +3854,13 @@ function CardDepositFlow({
 
   const updateCard = (index: number, value: string) => {
     const formatted = formatCardNumber(value);
+    const normalized = normalizeCardNumber(formatted);
+
+    // Show the recognizer immediately only when the card is complete.
+    setCardRecognition((current) => ({
+      ...current,
+      [index]: normalized.length === 16 ? "checking" : "idle",
+    }));
 
     setCardNumbers((current) => {
       const next = [...current];
