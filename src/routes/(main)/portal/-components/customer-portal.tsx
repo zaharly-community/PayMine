@@ -4028,7 +4028,7 @@ function CardDepositFlow({
 
                   <div className="space-y-2">
                     {cardNumbers.map((value, index) => {
-                      const isUsed = cardState(value) === "used";
+                      const isUsed = cardRecognition[index] === "duplicate";
 
                       return (
                         <div key={index} className="flex items-start gap-2">
