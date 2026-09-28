@@ -36,6 +36,10 @@ const integrations: Integration[] = [
   { id: "slack", name: "Slack", initials: "SL", category: "Communications", description: "Send settlement, treasury and security notifications to operations channels.", status: "Connected", accent: "bg-pink-500/10 text-pink-600", config: "communication", meta: "Webhook" },
   { id: "sentry", name: "Sentry", initials: "SE", category: "Monitoring & Security", description: "Capture application errors, performance signals and release health.", status: "Available", accent: "bg-red-500/10 text-red-600", config: "monitoring", meta: "DSN" },
   { id: "google-workspace", name: "Google Workspace", initials: "GW", category: "Identity", description: "Enterprise sign-in and directory synchronization for internal users.", status: "Available", accent: "bg-emerald-500/10 text-emerald-600", config: "identity", meta: "OAuth app" },
+  { id: "recaptcha", name: "Google reCAPTCHA v2", initials: "RC", category: "Monitoring & Security", description: "Protect authentication and public payment forms from automated abuse.", status: "Available", accent: "bg-rose-500/10 text-rose-600", config: "monitoring", meta: "Site + Secret keys" },
+  { id: "ipinfo", name: "IPinfo.io", initials: "IP", category: "Monitoring & Security", description: "IP intelligence for country detection, payment review and sign-in risk signals.", status: "Available", accent: "bg-emerald-500/10 text-emerald-600", config: "monitoring", meta: "API token" },
+  { id: "pusher", name: "Pusher", initials: "PU", category: "Communications", description: "Deliver real-time payment and operational events to the dashboard.", status: "Available", accent: "bg-purple-500/10 text-purple-600", config: "communication", meta: "Realtime API" },
+  { id: "twilio", name: "Twilio", initials: "TW", category: "Communications", description: "Send SMS alerts and transactional messages for payment operations.", status: "Available", accent: "bg-red-500/10 text-red-600", config: "communication", meta: "Account SID / Token" },
 ];
 
 const categories: IntegrationCategory[] = ["Providers", "Analytics", "CRM & Marketing", "Communications", "Monitoring & Security", "Identity"];
