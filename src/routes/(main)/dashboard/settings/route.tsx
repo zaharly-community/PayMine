@@ -51,7 +51,7 @@ function Page() {
   }
 
   return (
-    <section className="flex min-h-full flex-col gap-6 bg-background">
+    <section className="flex min-h-full flex-col gap-5 bg-background">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
@@ -59,23 +59,23 @@ function Page() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {cards.map(([key, title, description, Icon]) => (
-          <Link key={key} to={("/dashboard/settings/" + key) as any} className="group block h-full">
-            <Card className="h-full transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-primary/40 group-hover:shadow-sm">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Icon className="size-4.5" />
-                  </div>
-                  <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+          <Link key={key} to={("/dashboard/settings/" + key) as any} className="group block">
+            <Card className="h-full rounded-lg py-0 shadow-none transition-all duration-150 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/20 hover:shadow-sm">
+              <CardContent className="flex min-h-32 items-start gap-3 p-4">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Icon className="size-4" />
                 </div>
-                <CardTitle className="pt-2 text-base">{title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm leading-6 text-muted-foreground">{description}</p>
-                <div className="mt-4 text-xs font-medium text-muted-foreground group-hover:text-foreground">
-                  Open settings
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <h2 className="text-sm font-medium leading-5">{title}</h2>
+                    <ArrowRight className="mt-0.5 size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+                  </div>
+                  <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                    {description}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -87,5 +87,5 @@ function Page() {
         Settings are currently frontend configuration screens; values are presented as local defaults until backend persistence is connected.
       </p>
     </section>
-  );
+  )
 }
