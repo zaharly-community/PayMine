@@ -629,68 +629,85 @@ export function DepositRequestTrackingPage({
             </div>
           ) : null}
 
-          <div className="mb-5 text-center">
-            <p className="text-base font-semibold text-white">{statusTitle}</p>
-            <p className="mt-1 text-xs leading-relaxed text-slate-400">
-              {request.playerLookupType === "playerId"
-                ? "Player ID"
-                : request.playerLookupType === "username"
-                  ? "Username"
-                  : "Email"}{" "}
-              · {request.playerId} · {Number(request.amount).toFixed(2)} {request.currency}
-            </p>
-          </div>
+          <div className="mb-5 overflow-hidden rounded-xl border border-slate-700 bg-slate-800/40">
+            <div className="flex items-center gap-3 border-b border-slate-700/70 px-4 py-3.5">
+              <div
+                className={cn(
+                  "flex size-9 shrink-0 items-center justify-center rounded-lg border",
+                  status === "received"
+                    ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-300"
+                    : status === "correction"
+                      ? "border-red-400/25 bg-red-500/10 text-red-300"
+                      : status === "edited"
+                        ? "border-blue-400/25 bg-blue-400/10 text-blue-200"
+                        : "border-amber-400/25 bg-amber-400/10 text-amber-200",
+                )}
+              >
+                {status === "received" ? (
+                  <CheckCircle2 className="size-4.5" />
+                ) : status === "correction" ? (
+                  <Info className="size-4.5" />
+                ) : (
+                  <ShieldCheck className="size-4.5" />
+                )}
+              </div>
 
-          <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/60 p-3">
-            <PaymentMethodMark method={method} />
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Payment method</p>
-              <p className="truncate text-sm font-medium text-white">{request.methodName}</p>
-            </div>
-            <span
-              className={cn(
-                "shrink-0 rounded-full border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wide",
-                status === "received"
-                  ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
-                  : status === "correction"
-                    ? "border-red-400/20 bg-red-500/10 text-red-300"
-                    : status === "edited"
-                      ? "border-blue-400/20 bg-blue-400/10 text-blue-200"
-                      : "border-amber-400/20 bg-amber-400/10 text-amber-200",
-              )}
-            >
-              {status === "received"
-                ? "Completed"
-                : status === "correction"
-                  ? "Correction"
-                  : status === "edited"
-                    ? "Updated"
-                    : status === "approved"
-                      ? "Approved"
-                      : status === "expired"
-                        ? "Expired"
-                        : "Open"}
-            </span>
-          </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-white">{statusTitle}</p>
+                <p className="mt-0.5 text-[10px] text-slate-500">
+                  {request.methodName} deposit request
+                </p>
+              </div>
 
-          <div className="mb-5 grid grid-cols-2 gap-2">
-            <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
-              <p className="text-[9px] uppercase tracking-[0.08em] text-slate-500">Request ID</p>
-              <p className="mt-1 truncate font-mono text-xs text-slate-200">{request.id}</p>
+              <div className="text-right">
+                <p className="text-[9px] uppercase tracking-[0.1em] text-slate-500">Amount</p>
+                <p className="mt-0.5 text-base font-semibold tabular-nums text-white">
+                  {Number(request.amount).toFixed(2)}{" "}
+                  <span className="text-[10px] font-medium text-slate-400">{request.currency}</span>
+                </p>
+              </div>
             </div>
-            <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
-              <p className="text-[9px] uppercase tracking-[0.08em] text-slate-500">Amount</p>
-              <p className="mt-1 text-xs font-semibold tabular-nums text-white">
-                {Number(request.amount).toFixed(2)} {request.currency}
-              </p>
-            </div>
-            <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
-              <p className="text-[9px] uppercase tracking-[0.08em] text-slate-500">Player</p>
-              <p className="mt-1 truncate text-xs text-slate-200">{request.playerId}</p>
-            </div>
-            <div className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
-              <p className="text-[9px] uppercase tracking-[0.08em] text-slate-500">Created</p>
-              <p className="mt-1 truncate text-xs text-slate-300">{formattedCreatedAt}</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2">
+              <div className="flex items-center gap-2.5 border-b border-slate-700/70 px-4 py-3 sm:border-r">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-slate-900/70 text-slate-400">
+                  <UserRound className="size-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[9px] uppercase tracking-[0.08em] text-slate-500">
+                    {request.playerLookupType === "playerId"
+                      ? "Player ID"
+                      : request.playerLookupType === "username"
+                        ? "Username"
+                        : "Email"}
+                  </p>
+                  <p className="mt-0.5 truncate text-xs font-medium text-slate-200">{request.playerId}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 border-b border-slate-700/70 px-4 py-3">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-slate-900/70 text-slate-400">
+                  <Clock3 className="size-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[9px] uppercase tracking-[0.08em] text-slate-500">Created</p>
+                  <p className="mt-0.5 truncate text-xs text-slate-300">{formattedCreatedAt}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 px-4 py-3 sm:col-span-2">
+                <div className="shrink-0 rounded-md border border-slate-700 bg-slate-900/70 p-1">
+                  <PaymentMethodMark method={method} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[9px] uppercase tracking-[0.08em] text-slate-500">Payment method</p>
+                  <p className="truncate text-xs font-medium text-white">{request.methodName}</p>
+                </div>
+                <div className="hidden text-right sm:block">
+                  <p className="text-[9px] uppercase tracking-[0.08em] text-slate-500">Request ID</p>
+                  <p className="mt-0.5 max-w-[220px] truncate font-mono text-[10px] text-slate-400">{request.id}</p>
+                </div>
+              </div>
             </div>
           </div>
 
