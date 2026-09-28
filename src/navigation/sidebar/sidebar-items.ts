@@ -102,6 +102,18 @@ export const sidebarItems: NavGroup[] = [
   },
   {
     id: 2,
+    label: "Finance",
+    items: [
+      {
+        id: "transactions",
+        title: "Transactions",
+        url: "/dashboard/transactions",
+        icon: WalletCards,
+      },
+    ],
+  },
+  {
+    id: 3,
     label: "Configs",
     items: [
       {
