@@ -7,7 +7,6 @@ import {
   FileUp,
   HardDrive,
   IdCard,
-  ShieldAlert,
   FileClock,
   Globe2,
   Languages,
