@@ -119,7 +119,7 @@ export const sidebarItems: NavGroup[] = [
       {
         id: "settings",
         title: "Settings",
-        url: "/dashboard/settings/general",
+        url: "/dashboard/settings",
         icon: Settings2,
       },
       {
