@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-import { WithdrawlsAnalytics } from "../withdrawls/-components/withdrawls-analytics";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/(main)/dashboard/analytics")({
-  component: WithdrawlsAnalytics,
+  component: AnalyticsLayout,
 });
+
+function AnalyticsLayout() {
+  return <Outlet />;
+}
