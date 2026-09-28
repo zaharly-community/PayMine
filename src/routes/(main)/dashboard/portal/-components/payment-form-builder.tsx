@@ -79,7 +79,7 @@ export function PaymentFormBuilder({ initialForms }: { initialForms: readonly Fo
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div><h2 className="text-sm font-semibold">Payment forms</h2><p className="text-xs text-muted-foreground">Card-based form library with a live player checkout preview.</p></div>
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button size="sm"><Plus /> Create payment form</Button></DialogTrigger>
+            <DialogTrigger render={<Button size="sm" />}><Plus /> Create payment form</DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader><DialogTitle>Create payment form</DialogTitle></DialogHeader>
               <div className="grid gap-4">
