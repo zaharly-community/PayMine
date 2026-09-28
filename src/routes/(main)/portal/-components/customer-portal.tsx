@@ -2876,7 +2876,7 @@ function FlouciDepositFlow({
             ...current,
             [index]: registered ? "duplicate" : "available",
           }));
-        }, 650);
+        }, 1100);
       })
       .filter((timer): timer is number => timer !== null);
 
@@ -4047,12 +4047,14 @@ function CardDepositFlow({
                                 cardRecognition[index] === "duplicate" && "border-red-400/60 bg-red-500/10",
                               )}
                             />
-                            {cardRecognition[index] !== "idle" ? (
+                            {cardRecognition[index] === "checking" ||
+                            cardRecognition[index] === "available" ||
+                            cardRecognition[index] === "duplicate" ? (
                               <div
                                 className={cn(
                                   "pointer-events-none absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1.5 rounded-md border px-2 py-1 text-[9px] font-semibold backdrop-blur-sm",
                                   cardRecognition[index] === "checking" &&
-                                    "border-cyan-300/25 bg-cyan-300/10 text-cyan-200",
+                                    "border-cyan-300/30 bg-cyan-300/10 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.08)]",
                                   cardRecognition[index] === "available" &&
                                     "border-emerald-300/25 bg-emerald-300/10 text-emerald-200",
                                   cardRecognition[index] === "duplicate" &&
@@ -4061,8 +4063,19 @@ function CardDepositFlow({
                               >
                                 {cardRecognition[index] === "checking" ? (
                                   <>
-                                    <RefreshCw className="size-3 animate-spin" />
-                                    Checking
+                                    <span className="relative flex size-3 items-center justify-center">
+                                      <span className="absolute size-3 rounded-full border border-cyan-300/30" />
+                                      <span className="absolute size-3 animate-ping rounded-full border border-cyan-300/50" />
+                                      <ScanText className="relative size-3 text-cyan-200" />
+                                    </span>
+                                    <span className="relative">
+                                      Searching system
+                                      <span className="ml-0.5 inline-flex w-3 overflow-hidden align-middle">
+                                        <span className="animate-pulse">.</span>
+                                        <span className="animate-pulse [animation-delay:150ms]">.</span>
+                                        <span className="animate-pulse [animation-delay:300ms]">.</span>
+                                      </span>
+                                    </span>
                                   </>
                                 ) : cardRecognition[index] === "available" ? (
                                   <>
@@ -4077,7 +4090,12 @@ function CardDepositFlow({
                                 )}
                               </div>
                             ) : null}
-                            {cardRecognition[index] === "duplicate" ? (
+                            {cardRecognition[index] === "checking" ? (
+                              <p className="mt-1 flex items-center gap-1.5 text-[10px] text-cyan-300/80">
+                                <ScanText className="size-3 animate-pulse" />
+                                AI is checking this card against registered cards.
+                              </p>
+                            ) : cardRecognition[index] === "duplicate" ? (
                               <p className="mt-1 text-[10px] font-medium text-red-300">
                                 This card is already registered in the system.
                               </p>
