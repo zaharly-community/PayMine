@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   ArrowDownRight,
@@ -23,6 +23,7 @@ import { deposits } from "../deposits/-components/data";
 import type { DepositRow } from "../deposits/-components/data";
 import { withdrawls } from "../withdrawls/-components/data";
 import type { WithdrawlRow } from "../withdrawls/-components/data";
+import { readPaymentLinkDeposits } from "@/lib/payment-links";
 
 type TransactionStatus = "Completed" | "Pending" | "Processing" | "Canceled" | "Waiting Correction";
 type TransactionType = "Deposit" | "Withdrawl";
@@ -151,11 +152,32 @@ function TransactionsPage() {
   const [providerFilter, setProviderFilter] = useState("All");
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [paymentLinkRows, setPaymentLinkRows] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    const syncPaymentLinks = () => {
+      const linkRows = readPaymentLinkDeposits() as DepositRow[];
+      setPaymentLinkRows(linkRows.map(depositTransaction));
+    };
+
+    syncPaymentLinks();
+    window.addEventListener("storage", syncPaymentLinks);
+    window.addEventListener("focus", syncPaymentLinks);
+    return () => {
+      window.removeEventListener("storage", syncPaymentLinks);
+      window.removeEventListener("focus", syncPaymentLinks);
+    };
+  }, []);
 
   const rows = useMemo(() => {
-    const all = [
+    const seeded = [
       ...deposits.map(depositTransaction),
       ...withdrawls.map(withdrawlTransaction),
+    ];
+    const seededIds = new Set(seeded.map((row) => row.id));
+    const all = [
+      ...paymentLinkRows.filter((row) => !seededIds.has(row.id)),
+      ...seeded,
     ];
     const text = query.trim().toLowerCase();
 
@@ -171,7 +193,7 @@ function TransactionsPage() {
           .includes(text);
       })
       .sort((a, b) => parseDate(b.date) - parseDate(a.date));
-  }, [providerFilter, query, statusFilter, typeFilter]);
+  }, [paymentLinkRows, providerFilter, query, statusFilter, typeFilter]);
 
   const providers = useMemo(
     () => ["All", ...Array.from(new Set(rows.map((row) => row.provider)))],
@@ -269,7 +291,7 @@ function TransactionsPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm">
               <CalendarDays />
-              Sep 1, 2026 — Sep 28, 2026
+              Aug 30, 2026 — Sep 28, 2026
             </Button>
             <Button variant="outline" size="sm" onClick={exportCsv}>
               <Download />
