@@ -39,6 +39,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PortalAnalytics } from "../../portal/-components/portal-analytics";
 
 const rangeItems = [
   { value: "7d", label: "Last 7 days" },
@@ -872,6 +873,7 @@ const analyticsTabs = [
   { value: "players", label: "Players" },
   { value: "distributors", label: "Distributors" },
   { value: "providers", label: "Providers" },
+  { value: "portal", label: "Portal Analytics" },
 ] as const;
 
 type AnalyticsTab = (typeof analyticsTabs)[number]["value"];
@@ -913,6 +915,7 @@ function AnalyticsTabs() {
         {activeTab === "players" ? <PlayersAnalytics /> : null}
         {activeTab === "distributors" ? <DistributorsAnalytics /> : null}
         {activeTab === "providers" ? <ProvidersAnalytics /> : null}
+        {activeTab === "portal" ? <PortalAnalytics /> : null}
       </div>
     </div>
   );
