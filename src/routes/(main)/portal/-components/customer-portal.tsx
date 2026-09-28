@@ -2891,23 +2891,16 @@ function FlouciDepositFlow({
 
       if (normalized.length !== 16) return;
 
-      // Simulated AI/system lookup. The known test card is treated as registered.
+      // Simulated AI/system lookup. This timer is cancelled automatically if the
+      // player edits the card before the result is ready.
       timers.push(
         window.setTimeout(() => {
           const registered = recognizeRegisteredCard(normalized);
 
-          // Only publish the result if this field still contains the same 16-digit code.
-          setCardNumbers((latest) => {
-            const latestNormalized = normalizeCardNumber(latest[index] ?? "");
-            if (latestNormalized !== normalized) return latest;
-
-            setCardRecognition((current) => ({
-              ...current,
-              [index]: registered ? "duplicate" : "available",
-            }));
-
-            return latest;
-          });
+          setCardRecognition((current) => ({
+            ...current,
+            [index]: registered ? "duplicate" : "available",
+          }));
         }, 1600),
       );
     });
