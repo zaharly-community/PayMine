@@ -103,7 +103,6 @@ export function PaymentLinkTools({
     const nextLinks = [...links, next];
     writePaymentLinks(nextLinks);
     setLinks(nextLinks);
-    setCreateOpen(false);
     setArchiveOpen(false);
 
     return next;
@@ -180,6 +179,7 @@ function CreatePaymentLinkDialog({
   const [account, setAccount] = React.useState("");
   const [duration, setDuration] = React.useState("60");
   const [error, setError] = React.useState("");
+  const [createdLink, setCreatedLink] = React.useState<PaymentLink | null>(null);
 
   const reset = () => {
     setPlayerId("");
@@ -188,6 +188,7 @@ function CreatePaymentLinkDialog({
     setAccount("");
     setDuration("60");
     setError("");
+    setCreatedLink(null);
   };
 
   const close = (nextOpen: boolean) => {
@@ -228,7 +229,7 @@ function CreatePaymentLinkDialog({
       return;
     }
 
-    onCreate({
+    const created = onCreate({
       playerId: player,
       amount: numericAmount,
       method: selectedMethod,
@@ -236,7 +237,8 @@ function CreatePaymentLinkDialog({
       durationMinutes,
     });
 
-    reset();
+    setCreatedLink(created);
+    setError("");
   };
 
   return (
@@ -249,7 +251,80 @@ function CreatePaymentLinkDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={submit} className="space-y-4">
+        {createdLink ? (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-emerald-400/20 bg-emerald-400/10 text-emerald-300">
+                  <CheckCircle2 className="size-4.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white">Payment link created</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    LinkID={createdLink.id} · {createdLink.playerId} · {createdLink.amount.toFixed(2)} {createdLink.currency}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex overflow-hidden rounded-lg border border-slate-700 bg-slate-800/60">
+              <Input
+                readOnly
+                value={
+                  (typeof window === "undefined"
+                    ? "/portal/LinkID="
+                    : window.location.origin + "/portal/LinkID=") + createdLink.id
+                }
+                className="h-11 min-w-0 flex-1 border-0 bg-transparent font-mono text-xs text-slate-200 shadow-none focus-visible:ring-0"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                title="Copy payment link"
+                onClick={() =>
+                  void navigator.clipboard?.writeText(
+                    window.location.origin + "/portal/LinkID=" + createdLink.id,
+                  )
+                }
+                className="mr-1 my-1 size-9 text-slate-300 hover:bg-slate-700 hover:text-white"
+              >
+                <Copy className="size-3.5" />
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2.5 text-[10px] text-slate-500">
+              <span>
+                Valid for{" "}
+                {durationOptions.find((item) => item.value === createdLink.durationMinutes)?.label ?? "selected duration"}
+              </span>
+              <span className="inline-flex items-center gap-1 text-slate-300">
+                <CalendarClock className="size-3" />
+                {formatDate(createdLink.expiresAt)}
+              </span>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => close(false)}>
+                Done
+              </Button>
+              <Button
+                type="button"
+                onClick={() =>
+                  window.open(
+                    window.location.origin + "/portal/LinkID=" + createdLink.id,
+                    "_blank",
+                    "noopener,noreferrer",
+                  )
+                }
+              >
+                <ExternalLink />
+                Open link
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <form onSubmit={submit} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-xs font-medium">Player ID</label>
@@ -328,7 +403,9 @@ function CreatePaymentLinkDialog({
               Generate link
             </Button>
           </DialogFooter>
-        </form>
+
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );
