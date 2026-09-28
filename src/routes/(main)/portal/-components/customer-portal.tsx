@@ -2844,6 +2844,23 @@ function FlouciDepositFlow({
   }, [proofFile, method.id]);
 
   React.useEffect(() => {
+    setCardRecognition((current) => {
+      const next: Record<number, CardRecognitionStatus> = {};
+
+      cardNumbers.forEach((value, index) => {
+        const normalized = normalizeCardNumber(value);
+        next[index] = normalized.length === 16 ? "checking" : "idle";
+      });
+
+      const currentKeys = Object.keys(current);
+      const nextKeys = Object.keys(next);
+      const unchanged =
+        currentKeys.length === nextKeys.length &&
+        nextKeys.every((key) => current[Number(key)] === next[Number(key)]);
+
+      return unchanged ? current : next;
+    });
+
     const timers = cardNumbers
       .map((value, index) => {
         const normalized = normalizeCardNumber(value);
@@ -2851,12 +2868,6 @@ function FlouciDepositFlow({
         if (normalized.length !== 16) {
           return null;
         }
-
-        setCardRecognition((current) =>
-          current[index] === "checking"
-            ? current
-            : { ...current, [index]: "checking" },
-        );
 
         return window.setTimeout(() => {
           const registered = recognizeRegisteredCard(normalized);
