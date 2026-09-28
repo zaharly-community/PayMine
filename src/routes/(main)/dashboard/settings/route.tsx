@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
-import { ArrowRight, Bell, CreditCard, FileClock, FileCog, FileUp, HardDrive, IdCard, Languages, ListFilter, LockKeyhole, Settings2, SlidersHorizontal, UsersRound } from "lucide-react";
+import { ArrowRight, Bell, CreditCard, FileClock, FileCog, FileUp, Globe2, HardDrive, IdCard, Languages, ListFilter, LockKeyhole, Settings2, SlidersHorizontal, UsersRound } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const cards = [
@@ -12,6 +12,8 @@ const cards = [
   ["media-uploads", "Media & Uploads", "Payment evidence and identity-document upload limits.", FileUp],
   ["system-health", "System Health", "Operational retention and alert behavior.", HardDrive],
   ["maintenance", "Maintenance", "Temporary access controls and recovery options.", FileCog],
+  ["custom-domain", "Custom domain", "Branded dashboard and payment portal domains.", Globe2],
+  ["team-access", "Team & access", "Workspace members, roles and permissions.", UsersRound],
   ["audit-log", "Audit log", "Administrative activity history.", FileClock],
   ["billing", "Billing", "Plan, invoices and payment configuration.", CreditCard],
   ["features", "Features", "Platform modules, availability and rollout controls.", SlidersHorizontal],
