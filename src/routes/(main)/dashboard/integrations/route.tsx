@@ -62,7 +62,7 @@ const categoryIcons: Record<IntegrationCategory, typeof PlugZap> = {
   Identity: LockKeyhole,
 };
 
-export const Route = createFileRoute("/(main)/dashboard/integrations")({ component: Page });
+export const Route = createFileRoute("/(main)/dashboard/integrations")({ component: IntegrationCenter });
 
 function IntegrationLogo({ item, large = false }: { item: Integration; large?: boolean }) {
   return (
@@ -72,7 +72,7 @@ function IntegrationLogo({ item, large = false }: { item: Integration; large?: b
   );
 }
 
-function Page() {
+export function IntegrationCenter() {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Integration | null>(null);
   const [open, setOpen] = useState(false);
