@@ -5,7 +5,6 @@ import {
   ArchiveRestore,
   CalendarClock,
   CheckCircle2,
-  CircleDollarSign,
   Copy,
   ExternalLink,
   Link as LinkIcon,
