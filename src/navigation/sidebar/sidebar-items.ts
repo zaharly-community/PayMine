@@ -54,6 +54,17 @@ export interface NavGroup {
 
 export const sidebarItems: NavGroup[] = [
   {
+    id: 0,
+    items: [
+      {
+        id: "dashboard",
+        title: "Dashboard",
+        url: "/dashboard/",
+        icon: PanelsTopLeft,
+      },
+    ],
+  },
+  {
     id: 1,
     label: "Operations",
     items: [
@@ -91,7 +102,7 @@ export const sidebarItems: NavGroup[] = [
   },
   {
     id: 2,
-    label: "Pages",
+    label: "Configs",
     items: [
       {
         id: "settings",
