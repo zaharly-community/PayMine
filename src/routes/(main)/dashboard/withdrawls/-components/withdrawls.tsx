@@ -243,7 +243,7 @@ export function Withdrawls({ withdrawls }: { withdrawls: WithdrawlRow[] }) {
             </InputGroupAddon>
           </InputGroup>
 
-          <Button variant="outline" size="sm" render={<Link to="/dashboard/analytics" />}>
+          <Button nativeButton={false} variant="outline" size="sm" render={<Link to="/dashboard/analytics" />}>
             <BarChart3 /> Analytics
           </Button>
 
