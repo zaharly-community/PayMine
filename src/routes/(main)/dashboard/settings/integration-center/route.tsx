@@ -1,11 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { IntegrationCenter } from "@/routes/(main)/dashboard/integrations/route";
+import { IntegrationCenter } from "../-components/integration-center";
 
 export const Route = createFileRoute("/(main)/dashboard/settings/integration-center")({
-  component: IntegrationCenterSettings,
+  component: IntegrationCenter,
 });
-
-function IntegrationCenterSettings() {
-  return <IntegrationCenter />;
-}
