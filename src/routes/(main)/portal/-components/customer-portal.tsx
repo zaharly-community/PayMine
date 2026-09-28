@@ -4041,9 +4041,9 @@ function CardDepositFlow({
                               autoComplete="off"
                               maxLength={19}
                               className={cn(
-                                "h-12 border-slate-700 bg-slate-700/50 px-3 pr-28 text-sm text-slate-100 placeholder:text-slate-500",
-                                isUsed && "border-red-400/50 bg-red-500/10",
-                                cardRecognition[index] === "available" && "border-emerald-400/45 focus-visible:border-emerald-400/60",
+                                "h-12 border-slate-700 bg-slate-700/50 px-3 pr-40 text-sm text-slate-100 placeholder:text-slate-500",
+                                cardRecognition[index] === "checking" && "border-cyan-300/40 bg-slate-700/60",
+                                cardRecognition[index] === "available" && "border-emerald-400/45 bg-emerald-400/5 focus-visible:border-emerald-400/60",
                                 cardRecognition[index] === "duplicate" && "border-red-400/60 bg-red-500/10",
                               )}
                             />
@@ -4063,10 +4063,10 @@ function CardDepositFlow({
                               >
                                 {cardRecognition[index] === "checking" ? (
                                   <>
-                                    <span className="relative flex size-3 items-center justify-center">
-                                      <span className="absolute size-3 rounded-full border border-cyan-300/30" />
-                                      <span className="absolute size-3 animate-ping rounded-full border border-cyan-300/50" />
-                                      <ScanText className="relative size-3 text-cyan-200" />
+                                    <span className="relative flex size-4 items-center justify-center">
+                                      <span className="absolute size-4 rounded-full border border-cyan-300/25" />
+                                      <span className="absolute size-4 animate-ping rounded-full border border-cyan-300/45" />
+                                      <RefreshCw className="relative size-3 animate-spin text-cyan-200" />
                                     </span>
                                     <span className="relative">
                                       Searching system
@@ -4092,12 +4092,18 @@ function CardDepositFlow({
                             ) : null}
                             {cardRecognition[index] === "checking" ? (
                               <p className="mt-1 flex items-center gap-1.5 text-[10px] text-cyan-300/80">
-                                <ScanText className="size-3 animate-pulse" />
-                                AI is checking this card against registered cards.
+                                <RefreshCw className="size-3 animate-spin" />
+                                Searching registered cards…
+                              </p>
+                            ) : cardRecognition[index] === "available" ? (
+                              <p className="mt-1 flex items-center gap-1.5 text-[10px] font-medium text-emerald-300">
+                                <CheckCircle2 className="size-3" />
+                                Card code is not duplicated.
                               </p>
                             ) : cardRecognition[index] === "duplicate" ? (
-                              <p className="mt-1 text-[10px] font-medium text-red-300">
-                                This card is already registered in the system.
+                              <p className="mt-1 flex items-center gap-1.5 text-[10px] font-medium text-red-300">
+                                <Info className="size-3" />
+                                This card is already registered.
                               </p>
                             ) : null}
                           </div>
