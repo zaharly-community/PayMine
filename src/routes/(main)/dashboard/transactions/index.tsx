@@ -258,7 +258,7 @@ function TransactionsPage() {
         row.status,
         row.date,
       ]
-        .map((value) => """ + value.replaceAll(""", """") + """)
+        .map((value) => "\""\"" + value.replaceAll("\"", "\""\"") + "\""\"")
         .join(","),
     );
     const blob = new Blob([[header.join(","), ...lines].join("\n")], {
