@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Kbd } from "@/components/ui/kbd";
 import { AddTransactionDialog, type AddTransactionFieldValues } from "@/components/transactions/add-transaction-dialog";
+import { PaymentLinkTools } from "./payment-link-tools";
+import { readPaymentLinkDeposits } from "@/lib/payment-links";
 import { dataTableFeatures } from "@/lib/data-table-features";
 
 import type { DepositRow, DepositStatus, PaymentMethod, VerificationStatus } from "./data";
@@ -52,7 +54,52 @@ const paymentMethods: PaymentMethod[] = [
   "Tunisie Telecom",
   "Orange",
   "Ooredoo",
+  "E-Dinar",
 ];
+
+const paymentLinkMethods = [
+  {
+    name: "Flouci",
+    currency: "TND",
+    logoImage:
+      "https://play-lh.googleusercontent.com/7mMIDBQ-DsWB5GZluLfTwMXROjPTiJDS1LyQDPKRS8G20dW3LD8GGTU68FZ1hhbwM7-5jqe5QNMiDjQrIoDV",
+  },
+  {
+    name: "D17",
+    currency: "TND",
+    logoImage:
+      "https://play-lh.googleusercontent.com/eKwfMMr86vhBxUG6cGGVwXYR_fZqzLIJCTFXTI_JDD6VsBfYvvUHSuz-M9BC8Oy1cU5AXq4PkLre0bre3rmY",
+  },
+  {
+    name: "Kashy",
+    currency: "TND",
+    logoImage:
+      "https://play-lh.googleusercontent.com/pTtXnbOlZa8LXuvgdkvNb00J34wEPpDOHcEnBQiJYPV8zN5OQUBezMlosM0iO_KX5pLIbml45uvH-5MyUy1LQqI=w240-h480-rw",
+  },
+  {
+    name: "Tunisie Telecom",
+    currency: "TND",
+    logoImage: "https://ik.imagekit.io/tp/20220202-tunisie-telecom-logo.png",
+  },
+  {
+    name: "Orange",
+    currency: "TND",
+    logoImage:
+      "https://upload.wikimedia.org/wikipedia/commons/c/c8/Orange_logo.svg",
+  },
+  {
+    name: "Ooredoo",
+    currency: "TND",
+    logoImage:
+      "https://upload.wikimedia.org/wikipedia/commons/6/68/Ooredoo_logo.svg",
+  },
+  {
+    name: "E-Dinar",
+    currency: "TND",
+    logoImage:
+      "https://i0.wp.com/learning.symphony.tn/wp-content/uploads/2018/07/e-dinar.png?ssl=1",
+  },
+] as const;
 
 const depositColumnOrder = [
   "depositId",
@@ -228,7 +275,11 @@ function buildImportedDeposit(
 }
 
 export function Deposits({ deposits }: { deposits: DepositRow[] }) {
-  const [rows, setRows] = React.useState(deposits);
+  const [rows, setRows] = React.useState<DepositRow[]>(() => {
+    const linkRows = readPaymentLinkDeposits() as DepositRow[];
+    const seededIds = new Set(deposits.map((row) => row.id));
+    return [...linkRows.filter((row) => !seededIds.has(row.id)), ...deposits];
+  });
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "date", desc: true }]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -284,6 +335,35 @@ export function Deposits({ deposits }: { deposits: DepositRow[] }) {
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [customizeOpen]);
+
+  React.useEffect(() => {
+    const syncPaymentLinkDeposits = () => {
+      const linkRows = readPaymentLinkDeposits() as DepositRow[];
+
+      setRows((current) => {
+        const nonLinkRows = current.filter((row) => !row.id.startsWith("DEP-LINK-"));
+        const existingIds = new Set(nonLinkRows.map((row) => row.id));
+        const freshLinkRows = linkRows.filter((row) => !existingIds.has(row.id));
+        const mergedLinkRows = linkRows.length
+          ? linkRows
+          : current.filter((row) => row.id.startsWith("DEP-LINK-"));
+        return [
+          ...(mergedLinkRows as DepositRow[]),
+          ...nonLinkRows.filter(
+            (row) => !freshLinkRows.some((linkRow) => linkRow.id === row.id),
+          ),
+        ];
+      });
+    };
+
+    window.addEventListener("storage", syncPaymentLinkDeposits);
+    window.addEventListener("focus", syncPaymentLinkDeposits);
+
+    return () => {
+      window.removeEventListener("storage", syncPaymentLinkDeposits);
+      window.removeEventListener("focus", syncPaymentLinkDeposits);
+    };
+  }, []);
 
   const reorderColumns = (sourceId: string, targetId: string) => {
     if (sourceId === targetId) return;
@@ -457,11 +537,9 @@ export function Deposits({ deposits }: { deposits: DepositRow[] }) {
               table.setPageIndex(0);
             }}
           />
+          <PaymentLinkTools methods={paymentLinkMethods} />
           <Button variant="outline" size="sm">
             <Download /> Export
-          </Button>
-          <Button size="sm">
-            <Plus /> Add Deposit
           </Button>
         </div>
       </div>
