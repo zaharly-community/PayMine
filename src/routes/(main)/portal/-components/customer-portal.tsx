@@ -17,6 +17,8 @@ import {
   Star,
   Upload,
   ScanText,
+  Sparkles,
+  ShieldAlert,
   Hash,
   UserRound,
   Mail,
@@ -3171,6 +3173,53 @@ function recognizeRegisteredCard(cardNumber: string) {
 }
 
 
+function CardRecognitionIndicator({
+  status,
+}: {
+  status: CardRecognitionStatus | undefined;
+}) {
+  if (!status || status === "idle") return null;
+
+  if (status === "checking") {
+    return (
+      <span
+        className="pointer-events-none absolute right-3 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center"
+        title="Checking card"
+        aria-label="Checking card"
+      >
+        <span className="absolute inset-0 rounded-full border border-cyan-300/15" />
+        <span className="absolute inset-0.5 rounded-full border border-transparent border-t-cyan-300/80 animate-spin" />
+        <span className="absolute size-1.5 rounded-full bg-cyan-200/90 shadow-[0_0_9px_rgba(103,232,249,0.8)]" />
+        <ScanText className="relative size-3.5 text-cyan-200" />
+      </span>
+    );
+  }
+
+  if (status === "available") {
+    return (
+      <span
+        className="pointer-events-none absolute right-3 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center"
+        title="Card allowed"
+        aria-label="Card allowed"
+      >
+        <span className="absolute size-5 rounded-full bg-emerald-300/5 blur-[5px]" />
+        <Sparkles className="relative size-4.5 text-emerald-300 drop-shadow-[0_0_7px_rgba(52,211,153,0.45)]" />
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className="pointer-events-none absolute right-3 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center"
+      title="Card already registered"
+      aria-label="Card already registered"
+    >
+      <span className="absolute size-5 rounded-full bg-red-400/5 blur-[5px]" />
+      <ShieldAlert className="relative size-4.5 text-red-300 drop-shadow-[0_0_7px_rgba(248,113,113,0.4)]" />
+    </span>
+  );
+}
+
 function CardDepositHelpAccordion({ method }: { method: PaymentMethod }) {
   const [openItem, setOpenItem] = React.useState<string | null>(null);
 
@@ -3726,6 +3775,7 @@ function CardDepositFlow({
   const [detectedCards, setDetectedCards] = React.useState<string[]>([]);
   const [cardRecognition, setCardRecognition] = React.useState<Record<number, CardRecognitionStatus>>({});
   const recognitionTimers = React.useRef<Record<number, number>>({});
+  const recognitionKeys = React.useRef<Record<number, string>>({});
   const [cardReviewStatus, setCardReviewStatus] = React.useState<"reviewing" | "completed">("reviewing");
   const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
 
@@ -3747,6 +3797,7 @@ function CardDepositFlow({
   React.useEffect(() => {
     Object.values(recognitionTimers.current).forEach((timer) => window.clearTimeout(timer));
     recognitionTimers.current = {};
+    recognitionKeys.current = {};
 
     setStep(1);
     setError("");
@@ -3838,6 +3889,8 @@ function CardDepositFlow({
       delete recognitionTimers.current[index];
     }
 
+    recognitionKeys.current[index] = normalized;
+
     setCardRecognition((current) => ({
       ...current,
       [index]: normalized.length === 16 ? "checking" : "idle",
@@ -3845,6 +3898,9 @@ function CardDepositFlow({
 
     if (normalized.length === 16) {
       recognitionTimers.current[index] = window.setTimeout(() => {
+        // Ignore an old lookup result if the player has edited this input.
+        if (recognitionKeys.current[index] !== normalized) return;
+
         const registered = recognizeRegisteredCard(normalized);
 
         setCardRecognition((current) => ({
@@ -3853,7 +3909,7 @@ function CardDepositFlow({
         }));
 
         delete recognitionTimers.current[index];
-      }, 1400);
+      }, 1350);
     }
 
     setCardNumbers((current) => {
@@ -4074,37 +4130,13 @@ function CardDepositFlow({
                               autoComplete="off"
                               maxLength={19}
                               className={cn(
-                                "h-12 border-slate-700 bg-slate-700/50 px-3 pr-10 text-sm text-slate-100 placeholder:text-slate-500",
+                                "h-12 border-slate-700 bg-slate-700/50 px-3 pr-11 text-sm text-slate-100 placeholder:text-slate-500",
                                 cardRecognition[index] === "checking" && "border-cyan-300/40 bg-slate-700/60",
                                 cardRecognition[index] === "available" && "border-emerald-400/45 bg-emerald-400/5 focus-visible:border-emerald-400/60",
                                 cardRecognition[index] === "duplicate" && "border-red-400/60 bg-red-500/10",
                               )}
                             />
-                            {cardRecognition[index] === "checking" ||
-                            cardRecognition[index] === "available" ||
-                            cardRecognition[index] === "duplicate" ? (
-                              <img
-                                src={
-                                  cardRecognition[index] === "checking"
-                                    ? "https://img.icons8.com/?size=64&id=A9DjciQK0qqc&format=png&color=22d3ee"
-                                    : cardRecognition[index] === "available"
-                                      ? "https://img.icons8.com/?size=64&id=iH4tJvSyj9uA&format=png&color=34d399"
-                                      : "https://img.icons8.com/?size=64&id=dF5jn1JKszyE&format=png&color=f87171"
-                                }
-                                alt=""
-                                title={
-                                  cardRecognition[index] === "checking"
-                                    ? "Checking card in registered-card system"
-                                    : cardRecognition[index] === "available"
-                                      ? "Card allowed"
-                                      : "Card already registered"
-                                }
-                                className={cn(
-                                  "pointer-events-auto absolute right-3 top-1/2 size-5 -translate-y-1/2 object-contain",
-                                  cardRecognition[index] === "checking" && "animate-spin",
-                                )}
-                              />
-                            ) : null}
+                            <CardRecognitionIndicator status={cardRecognition[index]} />
                           </div>
 
                           <Button
