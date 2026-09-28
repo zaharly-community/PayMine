@@ -55,7 +55,7 @@ function PlayerActions({ player, meta, status, onSuspend, onDelete }: { player: 
 
   return <>
     <div className="flex items-center justify-end gap-0.5">
-      <Button type="button" size="icon-sm" variant="ghost" className="size-8 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={"View " + player.name} title="View player profile" nativeButton={false} render={<Link to="/dashboard/players/$playerId" params={{ playerId: meta.playerId }} } />}><Eye className="size-3.5" /></Button>
+      <Button type="button" size="icon-sm" variant="ghost" className="size-8 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={"View " + player.name} title="View player profile" nativeButton={false} render={<Link to="/dashboard/players/$playerId" params={{ playerId: meta.playerId }} />}><Eye className="size-3.5" /></Button>
       <Button type="button" size="icon-sm" variant="ghost" className={cn("size-8 rounded-md", deleting ? "text-red-500 hover:bg-red-500/10" : "text-orange-500 hover:bg-orange-500/10")} aria-label={deleting ? "Delete player" : "Suspend player"} title={deleting ? "Delete player" : "Suspend player"} onClick={() => setConfirmOpen(true)}>{deleting ? <Trash2 className="size-3.5" /> : <Ban className="size-3.5" />}</Button>
       <Button type="button" size="icon-sm" variant="ghost" className="size-8 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={"Report " + player.name} title="Report player" onClick={() => setReportOpen(true)}><Flag className="size-3.5" /></Button>
     </div>
