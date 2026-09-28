@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
-import { ArrowRight, Bell, CreditCard, FileClock, Languages, ListFilter, LockKeyhole, Settings2, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, Bell, CreditCard, FileClock, FileCog, FileUp, HardDrive, IdCard, Languages, ListFilter, LockKeyhole, Settings2, SlidersHorizontal, UsersRound } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const cards = [
@@ -7,6 +7,11 @@ const cards = [
   ["languages", "Languages", "Language, locale, timezone and formatting preferences.", Languages],
   ["security", "Security", "Authentication policies, sessions and access protection.", LockKeyhole],
   ["notifications", "Notifications", "Operational alerts, channel preferences and notification rules.", Bell],
+  ["kyc-verification", "KYC Verification", "Player identity verification, automation and risk thresholds.", IdCard],
+  ["agent-program", "Agent Program", "Distributor onboarding, commissions and country eligibility.", UsersRound],
+  ["media-uploads", "Media & Uploads", "Payment evidence and identity-document upload limits.", FileUp],
+  ["system-health", "System Health", "Operational retention and alert behavior.", HardDrive],
+  ["maintenance", "Maintenance", "Temporary access controls and recovery options.", FileCog],
   ["audit-log", "Audit log", "Administrative activity history.", FileClock],
   ["billing", "Billing", "Plan, invoices and payment configuration.", CreditCard],
   ["features", "Features", "Platform modules, availability and rollout controls.", SlidersHorizontal],
