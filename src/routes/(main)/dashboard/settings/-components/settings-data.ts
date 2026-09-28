@@ -4,6 +4,7 @@ export const settingsNav = [
   { key: "security", label: "Security", description: "Authentication and access protection." },
   { key: "notifications", label: "Notifications", description: "Control operational alerts and channels." },
   { key: "integration-center", label: "Integration Center", description: "Providers, security, messaging and platform connections." },
+  { key: "accounts", label: "Accounts", description: "Payment wallets, vouchers, limits and processing rules." },
   { key: "kyc-verification", label: "KYC Verification", description: "Player identity verification and review thresholds." },
   { key: "agent-program", label: "Agent Program", description: "Distributor onboarding, commissions and eligibility." },
   { key: "media-uploads", label: "Media & Uploads", description: "Payment evidence and identity-document upload rules." },
