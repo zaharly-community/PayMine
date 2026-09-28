@@ -4062,49 +4062,26 @@ function CardDepositFlow({
                                 )}
                               >
                                 {cardRecognition[index] === "checking" ? (
-                                  <>
-                                    <span className="relative flex size-4 items-center justify-center">
-                                      <span className="absolute size-4 rounded-full border border-cyan-300/25" />
-                                      <span className="absolute size-4 animate-ping rounded-full border border-cyan-300/45" />
-                                      <RefreshCw className="relative size-3 animate-spin text-cyan-200" />
-                                    </span>
-                                    <span className="relative">
-                                      Searching system
-                                      <span className="ml-0.5 inline-flex w-3 overflow-hidden align-middle">
-                                        <span className="animate-pulse">.</span>
-                                        <span className="animate-pulse [animation-delay:150ms]">.</span>
-                                        <span className="animate-pulse [animation-delay:300ms]">.</span>
-                                      </span>
-                                    </span>
-                                  </>
+                                  <span
+                                    className="relative flex size-5 items-center justify-center"
+                                    title="AI recognizer is checking this card"
+                                  >
+                                    <span className="absolute size-5 rounded-full border border-cyan-300/20" />
+                                    <span className="absolute size-5 animate-ping rounded-full border border-cyan-300/45" />
+                                    <RefreshCw className="relative size-3.5 animate-spin text-cyan-200" />
+                                  </span>
                                 ) : cardRecognition[index] === "available" ? (
                                   <>
-                                    <CheckCircle2 className="size-3" />
-                                    Not duplicated
+                                    <CheckCircle2 className="size-3.5" />
+                                    <span>Allowed</span>
                                   </>
                                 ) : (
                                   <>
-                                    <Info className="size-3" />
-                                    Already registered
+                                    <Info className="size-3.5" />
+                                    <span>Duplicate</span>
                                   </>
                                 )}
                               </div>
-                            ) : null}
-                            {cardRecognition[index] === "checking" ? (
-                              <p className="mt-1 flex items-center gap-1.5 text-[10px] text-cyan-300/80">
-                                <RefreshCw className="size-3 animate-spin" />
-                                Searching registered cards…
-                              </p>
-                            ) : cardRecognition[index] === "available" ? (
-                              <p className="mt-1 flex items-center gap-1.5 text-[10px] font-medium text-emerald-300">
-                                <CheckCircle2 className="size-3" />
-                                Card code is not duplicated.
-                              </p>
-                            ) : cardRecognition[index] === "duplicate" ? (
-                              <p className="mt-1 flex items-center gap-1.5 text-[10px] font-medium text-red-300">
-                                <Info className="size-3" />
-                                This card is already registered.
-                              </p>
                             ) : null}
                           </div>
 
@@ -4136,7 +4113,7 @@ function CardDepositFlow({
                   </div>
 
                   <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
-                    The first input is required. Entering any card number creates the next input automatically.
+                    Enter exactly 16 digits. The AI recognizer checks the card against registered cards before submission.
                   </p>
                 </div>
 
