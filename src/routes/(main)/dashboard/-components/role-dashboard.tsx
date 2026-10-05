@@ -33,15 +33,6 @@ import { cn } from "cn";
 import type { UserRole } from "@/stores/auth/auth-provider";
 import { useBrand } from "@/stores/brands/brand-provider";
 
-const ownerVolume = [
-  { label: "Apr", volume: 410000 },
-  { label: "May", volume: 470000 },
-  { label: "Jun", volume: 530000 },
-  { label: "Jul", volume: 590000 },
-  { label: "Aug", volume: 620000 },
-  { label: "Sep", volume: 710000 },
-];
-
 const brandVolume = [
   { label: "Apr", deposits: 195000, withdrawals: 74000 },
   { label: "May", deposits: 224000, withdrawals: 82000 },
