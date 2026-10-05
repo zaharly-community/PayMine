@@ -314,7 +314,7 @@ function CreatePackageModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[min(94vw,980px)] max-w-[980px] flex-col gap-0 overflow-hidden p-0">
+      <DialogContent className="flex max-h-[92vh] w-[calc(100vw-2rem)] max-w-none flex-col gap-0 overflow-hidden p-0 sm:w-[min(92vw,1100px)] sm:!max-w-[1100px]">
         <DialogHeader className="border-b px-7 py-5">
           <div className="pr-8">
             <DialogTitle className="text-lg">Create new package</DialogTitle>
@@ -324,7 +324,7 @@ function CreatePackageModal({
           </div>
         </DialogHeader>
 
-        <div className="min-h-0 overflow-y-auto bg-muted/15 px-7 py-6">
+        <div className="min-h-0 overflow-y-auto bg-muted/10 px-4 py-4 sm:px-7 sm:py-6">
           <div className="space-y-5">
             <FormSection
               title="Basic information"
@@ -580,7 +580,7 @@ function CreatePackageModal({
           </div>
         </div>
 
-        <DialogFooter className="border-t bg-background px-7 py-4">
+        <DialogFooter className="!mx-0 !mb-0 border-t bg-background px-4 py-4 sm:px-7">
           <div className="mr-auto hidden text-xs text-muted-foreground sm:block">
             Changes apply to new subscriptions for this package.
           </div>
