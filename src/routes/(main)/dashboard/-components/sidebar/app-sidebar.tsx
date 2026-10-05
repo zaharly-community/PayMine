@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/sidebar";
 import { APP_CONFIG } from "@/config/app-config";
 import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
+import { filterSidebarItemsForRole } from "@/navigation/sidebar/role-navigation";
+import { useAuth } from "@/stores/auth/auth-provider";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
 import { BrandSwitcher } from "./brand-switcher";
@@ -28,16 +30,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       isSynced: s.isSynced,
     })),
   );
+  const { user } = useAuth();
 
   const variant = isSynced ? sidebarVariant : props.variant;
   const collapsible = isSynced ? sidebarCollapsible : props.collapsible;
+  const visibleItems = filterSidebarItemsForRole(sidebarItems, user?.role);
 
   return (
     <Sidebar {...props} variant={variant} collapsible={collapsible}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton render={<Link to="/dashboard/default" />}>
+            <SidebarMenuButton render={<Link to="/dashboard/" />}>
               <Command />
               <span className="font-semibold text-base">{APP_CONFIG.name}</span>
             </SidebarMenuButton>
@@ -45,7 +49,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={sidebarItems} />
+        <NavMain items={visibleItems} />
       </SidebarContent>
       <SidebarFooter className="gap-2">
         <SupportCard />
