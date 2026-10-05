@@ -19,7 +19,9 @@ type PackageFeature = {
 
 type PackagePlan = {
   name: string;
-  price: string;
+  priceType: "one-time" | "monthly" | "yearly";
+  price: number;
+  annualDiscountPercent: number;
   users: string;
   subscriptions: string;
   revenue: string;
@@ -46,7 +48,9 @@ const defaultFeatures: PackageFeature[] = [
 const initialPlans: PackagePlan[] = [
   {
     name: "Starter",
-    price: "$29",
+    priceType: "monthly",
+    price: 29,
+    annualDiscountPercent: 15,
     users: "Up to 5 users",
     subscriptions: "312 active",
     revenue: "$9.0K MRR",
@@ -61,7 +65,9 @@ const initialPlans: PackagePlan[] = [
   },
   {
     name: "Growth",
-    price: "$79",
+    priceType: "monthly",
+    price: 79,
+    annualDiscountPercent: 15,
     users: "Up to 25 users",
     subscriptions: "1,204 active",
     revenue: "$95.1K MRR",
@@ -76,7 +82,9 @@ const initialPlans: PackagePlan[] = [
   },
   {
     name: "Scale",
-    price: "$199",
+    priceType: "yearly",
+    price: 1990,
+    annualDiscountPercent: 0,
     users: "Unlimited users",
     subscriptions: "524 active",
     revenue: "$104.3K MRR",
@@ -137,7 +145,7 @@ function Page() {
                 {index === 1 ? <Badge>Most popular</Badge> : <Button variant="ghost" size="icon-sm"><Pencil /></Button>}
               </div>
               <h2 className="pt-3 text-lg font-semibold">{plan.name}</h2>
-              <p className="text-3xl font-semibold tracking-tight">{plan.price}<span className="text-sm font-normal text-muted-foreground"> / month</span></p>
+              <PricingSummary plan={plan} />
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3 border-y py-4 text-sm">
@@ -179,6 +187,39 @@ function Page() {
   );
 }
 
+function PricingSummary({ plan }: { plan: PackagePlan }) {
+  if (plan.priceType === "one-time") {
+    return (
+      <div>
+        <p className="text-3xl font-semibold tracking-tight">${plan.price.toLocaleString()}</p>
+        <p className="mt-1 text-sm font-medium">One-time payment</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">Paid once · access remains valid indefinitely</p>
+      </div>
+    );
+  }
+
+  if (plan.priceType === "yearly") {
+    return (
+      <div>
+        <p className="text-3xl font-semibold tracking-tight">${plan.price.toLocaleString()}<span className="text-sm font-normal text-muted-foreground"> / year</span></p>
+        <p className="mt-1 text-xs text-muted-foreground">Billed once every year</p>
+      </div>
+    );
+  }
+
+  const yearlyPrice = plan.price * 12 * (1 - plan.annualDiscountPercent / 100);
+
+  return (
+    <div>
+      <p className="text-3xl font-semibold tracking-tight">${plan.price.toLocaleString()}<span className="text-sm font-normal text-muted-foreground"> / month</span></p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        ${yearlyPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} / year
+        {plan.annualDiscountPercent > 0 ? <span className="ml-1 font-medium text-emerald-600 dark:text-emerald-400">({plan.annualDiscountPercent}% off)</span> : null}
+      </p>
+    </div>
+  );
+}
+
 function CreatePackageModal({
   open,
   onOpenChange,
@@ -189,7 +230,9 @@ function CreatePackageModal({
   onCreate: (plan: PackagePlan) => void;
 }) {
   const [name, setName] = React.useState("");
+  const [priceType, setPriceType] = React.useState<PackagePlan["priceType"]>("monthly");
   const [price, setPrice] = React.useState("");
+  const [annualDiscountPercent, setAnnualDiscountPercent] = React.useState("0");
   const [usersLimit, setUsersLimit] = React.useState("");
   const [transactionLimitType, setTransactionLimitType] = React.useState<PackagePlan["transactionLimitType"]>("number");
   const [transactionLimit, setTransactionLimit] = React.useState("");
@@ -204,7 +247,9 @@ function CreatePackageModal({
 
   const reset = () => {
     setName("");
+    setPriceType("monthly");
     setPrice("");
+    setAnnualDiscountPercent("0");
     setUsersLimit("");
     setTransactionLimitType("number");
     setTransactionLimit("");
@@ -221,9 +266,15 @@ function CreatePackageModal({
     if (!nextOpen) reset();
   };
 
+  const annualPricePreview =
+    priceType === "monthly" && Number(price) > 0
+      ? Number(price) * 12 * (1 - Math.min(100, Math.max(0, Number(annualDiscountPercent) || 0)) / 100)
+      : 0;
+
   const canCreate =
     name.trim().length > 0 &&
     Number(price) > 0 &&
+    (priceType !== "monthly" || (Number(annualDiscountPercent) >= 0 && Number(annualDiscountPercent) <= 100)) &&
     Number(transactionLimit) > 0 &&
     Number(usersLimit) >= 0 &&
     Number(paymentMethodAccounts) > 0 &&
@@ -235,10 +286,12 @@ function CreatePackageModal({
 
     const plan: PackagePlan = {
       name: name.trim(),
-      price: "$" + Number(price).toLocaleString(),
+      priceType,
+      price: Number(price),
+      annualDiscountPercent: priceType === "monthly" ? Number(annualDiscountPercent) : 0,
       users: usersLimit.trim() ? "Up to " + Number(usersLimit).toLocaleString() + " users" : "Unlimited users",
       subscriptions: "0 active",
-      revenue: "$0 MRR",
+      revenue: priceType === "monthly" ? "$0 MRR" : "$0 revenue",
       transactionLimitType,
       transactionLimit: Number(transactionLimit),
       depositFeePercent: Number(depositFeePercent),
@@ -259,27 +312,92 @@ function CreatePackageModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-3xl flex-col gap-0 overflow-hidden p-0">
+      <DialogContent className="flex max-h-[92vh] w-[min(96vw,1180px)] max-w-6xl flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="border-b px-6 py-5">
-          <DialogTitle>Create new package</DialogTitle>
+          <DialogTitle className="text-lg">Create new package</DialogTitle>
           <DialogDescription>Configure pricing, transaction limits, transfer fees, payment method access, and package features.</DialogDescription>
         </DialogHeader>
 
         <div className="min-h-0 overflow-y-auto px-6 py-5">
-          <div className="grid gap-8">
+          <div className="grid gap-8 lg:grid-cols-2 lg:gap-x-10">
             <section className="space-y-4">
-              <SectionHeading title="General" description="Set the package identity and monthly commercial terms." />
-              <div className="grid gap-4 sm:grid-cols-3">
+              <SectionHeading title="General" description="Set the package identity and user capacity." />
+              <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Package name">
                   <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Enterprise" />
-                </Field>
-                <Field label="Monthly price">
-                  <Input type="number" min="0" step="1" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="199" />
                 </Field>
                 <Field label="User limit">
                   <Input type="number" min="0" step="1" value={usersLimit} onChange={(event) => setUsersLimit(event.target.value)} placeholder="Unlimited" />
                 </Field>
               </div>
+            </section>
+
+            <section className="space-y-4">
+              <SectionHeading title="Pricing" description="Choose how the package is billed. One-time plans never expire." />
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  ["monthly", "Monthly"],
+                  ["yearly", "Yearly"],
+                  ["one-time", "One-time"],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setPriceType(value)}
+                    className={cn(
+                      "rounded-lg border px-3 py-3 text-left transition-colors",
+                      priceType === value ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "hover:bg-muted/50",
+                    )}
+                    aria-pressed={priceType === value}
+                  >
+                    <span className="block text-sm font-medium">{label}</span>
+                    <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                      {value === "monthly" ? "Recurring every month" : value === "yearly" ? "Recurring every year" : "Pay once, valid forever"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {priceType === "monthly" ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Monthly price">
+                    <Input type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="79" />
+                  </Field>
+                  <Field label="Annual discount (%)">
+                    <Input type="number" min="0" max="100" step="0.5" value={annualDiscountPercent} onChange={(event) => setAnnualDiscountPercent(event.target.value)} placeholder="15" />
+                  </Field>
+                  <div className="sm:col-span-2 rounded-lg border bg-muted/20 px-4 py-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-medium">Annual billing preview</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">Same plan, billed once per year with the discount above.</p>
+                      </div>
+                      <p className="text-right text-lg font-semibold tabular-nums">
+                        {annualPricePreview > 0 ? "$" + annualPricePreview.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
+                        <span className="text-xs font-normal text-muted-foreground"> / year</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {priceType === "yearly" ? (
+                <Field label="Yearly price">
+                  <Input type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="790" />
+                </Field>
+              ) : null}
+
+              {priceType === "one-time" ? (
+                <div className="grid gap-4">
+                  <Field label="One-time price">
+                    <Input type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="499" />
+                  </Field>
+                  <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
+                    <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Permanent access</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">The customer pays once. The package has no renewal date and remains valid indefinitely.</p>
+                  </div>
+                </div>
+              ) : null}
             </section>
 
             <section className="space-y-4">
