@@ -52,7 +52,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={visibleItems} showQuickCreate={user?.role !== "SaaS Owner"} />
       </SidebarContent>
       <SidebarFooter className="gap-2">
-        <SupportCard />
+        {user?.role !== "SaaS Owner" ? <SupportCard /> : null}
         {user?.role !== "SaaS Owner" ? <BrandSwitcher /> : null}
       </SidebarFooter>
     </Sidebar>
