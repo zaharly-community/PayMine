@@ -8,6 +8,7 @@ import { APP_CONFIG } from "@/config/app-config";
 import { fontRegistry } from "@/lib/fonts/registry";
 import { PREFERENCE_DEFAULTS } from "@/lib/preferences/preferences-config";
 import { ThemeBootScript } from "@/scripts/theme-boot";
+import { AuthProvider } from "@/stores/auth/auth-provider";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
 
 import appCss from "../styles/styles.css?url";
@@ -151,10 +152,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="min-h-screen antialiased">
         <TooltipProvider>
-          <PreferencesStoreProvider initialValues={PREFERENCE_DEFAULTS}>
-            {children}
-            <Toaster />
-          </PreferencesStoreProvider>
+          <AuthProvider>
+            <PreferencesStoreProvider initialValues={PREFERENCE_DEFAULTS}>
+              {children}
+              <Toaster />
+            </PreferencesStoreProvider>
+          </AuthProvider>
         </TooltipProvider>
         <TanStackDevtools
           config={{
