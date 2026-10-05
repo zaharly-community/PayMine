@@ -1,5 +1,5 @@
 {
-  "name": "tanstack-shadcn-admin-dashboard",
+  "name": "ipaycash",
   "private": true,
   "type": "module",
   "imports": {
@@ -78,5 +78,6 @@
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
     "vite": "^8.3.0"
-  }
+  },
+  "description": "ipaycash payment operations dashboard"
 }

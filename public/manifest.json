@@ -1,7 +1,7 @@
 {
-  "short_name": "Studio Admin",
-  "name": "Studio Admin - TanStack Start Dashboard",
-  "description": "A modern, customizable admin dashboard template built with TanStack Start and shadcn/ui.",
+  "short_name": "ipaycash",
+  "name": "ipaycash — Payment Operations Dashboard",
+  "description": "ipaycash is a modern payment operations platform for managing players, distributors, deposits, withdrawals, transactions, settlements, reconciliation, analytics, and revenue.",
   "icons": [
     {
       "src": "favicon.ico",
@@ -22,6 +22,6 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#ffffff",
   "background_color": "#ffffff"
 }
