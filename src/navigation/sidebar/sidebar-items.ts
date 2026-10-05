@@ -1,21 +1,25 @@
 import {
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  ChartBar,
-  CircleDollarSign,
-  FileCheck2,
-  Landmark,
-  Network,
+  BarChart3,
+  CreditCard,
+  Layers3,
   PanelsTopLeft,
-  RefreshCcw,
-  Scale,
   Settings2,
   Users,
-  WalletCards,
   type LucideIcon,
 } from "lucide-react";
 
 import type { FileRoutesByTo } from "@/routeTree.gen";
+
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  CircleDollarSign,
+  Landmark,
+  Network,
+  RefreshCcw,
+  Scale,
+  WalletCards,
+} from "lucide-react";
 
 export type NavBadge = "new" | "soon";
 export type AppPath = keyof FileRoutesByTo;
@@ -70,6 +74,42 @@ export const sidebarItems: NavGroup[] = [
   },
   {
     id: 1,
+    label: "Platform",
+    items: [
+      {
+        id: "users",
+        title: "Users",
+        url: "/dashboard/users",
+        icon: Users,
+      },
+      {
+        id: "packages",
+        title: "Packages",
+        url: "/dashboard/packages",
+        icon: Layers3,
+      },
+      {
+        id: "subscriptions",
+        title: "Subscriptions",
+        url: "/dashboard/subscriptions",
+        icon: CreditCard,
+      },
+      {
+        id: "reports",
+        title: "Reports",
+        url: "/dashboard/reports",
+        icon: BarChart3,
+      },
+      {
+        id: "settings",
+        title: "Settings",
+        url: "/dashboard/settings",
+        icon: Settings2,
+      },
+    ],
+  },
+  {
+    id: 2,
     label: "Operations",
     items: [
       {
@@ -100,7 +140,7 @@ export const sidebarItems: NavGroup[] = [
         id: "analytics",
         title: "Analytics",
         url: "/dashboard/analytics",
-        icon: ChartBar,
+        icon: BarChart3,
       },
       {
         id: "disagreements",
@@ -111,7 +151,7 @@ export const sidebarItems: NavGroup[] = [
     ],
   },
   {
-    id: 2,
+    id: 3,
     label: "Finance",
     items: [
       {
@@ -140,22 +180,5 @@ export const sidebarItems: NavGroup[] = [
       },
     ],
   },
-  {
-    id: 3,
-    label: "Configs",
-    items: [
-      {
-        id: "settings",
-        title: "Settings",
-        url: "/dashboard/settings",
-        icon: Settings2,
-      },
-      {
-        id: "portal",
-        title: "Portal",
-        url: "/dashboard/portal",
-        icon: PanelsTopLeft,
-      },
-    ],
-  },
 ];
+
