@@ -82,6 +82,7 @@ export function filterSidebarItemsForRole<T extends { id: string }>(
   return groups
     .map((group) => ({
       ...group,
+      label: role === "SaaS Owner" && group.id === 4 ? undefined : group.label,
       items: group.items.filter((item) => access[item.id] === true),
     }))
     .filter((group) => group.items.length > 0);
