@@ -14,6 +14,7 @@ type Position = {
   endLng: number;
   color: string;
   order: number;
+  arcAlt: number;
 };
 
 type FeatureCollection = {
@@ -27,14 +28,14 @@ type FeatureCollection = {
 
 const colors = ["#06b6d4", "#3b82f6", "#6366f1"];
 const arcSeeds: Array<Omit<Position, "color">> = [
-  { order: 1, startLat: 22.3193, startLng: 114.1694, endLat: 51.5072, endLng: -0.1276, arcAlt: 0.3 } as never,
-  { order: 2, startLat: 1.3521, startLng: 103.8198, endLat: 35.6762, endLng: 139.6503, arcAlt: 0.2 } as never,
-  { order: 3, startLat: -33.8688, startLng: 151.2093, endLat: 22.3193, endLng: 114.1694, arcAlt: 0.3 } as never,
-  { order: 4, startLat: 51.5072, startLng: -0.1276, endLat: 37.7749, endLng: -122.4194, arcAlt: 0.3 } as never,
-  { order: 5, startLat: 34.0522, startLng: -118.2437, endLat: 48.8566, endLng: 2.3522, arcAlt: 0.2 } as never,
-  { order: 6, startLat: 28.6139, startLng: 77.209, endLat: 3.139, endLng: 101.6869, arcAlt: 0.2 } as never,
-  { order: 7, startLat: -22.9068, startLng: -43.1729, endLat: 34.0522, endLng: -118.2437, arcAlt: 0.5 } as never,
-  { order: 8, startLat: 52.3676, startLng: 4.9041, endLat: 35.6762, endLng: 139.6503, arcAlt: 0.2 } as never,
+  { order: 1, startLat: 22.3193, startLng: 114.1694, endLat: 51.5072, endLng: -0.1276, arcAlt: 0.3 },
+  { order: 2, startLat: 1.3521, startLng: 103.8198, endLat: 35.6762, endLng: 139.6503, arcAlt: 0.2 },
+  { order: 3, startLat: -33.8688, startLng: 151.2093, endLat: 22.3193, endLng: 114.1694, arcAlt: 0.3 },
+  { order: 4, startLat: 51.5072, startLng: -0.1276, endLat: 37.7749, endLng: -122.4194, arcAlt: 0.3 },
+  { order: 5, startLat: 34.0522, startLng: -118.2437, endLat: 48.8566, endLng: 2.3522, arcAlt: 0.2 },
+  { order: 6, startLat: 28.6139, startLng: 77.209, endLat: 3.139, endLng: 101.6869, arcAlt: 0.2 },
+  { order: 7, startLat: -22.9068, startLng: -43.1729, endLat: 34.0522, endLng: -118.2437, arcAlt: 0.5 },
+  { order: 8, startLat: 52.3676, startLng: 4.9041, endLat: 35.6762, endLng: 139.6503, arcAlt: 0.2 },
 ];
 
 function createArcs() {
