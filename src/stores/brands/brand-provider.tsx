@@ -7,6 +7,7 @@ export type DashboardBrand = {
   name: string;
   initials: string;
   description: string;
+  url: string;
 };
 
 export const DASHBOARD_BRANDS: readonly DashboardBrand[] = [
@@ -21,18 +22,21 @@ export const DASHBOARD_BRANDS: readonly DashboardBrand[] = [
       .join("")
       .toUpperCase(),
     description: "Primary brand",
+    url: "",
   },
   {
     id: "brand-two",
     name: "Brand Two",
     initials: "B2",
     description: "Secondary brand",
+    url: "",
   },
   {
     id: "brand-three",
     name: "Brand Three",
     initials: "B3",
     description: "Secondary brand",
+    url: "",
   },
 ];
 
@@ -44,7 +48,7 @@ type BrandContextValue = {
   brands: readonly DashboardBrand[];
   activeBrand: DashboardBrand;
   setActiveBrand: (brandId: string) => void;
-  addBrand: (input: { name: string; description?: string }) => DashboardBrand;
+  addBrand: (input: { name: string; description?: string; url: string }) => DashboardBrand;
 };
 
 const BrandContext = createContext<BrandContextValue | null>(null);
@@ -70,6 +74,30 @@ function getInitials(name: string) {
   );
 }
 
+function getBrandDomain(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+function isStoredBrand(value: unknown): value is DashboardBrand {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const brand = value as Record<string, unknown>;
+
+  return (
+    typeof brand.id === "string" &&
+    typeof brand.name === "string" &&
+    typeof brand.initials === "string" &&
+    typeof brand.description === "string" &&
+    (typeof brand.url === "string" || brand.url === undefined)
+  );
+}
+
 export function BrandProvider({ children }: { children: React.ReactNode }) {
   const [brands, setBrands] = useState<DashboardBrand[]>(() => [...DASHBOARD_BRANDS]);
   const [activeBrandId, setActiveBrandId] = useState(DEFAULT_BRAND.id);
@@ -83,20 +111,12 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
       if (storedBrands) {
         const parsedBrands: unknown = JSON.parse(storedBrands);
 
-        if (
-          Array.isArray(parsedBrands) &&
-          parsedBrands.length > 0 &&
-          parsedBrands.every(
-            (brand) =>
-              typeof brand === "object" &&
-              brand !== null &&
-              typeof brand.id === "string" &&
-              typeof brand.name === "string" &&
-              typeof brand.initials === "string" &&
-              typeof brand.description === "string",
-          )
-        ) {
-          const restoredBrands = parsedBrands as DashboardBrand[];
+        if (Array.isArray(parsedBrands) && parsedBrands.length > 0 && parsedBrands.every(isStoredBrand)) {
+          const restoredBrands = parsedBrands.map((brand) => ({
+            ...brand,
+            url: brand.url ?? "",
+          }));
+
           setBrands(restoredBrands);
 
           if (storedActiveBrandId && restoredBrands.some((brand) => brand.id === storedActiveBrandId)) {
@@ -135,14 +155,16 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     [brands],
   );
 
-  const addBrand = useCallback((input: { name: string; description?: string }) => {
+  const addBrand = useCallback((input: { name: string; description?: string; url: string }) => {
     const name = input.name.trim();
-    const description = input.description?.trim() || "Custom brand";
+    const url = input.url.trim();
+    const description = input.description?.trim() || getBrandDomain(url) || "Custom brand";
     const brand: DashboardBrand = {
       id: createBrandId(),
       name,
       initials: getInitials(name),
       description,
+      url,
     };
 
     setBrands((current) => [...current, brand]);
