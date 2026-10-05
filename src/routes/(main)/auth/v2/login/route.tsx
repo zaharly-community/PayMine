@@ -1,16 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-  Eye,
-  EyeOff,
-  Globe,
-  Landmark,
-  LockKeyhole,
-  Mail,
-  ShieldCheck,
-} from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Eye, EyeOff, Globe, Landmark, Lock, Mail, ShieldCheck } from "lucide-react";
+import { siApple, siGoogle } from "simple-icons";
 
+import { SimpleIcon } from "@/components/simple-icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,13 +15,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { APP_CONFIG } from "@/config/app-config";
+import { cn } from "cn";
 import {
   DEMO_USERS,
   USER_ROLES,
   useAuth,
   type UserRole,
 } from "@/stores/auth/auth-provider";
-import { cn } from "cn";
 
 import { LoginGlobe } from "../../-components/login-globe";
 
@@ -67,7 +61,7 @@ function LoginV2() {
   };
 
   return (
-    <div className="flex min-h-svh bg-background">
+    <div className="flex min-h-svh">
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-zinc-950 lg:flex">
         <div className="relative z-20 flex items-center gap-2.5 p-8">
           <div className="flex size-8 items-center justify-center rounded-lg bg-white text-black">
@@ -81,7 +75,7 @@ function LoginV2() {
         </div>
 
         <div className="relative z-20 mt-auto p-8">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+          <div className="max-w-[520px] rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
             <blockquote className="text-sm leading-relaxed text-white/80">
               &ldquo;The best time to start investing was yesterday. The second best time is now.&rdquo;
             </blockquote>
@@ -104,16 +98,30 @@ function LoginV2() {
             <p className="mt-1.5 text-sm text-muted-foreground">Sign in to your account</p>
           </div>
 
+          <div className="mt-5 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <span>Demo role</span>
+            <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as UserRole)}>
+              <SelectTrigger className="h-7 w-auto min-w-[128px] border-0 bg-transparent px-1.5 shadow-none focus-visible:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="center">
+                {USER_ROLES.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="mt-8 grid grid-cols-2 gap-3">
             <Button type="button" variant="outline" size="lg" className="gap-2">
-              <span className="flex size-4 items-center justify-center text-sm font-bold">G</span>
-              <span>Google</span>
+              <SimpleIcon icon={siGoogle} className="size-4" aria-hidden="true" />
+              <span className="text-sm">Google</span>
             </Button>
             <Button type="button" variant="outline" size="lg" className="gap-2">
-              <span className="text-base leading-none" aria-hidden="true">
-                
-              </span>
-              <span>Apple</span>
+              <SimpleIcon icon={siApple} className="size-4" aria-hidden="true" />
+              <span className="text-sm">Apple</span>
             </Button>
           </div>
 
@@ -150,15 +158,15 @@ function LoginV2() {
                 </label>
                 <Link
                   to="/auth/v2/login"
-                  className="text-xs text-muted-foreground transition-colors hover:text-foreground"
                   onClick={(event) => event.preventDefault()}
+                  className="text-xs text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Forgot password?
                 </Link>
               </div>
 
               <div className="relative">
-                <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="login-password"
                   type={showPassword ? "text" : "password"}
@@ -171,50 +179,15 @@ function LoginV2() {
                 />
                 <button
                   type="button"
-                  className="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className={cn(
+                    "absolute right-1.5 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                  )}
                   onClick={() => setShowPassword((current) => !current)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                 </button>
               </div>
-            </div>
-
-            <div className="space-y-1.5 pt-1">
-              <label htmlFor="demo-role" className="block text-sm font-medium">
-                Demo role
-              </label>
-              <Select
-                value={selectedRole}
-                onValueChange={(value) => setSelectedRole(value as UserRole)}
-              >
-                <SelectTrigger id="demo-role" className="h-9 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {USER_ROLES.map((role) => (
-                    <SelectItem key={role} value={role}>
-                      <span className="flex items-center gap-2">
-                        {role}
-                        {role === "SaaS Owner" ? (
-                          <span className="text-xs text-muted-foreground">Platform</span>
-                        ) : role === "Brand Admin" ? (
-                          <span className="text-xs text-muted-foreground">Brand</span>
-                        ) : role === "Supervisor" ? (
-                          <span className="text-xs text-muted-foreground">Operations</span>
-                        ) : role === "Agent" ? (
-                          <span className="text-xs text-muted-foreground">Queue</span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Support</span>
-                        )}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Demo login will use <span className="font-medium text-foreground">{selectedUser?.email}</span>.
-              </p>
             </div>
 
             <Button type="submit" size="lg" className="h-9 w-full">
@@ -237,7 +210,7 @@ function LoginV2() {
             <span>256-bit SSL encrypted</span>
           </div>
 
-          <div className="mt-8 flex justify-center gap-1 text-xs text-muted-foreground">
+          <div className="mt-6 flex items-center justify-center gap-1 text-xs text-muted-foreground lg:hidden">
             <Globe className="size-3.5" />
             <span>ENG · {APP_CONFIG.copyright}</span>
           </div>
