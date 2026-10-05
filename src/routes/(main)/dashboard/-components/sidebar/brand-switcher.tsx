@@ -333,7 +333,7 @@ export function BrandSwitcher() {
                 </div>
               </div>
 
-              <DialogFooter className="border-t bg-muted/20 px-6 py-4">
+              <DialogFooter className="mx-0 mb-0 mt-auto border-t bg-muted/20 px-6 py-4">
                 <Button
                   type="button"
                   variant="ghost"
