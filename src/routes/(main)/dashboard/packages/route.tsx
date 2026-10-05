@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -24,7 +25,7 @@ type PackagePlan = {
   priceType: "one-time" | "monthly" | "yearly";
   price: number;
   annualDiscountPercent: number;
-  users: string;
+  description: string;
   subscriptions: string;
   revenue: string;
   transactionLimitType: "number" | "turnover";
@@ -53,7 +54,7 @@ const initialPlans: PackagePlan[] = [
     priceType: "monthly",
     price: 29,
     annualDiscountPercent: 15,
-    users: "Up to 5 users",
+    description: "Essential payment operations for small brands.",
     subscriptions: "312 active",
     revenue: "$9.0K MRR",
     transactionLimitType: "number",
@@ -70,7 +71,7 @@ const initialPlans: PackagePlan[] = [
     priceType: "monthly",
     price: 79,
     annualDiscountPercent: 15,
-    users: "Up to 25 users",
+    description: "Advanced controls, automation, and reporting for growing brands.",
     subscriptions: "1,204 active",
     revenue: "$95.1K MRR",
     transactionLimitType: "turnover",
@@ -87,7 +88,7 @@ const initialPlans: PackagePlan[] = [
     priceType: "yearly",
     price: 1990,
     annualDiscountPercent: 0,
-    users: "Unlimited users",
+    description: "Full platform access with advanced controls and enterprise capabilities.",
     subscriptions: "524 active",
     revenue: "$104.3K MRR",
     transactionLimitType: "turnover",
@@ -154,7 +155,7 @@ function Page() {
                 <div><p className="text-muted-foreground">Subscribers</p><p className="mt-1 font-medium">{plan.subscriptions}</p></div>
                 <div><p className="text-muted-foreground">Revenue</p><p className="mt-1 font-medium">{plan.revenue}</p></div>
               </div>
-              <p className="mt-4 text-xs font-medium text-muted-foreground">{plan.users}</p>
+              <p className="mt-4 text-sm leading-5 text-muted-foreground">{plan.description}</p>
               <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded-md border px-3 py-2">
                   <p className="text-muted-foreground">Transaction limit</p>
@@ -235,7 +236,7 @@ function CreatePackageModal({
   const [priceType, setPriceType] = React.useState<PackagePlan["priceType"]>("monthly");
   const [price, setPrice] = React.useState("");
   const [annualDiscountPercent, setAnnualDiscountPercent] = React.useState("0");
-  const [usersLimit, setUsersLimit] = React.useState("");
+  const [description, setDescription] = React.useState("");
   const [transactionLimitType, setTransactionLimitType] = React.useState<PackagePlan["transactionLimitType"]>("number");
   const [transactionLimit, setTransactionLimit] = React.useState("");
   const [depositFeePercent, setDepositFeePercent] = React.useState("");
@@ -252,7 +253,7 @@ function CreatePackageModal({
     setPriceType("monthly");
     setPrice("");
     setAnnualDiscountPercent("0");
-    setUsersLimit("");
+    setDescription("");
     setTransactionLimitType("number");
     setTransactionLimit("");
     setDepositFeePercent("");
@@ -278,7 +279,6 @@ function CreatePackageModal({
     Number(price) > 0 &&
     (priceType !== "monthly" || (Number(annualDiscountPercent) >= 0 && Number(annualDiscountPercent) <= 100)) &&
     Number(transactionLimit) > 0 &&
-    Number(usersLimit) >= 0 &&
     Number(paymentMethodAccounts) > 0 &&
     Number(depositFeePercent) >= 0 &&
     Number(withdrawalFeePercent) >= 0;
@@ -291,7 +291,7 @@ function CreatePackageModal({
       priceType,
       price: Number(price),
       annualDiscountPercent: priceType === "monthly" ? Number(annualDiscountPercent) : 0,
-      users: usersLimit.trim() ? "Up to " + Number(usersLimit).toLocaleString() + " users" : "Unlimited users",
+      description: description.trim(),
       subscriptions: "0 active",
       revenue: priceType === "monthly" ? "$0 MRR" : "$0 revenue",
       transactionLimitType,
@@ -327,10 +327,11 @@ function CreatePackageModal({
         <div className="min-h-0 overflow-y-auto bg-muted/10 px-4 py-4 sm:px-7 sm:py-6">
           <div className="space-y-5">
             <FormSection
-              title="Basic information"
-              description="Give the package a clear name and define how many users it supports."
+              step="01"
+              title="Package details"
+              description="Set the package name and a short description that explains who it is for."
             >
-              <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
+              <div className="space-y-4">
                 <Field label="Package name">
                   <Input
                     value={name}
@@ -339,21 +340,20 @@ function CreatePackageModal({
                     className="h-9"
                   />
                 </Field>
-                <Field label="User limit">
-                  <Input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={usersLimit}
-                    onChange={(event) => setUsersLimit(event.target.value)}
-                    placeholder="Unlimited"
-                    className="h-9"
+                <Field label="Description">
+                  <Textarea
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    placeholder="Describe the package, its target customer, or the main value it provides."
+                    rows={3}
+                    className="min-h-20 resize-none"
                   />
                 </Field>
               </div>
             </FormSection>
 
             <FormSection
+              step="02"
               title="Pricing & billing"
               description="Choose one billing model. Monthly plans can also offer a discounted annual option."
             >
@@ -473,6 +473,7 @@ function CreatePackageModal({
 
             <div className="grid gap-5 lg:grid-cols-2">
               <FormSection
+                step="03"
                 title="Transaction limits"
                 description="Choose whether the monthly cap is based on transaction count or turnover."
               >
@@ -514,6 +515,7 @@ function CreatePackageModal({
               </FormSection>
 
               <FormSection
+                step="04"
                 title="Transfer fees"
                 description="Set the percentage charged on deposits and withdrawals."
               >
@@ -530,6 +532,7 @@ function CreatePackageModal({
 
             <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
               <FormSection
+                step="05"
                 title="Payment methods"
                 description="Limit the number of provider accounts allowed per payment method."
               >
@@ -547,6 +550,7 @@ function CreatePackageModal({
               </FormSection>
 
               <FormSection
+                step="06"
                 title="Access & features"
                 description="Control optional platform capabilities included with the package."
               >
@@ -598,19 +602,26 @@ function CreatePackageModal({
 }
 
 function FormSection({
+  step,
   title,
   description,
   children,
 }: {
+  step: string;
   title: string;
   description: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="rounded-xl border bg-background p-5 shadow-none">
-      <div className="mb-4">
-        <h3 className="text-sm font-semibold">{title}</h3>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
+      <div className="mb-4 flex items-start gap-3">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold tabular-nums text-muted-foreground">
+          {step}
+        </span>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold">{title}</h3>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
+        </div>
       </div>
       {children}
     </section>
