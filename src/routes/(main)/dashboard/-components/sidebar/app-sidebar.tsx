@@ -1,3 +1,6 @@
+import { Link } from "@tanstack/react-router";
+
+import { Command } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 
 import {
@@ -13,9 +16,9 @@ import { APP_CONFIG } from "@/config/app-config";
 import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
+import { BrandSwitcher } from "./brand-switcher";
 import { NavMain } from "./nav-main";
 import { SupportCard } from "./support-card";
-import { BrandSwitcher } from "./brand-switcher";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
