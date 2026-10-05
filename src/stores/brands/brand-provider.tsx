@@ -36,6 +36,8 @@ export const DASHBOARD_BRANDS: readonly DashboardBrand[] = [
   },
 ];
 
+const DEFAULT_BRAND = DASHBOARD_BRANDS[0] as DashboardBrand;
+
 type BrandContextValue = {
   brands: readonly DashboardBrand[];
   activeBrand: DashboardBrand;
@@ -46,11 +48,12 @@ const BRAND_STORAGE_KEY = "paymine_active_brand";
 const BrandContext = createContext<BrandContextValue | null>(null);
 
 export function BrandProvider({ children }: { children: React.ReactNode }) {
-  const [activeBrandId, setActiveBrandId] = useState(DASHBOARD_BRANDS[0]?.id ?? "");
+  const [activeBrandId, setActiveBrandId] = useState(DEFAULT_BRAND.id);
 
   useEffect(() => {
     try {
       const storedBrandId = window.localStorage.getItem(BRAND_STORAGE_KEY);
+
       if (storedBrandId && DASHBOARD_BRANDS.some((brand) => brand.id === storedBrandId)) {
         setActiveBrandId(storedBrandId);
       }
@@ -60,8 +63,6 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!activeBrandId) return;
-
     try {
       window.localStorage.setItem(BRAND_STORAGE_KEY, activeBrandId);
     } catch {
@@ -70,15 +71,21 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
   }, [activeBrandId]);
 
   const activeBrand = useMemo(
-    () => DASHBOARD_BRANDS.find((brand) => brand.id === activeBrandId) ?? DASHBOARD_BRANDS[0],
+    () => DASHBOARD_BRANDS.find((brand) => brand.id === activeBrandId) ?? DEFAULT_BRAND,
     [activeBrandId],
   );
+
+  const setActiveBrand = (brandId: string) => {
+    if (DASHBOARD_BRANDS.some((brand) => brand.id === brandId)) {
+      setActiveBrandId(brandId);
+    }
+  };
 
   const value = useMemo<BrandContextValue>(
     () => ({
       brands: DASHBOARD_BRANDS,
       activeBrand,
-      setActiveBrand: setActiveBrandId,
+      setActiveBrand,
     }),
     [activeBrand],
   );
