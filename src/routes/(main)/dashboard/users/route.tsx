@@ -1,218 +1,270 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { MoreHorizontal, UserCheck, UserPlus, Users, Wallet } from "lucide-react";
-import type { ComponentType } from "react";
+import * as React from "react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  type ColumnFiltersState,
+  type ColumnVisibilityState,
+  type PaginationState,
+  type SortingState,
+  useTable,
+} from "@tanstack/react-table";
+import { Check, Cog, Download, GripVertical, Plus, Search } from "lucide-react";
 
-const rows = [
-  {
-    id: "USR-10428",
-    name: "Omar Ben Salah",
-    email: "omar@atlas.demo",
-    image: "https://i.pravatar.cc/96?img=12",
-    joined: "Sep 24, 2026",
-    package: "Scale",
-    balance: "$18,420.50",
-    status: "Active",
-  },
-  {
-    id: "USR-10391",
-    name: "Nadia Trabelsi",
-    email: "nadia@ipaycash.demo",
-    image: "https://i.pravatar.cc/96?img=47",
-    joined: "Sep 18, 2026",
-    package: "Growth",
-    balance: "$7,845.20",
-    status: "Active",
-  },
-  {
-    id: "USR-10357",
-    name: "Yassine Kallel",
-    email: "yassine@atlas.demo",
-    image: "https://i.pravatar.cc/96?img=68",
-    joined: "Sep 11, 2026",
-    package: "Growth",
-    balance: "$4,230.00",
-    status: "Active",
-  },
-  {
-    id: "USR-10286",
-    name: "Meriem Jaziri",
-    email: "meriem@northline.demo",
-    image: "https://i.pravatar.cc/96?img=32",
-    joined: "Aug 29, 2026",
-    package: "Starter",
-    balance: "$1,285.75",
-    status: "Pending",
-  },
-  {
-    id: "USR-10194",
-    name: "Sami Ben Amor",
-    email: "sami@delta.demo",
-    image: "https://i.pravatar.cc/96?img=15",
-    joined: "Aug 14, 2026",
-    package: "Growth",
-    balance: "$0.00",
-    status: "Disabled",
-  },
-] as const;
+import { Button } from "@/components/ui/button";
+import { createFileRoute } from "@tanstack/react-router";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Kbd } from "@/components/ui/kbd";
+import { dataTableFeatures } from "@/lib/data-table-features";
 
-type UserStatus = (typeof rows)[number]["status"];
+import { users } from "./-components/data";
+import { createUsersColumns } from "./-components/users-columns";
+import { UsersTable } from "./-components/users-table";
 
 export const Route = createFileRoute("/(main)/dashboard/users")({
   component: Page,
 });
 
+
 function Page() {
+  const [userRows, setUserRows] = React.useState(users);
+  const [rowSelection, setRowSelection] = React.useState({});
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<ColumnVisibilityState>({
+    search: false,
+  });
+  const [columnOrder, setColumnOrder] = React.useState<string[]>([
+    "id",
+    "name",
+    "joinedDate",
+    "package",
+    "balance",
+    "status",
+    "actions",
+  ]);
+  const [customizeOpen, setCustomizeOpen] = React.useState(false);
+  const customizeRef = React.useRef<HTMLDivElement>(null);
+  const [pagination, setPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 25,
+  });
+
+  const handlePlanChange = React.useCallback((userId: string, nextPackage: (typeof users)[number]["package"]) => {
+    setUserRows((current) =>
+      current.map((user) => (user.id === userId ? { ...user, package: nextPackage } : user)),
+    );
+  }, []);
+
+  const handleWalletFund = React.useCallback((userId: string, amount: number) => {
+    setUserRows((current) =>
+      current.map((user) =>
+        user.id === userId ? { ...user, balance: user.balance + amount } : user,
+      ),
+    );
+  }, []);
+
+  const handleDisable = React.useCallback((userId: string) => {
+    setUserRows((current) =>
+      current.map((user) =>
+        user.id === userId ? { ...user, status: "Disabled" as const } : user,
+      ),
+    );
+  }, []);
+
+  const handleDelete = React.useCallback((userId: string) => {
+    setUserRows((current) => current.filter((user) => user.id !== userId));
+  }, []);
+
+  const userColumns = React.useMemo(
+    () =>
+      createUsersColumns({
+        onPlanChange: handlePlanChange,
+        onWalletFund: handleWalletFund,
+        onDisable: handleDisable,
+        onDelete: handleDelete,
+      }),
+    [handlePlanChange, handleWalletFund, handleDisable, handleDelete],
+  );
+
+  const table = useTable({
+    features: dataTableFeatures,
+    data: userRows,
+    columns: userColumns,
+    state: {
+      rowSelection,
+      sorting,
+      columnFilters,
+      columnVisibility,
+      columnOrder,
+      pagination,
+    },
+    getRowId: (row) => row.id,
+    autoResetPageIndex: false,
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onColumnOrderChange: setColumnOrder,
+    onPaginationChange: setPagination,
+  });
+
+  React.useEffect(() => {
+    if (!customizeOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (customizeRef.current && !customizeRef.current.contains(event.target as Node)) {
+        setCustomizeOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [customizeOpen]);
+
+  const reorderColumns = (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return;
+    setColumnOrder((current) => {
+      const next = [...current];
+      const sourceIndex = next.indexOf(sourceId);
+      const targetIndex = next.indexOf(targetId);
+      if (sourceIndex === -1 || targetIndex === -1) return current;
+      const [moved] = next.splice(sourceIndex, 1);
+      next.splice(targetIndex, 0, moved);
+      return next;
+    });
+  };
+
+  const searchQuery = (table.getColumn("search")?.getFilterValue() as string | undefined) ?? "";
+
   return (
-    <section className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">SaaS Owner</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Users</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage user plans, wallet balances, and account status.
-          </p>
+    <section data-content-padding="false" className="flex min-h-full flex-col bg-background">
+      <div className="flex items-start justify-between gap-4 border-b px-4 py-3">
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold tracking-tight">Users</h1>
+          <p className="text-muted-foreground text-sm">Manage platform users, plans, and wallet balances.</p>
         </div>
-        <Button>
-          <UserPlus />
-          Add user
-        </Button>
-      </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MiniStat label="Total users" value="11,640" icon={Users} />
-        <MiniStat label="Active users" value="9,420" icon={UserCheck} />
-        <MiniStat label="Wallet balance" value="$2.84M" icon={Wallet} />
-        <MiniStat label="Pending users" value="74" icon={UserPlus} />
-      </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <InputGroup className="h-8 w-64">
+            <InputGroupAddon align="inline-start">
+              <Search className="size-3.5" />
+            </InputGroupAddon>
+            <InputGroupInput
+              className="h-8"
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(event) => {
+                table.getColumn("search")?.setFilterValue(event.target.value || undefined);
+                table.setPageIndex(0);
+              }}
+            />
+            <InputGroupAddon align="inline-end">
+              <Kbd className="h-4 text-[10px]">⌘K</Kbd>
+            </InputGroupAddon>
+          </InputGroup>
 
-      <Card className="overflow-hidden shadow-none">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-sm">
-              <thead className="border-y bg-muted/30 text-xs text-muted-foreground">
-                <tr>
-                  {["User", "Joined", "Package", "Wallet Balance", "Status", "Action"].map((label) => (
-                    <th
-                      key={label}
-                      className={`px-5 py-3 text-left font-medium ${label === "Action" ? "text-right" : ""}`}
-                    >
-                      {label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((user) => (
-                  <tr key={user.id} className="border-b last:border-0">
-                    <td className="px-5 py-4">
-                      <div className="flex min-w-[250px] items-center gap-3">
-                        <Avatar className="size-10">
-                          <AvatarImage src={user.image} alt={user.name} />
-                          <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                          <p className="truncate font-medium">{user.name}</p>
-                          <p className="truncate text-xs text-muted-foreground">{user.id} · {user.email}</p>
+          <div className="relative" ref={customizeRef}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-expanded={customizeOpen}
+              aria-haspopup="menu"
+              onClick={() => setCustomizeOpen((open) => !open)}
+            >
+              <Cog /> Customize
+            </Button>
+            {customizeOpen ? (
+              <div
+                role="menu"
+                className="absolute right-0 top-[calc(100%+6px)] z-50 w-72 rounded-lg bg-popover p-2 text-popover-foreground shadow-lg ring-1 ring-foreground/10"
+              >
+                <div className="border-b px-2 pb-2">
+                  <p className="text-sm font-medium">Customize columns</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Show, hide, and drag columns to change their order.</p>
+                </div>
+                <div className="mt-2 max-h-80 overflow-y-auto">
+                  {table.getAllLeafColumns()
+                    .filter((column) => column.id !== "search")
+                    .map((column) => {
+                      const visible = column.getIsVisible();
+                      const canHide = column.getCanHide();
+                      const labelMap: Record<string, string> = {
+                        id: "User ID",
+                        name: "User",
+                        joinedDate: "Joined",
+                        package: "Package",
+                        balance: "Wallet Balance",
+                        status: "Status",
+                        actions: "Actions",
+                      };
+                      return (
+                        <div
+                          key={column.id}
+                          draggable={column.id !== "actions"}
+                          onDragStart={() => {
+                            if (column.id !== "actions") customizeRef.current?.setAttribute("data-dragging-column", column.id);
+                          }}
+                          onDragEnd={() => customizeRef.current?.removeAttribute("data-dragging-column")}
+                          onDragOver={(event) => {
+                            if (column.id !== "actions") event.preventDefault();
+                          }}
+                          onDrop={(event) => {
+                            event.preventDefault();
+                            const sourceId = customizeRef.current?.getAttribute("data-dragging-column");
+                            if (sourceId) reorderColumns(sourceId, column.id);
+                          }}
+                          className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/50"
+                        >
+                          <GripVertical
+                            className={
+                              column.id === "actions"
+                                ? "size-3.5 text-muted-foreground/35"
+                                : "size-3.5 cursor-grab text-muted-foreground"
+                            }
+                          />
+                          <button
+                            type="button"
+                            disabled={!canHide}
+                            role="menuitemcheckbox"
+                            aria-checked={visible}
+                            className="flex min-w-0 flex-1 items-center gap-2 text-left disabled:cursor-not-allowed disabled:opacity-60"
+                            onClick={() => {
+                              if (canHide) column.toggleVisibility(!visible);
+                            }}
+                          >
+                            <span
+                              className={
+                                visible
+                                  ? "flex size-4 shrink-0 items-center justify-center rounded-sm border border-primary bg-primary text-primary-foreground"
+                                  : "flex size-4 shrink-0 items-center justify-center rounded-sm border border-input bg-background"
+                              }
+                            >
+                              {visible ? <Check className="size-3" /> : null}
+                            </span>
+                            <span className="truncate">{labelMap[column.id] ?? column.id}</span>
+                          </button>
                         </div>
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-4 text-muted-foreground">{user.joined}</td>
-                    <td className="px-5 py-4">
-                      <Badge variant="outline" className="font-medium">{user.package}</Badge>
-                    </td>
-                    <td className="px-5 py-4 font-medium tabular-nums">{user.balance}</td>
-                    <td className="px-5 py-4">
-                      <StatusBadge status={user.status} />
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" size="sm" className="h-8">
-                          Change Plan
-                        </Button>
-                        <Button size="sm" className="h-8">
-                          <Wallet className="size-3.5" />
-                          Fund wallet
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${user.name}`}>
-                              <MoreHorizontal />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              Change Plan
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              Fund wallet
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                              {user.status === "Disabled" ? "Enable" : "Disable"}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive focus:text-destructive">
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      );
+                    })}
+                </div>
+                <div className="mt-2 border-t pt-2 text-[11px] text-muted-foreground">Actions stays visible and cannot be hidden.</div>
+              </div>
+            ) : null}
           </div>
-        </CardContent>
-      </Card>
+
+          <Button variant="outline" size="sm">
+            <Download /> Export
+          </Button>
+          <Button size="sm">
+            <Plus /> Add User
+          </Button>
+        </div>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <UsersTable table={table} />
+      </div>
     </section>
   );
-}
-
-function StatusBadge({ status }: { status: UserStatus }) {
-  const variant = status === "Active" ? "secondary" : status === "Pending" ? "outline" : "destructive";
-
-  return <Badge variant={variant}>{status}</Badge>;
-}
-
-function MiniStat({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: string;
-  icon: ComponentType<{ className?: string }>;
-}) {
-  return (
-    <Card className="shadow-none">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{label}</span>
-          <Icon className="size-4 text-muted-foreground" />
-        </div>
-        <p className="mt-4 text-2xl font-semibold tabular-nums">{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 }
