@@ -18,7 +18,6 @@ import {
   Zap,
 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
-import { Link } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -316,7 +315,7 @@ function SaasOwnerDashboard() {
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
             <SectionTitle icon={BarChart3} title="Go deeper" description="Detailed reporting is separated from the operational dashboard." />
-            <Link to="/dashboard/reports" className="text-xs font-medium hover:underline">Open Reports</Link>
+            <a href="/dashboard/reports" className="text-xs font-medium hover:underline">Open Reports</a>
           </div>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-3">
@@ -329,12 +328,12 @@ function SaasOwnerDashboard() {
   );
 }
 
-function DashboardLink({ title, detail, to }: { title: string; detail: string; to: "/dashboard/reports" }) {
+function DashboardLink({ title, detail, to }: { title: string; detail: string; to: string }) {
   return (
-    <Link to={to} className="rounded-lg border p-4 transition-colors hover:bg-muted/30">
+    <a href={to} className="rounded-lg border p-4 transition-colors hover:bg-muted/30">
       <p className="text-sm font-medium">{title}</p>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">{detail}</p>
-    </Link>
+    </a>
   );
 }
 
