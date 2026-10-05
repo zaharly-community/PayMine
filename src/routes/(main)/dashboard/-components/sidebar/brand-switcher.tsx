@@ -215,18 +215,22 @@ export function BrandSwitcher() {
                           </span>
                         )}
                       </div>
-                      {brand.url && (
-                        <a
-                          href={brand.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          View
-                        </a>
-                      )}
-                      {isActive && <Check className="size-4 text-foreground" />}
+                      <div className="flex shrink-0 items-center gap-1">
+                        {brand.url && (
+                          <a
+                            href={brand.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            title={`Open ${brand.name}`}
+                            aria-label={`Open ${brand.name}`}
+                            className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <ExternalLink className="size-3.5" />
+                          </a>
+                        )}
+                        {isActive && <Check className="size-4 text-foreground" />}
+                      </div>
                     </DropdownMenuItem>
                   );
                 })}
