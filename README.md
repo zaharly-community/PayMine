@@ -2,7 +2,7 @@
 
 **ipaycash** - Includes multiple dashboards, authentication layouts, customizable theme presets, and more.
 
-<img src="https://github.com/arhamkhnz/ipaycash/blob/main/media/dashboard.png?version=5" alt="Dashboard Screenshot">
+<img src="https://github.com/zaharly-community/PayMine/blob/main/media/dashboard.png?version=5" alt="Dashboard Screenshot">
 
 Most admin templates I found, free or paid, felt cluttered, outdated, or too rigid. I built this as a cleaner alternative with features often missing in others, such as theme toggling and layout controls, while keeping the design modern, minimal, and flexible.
 
@@ -88,7 +88,7 @@ You can run this project locally, or deploy it instantly with Vercel.
 
 ### Deploy with Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Farhamkhnz%2Fipaycash)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fzaharly-community%2FPayMine)
 
 _Deploy your own copy with one click._
 
@@ -96,7 +96,7 @@ _Deploy your own copy with one click._
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/arhamkhnz/ipaycash.git
+   git clone https://github.com/zaharly-community/PayMine.git
    ```
    
 2. **Navigate into the project**
