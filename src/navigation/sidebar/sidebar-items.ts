@@ -97,12 +97,6 @@ export const sidebarItems: NavGroup[] = [
         url: "/dashboard/reports" as AppPath,
         icon: BarChart3,
       },
-      {
-        id: "settings",
-        title: "Settings",
-        url: "/dashboard/settings",
-        icon: Settings2,
-      },
     ],
   },
   {
@@ -174,6 +168,24 @@ export const sidebarItems: NavGroup[] = [
         title: "Fees & Revenue",
         url: "/dashboard/transactions/fees-revenue",
         icon: CircleDollarSign,
+      },
+    ],
+  },
+  {
+    id: 4,
+    label: "Configs",
+    items: [
+      {
+        id: "settings",
+        title: "Settings",
+        url: "/dashboard/settings",
+        icon: Settings2,
+      },
+      {
+        id: "portal",
+        title: "Portal",
+        url: "/dashboard/portal",
+        icon: PanelsTopLeft,
       },
     ],
   },
