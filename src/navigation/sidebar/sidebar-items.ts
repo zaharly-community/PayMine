@@ -76,25 +76,25 @@ export const sidebarItems: NavGroup[] = [
       {
         id: "users",
         title: "Users",
-        url: "/dashboard/users",
+        url: "/dashboard/users" as AppPath,
         icon: Users,
       },
       {
         id: "packages",
         title: "Packages",
-        url: "/dashboard/packages",
+        url: "/dashboard/packages" as AppPath,
         icon: Layers3,
       },
       {
         id: "subscriptions",
         title: "Subscriptions",
-        url: "/dashboard/subscriptions",
+        url: "/dashboard/subscriptions" as AppPath,
         icon: CreditCard,
       },
       {
         id: "reports",
         title: "Reports",
-        url: "/dashboard/reports",
+        url: "/dashboard/reports" as AppPath,
         icon: BarChart3,
       },
       {
