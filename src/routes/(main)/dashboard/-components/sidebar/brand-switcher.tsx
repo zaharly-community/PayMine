@@ -1,6 +1,15 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-import { Check, ChevronDown, ExternalLink, Globe2, Plus } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ExternalLink,
+  Globe2,
+  ImagePlus,
+  Plus,
+  Upload,
+  X,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -31,20 +41,26 @@ import { useBrand } from "@/stores/brands/brand-provider";
 
 function BrandAvatar({
   initials,
+  logo,
   className,
 }: {
   readonly initials: string;
+  readonly logo?: string;
   readonly className?: string;
 }) {
   return (
     <span
       className={cn(
-        "flex size-8 shrink-0 items-center justify-center rounded-lg border bg-muted text-[11px] font-semibold",
+        "flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted text-[11px] font-semibold",
         className,
       )}
       aria-hidden="true"
     >
-      {initials}
+      {logo ? (
+        <img src={logo} alt="" className="size-full object-cover" />
+      ) : (
+        initials
+      )}
     </span>
   );
 }
@@ -60,11 +76,13 @@ function formatUrl(url: string) {
 export function BrandSwitcher() {
   const { isMobile } = useSidebar();
   const { brands, activeBrand, setActiveBrand, addBrand } = useBrand();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
+  const [logo, setLogo] = useState("");
 
   const canCreate = Boolean(name.trim() && url.trim());
 
@@ -72,6 +90,30 @@ export function BrandSwitcher() {
     setName("");
     setUrl("");
     setDescription("");
+    setLogo("");
+  };
+
+  const handleLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/") || file.size > 2 * 1024 * 1024) {
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setLogo(reader.result);
+      }
+    };
+
+    reader.readAsDataURL(file);
   };
 
   const handleCreateBrand = (event: React.FormEvent<HTMLFormElement>) => {
@@ -85,6 +127,7 @@ export function BrandSwitcher() {
       name: name.trim(),
       url: url.trim(),
       description: description.trim(),
+      logo,
     });
 
     resetForm();
@@ -106,9 +149,14 @@ export function BrandSwitcher() {
                 />
               }
             >
-              <BrandAvatar initials={activeBrand.initials} />
+              <BrandAvatar
+                initials={activeBrand.initials}
+                logo={activeBrand.logo}
+              />
               <div className="min-w-0 flex-1 text-left">
-                <span className="block truncate text-sm font-medium">{activeBrand.name}</span>
+                <span className="block truncate text-sm font-medium">
+                  {activeBrand.name}
+                </span>
                 <span className="block truncate text-[11px] text-muted-foreground">
                   {activeBrand.url ? formatUrl(activeBrand.url) : activeBrand.description}
                 </span>
@@ -123,12 +171,17 @@ export function BrandSwitcher() {
               sideOffset={6}
             >
               <div className="px-2.5 py-2">
-                <p className="text-xs font-medium text-muted-foreground">Switch brand</p>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Switch brand
+                </p>
               </div>
 
               <div className="space-y-0.5">
                 {brands.map((brand) => {
                   const isActive = brand.id === activeBrand.id;
+                  const secondaryText = brand.url
+                    ? formatUrl(brand.url)
+                    : brand.description;
 
                   return (
                     <DropdownMenuItem
@@ -137,11 +190,16 @@ export function BrandSwitcher() {
                       onClick={() => setActiveBrand(brand.id)}
                       aria-current={isActive ? "true" : undefined}
                     >
-                      <BrandAvatar initials={brand.initials} />
+                      <BrandAvatar
+                        initials={brand.initials}
+                        logo={brand.logo}
+                      />
                       <div className="min-w-0 flex-1">
-                        <span className="block truncate text-sm">{brand.name}</span>
-                        <span className="block truncate text-[11px] text-muted-foreground">
-                          {brand.url ? formatUrl(brand.url) : brand.description}
+                        <span className="block truncate text-sm">
+                          {brand.name}
+                        </span>
+                        <span className="inline-block max-w-full truncate rounded border border-border/60 px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                          {secondaryText}
                         </span>
                       </div>
                       {isActive && <Check className="size-4 text-foreground" />}
@@ -173,15 +231,77 @@ export function BrandSwitcher() {
           }
         }}
       >
-        <DialogContent className="max-w-md rounded-2xl">
+        <DialogContent className="max-w-lg rounded-2xl">
           <DialogHeader>
             <DialogTitle>Create a new brand</DialogTitle>
             <DialogDescription>
-              Add the basic details for the brand you want to manage.
+              Add your brand details. The logo is optional and can be changed later.
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleCreateBrand} className="space-y-5">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                className={cn(
+                  "group relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed bg-muted transition-colors hover:bg-muted/70",
+                  logo && "border-solid",
+                )}
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Upload brand logo"
+              >
+                {logo ? (
+                  <>
+                    <img
+                      src={logo}
+                      alt="Brand logo preview"
+                      className="size-full object-cover"
+                    />
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Upload className="size-4 text-white" />
+                    </span>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                    <ImagePlus className="size-5" />
+                    <span className="text-[10px]">Logo</span>
+                  </div>
+                )}
+              </button>
+
+              <div className="min-w-0">
+                <Label htmlFor="brand-logo" className="text-sm">
+                  Brand logo
+                </Label>
+                <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                  PNG, JPG, WEBP or SVG up to 2 MB.
+                </p>
+                <input
+                  ref={fileInputRef}
+                  id="brand-logo"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  className="sr-only"
+                  onChange={handleLogoChange}
+                />
+                {logo && (
+                  <button
+                    type="button"
+                    className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      setLogo("");
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                    }}
+                  >
+                    <X className="size-3" />
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="brand-name">Brand name</Label>
               <Input
@@ -228,14 +348,17 @@ export function BrandSwitcher() {
 
             <div className="space-y-2">
               <Label htmlFor="brand-description">
-                Description <span className="font-normal text-muted-foreground">(optional)</span>
+                Description{" "}
+                <span className="font-normal text-muted-foreground">(optional)</span>
               </Label>
-              <Input
+              <Textarea
                 id="brand-description"
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                placeholder="Payments platform"
-                maxLength={80}
+                placeholder="Describe what this brand is used for..."
+                maxLength={180}
+                rows={3}
+                className="min-h-20 resize-none"
               />
             </div>
 
