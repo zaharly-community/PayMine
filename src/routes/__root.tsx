@@ -31,6 +31,62 @@ export const Route = createRootRoute({
         name: "description",
         content: APP_CONFIG.meta.description,
       },
+      {
+        name: "application-name",
+        content: APP_CONFIG.name,
+      },
+      {
+        name: "apple-mobile-web-app-title",
+        content: APP_CONFIG.name,
+      },
+      {
+        name: "theme-color",
+        content: "#ffffff",
+      },
+      {
+        name: "robots",
+        content: "index, follow",
+      },
+      {
+        name: "googlebot",
+        content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      },
+      {
+        property: "og:type",
+        content: "website",
+      },
+      {
+        property: "og:site_name",
+        content: APP_CONFIG.name,
+      },
+      {
+        property: "og:title",
+        content: APP_CONFIG.meta.title,
+      },
+      {
+        property: "og:description",
+        content: APP_CONFIG.meta.description,
+      },
+      {
+        property: "og:image",
+        content: "/logo512.png",
+      },
+      {
+        name: "twitter:card",
+        content: "summary",
+      },
+      {
+        name: "twitter:title",
+        content: APP_CONFIG.meta.title,
+      },
+      {
+        name: "twitter:description",
+        content: APP_CONFIG.meta.description,
+      },
+      {
+        name: "twitter:image",
+        content: "/logo512.png",
+      },
     ],
     links: [
       {
@@ -78,7 +134,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       suppressHydrationWarning
     >
       <head>
-        {/* Applies theme and layout preferences on load to avoid flicker and unnecessary server rerenders. */}
         <ThemeBootScript />
         <HeadContent />
       </head>
