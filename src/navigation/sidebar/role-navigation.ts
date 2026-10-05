@@ -3,18 +3,11 @@ import type { UserRole } from "@/stores/auth/auth-provider";
 export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
   "SaaS Owner": {
     dashboard: true,
-    players: true,
-    distributors: true,
-    deposits: true,
-    withdrawls: true,
-    analytics: true,
-    disagreements: true,
-    transactions: true,
-    settlements: true,
-    reconciliation: true,
-    "fees-revenue": true,
+    users: true,
+    packages: true,
+    subscriptions: true,
+    reports: true,
     settings: true,
-    portal: true,
   },
   "Brand Admin": {
     dashboard: true,
@@ -29,7 +22,6 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     reconciliation: true,
     "fees-revenue": true,
     settings: true,
-    portal: true,
   },
   Supervisor: {
     dashboard: true,
@@ -40,45 +32,29 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     analytics: true,
     disagreements: true,
     transactions: true,
-    settlements: true,
-    reconciliation: false,
-    "fees-revenue": false,
-    settings: false,
-    portal: false,
   },
   Agent: {
     dashboard: true,
     players: true,
-    distributors: false,
     deposits: true,
     withdrawls: true,
-    analytics: false,
     disagreements: true,
     transactions: true,
-    settlements: false,
-    reconciliation: false,
-    "fees-revenue": false,
-    settings: false,
-    portal: false,
   },
   Assistant: {
     dashboard: true,
     players: true,
     distributors: true,
     deposits: true,
-    withdrawls: false,
-    analytics: false,
-    disagreements: false,
     transactions: true,
-    settlements: false,
-    reconciliation: false,
-    "fees-revenue": false,
-    settings: false,
-    portal: false,
   },
 };
 
 const routeKeys: Array<{ prefix: string; id: string }> = [
+  { prefix: "/dashboard/users", id: "users" },
+  { prefix: "/dashboard/packages", id: "packages" },
+  { prefix: "/dashboard/subscriptions", id: "subscriptions" },
+  { prefix: "/dashboard/reports", id: "reports" },
   { prefix: "/dashboard/players", id: "players" },
   { prefix: "/dashboard/distributors", id: "distributors" },
   { prefix: "/dashboard/deposits", id: "deposits" },
@@ -106,7 +82,7 @@ export function filterSidebarItemsForRole<T extends { id: string }>(
   return groups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => access[item.id] !== false),
+      items: group.items.filter((item) => access[item.id] === true),
     }))
     .filter((group) => group.items.length > 0);
 }
@@ -117,5 +93,5 @@ export function isRoleAllowedPath(role: UserRole, path: string) {
   }
 
   const match = routeKeys.find(({ prefix }) => path.startsWith(prefix));
-  return match ? roleNavigation[role][match.id] !== false : true;
+  return match ? roleNavigation[role][match.id] === true : true;
 }
