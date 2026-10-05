@@ -136,7 +136,7 @@ export function BrandSwitcher() {
 
   return (
     <>
-      <SidebarMenu className="px-0">
+      <SidebarMenu className="rounded-lg border border-sidebar-border/70 px-0">
         <SidebarMenuItem>
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -198,10 +198,28 @@ export function BrandSwitcher() {
                         <span className="block truncate text-sm">
                           {brand.name}
                         </span>
-                        <span className="inline-block max-w-full truncate rounded border border-border/60 px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                          {secondaryText}
-                        </span>
+                        <a
+                          href={brand.url || undefined}
+                          target={brand.url ? "_blank" : undefined}
+                          rel={brand.url ? "noreferrer" : undefined}
+                          title={brand.url || secondaryText}
+                          className="block max-w-full truncate text-[11px] text-muted-foreground hover:text-foreground hover:underline"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          {brand.url || secondaryText}
+                        </a>
                       </div>
+                      {brand.url && (
+                        <a
+                          href={brand.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          View
+                        </a>
+                      )}
                       {isActive && <Check className="size-4 text-foreground" />}
                     </DropdownMenuItem>
                   );
