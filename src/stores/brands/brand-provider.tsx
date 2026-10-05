@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import { APP_CONFIG } from "@/config/app-config";
 
@@ -37,57 +37,133 @@ export const DASHBOARD_BRANDS: readonly DashboardBrand[] = [
 ];
 
 const DEFAULT_BRAND = DASHBOARD_BRANDS[0] as DashboardBrand;
+const BRANDS_STORAGE_KEY = "paymine_brands";
+const ACTIVE_BRAND_STORAGE_KEY = "paymine_active_brand";
 
 type BrandContextValue = {
   brands: readonly DashboardBrand[];
   activeBrand: DashboardBrand;
   setActiveBrand: (brandId: string) => void;
+  addBrand: (input: { name: string; description?: string }) => DashboardBrand;
 };
 
-const BRAND_STORAGE_KEY = "paymine_active_brand";
 const BrandContext = createContext<BrandContextValue | null>(null);
 
+function createBrandId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `brand-${Date.now()}`;
+}
+
+function getInitials(name: string) {
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "BR"
+  );
+}
+
 export function BrandProvider({ children }: { children: React.ReactNode }) {
+  const [brands, setBrands] = useState<DashboardBrand[]>(() => [...DASHBOARD_BRANDS]);
   const [activeBrandId, setActiveBrandId] = useState(DEFAULT_BRAND.id);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     try {
-      const storedBrandId = window.localStorage.getItem(BRAND_STORAGE_KEY);
+      const storedBrands = window.localStorage.getItem(BRANDS_STORAGE_KEY);
+      const storedActiveBrandId = window.localStorage.getItem(ACTIVE_BRAND_STORAGE_KEY);
 
-      if (storedBrandId && DASHBOARD_BRANDS.some((brand) => brand.id === storedBrandId)) {
-        setActiveBrandId(storedBrandId);
+      if (storedBrands) {
+        const parsedBrands: unknown = JSON.parse(storedBrands);
+
+        if (
+          Array.isArray(parsedBrands) &&
+          parsedBrands.length > 0 &&
+          parsedBrands.every(
+            (brand) =>
+              typeof brand === "object" &&
+              brand !== null &&
+              typeof brand.id === "string" &&
+              typeof brand.name === "string" &&
+              typeof brand.initials === "string" &&
+              typeof brand.description === "string",
+          )
+        ) {
+          const restoredBrands = parsedBrands as DashboardBrand[];
+          setBrands(restoredBrands);
+
+          if (storedActiveBrandId && restoredBrands.some((brand) => brand.id === storedActiveBrandId)) {
+            setActiveBrandId(storedActiveBrandId);
+          }
+        }
+      } else if (storedActiveBrandId && DASHBOARD_BRANDS.some((brand) => brand.id === storedActiveBrandId)) {
+        setActiveBrandId(storedActiveBrandId);
       }
     } catch {
-      // Ignore storage access errors and keep the default brand.
+      // Ignore storage access errors and keep the defaults.
+    } finally {
+      setIsHydrated(true);
     }
   }, []);
 
   useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
     try {
-      window.localStorage.setItem(BRAND_STORAGE_KEY, activeBrandId);
+      window.localStorage.setItem(BRANDS_STORAGE_KEY, JSON.stringify(brands));
+      window.localStorage.setItem(ACTIVE_BRAND_STORAGE_KEY, activeBrandId);
     } catch {
       // Ignore storage access errors; switching still works in memory.
     }
-  }, [activeBrandId]);
+  }, [activeBrandId, brands, isHydrated]);
 
-  const activeBrand = useMemo(
-    () => DASHBOARD_BRANDS.find((brand) => brand.id === activeBrandId) ?? DEFAULT_BRAND,
-    [activeBrandId],
+  const setActiveBrand = useCallback(
+    (brandId: string) => {
+      if (brands.some((brand) => brand.id === brandId)) {
+        setActiveBrandId(brandId);
+      }
+    },
+    [brands],
   );
 
-  const setActiveBrand = (brandId: string) => {
-    if (DASHBOARD_BRANDS.some((brand) => brand.id === brandId)) {
-      setActiveBrandId(brandId);
-    }
-  };
+  const addBrand = useCallback((input: { name: string; description?: string }) => {
+    const name = input.name.trim();
+    const description = input.description?.trim() || "Custom brand";
+    const brand: DashboardBrand = {
+      id: createBrandId(),
+      name,
+      initials: getInitials(name),
+      description,
+    };
+
+    setBrands((current) => [...current, brand]);
+    setActiveBrandId(brand.id);
+
+    return brand;
+  }, []);
+
+  const activeBrand = useMemo(
+    () => brands.find((brand) => brand.id === activeBrandId) ?? brands[0] ?? DEFAULT_BRAND,
+    [activeBrandId, brands],
+  );
 
   const value = useMemo<BrandContextValue>(
     () => ({
-      brands: DASHBOARD_BRANDS,
+      brands,
       activeBrand,
       setActiveBrand,
+      addBrand,
     }),
-    [activeBrand],
+    [activeBrand, addBrand, brands, setActiveBrand],
   );
 
   return <BrandContext.Provider value={value}>{children}</BrandContext.Provider>;
