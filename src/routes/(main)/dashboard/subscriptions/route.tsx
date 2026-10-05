@@ -23,7 +23,7 @@ const config = {
   cancelled: { label: "Cancelled", color: "var(--muted-foreground)" },
 } satisfies ChartConfig;
 
-export const Route = createFileRoute("/(main)/dashboard/subscriptions" as any)({
+export const Route = createFileRoute("/(main)/dashboard/subscriptions")({
   component: Page,
 });
 

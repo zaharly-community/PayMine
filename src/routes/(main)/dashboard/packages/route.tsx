@@ -11,7 +11,7 @@ const plans = [
   { name: "Scale", price: "$199", users: "Unlimited users", subscriptions: "524 active", revenue: "$104.3K MRR", features: ["Custom limits", "Dedicated controls", "Advanced reports"] },
 ] as const;
 
-export const Route = createFileRoute("/(main)/dashboard/packages" as any)({
+export const Route = createFileRoute("/(main)/dashboard/packages")({
   component: Page,
 });
 

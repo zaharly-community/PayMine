@@ -13,7 +13,7 @@ const rows = [
   ["Sami Ben Amor", "Agent", "Delta Commerce", "sami@delta.demo", "Suspended", "4 days ago"],
 ] as const;
 
-export const Route = createFileRoute("/(main)/dashboard/users" as any)({
+export const Route = createFileRoute("/(main)/dashboard/users")({
   component: Page,
 });
 
