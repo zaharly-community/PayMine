@@ -27,7 +27,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "cn";
 import type { UserRole } from "@/stores/auth/auth-provider";
 import { useBrand } from "@/stores/brands/brand-provider";
