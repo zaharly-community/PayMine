@@ -215,6 +215,7 @@ export function BrandSwitcher() {
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
+          </DropdownMenu>
         </SidebarMenuItem>
       </SidebarMenu>
 
