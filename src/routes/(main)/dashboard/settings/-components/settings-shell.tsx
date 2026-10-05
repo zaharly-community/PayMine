@@ -3,14 +3,14 @@ import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { SettingsKey } from "./settings-data";
 
 export function SettingsShell({
+  active,
   title,
   description,
   children,
 }: {
-  active?: SettingsKey;
+  active: string;
   title: string;
   description: string;
   children: ReactNode;
@@ -24,11 +24,19 @@ export function SettingsShell({
         >
           <ArrowLeft className="size-3.5" /> Settings
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          Manage platform preferences, access, controls and account configuration.
+        </p>
       </div>
 
-      <div className="min-w-0">{children}</div>
+      <div className="min-w-0">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+        </div>
+        {children}
+      </div>
 
       <p className="text-[11px] text-muted-foreground">
         Frontend-only template with default mock data. No setting is persisted to a backend.
