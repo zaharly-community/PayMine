@@ -1,25 +1,22 @@
 import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
   BarChart3,
+  CircleDollarSign,
   CreditCard,
+  Landmark,
   Layers3,
+  Network,
   PanelsTopLeft,
+  RefreshCcw,
+  Scale,
   Settings2,
   Users,
+  WalletCards,
   type LucideIcon,
 } from "lucide-react";
 
 import type { FileRoutesByTo } from "@/routeTree.gen";
-
-import {
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  CircleDollarSign,
-  Landmark,
-  Network,
-  RefreshCcw,
-  Scale,
-  WalletCards,
-} from "lucide-react";
 
 export type NavBadge = "new" | "soon";
 export type AppPath = keyof FileRoutesByTo;
