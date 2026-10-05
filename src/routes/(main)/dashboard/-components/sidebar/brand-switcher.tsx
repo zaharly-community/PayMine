@@ -133,9 +133,7 @@ export function BrandSwitcher() {
                 )}
               </div>
               <ChevronDown className="ml-1 size-4 shrink-0 text-muted-foreground transition-transform group-data-open/menu-button:rotate-180" />
-            </SidebarMenuButton>
-          }
-        >
+            </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-80 rounded-2xl border-border/70 bg-popover/95 p-1.5 shadow-xl backdrop-blur"
             side={isMobile ? "bottom" : "right"}
