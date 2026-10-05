@@ -1,5 +1,7 @@
+import type { ComponentType } from "react";
+
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowDownRight, ArrowUpRight, CreditCard, RefreshCcw, Users } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, CreditCard, Users } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +23,7 @@ const config = {
   cancelled: { label: "Cancelled", color: "var(--muted-foreground)" },
 } satisfies ChartConfig;
 
-export const Route = createFileRoute("/(main)/dashboard/subscriptions")({
+export const Route = createFileRoute("/(main)/dashboard/subscriptions" as any)({
   component: Page,
 });
 
@@ -85,6 +87,6 @@ function Page() {
   );
 }
 
-function Stat({ label, value, note, icon: Icon }: { label: string; value: string; note: string; icon: React.ComponentType<{ className?: string }> }) {
+function Stat({ label, value, note, icon: Icon }: { label: string; value: string; note: string; icon: ComponentType<{ className?: string }> }) {
   return <Card className="shadow-none"><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm text-muted-foreground">{label}</p><Icon className="size-4 text-muted-foreground" /></div><p className="mt-4 text-2xl font-semibold tabular-nums">{value}</p><p className="mt-1 text-xs text-muted-foreground">{note}</p></CardContent></Card>;
 }
