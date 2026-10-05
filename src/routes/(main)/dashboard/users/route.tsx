@@ -10,6 +10,7 @@ import {
 import { Check, Cog, Download, GripVertical, Plus, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { createFileRoute } from "@tanstack/react-router";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Kbd } from "@/components/ui/kbd";
 import { dataTableFeatures } from "@/lib/data-table-features";
@@ -22,7 +23,6 @@ export const Route = createFileRoute("/(main)/dashboard/users")({
   component: Page,
 });
 
-import { createFileRoute } from "@tanstack/react-router";
 
 function Page() {
   const [userRows, setUserRows] = React.useState(users);
