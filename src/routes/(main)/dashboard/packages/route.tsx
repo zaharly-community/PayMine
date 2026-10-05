@@ -314,69 +314,118 @@ function CreatePackageModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="flex max-h-[92vh] w-[min(96vw,1180px)] max-w-6xl flex-col gap-0 overflow-hidden p-0">
-        <DialogHeader className="border-b px-6 py-5">
-          <DialogTitle className="text-lg">Create new package</DialogTitle>
-          <DialogDescription>Configure pricing, transaction limits, transfer fees, payment method access, and package features.</DialogDescription>
+      <DialogContent className="flex max-h-[90vh] w-[min(94vw,980px)] max-w-[980px] flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="border-b px-7 py-5">
+          <div className="pr-8">
+            <DialogTitle className="text-lg">Create new package</DialogTitle>
+            <DialogDescription className="mt-1 max-w-2xl">
+              Build the commercial plan, usage limits, wallet fees, payment access, and available features.
+            </DialogDescription>
+          </div>
         </DialogHeader>
 
-        <div className="min-h-0 overflow-y-auto px-6 py-5">
-          <div className="grid gap-8 lg:grid-cols-2 lg:gap-x-10">
-            <section className="space-y-4">
-              <SectionHeading title="General" description="Set the package identity and user capacity." />
-              <div className="grid gap-4 sm:grid-cols-2">
+        <div className="min-h-0 overflow-y-auto bg-muted/15 px-7 py-6">
+          <div className="space-y-5">
+            <FormSection
+              title="Basic information"
+              description="Give the package a clear name and define how many users it supports."
+            >
+              <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
                 <Field label="Package name">
-                  <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Enterprise" />
+                  <Input
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    placeholder="e.g. Enterprise"
+                    className="h-9"
+                  />
                 </Field>
                 <Field label="User limit">
-                  <Input type="number" min="0" step="1" value={usersLimit} onChange={(event) => setUsersLimit(event.target.value)} placeholder="Unlimited" />
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={usersLimit}
+                    onChange={(event) => setUsersLimit(event.target.value)}
+                    placeholder="Unlimited"
+                    className="h-9"
+                  />
                 </Field>
               </div>
-            </section>
+            </FormSection>
 
-            <section className="space-y-4">
-              <SectionHeading title="Pricing" description="Choose how the package is billed. One-time plans never expire." />
-              <div className="grid grid-cols-3 gap-2">
+            <FormSection
+              title="Pricing & billing"
+              description="Choose one billing model. Monthly plans can also offer a discounted annual option."
+            >
+              <div className="grid gap-2 md:grid-cols-3">
                 {([
-                  ["monthly", "Monthly"],
-                  ["yearly", "Yearly"],
-                  ["one-time", "One-time"],
-                ] as const).map(([value, label]) => (
+                  ["monthly", "Monthly", "Recurring every month"],
+                  ["yearly", "Yearly", "Recurring every year"],
+                  ["one-time", "One-time", "Pay once · valid forever"],
+                ] as const).map(([value, label, description]) => (
                   <button
                     key={value}
                     type="button"
                     onClick={() => setPriceType(value)}
                     className={cn(
-                      "rounded-lg border px-3 py-3 text-left transition-colors",
-                      priceType === value ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "hover:bg-muted/50",
+                      "rounded-lg border bg-background px-4 py-3 text-left transition-all",
+                      "hover:border-foreground/20 hover:bg-muted/30",
+                      priceType === value
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        : "border-border/80",
                     )}
                     aria-pressed={priceType === value}
                   >
-                    <span className="block text-sm font-medium">{label}</span>
-                    <span className="mt-0.5 block text-[11px] text-muted-foreground">
-                      {value === "monthly" ? "Recurring every month" : value === "yearly" ? "Recurring every year" : "Pay once, valid forever"}
-                    </span>
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-sm font-semibold">{label}</span>
+                      {priceType === value ? <span className="mt-0.5 size-2 rounded-full bg-primary" /> : null}
+                    </div>
+                    <span className="mt-1 block text-xs text-muted-foreground">{description}</span>
                   </button>
                 ))}
               </div>
 
               {priceType === "monthly" ? (
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="mt-4 grid gap-4 md:grid-cols-[1fr_1fr]">
                   <Field label="Monthly price">
-                    <Input type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="79" />
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={price}
+                      onChange={(event) => setPrice(event.target.value)}
+                      placeholder="79"
+                      className="h-9"
+                    />
                   </Field>
-                  <Field label="Annual discount (%)">
-                    <Input type="number" min="0" max="100" step="0.5" value={annualDiscountPercent} onChange={(event) => setAnnualDiscountPercent(event.target.value)} placeholder="15" />
+                  <Field label="Annual discount">
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={annualDiscountPercent}
+                        onChange={(event) => setAnnualDiscountPercent(event.target.value)}
+                        placeholder="15"
+                        className="h-9 pr-9"
+                      />
+                      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-muted-foreground">%</span>
+                    </div>
                   </Field>
-                  <div className="sm:col-span-2 rounded-lg border bg-muted/20 px-4 py-3">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-medium">Annual billing preview</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">Same plan, billed once per year with the discount above.</p>
-                      </div>
-                      <p className="text-right text-lg font-semibold tabular-nums">
+                  <div className="md:col-span-2 flex flex-col gap-2 rounded-lg border border-dashed bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Annual billing</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Same plan billed yearly with the discount above.
+                      </p>
+                    </div>
+                    <div className="text-left sm:text-right">
+                      <p className="text-lg font-semibold tabular-nums">
                         {annualPricePreview > 0 ? "$" + annualPricePreview.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}
-                        <span className="text-xs font-normal text-muted-foreground"> / year</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        / year {annualDiscountPercent !== "0" && Number(annualDiscountPercent) > 0 ? "· " + annualDiscountPercent + "% off" : ""}
                       </p>
                     </div>
                   </div>
@@ -384,97 +433,160 @@ function CreatePackageModal({
               ) : null}
 
               {priceType === "yearly" ? (
-                <Field label="Yearly price">
-                  <Input type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="790" />
-                </Field>
+                <div className="mt-4">
+                  <Field label="Yearly price">
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={price}
+                      onChange={(event) => setPrice(event.target.value)}
+                      placeholder="790"
+                      className="h-9 max-w-xs"
+                    />
+                  </Field>
+                </div>
               ) : null}
 
               {priceType === "one-time" ? (
-                <div className="grid gap-4">
+                <div className="mt-4 grid gap-3">
                   <Field label="One-time price">
-                    <Input type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="499" />
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={price}
+                      onChange={(event) => setPrice(event.target.value)}
+                      placeholder="499"
+                      className="h-9 max-w-xs"
+                    />
                   </Field>
                   <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
                     <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Permanent access</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">The customer pays once. The package has no renewal date and remains valid indefinitely.</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      The customer pays once. There is no renewal date, and access remains valid indefinitely.
+                    </p>
                   </div>
                 </div>
               ) : null}
-            </section>
+            </FormSection>
 
-            <section className="space-y-4">
-              <SectionHeading title="Transaction limits" description="Limit usage by transaction count or monthly turnover." />
-              <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
-                <Field label="Limit type">
-                  <Select value={transactionLimitType} onValueChange={(value) => setTransactionLimitType(value as PackagePlan["transactionLimitType"])}>
-                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="number">Number of transactions</SelectItem>
-                      <SelectItem value="turnover">Monthly turnover</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field label={transactionLimitType === "number" ? "Maximum transactions / month" : "Maximum turnover / month"}>
+            <div className="grid gap-5 lg:grid-cols-2">
+              <FormSection
+                title="Transaction limits"
+                description="Choose whether the monthly cap is based on transaction count or turnover."
+              >
+                <div className="grid gap-4">
+                  <Field label="Limit type">
+                    <Select
+                      value={transactionLimitType}
+                      onValueChange={(value) =>
+                        setTransactionLimitType(value as PackagePlan["transactionLimitType"])
+                      }
+                    >
+                      <SelectTrigger className="h-9 w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="number">Number of transactions</SelectItem>
+                        <SelectItem value="turnover">Monthly turnover</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field
+                    label={
+                      transactionLimitType === "number"
+                        ? "Maximum transactions / month"
+                        : "Maximum turnover / month"
+                    }
+                  >
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={transactionLimit}
+                      onChange={(event) => setTransactionLimit(event.target.value)}
+                      placeholder={transactionLimitType === "number" ? "10,000" : "500,000"}
+                      className="h-9"
+                    />
+                  </Field>
+                </div>
+              </FormSection>
+
+              <FormSection
+                title="Transfer fees"
+                description="Set the percentage charged on deposits and withdrawals."
+              >
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Deposit">
+                    <PercentInput value={depositFeePercent} onChange={setDepositFeePercent} placeholder="0.35" />
+                  </Field>
+                  <Field label="Withdrawal">
+                    <PercentInput value={withdrawalFeePercent} onChange={setWithdrawalFeePercent} placeholder="0.75" />
+                  </Field>
+                </div>
+              </FormSection>
+            </div>
+
+            <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+              <FormSection
+                title="Payment methods"
+                description="Limit the number of provider accounts allowed per payment method."
+              >
+                <Field label="Accounts per method">
                   <Input
                     type="number"
-                    min="0"
+                    min="1"
                     step="1"
-                    value={transactionLimit}
-                    onChange={(event) => setTransactionLimit(event.target.value)}
-                    placeholder={transactionLimitType === "number" ? "10,000" : "500,000"}
+                    value={paymentMethodAccounts}
+                    onChange={(event) => setPaymentMethodAccounts(event.target.value)}
+                    placeholder="5"
+                    className="h-9 max-w-xs"
                   />
                 </Field>
-              </div>
-            </section>
+              </FormSection>
 
-            <section className="space-y-4">
-              <SectionHeading title="Monthly transfer fees" description="Set the percentage charged on deposits and withdrawals each month." />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Deposit fee (%)">
-                  <Input type="number" min="0" max="100" step="0.01" value={depositFeePercent} onChange={(event) => setDepositFeePercent(event.target.value)} placeholder="0.35" />
-                </Field>
-                <Field label="Withdrawal fee (%)">
-                  <Input type="number" min="0" max="100" step="0.01" value={withdrawalFeePercent} onChange={(event) => setWithdrawalFeePercent(event.target.value)} placeholder="0.75" />
-                </Field>
-              </div>
-            </section>
-
-            <section className="space-y-4">
-              <SectionHeading title="Payment methods" description="Control how many provider accounts a brand may configure per payment method." />
-              <Field label="Allowed accounts per payment method">
-                <Input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={paymentMethodAccounts}
-                  onChange={(event) => setPaymentMethodAccounts(event.target.value)}
-                  className="max-w-xs"
-                  placeholder="5"
-                />
-              </Field>
-            </section>
-
-            <section className="space-y-4">
-              <SectionHeading title="Access & features" description="Enable optional platform capabilities for this package." />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <ToggleRow label="Custom domain" description="Allow the brand to use its own domain." checked={customDomain} onCheckedChange={setCustomDomain} />
-                <ToggleRow label="Integrations" description="Allow access to external integrations and connectors." checked={integrations} onCheckedChange={setIntegrations} />
-                {featureCatalog.map((feature) => (
+              <FormSection
+                title="Access & features"
+                description="Control optional platform capabilities included with the package."
+              >
+                <div className="grid gap-2 sm:grid-cols-2">
                   <ToggleRow
-                    key={feature.id}
-                    label={feature.label}
-                    description="Enable this capability for subscribers on the package."
-                    checked={Boolean(features[feature.id])}
-                    onCheckedChange={(checked) => setFeatures((current) => ({ ...current, [feature.id]: checked }))}
+                    label="Custom domain"
+                    description="Use a custom brand domain."
+                    checked={customDomain}
+                    onCheckedChange={setCustomDomain}
                   />
-                ))}
-              </div>
-            </section>
+                  <ToggleRow
+                    label="Integrations"
+                    description="Access external integrations."
+                    checked={integrations}
+                    onCheckedChange={setIntegrations}
+                  />
+                  {featureCatalog.map((feature) => (
+                    <ToggleRow
+                      key={feature.id}
+                      label={feature.label}
+                      description="Available to package subscribers."
+                      checked={Boolean(features[feature.id])}
+                      onCheckedChange={(checked) =>
+                        setFeatures((current) => ({ ...current, [feature.id]: checked }))
+                      }
+                    />
+                  ))}
+                </div>
+              </FormSection>
+            </div>
           </div>
         </div>
 
-        <DialogFooter className="px-6 py-4">
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
+        <DialogFooter className="border-t bg-background px-7 py-4">
+          <div className="mr-auto hidden text-xs text-muted-foreground sm:block">
+            Changes apply to new subscriptions for this package.
+          </div>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+            Cancel
+          </Button>
           <Button disabled={!canCreate} onClick={handleCreate}>
             <Plus />
             Create package
@@ -482,6 +594,52 @@ function CreatePackageModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function FormSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-xl border bg-background p-5 shadow-none">
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function PercentInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div className="relative">
+      <Input
+        type="number"
+        min="0"
+        max="100"
+        step="0.01"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="h-9 pr-9"
+      />
+      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-muted-foreground">%</span>
+    </div>
   );
 }
 
