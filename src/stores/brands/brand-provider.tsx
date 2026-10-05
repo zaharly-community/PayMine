@@ -8,6 +8,7 @@ export type DashboardBrand = {
   initials: string;
   description: string;
   url: string;
+  logo?: string;
 };
 
 export const DASHBOARD_BRANDS: readonly DashboardBrand[] = [
@@ -48,7 +49,12 @@ type BrandContextValue = {
   brands: readonly DashboardBrand[];
   activeBrand: DashboardBrand;
   setActiveBrand: (brandId: string) => void;
-  addBrand: (input: { name: string; description?: string; url: string }) => DashboardBrand;
+  addBrand: (input: {
+    name: string;
+    description?: string;
+    url: string;
+    logo?: string;
+  }) => DashboardBrand;
 };
 
 const BrandContext = createContext<BrandContextValue | null>(null);
@@ -94,7 +100,8 @@ function isStoredBrand(value: unknown): value is DashboardBrand {
     typeof brand.name === "string" &&
     typeof brand.initials === "string" &&
     typeof brand.description === "string" &&
-    (typeof brand.url === "string" || brand.url === undefined)
+    (typeof brand.url === "string" || brand.url === undefined) &&
+    (typeof brand.logo === "string" || brand.logo === undefined)
   );
 }
 
@@ -115,6 +122,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
           const restoredBrands = parsedBrands.map((brand) => ({
             ...brand,
             url: brand.url ?? "",
+            logo: brand.logo ?? undefined,
           }));
 
           setBrands(restoredBrands);
@@ -155,7 +163,12 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     [brands],
   );
 
-  const addBrand = useCallback((input: { name: string; description?: string; url: string }) => {
+  const addBrand = useCallback((input: {
+    name: string;
+    description?: string;
+    url: string;
+    logo?: string;
+  }) => {
     const name = input.name.trim();
     const url = input.url.trim();
     const description = input.description?.trim() || getBrandDomain(url) || "Custom brand";
@@ -165,6 +178,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
       initials: getInitials(name),
       description,
       url,
+      logo: input.logo || undefined,
     };
 
     setBrands((current) => [...current, brand]);
