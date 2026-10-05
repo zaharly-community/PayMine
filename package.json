@@ -9,7 +9,7 @@
     "predev": "tsr generate",
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
-    "build": "vite build",
+    "build": "tsr generate && vite build",
     "preview": "vite preview",
     "format": "biome format",
     "lint": "biome lint",

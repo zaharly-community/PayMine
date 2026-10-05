@@ -32,15 +32,6 @@ import { cn } from "cn";
 import type { UserRole } from "@/stores/auth/auth-provider";
 import { useBrand } from "@/stores/brands/brand-provider";
 
-const ownerVolume = [
-  { label: "Apr", volume: 410000 },
-  { label: "May", volume: 470000 },
-  { label: "Jun", volume: 530000 },
-  { label: "Jul", volume: 590000 },
-  { label: "Aug", volume: 620000 },
-  { label: "Sep", volume: 710000 },
-];
-
 const brandVolume = [
   { label: "Apr", deposits: 195000, withdrawals: 74000 },
   { label: "May", deposits: 224000, withdrawals: 82000 },
@@ -200,51 +191,82 @@ function HealthRow({
 }
 
 function SaasOwnerDashboard() {
-  const pieData = [
-    { name: "Healthy", value: 82 },
-    { name: "Attention", value: 14 },
-    { name: "Critical", value: 4 },
+  const platformTrend = [
+    { month: "Apr", volume: 410000, commission: 18200 },
+    { month: "May", volume: 470000, commission: 19800 },
+    { month: "Jun", volume: 530000, commission: 22100 },
+    { month: "Jul", volume: 590000, commission: 24700 },
+    { month: "Aug", volume: 620000, commission: 26800 },
+    { month: "Sep", volume: 710000, commission: 29400 },
   ];
 
   return (
     <DashboardShell
       eyebrow="SaaS Owner"
-      title="Platform overview"
-      description="See how the entire ipaycash platform is performing across brands, payment volume, revenue, and operational risk."
+      title="Platform dashboard"
+      description="A high-level view of platform growth, users, subscriptions, commission revenue, and overall business health."
     >
       <StatGrid
         items={[
-          { label: "Active brands", value: "18", note: "+2 this month", icon: Users },
-          { label: "Payment volume", value: "$3.84M", note: "+11.6% vs last month", icon: WalletCards },
-          { label: "Net revenue", value: "$184K", note: "4.8% blended take rate", icon: DollarSign },
-          { label: "Settlement exposure", value: "$412K", note: "3 items need attention", icon: AlertTriangle },
+          { label: "Total users", value: "11,640", note: "+7.0% this month", icon: Users },
+          { label: "Active users", value: "9,420", note: "81.0% of total users", icon: UserCheck },
+          { label: "Platform commission", value: "$184.7K", note: "+12.8% vs prior period", icon: DollarSign },
+          { label: "MRR", value: "$22.6K", note: "+8.4% month over month", icon: CreditCard },
         ]}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className="shadow-none">
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground">Active brands</p>
+            <p className="mt-3 text-xl font-semibold tabular-nums">18</p>
+            <p className="mt-1 text-xs text-muted-foreground">2 onboarded this month</p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-none">
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground">Payment volume</p>
+            <p className="mt-3 text-xl font-semibold tabular-nums">$3.84M</p>
+            <p className="mt-1 text-xs text-muted-foreground">Across all brands · monthly</p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-none">
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground">Active subscriptions</p>
+            <p className="mt-3 text-xl font-semibold tabular-nums">2,346</p>
+            <p className="mt-1 text-xs text-muted-foreground">96.8% gross retention</p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-none">
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground">Net churn</p>
+            <p className="mt-3 text-xl font-semibold tabular-nums">1.8%</p>
+            <p className="mt-1 text-xs text-muted-foreground">Down 0.6 pts</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.65fr)]">
         <Card className="shadow-none">
           <CardHeader>
             <SectionTitle
               icon={BarChart3}
-              title="Platform payment volume"
-              description="Six-month trend across all brands"
+              title="Platform economics"
+              description="Payment volume and commission generated over six months"
             />
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[260px] w-full">
-              <BarChart data={ownerVolume} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
+            <ChartContainer config={{
+              volume: { label: "Payment volume", color: "var(--foreground)" },
+              commission: { label: "Commission", color: "var(--muted-foreground)" },
+            }} className="h-[270px] w-full">
+              <BarChart data={platformTrend} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
                 <CartesianGrid vertical={false} />
-                <XAxis dataKey="label" axisLine={false} tickLine={false} />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  width={46}
-                  tickFormatter={(value) => "$" + Math.round(Number(value) / 1000) + "k"}
-                />
-                <ChartTooltip
-                  content={<ChartTooltipContent formatter={(value) => "$" + Number(value).toLocaleString()} />}
-                />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} />
+                <YAxis axisLine={false} tickLine={false} width={48} tickFormatter={(value) => "$" + Math.round(Number(value) / 1000) + "k"} />
+                <ChartTooltip content={<ChartTooltipContent formatter={(value) => "$" + Number(value).toLocaleString()} />} />
                 <Bar dataKey="volume" fill="var(--color-volume)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="commission" fill="var(--color-commission)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ChartContainer>
           </CardContent>
@@ -252,57 +274,66 @@ function SaasOwnerDashboard() {
 
         <Card className="shadow-none">
           <CardHeader>
-            <SectionTitle
-              icon={ShieldCheck}
-              title="Platform health"
-              description="Current operational posture"
-            />
+            <SectionTitle icon={Activity} title="Platform snapshot" description="Current business position" />
           </CardHeader>
-          <CardContent>
-            <div className="mx-auto h-[170px] max-w-[220px]">
-              <ChartContainer config={chartConfig} className="h-full w-full">
-                <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={56} outerRadius={78}>
-                    {pieData.map((entry, index) => (
-                      <Cell key={entry.name} fill={index === 0 ? "var(--foreground)" : "var(--muted-foreground)"} opacity={1 - index * 0.22} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                </PieChart>
-              </ChartContainer>
-            </div>
-            <div className="space-y-1 text-center">
-              <p className="text-2xl font-semibold">82%</p>
-              <p className="text-xs text-muted-foreground">systems healthy</p>
-            </div>
-            <div className="mt-5 space-y-1">
-              <HealthRow name="Collections" detail="Deposit success 97.4%" value="Healthy" status="healthy" />
-              <HealthRow name="Payouts" detail="Withdrawal SLA 94.1%" value="Watch" status="attention" />
-              <HealthRow name="Reconciliation" detail="2 unmatched batches" value="Review" status="critical" />
-            </div>
+          <CardContent className="space-y-0">
+            <HealthRow name="User activation" detail="9,420 active of 11,640 total" value="81%" status="healthy" />
+            <HealthRow name="Subscription health" detail="2,346 active subscriptions" value="96.8%" status="healthy" />
+            <HealthRow name="Commission yield" detail="Blended platform take rate" value="4.8%" status="healthy" />
+            <HealthRow name="Risk exposure" detail="Settlement and operational exceptions" value="$412K" status="attention" />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="shadow-none">
+          <CardHeader>
+            <SectionTitle icon={Users} title="User overview" description="The signals that matter to platform growth" />
+          </CardHeader>
+          <CardContent className="space-y-0">
+            <HealthRow name="New users" detail="This month · 764 newly registered" value="+7.0%" status="healthy" />
+            <HealthRow name="Active users" detail="Logged in or transacted during the period" value="9,420" status="healthy" />
+            <HealthRow name="Pending activation" detail="Invited or onboarding users" value="1,486" status="attention" />
+            <HealthRow name="Suspended / inactive" detail="Accounts outside normal activity" value="734" status="attention" />
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-none">
+          <CardHeader>
+            <SectionTitle icon={CreditCard} title="Subscription overview" description="Recurring revenue and package movement" />
+          </CardHeader>
+          <CardContent className="space-y-0">
+            <HealthRow name="New subscriptions" detail="Created during the current month" value="262" status="healthy" />
+            <HealthRow name="Upgrades" detail="Accounts moving into higher plans" value="84" status="healthy" />
+            <HealthRow name="Cancellations" detail="Subscriptions cancelled this month" value="55" status="attention" />
+            <HealthRow name="MRR expansion" detail="Net monthly recurring revenue movement" value="+8.4%" status="healthy" />
           </CardContent>
         </Card>
       </div>
 
       <Card className="shadow-none">
         <CardHeader>
-          <SectionTitle
-            icon={Activity}
-            title="Brand performance"
-            description="Brands with the highest operational impact"
-            action="View brands"
-          />
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-x-8 gap-y-0 md:grid-cols-2">
-            <HealthRow name="ipaycash" detail="642K volume · 14K players" value="$642K" status="healthy" />
-            <HealthRow name="Brand Two" detail="488K volume · 9K players" value="$488K" status="healthy" />
-            <HealthRow name="Brand Three" detail="310K volume · 7K players" value="$310K" status="attention" />
-            <HealthRow name="New Partner" detail="142K volume · launch week" value="$142K" status="critical" />
+          <div className="flex items-start justify-between gap-4">
+            <SectionTitle icon={BarChart3} title="Go deeper" description="Detailed reporting is separated from the operational dashboard." />
+            <a href="/dashboard/reports" className="text-xs font-medium hover:underline">Open Reports</a>
           </div>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-3">
+          <DashboardLink title="User analytics" detail="Growth, activation, retention, and user quality." to="/dashboard/reports" />
+          <DashboardLink title="Commission analytics" detail="Commission by period, brand, package, and volume." to="/dashboard/reports" />
+          <DashboardLink title="Subscription analytics" detail="MRR, ARR, churn, upgrades, and package mix." to="/dashboard/reports" />
         </CardContent>
       </Card>
     </DashboardShell>
+  );
+}
+
+function DashboardLink({ title, detail, to }: { title: string; detail: string; to: string }) {
+  return (
+    <a href={to} className="rounded-lg border p-4 transition-colors hover:bg-muted/30">
+      <p className="text-sm font-medium">{title}</p>
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">{detail}</p>
+    </a>
   );
 }
 

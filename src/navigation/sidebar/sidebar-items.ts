@@ -1,10 +1,11 @@
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
-  ChartBar,
+  BarChart3,
   CircleDollarSign,
-  FileCheck2,
+  CreditCard,
   Landmark,
+  Layers3,
   Network,
   PanelsTopLeft,
   RefreshCcw,
@@ -70,6 +71,36 @@ export const sidebarItems: NavGroup[] = [
   },
   {
     id: 1,
+    label: "Platform",
+    items: [
+      {
+        id: "users",
+        title: "Users",
+        url: "/dashboard/users" as AppPath,
+        icon: Users,
+      },
+      {
+        id: "packages",
+        title: "Packages",
+        url: "/dashboard/packages" as AppPath,
+        icon: Layers3,
+      },
+      {
+        id: "subscriptions",
+        title: "Subscriptions",
+        url: "/dashboard/subscriptions" as AppPath,
+        icon: CreditCard,
+      },
+      {
+        id: "reports",
+        title: "Reports",
+        url: "/dashboard/reports" as AppPath,
+        icon: BarChart3,
+      },
+    ],
+  },
+  {
+    id: 2,
     label: "Operations",
     items: [
       {
@@ -100,7 +131,7 @@ export const sidebarItems: NavGroup[] = [
         id: "analytics",
         title: "Analytics",
         url: "/dashboard/analytics",
-        icon: ChartBar,
+        icon: BarChart3,
       },
       {
         id: "disagreements",
@@ -111,7 +142,7 @@ export const sidebarItems: NavGroup[] = [
     ],
   },
   {
-    id: 2,
+    id: 3,
     label: "Finance",
     items: [
       {
@@ -141,7 +172,7 @@ export const sidebarItems: NavGroup[] = [
     ],
   },
   {
-    id: 3,
+    id: 4,
     label: "Configs",
     items: [
       {
@@ -159,3 +190,4 @@ export const sidebarItems: NavGroup[] = [
     ],
   },
 ];
+
