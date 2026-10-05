@@ -72,8 +72,16 @@ export const Route = createRootRoute({
         content: "/logo512.png",
       },
       {
+        property: "og:image:alt",
+        content: "ipaycash logo",
+      },
+      {
+        property: "og:locale",
+        content: "en_US",
+      },
+      {
         name: "twitter:card",
-        content: "summary",
+        content: "summary_large_image",
       },
       {
         name: "twitter:title",
@@ -86,6 +94,10 @@ export const Route = createRootRoute({
       {
         name: "twitter:image",
         content: "/logo512.png",
+      },
+      {
+        name: "twitter:image:alt",
+        content: "ipaycash logo",
       },
     ],
     links: [
