@@ -73,6 +73,7 @@ function getInitials(name: string) {
 export function BrandProvider({ children }: { children: React.ReactNode }) {
   const [brands, setBrands] = useState<DashboardBrand[]>(() => [...DASHBOARD_BRANDS]);
   const [activeBrandId, setActiveBrandId] = useState(DEFAULT_BRAND.id);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     try {
@@ -84,6 +85,7 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 
         if (
           Array.isArray(parsedBrands) &&
+          parsedBrands.length > 0 &&
           parsedBrands.every(
             (brand) =>
               typeof brand === "object" &&
@@ -94,9 +96,10 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
               typeof brand.description === "string",
           )
         ) {
-          setBrands(parsedBrands as DashboardBrand[]);
+          const restoredBrands = parsedBrands as DashboardBrand[];
+          setBrands(restoredBrands);
 
-          if (storedActiveBrandId && parsedBrands.some((brand) => brand.id === storedActiveBrandId)) {
+          if (storedActiveBrandId && restoredBrands.some((brand) => brand.id === storedActiveBrandId)) {
             setActiveBrandId(storedActiveBrandId);
           }
         }
@@ -105,17 +108,23 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
       }
     } catch {
       // Ignore storage access errors and keep the defaults.
+    } finally {
+      setIsHydrated(true);
     }
   }, []);
 
   useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
     try {
       window.localStorage.setItem(BRANDS_STORAGE_KEY, JSON.stringify(brands));
       window.localStorage.setItem(ACTIVE_BRAND_STORAGE_KEY, activeBrandId);
     } catch {
       // Ignore storage access errors; switching still works in memory.
     }
-  }, [activeBrandId, brands]);
+  }, [activeBrandId, brands, isHydrated]);
 
   const setActiveBrand = useCallback(
     (brandId: string) => {
