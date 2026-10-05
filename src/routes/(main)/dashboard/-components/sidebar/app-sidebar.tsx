@@ -49,11 +49,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={visibleItems} />
+        <NavMain items={visibleItems} showQuickCreate={user?.role !== "SaaS Owner"} />
       </SidebarContent>
       <SidebarFooter className="gap-2">
         <SupportCard />
-        <BrandSwitcher />
+        {user?.role !== "SaaS Owner" ? <BrandSwitcher /> : null}
       </SidebarFooter>
     </Sidebar>
   );
