@@ -198,16 +198,22 @@ export function BrandSwitcher() {
                         <span className="block truncate text-sm">
                           {brand.name}
                         </span>
-                        <a
-                          href={brand.url || undefined}
-                          target={brand.url ? "_blank" : undefined}
-                          rel={brand.url ? "noreferrer" : undefined}
-                          title={brand.url || secondaryText}
-                          className="block max-w-full truncate text-[11px] text-muted-foreground hover:text-foreground hover:underline"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          {brand.url || secondaryText}
-                        </a>
+                        {brand.url ? (
+                          <a
+                            href={brand.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            title={brand.url}
+                            className="block max-w-full truncate text-[11px] text-muted-foreground hover:text-foreground hover:underline"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            {brand.url}
+                          </a>
+                        ) : (
+                          <span className="block truncate text-[11px] text-muted-foreground">
+                            {secondaryText}
+                          </span>
+                        )}
                       </div>
                       {brand.url && (
                         <a
