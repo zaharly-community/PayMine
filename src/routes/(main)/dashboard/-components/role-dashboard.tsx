@@ -1,3 +1,5 @@
+import type { ComponentType, ReactNode } from "react";
+
 import {
   Activity,
   AlertTriangle,
@@ -78,7 +80,7 @@ function DashboardShell({
   eyebrow: string;
   title: string;
   description: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <section className="space-y-6" data-content-padding="false">
@@ -106,7 +108,7 @@ function StatGrid({
     label: string;
     value: string;
     note: string;
-    icon: React.ComponentType<{ className?: string }>;
+    icon: ComponentType<{ className?: string }>;
   }>;
 }) {
   return (
@@ -133,7 +135,7 @@ function SectionTitle({
   description,
   action,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   title: string;
   description: string;
   action?: string;
