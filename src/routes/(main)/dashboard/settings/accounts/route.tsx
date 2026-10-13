@@ -13,7 +13,6 @@ import {
   Eye,
   Gauge,
   Info,
-  Link2,
   Plus,
   Sparkles,
   TicketCheck,
@@ -295,10 +294,6 @@ function Page() {
     });
   }, [accounts, query, typeFilter]);
 
-  const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
-  const totalChange = accounts.reduce((sum, account) => sum + account.change, 0);
-  const linkedAccounts = accounts.length;
-
   function handleCreate(account: PaymentAccount) {
     setAccounts((current) => [account, ...current]);
     setAddOpen(false);
@@ -313,17 +308,6 @@ function Page() {
 
   return (
     <section className="flex min-h-full flex-col gap-5 bg-background">
-      <div className="grid gap-3 md:grid-cols-3">
-        <SummaryCard icon={<WalletCards className="size-4" />} label="Total Balance" value={formatMoney(totalBalance)} />
-        <SummaryCard
-          icon={<Activity className="size-4" />}
-          label="Total Change"
-          value={(totalChange >= 0 ? "+" : "-") + formatMoney(Math.abs(totalChange))}
-          positive={totalChange >= 0}
-        />
-        <SummaryCard icon={<Link2 className="size-4" />} label="Linked Accounts" value={String(linkedAccounts)} />
-      </div>
-
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           {(["All", "Wallet", "Voucher"] as const).map((filter) => (
@@ -429,32 +413,6 @@ function Page() {
         }}
       />
     </section>
-  );
-}
-
-function SummaryCard({
-  icon,
-  label,
-  value,
-  positive,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  positive?: boolean;
-}) {
-  return (
-    <Card className="rounded-2xl shadow-none">
-      <CardContent className="flex items-center gap-3 px-4 py-3">
-        <span className={positive === undefined ? "flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-foreground" : positive ? "flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600" : "flex size-10 shrink-0 items-center justify-center rounded-full bg-rose-500/10 text-rose-600"}>
-          {icon}
-        </span>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{label}</p>
-          <p className="text-lg font-semibold tabular-nums">{value}</p>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
