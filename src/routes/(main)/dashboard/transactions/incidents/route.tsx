@@ -88,7 +88,7 @@ function IncidentsPage() {
             <div className="rounded-lg border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Variance under investigation</p><p className={"mt-1 text-2xl font-semibold tabular-nums " + (selected.variance < 0 ? "text-rose-600" : "text-amber-700")}>{selected.variance < 0 ? "−" : "+"}{formatTnd(Math.abs(selected.variance))}</p><p className="mt-1 text-[11px] text-muted-foreground">This is an unresolved difference, not proof of misconduct.</p></div>
             <div><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Summary</p><p className="mt-1.5 text-sm leading-5">{selected.summary}</p></div>
             <div className="grid grid-cols-2 gap-3">
-              <Meta label="Accountable supervisor" value={selected.supervisor} />
+              <Meta label="Custody participants" value={selected.supervisor} />
               <Meta label="Independent reviewer" value={selected.reviewer} />
               <Meta label="Shift reference" value={selected.shiftId} />
               <Meta label="Handover reference" value={selected.handoverId} />
