@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowLeftRight, CheckCheck, ClipboardSignature, Search, ShieldAlert } from "lucide-react";
+import { ArrowLeftRight, CheckCheck, Search, ShieldAlert } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
