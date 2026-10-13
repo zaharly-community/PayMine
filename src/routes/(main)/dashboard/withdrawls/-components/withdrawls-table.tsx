@@ -1,6 +1,7 @@
 import type { MouseEvent } from "react";
 
 import type { ReactTable } from "@tanstack/react-table";
+import { ArrowUpRight } from "lucide-react";
 
 import {
   Pagination,
@@ -15,6 +16,8 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { DataTableFeatures } from "@/lib/data-table-features";
+
+import { formatCurrency } from "@/lib/utils";
 
 import type { WithdrawlRow } from "./data";
 
@@ -53,7 +56,7 @@ export function WithdrawlsTable({ table }: { table: ReactTable<DataTableFeatures
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div>
+      <div className="hidden md:block">
         <Table className="w-full border-collapse **:data-[slot='table-cell']:border-b **:data-[slot='table-cell']:border-border/70 **:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:border-b **:data-[slot='table-head']:border-border/70 **:data-[slot='table-head']:px-4">
           <TableHeader className="[&_tr]:border-t">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -93,12 +96,57 @@ export function WithdrawlsTable({ table }: { table: ReactTable<DataTableFeatures
         </Table>
       </div>
 
+      <div className="divide-y md:hidden">
+        {table.getRowModel().rows.length ? (
+          table.getRowModel().rows.map((row) => {
+            const withdrawl = row.original;
+            const statusCell = row.getAllCells().find((cell) => cell.column.id === "status");
+            const actionsCell = row.getAllCells().find((cell) => cell.column.id === "actions");
+
+            return (
+              <div key={row.id} data-withdrawl-row-id={withdrawl.id} className="min-w-0 px-3 py-3 transition-colors hover:bg-muted/30">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                    <ArrowUpRight className="size-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <span className="truncate text-sm font-medium">{withdrawl.name}</span>
+                      <span className="shrink-0 text-right text-sm font-semibold tabular-nums text-red-600 dark:text-red-400">
+                        −{formatCurrency(withdrawl.amount)}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex min-w-0 items-center justify-between gap-2">
+                      <span className="truncate text-xs text-muted-foreground">Withdrawl · {withdrawl.withdrawlMethod}</span>
+                      <span className="shrink-0">{statusCell ? <table.FlexRender cell={statusCell} /> : null}</span>
+                    </div>
+                    <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-[10px] leading-4 text-muted-foreground">
+                      <span className="shrink-0 font-mono">{withdrawl.id}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="min-w-0 truncate">{withdrawl.date}</span>
+                    </div>
+                    <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+                      <span className="min-w-0 truncate text-[10px] text-muted-foreground">
+                        By {withdrawl.processedBy.name} · Fee: {withdrawl.commissionPercent > 0 ? `${withdrawl.commissionPercent}% · ${formatCurrency(withdrawl.commissionAmount)}` : "Not concerned"}
+                      </span>
+                      {actionsCell ? <div className="ml-auto shrink-0"><table.FlexRender cell={actionsCell} /></div> : null}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="px-4 py-12 text-center text-sm text-muted-foreground">No results.</div>
+        )}
+      </div>
+
       <Separator />
 
-      <div className="flex items-center justify-between px-4">
-        <div className="flex items-center gap-4 text-muted-foreground text-sm">
+      <div className="flex flex-col gap-3 px-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-muted-foreground text-xs sm:gap-4 sm:text-sm">
           <div className="flex items-center gap-2">
-            <span>Rows per page</span>
+            <span><span className="sm:hidden">Rows</span><span className="hidden sm:inline">Rows per page</span></span>
             <Select
               value={`${table.state.pagination.pageSize}`}
               onValueChange={(value) => table.setPageSize(Number(value))}
@@ -122,7 +170,7 @@ export function WithdrawlsTable({ table }: { table: ReactTable<DataTableFeatures
           </span>
         </div>
 
-        <Pagination className="mx-0 w-auto justify-start md:justify-end">
+        <Pagination className="mx-0 w-auto justify-start sm:justify-end">
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
