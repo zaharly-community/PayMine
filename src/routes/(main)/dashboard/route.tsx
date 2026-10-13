@@ -18,6 +18,7 @@ import { SearchDialog } from "./-components/header/search-dialog";
 import { ThemeSwitcher } from "./-components/header/theme-switcher";
 import { WalletMenu } from "./-components/header/wallet-menu";
 import { AppSidebar } from "./-components/sidebar/app-sidebar";
+import { MobileBottomNav } from "./-components/mobile-bottom-nav";
 
 export const Route = createFileRoute("/(main)/dashboard")({
   loader: () => getDashboardLayout(),
@@ -104,9 +105,10 @@ function DashboardLayout() {
             </div>
           </header>
 
-          <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden p-4 has-data-[content-padding=false]:p-0 md:has-data-[content-padding=false]:p-0">
+          <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden p-4 pb-24 md:pb-4 has-data-[content-padding=false]:p-0 has-data-[content-padding=false]:pb-24 md:has-data-[content-padding=false]:pb-0">
             <Outlet />
           </div>
+          <MobileBottomNav />
         </SidebarInset>
       </SidebarProvider>
     </BrandProvider>
