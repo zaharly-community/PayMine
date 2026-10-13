@@ -44,9 +44,13 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
   Assistant: {
     dashboard: true,
     players: true,
-    distributors: true,
     deposits: true,
+    withdrawls: true,
+    disagreements: true,
     transactions: true,
+    settlements: true,
+    reconciliation: true,
+    "fees-revenue": true,
   },
 };
 
