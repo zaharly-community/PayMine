@@ -69,6 +69,8 @@ type AccountConfig = {
 
 type PaymentAccount = {
   id: string;
+  source: "admin" | "rented";
+  rentalExpiresAt?: string;
   accountName: string;
   method: AccountMethod;
   type: AccountType;
@@ -127,6 +129,7 @@ function createDefaultConfig(method: AccountMethod): AccountConfig {
 const initialAccounts: PaymentAccount[] = [
   {
     id: "ACC-001",
+    source: "admin",
     accountName: "D17 Primary",
     method: "D17",
     type: "Wallet",
@@ -158,6 +161,7 @@ const initialAccounts: PaymentAccount[] = [
   },
   {
     id: "ACC-002",
+    source: "admin",
     accountName: "Flouci Main",
     method: "Flouci",
     type: "Wallet",
@@ -187,6 +191,7 @@ const initialAccounts: PaymentAccount[] = [
   },
   {
     id: "ACC-003",
+    source: "admin",
     accountName: "Kashy Reserve",
     method: "Kashy",
     type: "Wallet",
@@ -213,6 +218,7 @@ const initialAccounts: PaymentAccount[] = [
   },
   {
     id: "ACC-004",
+    source: "admin",
     accountName: "e-Dinar Treasury",
     method: "e-Dinar",
     type: "Wallet",
@@ -241,6 +247,7 @@ const initialAccounts: PaymentAccount[] = [
   },
   {
     id: "ACC-005",
+    source: "admin",
     accountName: "Cash Voucher Stock",
     method: "Voucher",
     type: "Voucher",
@@ -273,7 +280,7 @@ export const Route = createFileRoute("/(main)/dashboard/settings/accounts")({ co
 
 function Page() {
   const [accounts, setAccounts] = useState(initialAccounts);
-  const [rentedOffers, setRentedOffers] = useState<string[]>([]);
+  const [rentedOffers, setRentedOffers] = useState<Record<string, string>>({});
   const [claimOfferId, setClaimOfferId] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<"All" | AccountType>("All");
   const [query, setQuery] = useState("");
@@ -287,7 +294,7 @@ function Page() {
       const matchesType = typeFilter === "All" || account.type === typeFilter;
       const matchesSearch =
         !needle ||
-        [account.id, account.accountName, account.method, account.identifier].some((value) =>
+        [account.id, account.accountName, account.method, account.identifier, account.source].some((value) =>
           value.toLowerCase().includes(needle),
         );
       return matchesType && matchesSearch;
@@ -300,11 +307,15 @@ function Page() {
   }
 
   function handleRent(offerId: string) {
-    setRentedOffers((current) => current.includes(offerId) ? current : [...current, offerId]);
+    setRentedOffers((current) =>
+      current[offerId] ? current : { ...current, [offerId]: getRentalExpiryDate() },
+    );
     setRentOpen(false);
   }
 
-  const rentedOfferRecords = rentalOffers.filter((offer) => rentedOffers.includes(offer.id));
+  const rentedOfferRecords = rentalOffers
+    .filter((offer) => Boolean(rentedOffers[offer.id]))
+    .map((offer) => ({ ...offer, rentalExpiresAt: rentedOffers[offer.id] }));
 
   return (
     <section className="flex min-h-full flex-col gap-5 bg-background">
@@ -406,9 +417,14 @@ function Page() {
         open={Boolean(claimOfferId)}
         onOpenChange={(open) => !open && setClaimOfferId(null)}
         onClaim={(offer, config) => {
-          const rentedAccount = buildRentedAccount(offer, config);
+          const rentalExpiresAt = rentedOffers[offer.id] ?? getRentalExpiryDate();
+          const rentedAccount = buildRentedAccount(offer, config, rentalExpiresAt);
           handleCreate(rentedAccount);
-          setRentedOffers((current) => current.filter((id) => id !== offer.id));
+          setRentedOffers((current) => {
+            const next = { ...current };
+            delete next[offer.id];
+            return next;
+          });
           setClaimOfferId(null);
         }}
       />
@@ -448,9 +464,26 @@ function AccountCard({ account, onView }: { account: PaymentAccount; onView: () 
               <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{account.identifier}</p>
             </div>
           </div>
-          <Badge variant={account.status === "Active" ? "secondary" : "outline"}>{account.status}</Badge>
+          <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
+            <Badge variant={account.status === "Active" ? "secondary" : "outline"}>{account.status}</Badge>
+            <Badge variant={account.source === "rented" ? "default" : "outline"}>
+              {account.source === "rented" ? "Rented" : "Admin-added"}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
+
+      {account.source === "rented" && account.rentalExpiresAt ? (
+        <div className="mx-5 mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs">
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <Clock3 className="size-3.5" />
+            Rental expires
+          </span>
+          <span className="font-medium tabular-nums">
+            {formatRentalDate(account.rentalExpiresAt)} · {getRentalTimeRemaining(account.rentalExpiresAt)}
+          </span>
+        </div>
+      ) : null}
 
       <CardContent className="pl-5">
         <div className="flex items-end justify-between gap-3">
@@ -573,6 +606,7 @@ function AccountWizard({
 
     onCreate({
       id: "ACC-" + String(Date.now()).slice(-6),
+      source: "admin",
       accountName: accountName.trim(),
       method,
       type,
@@ -1263,7 +1297,9 @@ const rentalOffers = [
   },
 ] as const;
 
-function RentedAccountCard({ offer, onClaim }: { offer: (typeof rentalOffers)[number]; onClaim: () => void }) {
+type RentedOfferRecord = (typeof rentalOffers)[number] & { rentalExpiresAt: string };
+
+function RentedAccountCard({ offer, onClaim }: { offer: RentedOfferRecord; onClaim: () => void }) {
   return (
     <div className="flex min-w-0 items-center gap-3 rounded-md border bg-background p-3">
       <div className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-md bg-muted">
@@ -1272,6 +1308,10 @@ function RentedAccountCard({ offer, onClaim }: { offer: (typeof rentalOffers)[nu
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{offer.title}</p>
         <p className="truncate text-xs text-muted-foreground">{offer.identifier} · 100 TND / month · No commission</p>
+        <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400">
+          <Clock3 className="size-3.5" />
+          Expires {formatRentalDate(offer.rentalExpiresAt)} · {getRentalTimeRemaining(offer.rentalExpiresAt)}
+        </p>
       </div>
       <Badge variant="secondary">Rented</Badge>
       <Button type="button" size="sm" onClick={onClaim}>Claim</Button>
@@ -1279,11 +1319,17 @@ function RentedAccountCard({ offer, onClaim }: { offer: (typeof rentalOffers)[nu
   );
 }
 
-function buildRentedAccount(offer: (typeof rentalOffers)[number], config: AccountConfig): PaymentAccount {
+function buildRentedAccount(
+  offer: (typeof rentalOffers)[number],
+  config: AccountConfig,
+  rentalExpiresAt: string,
+): PaymentAccount {
   const method: AccountMethod = offer.title.startsWith("E-Dinar") ? "e-Dinar" : "Flouci";
 
   return {
     id: "ACC-" + String(Date.now()).slice(-6),
+    source: "rented",
+    rentalExpiresAt,
     accountName: offer.title,
     method,
     type: "Wallet",
@@ -1305,7 +1351,7 @@ function RentCardDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  rentedOffers: string[];
+  rentedOffers: Record<string, string>;
   onRent: (offerId: string) => void;
 }) {
   return (
@@ -1320,7 +1366,7 @@ function RentCardDialog({
 
         <div className="grid gap-3 sm:grid-cols-2">
           {rentalOffers.map((offer) => {
-            const rented = rentedOffers.includes(offer.id);
+            const rented = Boolean(rentedOffers[offer.id]);
             return (
               <Card key={offer.id} className={rented ? "border-primary/30 bg-muted/20 shadow-none" : "shadow-none"}>
                 <CardContent className="p-4">
@@ -1657,7 +1703,12 @@ function AccountDetailsDialog({
               <DialogTitle>{account.accountName}</DialogTitle>
               <DialogDescription>{account.id} · {account.method} · {account.type}</DialogDescription>
             </div>
-            <Badge variant={account.status === "Active" ? "secondary" : "outline"}>{account.status}</Badge>
+            <div className="flex flex-wrap justify-end gap-1.5">
+              <Badge variant={account.status === "Active" ? "secondary" : "outline"}>{account.status}</Badge>
+              <Badge variant={account.source === "rented" ? "default" : "outline"}>
+                {account.source === "rented" ? "Rented" : "Admin-added"}
+              </Badge>
+            </div>
           </div>
         </DialogHeader>
 
@@ -1680,6 +1731,11 @@ function AccountDetailsDialog({
                 <ReviewItem label="Owner" value={account.config.ownerName || "—"} />
                 <ReviewItem label="Max transactions" value={account.config.maxTransactions || "Unlimited"} />
                 <ReviewItem label="Max amount" value={account.config.maxAmount ? account.config.maxAmount + " TND / day" : "Unlimited"} />
+                {account.source === "rented" && account.rentalExpiresAt ? (
+                  <ReviewItem label="Rental expires" value={formatRentalDate(account.rentalExpiresAt) + " · " + getRentalTimeRemaining(account.rentalExpiresAt)} />
+                ) : (
+                  <ReviewItem label="Account source" value="Added by admin" />
+                )}
               </div>
 
               <div className="rounded-lg border p-3">
@@ -1714,6 +1770,36 @@ function AccountDetailsDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+function getRentalExpiryDate() {
+  const now = new Date();
+  const expiry = new Date(now);
+  const originalDay = now.getDate();
+  expiry.setDate(1);
+  expiry.setMonth(expiry.getMonth() + 1);
+  const lastDayOfMonth = new Date(expiry.getFullYear(), expiry.getMonth() + 1, 0).getDate();
+  expiry.setDate(Math.min(originalDay, lastDayOfMonth));
+  return expiry.toISOString();
+}
+
+function formatRentalDate(value: string) {
+  return new Date(value).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function getRentalTimeRemaining(value: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const expiry = new Date(value);
+  expiry.setHours(0, 0, 0, 0);
+  const days = Math.ceil((expiry.getTime() - today.getTime()) / 86400000);
+  if (days < 0) return "Expired";
+  if (days === 0) return "Expires today";
+  return String(days) + " day" + (days === 1 ? "" : "s") + " left";
 }
 
 function formatMoney(value: number) {
