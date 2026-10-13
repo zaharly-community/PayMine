@@ -251,6 +251,33 @@ export const initialApprovals: TreasuryApproval[] = [
   { id: "APR-260928-003", createdAt: "28 Sep 2026, 13:20", accountId: "ACCT-TN-002", accountName: "D17 Primary", kind: "Manual balance adjustment", amount: 120, requester: "Sami Ben Salah", approver: "Maya Chen", reason: "Correct opening balance; requires dual review and source evidence", evidenceCount: 0, status: "Evidence requested", risk: "High" },
 ];
 
+export type SupervisorAssignment = {
+  id: string;
+  accountId: string;
+  accountName: string;
+  provider: string;
+  supervisor: string;
+  scope: "Execute & submit" | "View only";
+  status: "Active" | "Suspended";
+  assignedBy: string;
+  assignedAt: string;
+  lastUsed: string;
+  shiftRequired: boolean;
+};
+
+export const initialAssignments: SupervisorAssignment[] = [
+  { id: "ASN-260901-001", accountId: "ACCT-TN-002", accountName: "D17 Primary", provider: "D17", supervisor: "Sami Ben Salah", scope: "Execute & submit", status: "Active", assignedBy: "Maya Chen", assignedAt: "01 Sep 2026", lastUsed: "28 Sep 2026, 16:04", shiftRequired: true },
+  { id: "ASN-260901-002", accountId: "ACCT-TN-002", accountName: "D17 Primary", provider: "D17", supervisor: "Koray Okumus", scope: "Execute & submit", status: "Active", assignedBy: "Maya Chen", assignedAt: "01 Sep 2026", lastUsed: "28 Sep 2026, 16:00", shiftRequired: true },
+  { id: "ASN-260901-003", accountId: "ACCT-TN-001", accountName: "Flouci Clearing", provider: "Flouci", supervisor: "Youssef Trabelsi", scope: "Execute & submit", status: "Active", assignedBy: "Maya Chen", assignedAt: "02 Sep 2026", lastUsed: "28 Sep 2026, 08:00", shiftRequired: true },
+  { id: "ASN-260901-004", accountId: "ACCT-TN-001", accountName: "Flouci Clearing", provider: "Flouci", supervisor: "Koray Okumus", scope: "Execute & submit", status: "Active", assignedBy: "Maya Chen", assignedAt: "03 Sep 2026", lastUsed: "28 Sep 2026, 15:58", shiftRequired: true },
+  { id: "ASN-260901-005", accountId: "ACCT-TN-003", accountName: "Kashy Reserve", provider: "Kashy", supervisor: "Sami Ben Salah", scope: "Execute & submit", status: "Active", assignedBy: "Aiy", assignedAt: "04 Sep 2026", lastUsed: "27 Sep 2026, 16:00", shiftRequired: true },
+  { id: "ASN-260901-006", accountId: "ACCT-TN-003", accountName: "Kashy Reserve", provider: "Kashy", supervisor: "Youssef Trabelsi", scope: "Execute & submit", status: "Active", assignedBy: "Aiy", assignedAt: "04 Sep 2026", lastUsed: "28 Sep 2026, 00:00", shiftRequired: true },
+  { id: "ASN-260901-007", accountId: "ACCT-TT-004", accountName: "Tunisie Telecom Float", provider: "Tunisie Telecom", supervisor: "Nicolas Martin", scope: "Execute & submit", status: "Active", assignedBy: "Maya Chen", assignedAt: "05 Sep 2026", lastUsed: "27 Sep 2026, 23:59", shiftRequired: true },
+  { id: "ASN-260901-008", accountId: "ACCT-TN-005", accountName: "Ooredoo Float", provider: "Ooredoo", supervisor: "Nicolas Martin", scope: "Execute & submit", status: "Active", assignedBy: "Maya Chen", assignedAt: "05 Sep 2026", lastUsed: "27 Sep 2026, 22:18", shiftRequired: true },
+  { id: "ASN-260901-009", accountId: "ACCT-TN-005", accountName: "Ooredoo Float", provider: "Ooredoo", supervisor: "Sami Ben Salah", scope: "View only", status: "Active", assignedBy: "Maya Chen", assignedAt: "06 Sep 2026", lastUsed: "26 Sep 2026, 19:20", shiftRequired: true },
+  { id: "ASN-260901-010", accountId: "ACCT-TN-006", accountName: "Orange Float", provider: "Orange", supervisor: "Koray Okumus", scope: "Execute & submit", status: "Active", assignedBy: "Aiy", assignedAt: "07 Sep 2026", lastUsed: "27 Sep 2026, 23:42", shiftRequired: true },
+];
+
 export function formatTnd(value: number) {
   return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " TND";
 }
