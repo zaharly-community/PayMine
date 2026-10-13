@@ -447,82 +447,76 @@ function AccountCard({ account, onView }: { account: PaymentAccount; onView: () 
     : false;
 
   return (
-    <Card className="group relative flex h-full flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-      <div className={account.source === "rented" ? "absolute inset-x-0 top-0 h-1 bg-amber-500/80" : "absolute inset-x-0 top-0 h-1 bg-primary/60"} />
-      <CardHeader className="gap-4 pb-3 pt-5">
+    <Card className="group flex h-full flex-col overflow-hidden rounded-xl border border-border/70 bg-card shadow-none transition-colors hover:border-border hover:shadow-sm">
+      <CardHeader className="gap-3 px-4 pb-3 pt-4">
         <div className="flex min-w-0 items-start justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-muted/50 p-0.5">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted/30 p-0.5">
               {accountMethodImages[account.method] ? (
-                <img src={accountMethodImages[account.method]} alt={account.method} className="size-full rounded-[10px] object-cover" />
+                <img src={accountMethodImages[account.method]} alt={account.method} className="size-full rounded-md object-cover" />
               ) : (
-                <CreditCard className="size-5 text-muted-foreground" />
+                <CreditCard className="size-4 text-muted-foreground" />
               )}
             </div>
-            <div className="min-w-0 space-y-1">
+            <div className="min-w-0">
               <CardTitle className="truncate text-sm font-semibold">{account.accountName}</CardTitle>
-              <p className="truncate text-xs text-muted-foreground">{account.identifier}</p>
+              <p className="mt-1 truncate text-[11px] text-muted-foreground">{account.identifier}</p>
             </div>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-1.5">
-            <Badge variant={account.status === "Active" ? "secondary" : "outline"} className="text-[10px]">
-              <span className={account.status === "Active" ? "mr-1 size-1.5 rounded-full bg-emerald-500" : "mr-1 size-1.5 rounded-full bg-muted-foreground"} />
-              {account.status}
-            </Badge>
-            <span className={account.source === "rented" ? "text-[10px] font-medium text-amber-700 dark:text-amber-400" : "text-[10px] text-muted-foreground"}>
-              {account.source === "rented" ? "Rented account" : "Admin-added"}
-            </span>
-          </div>
+          <span className="inline-flex shrink-0 items-center gap-1.5 pt-0.5 text-[11px] text-muted-foreground">
+            <span className={account.status === "Active" ? "size-1.5 rounded-full bg-emerald-500" : "size-1.5 rounded-full bg-muted-foreground"} />
+            {account.status}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between gap-2">
+          <span className={account.source === "rented" ? "inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-1 text-[10px] font-medium text-amber-700 dark:text-amber-400" : "inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground"}>
+            {account.source === "rented" ? <Clock3 className="size-3" /> : <ShieldCheck className="size-3" />}
+            {account.source === "rented" ? "Rented" : "Added by admin"}
+          </span>
+          <span className="text-[10px] text-muted-foreground">{account.method}</span>
         </div>
 
         {account.source === "rented" && account.rentalExpiresAt ? (
-          <div className={rentalExpired ? "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-rose-500/25 bg-rose-500/5 px-3 py-2.5" : "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2.5"}>
-            <div className="flex items-center gap-2">
-              <span className={rentalExpired ? "flex size-7 items-center justify-center rounded-lg bg-rose-500/10 text-rose-600" : "flex size-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400"}>
-                <Clock3 className="size-3.5" />
-              </span>
-              <div>
-                <p className="text-[11px] font-medium">Rental expiry</p>
-                <p className="text-[10px] text-muted-foreground">{formatRentalDate(account.rentalExpiresAt)}</p>
-              </div>
-            </div>
-            <span className={rentalExpired ? "text-xs font-semibold text-rose-600" : "text-xs font-semibold text-amber-700 dark:text-amber-400"}>
+          <div className={rentalExpired ? "flex items-center justify-between gap-2 rounded-lg bg-rose-500/5 px-2.5 py-2" : "flex items-center justify-between gap-2 rounded-lg bg-amber-500/5 px-2.5 py-2"}>
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Clock3 className="size-3.5" />
+              Ends {formatRentalDate(account.rentalExpiresAt)}
+            </span>
+            <span className={rentalExpired ? "text-[11px] font-semibold text-rose-600" : "text-[11px] font-semibold text-amber-700 dark:text-amber-400"}>
               {getRentalTimeRemaining(account.rentalExpiresAt)}
             </span>
           </div>
         ) : null}
       </CardHeader>
 
-      <CardContent className="flex flex-1 flex-col gap-4 pt-1">
-        <div className="flex items-center justify-between gap-3 rounded-xl border bg-muted/25 p-3.5">
+      <CardContent className="flex flex-1 flex-col px-4 pb-4 pt-0">
+        <div className="flex items-center justify-between gap-2 py-1">
           <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">Available balance</p>
-            <p className="mt-1.5 truncate text-2xl font-semibold tracking-tight tabular-nums">{formatMoney(account.balance)}</p>
+            <p className="text-[11px] text-muted-foreground">Available balance</p>
+            <p className="mt-1 truncate text-xl font-semibold tracking-tight tabular-nums">{formatMoney(account.balance)}</p>
           </div>
-          <div className="flex shrink-0 items-center gap-1 rounded-lg border bg-background p-1">
-            <button type="button" onClick={onView} className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={"View " + account.accountName} title="View account">
+          <div className="flex shrink-0 items-center gap-0.5">
+            <button type="button" onClick={onView} className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={"View " + account.accountName} title="View account">
               <Eye className="size-4" />
             </button>
-            <button type="button" onClick={onView} className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={"Configure " + account.accountName} title="Configure account">
+            <button type="button" onClick={onView} className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={"Configure " + account.accountName} title="Configure account">
               <Settings2 className="size-4" />
             </button>
           </div>
         </div>
 
-        <div className="mt-auto flex items-end justify-between gap-3 border-t pt-3">
+        <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/60 pt-3">
           <div className="min-w-0">
-            <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Today's movement</p>
-            <span className={positive ? "inline-flex max-w-full items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-600" : "inline-flex max-w-full items-center gap-1 rounded-full bg-rose-500/10 px-2 py-1 text-xs font-semibold text-rose-600"}>
+            <p className="text-[10px] text-muted-foreground">Today</p>
+            <span className={positive ? "mt-0.5 inline-flex max-w-full items-center gap-1 text-xs font-semibold text-emerald-600" : "mt-0.5 inline-flex max-w-full items-center gap-1 text-xs font-semibold text-rose-600"}>
               {positive ? <ArrowUpRight className="size-3 shrink-0" /> : <ArrowDownRight className="size-3 shrink-0" />}
               <span className="truncate tabular-nums">{positive ? "+" : "-"}{formatMoney(Math.abs(account.change))}</span>
             </span>
           </div>
-          <div className="shrink-0 text-right">
-            <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Last activity</p>
-            <p className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
-              <Clock3 className="size-3.5 text-muted-foreground" />
-              {account.lastActivity}
-            </p>
+          <div className="min-w-0 text-right">
+            <p className="text-[10px] text-muted-foreground">Last activity</p>
+            <p className="mt-0.5 truncate text-xs font-medium text-foreground">{account.lastActivity}</p>
           </div>
         </div>
       </CardContent>
