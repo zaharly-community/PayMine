@@ -16,6 +16,7 @@ import {
   Settings2,
   SlidersHorizontal,
   UsersRound,
+  WalletCards,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +27,7 @@ const cards = [
   ["security", "Security", "Authentication, session protection, wallet security and merchant API controls.", LockKeyhole],
   ["notifications", "Notifications", "Operational notification channels, alert events and sound preferences.", Bell],
   ["integration-center", "Integration Center", "Payment providers, security services, messaging and other platform connections.", PlugZap],
+  ["accounts", "Accounts", "Manage payment method accounts, wallet balances, account schedules, and supervisor access.", WalletCards],
   ["kyc-verification", "KYC Verification", "Player identity verification, automation and risk thresholds.", IdCard],
   ["agent-program", "Agent Program", "Distributor onboarding, commissions, eligibility and application rules.", UsersRound],
   ["media-uploads", "Media & Uploads", "Payment evidence, KYC documents, attachments and upload limits.", FileUp],
