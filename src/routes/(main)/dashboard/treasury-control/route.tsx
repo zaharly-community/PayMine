@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   initialApprovals,
@@ -41,6 +40,7 @@ function TreasuryControlPage() {
 
   const shortcuts = [
     { title: "Immutable ledger", description: "Review every posted and pending journal entry.", url: "/dashboard/transactions/ledger", icon: BookOpenCheck },
+    { title: "Supervisor access", description: "Audit account assignments, activity and overlapping access.", url: "/dashboard/transactions/assignments", icon: UsersRound },
     { title: "Shift control", description: "Review openings, closing counts and assigned reviewers.", url: "/dashboard/transactions/shifts", icon: Clock3 },
     { title: "Handover register", description: "Trace who released and who accepted each account.", url: "/dashboard/transactions/handovers", icon: UsersRound },
     { title: "Reconciliation incidents", description: "Investigate unexplained shortages and surpluses.", url: "/dashboard/transactions/incidents", icon: FileWarning },
@@ -97,9 +97,7 @@ function TreasuryControlPage() {
             ))}
           </div>
           <div className="border-t p-3">
-            <Button asChild variant="outline" size="sm" className="w-full">
-              <Link to={"/dashboard/transactions/incidents" as never}>Open incident register <ArrowRight className="size-4" /></Link>
-            </Button>
+            <Link to={"/dashboard/transactions/incidents" as never} className="flex h-7 w-full items-center justify-center gap-1.5 rounded-md border bg-background px-2.5 text-xs font-medium hover:bg-muted">Open incident register <ArrowRight className="size-4" /></Link>
           </div>
         </Card>
 
