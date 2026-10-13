@@ -2,7 +2,7 @@ import type { MouseEvent } from "react";
 
 
 import type { ReactTable } from "@tanstack/react-table";
-import { LockKeyhole } from "lucide-react";
+import { ArrowDownRight, LockKeyhole } from "lucide-react";
 
 import {
   Pagination,
@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { DataTableFeatures } from "@/lib/data-table-features";
+
+import { formatCurrency } from "@/lib/utils";
 
 import type { DepositRow } from "./data";
 import { processingLockedRows } from "./deposits-columns";
@@ -85,7 +87,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div>
+      <div className="hidden md:block">
         <Table className="w-full border-collapse **:data-[slot='table-cell']:border-b **:data-[slot='table-cell']:border-border/70 **:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:border-b **:data-[slot='table-head']:border-border/70 **:data-[slot='table-head']:px-4">
           <TableHeader className="[&_tr]:border-t">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -132,12 +134,80 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
         </Table>
       </div>
 
+      <div className="divide-y md:hidden">
+        {table.getRowModel().rows.length ? (
+          table.getRowModel().rows.map((row) => {
+            const deposit = row.original;
+            const statusCell = row.getAllCells().find((cell) => cell.column.id === "depositStatus");
+            const verificationCell = row.getAllCells().find((cell) => cell.column.id === "verificationStatus");
+            const actionsCell = row.getAllCells().find((cell) => cell.column.id === "actions");
+            const isLocked = processingLockedRows.has(deposit.id);
+
+            return (
+              <div
+                key={row.id}
+                data-deposit-row-id={deposit.id}
+                data-state={table.state.rowSelection[row.id] && "selected"}
+                className={`relative min-w-0 px-3 py-3 transition-colors hover:bg-muted/30 ${getDepositRowIndicator(deposit.depositStatus)}`}
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border bg-primary/10 text-primary">
+                    <ArrowDownRight className="size-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <span className="truncate text-sm font-medium">{deposit.name}</span>
+                      <span className="shrink-0 text-right text-sm font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                        +{formatCurrency(deposit.amount)}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex min-w-0 items-center justify-between gap-2">
+                      <span className="truncate text-xs text-muted-foreground">Deposit · {deposit.paymentMethod}</span>
+                      <span className="shrink-0">{statusCell ? <table.FlexRender cell={statusCell} /> : null}</span>
+                    </div>
+                    <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-[10px] leading-4 text-muted-foreground">
+                      <span className="shrink-0 font-mono">{deposit.id}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="min-w-0 truncate">{deposit.date}</span>
+                    </div>
+                    <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        {verificationCell ? <table.FlexRender cell={verificationCell} /> : null}
+                        <span className="text-[10px] text-muted-foreground">
+                          Fee: {deposit.feePercent > 0 ? `${deposit.feePercent}% · ${formatCurrency(deposit.feeAmount)}` : "Not concerned"}
+                        </span>
+                        <span className="max-w-full truncate text-[10px] text-muted-foreground">By {deposit.processedBy.name}</span>
+                      </div>
+                      {actionsCell ? <div className="ml-auto shrink-0"><table.FlexRender cell={actionsCell} /></div> : null}
+                    </div>
+                  </div>
+                </div>
+                {isLocked ? (
+                  <div
+                    className="absolute inset-0 z-20 flex cursor-not-allowed items-center justify-center bg-background/65 px-3 backdrop-blur-[3px]"
+                    onClick={(event) => { event.preventDefault(); event.stopPropagation(); }}
+                    onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); }}
+                  >
+                    <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <LockKeyhole className="size-4 shrink-0" />
+                      Processing by {deposit.processedBy.name}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })
+        ) : (
+          <div className="px-4 py-12 text-center text-sm text-muted-foreground">No results.</div>
+        )}
+      </div>
+
       <Separator />
 
-      <div className="flex items-center justify-between px-4">
-        <div className="flex items-center gap-4 text-muted-foreground text-sm">
+      <div className="flex flex-col gap-3 px-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-muted-foreground text-xs sm:gap-4 sm:text-sm">
           <div className="flex items-center gap-2">
-            <span>Rows per page</span>
+            <span><span className="sm:hidden">Rows</span><span className="hidden sm:inline">Rows per page</span></span>
             <Select
               value={`${table.state.pagination.pageSize}`}
               onValueChange={(value) => table.setPageSize(Number(value))}
@@ -161,7 +231,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
           </span>
         </div>
 
-        <Pagination className="mx-0 w-auto justify-start md:justify-end">
+        <Pagination className="mx-0 w-auto justify-start sm:justify-end">
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
