@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { BookOpenCheck, Download, FileClock, LockKeyhole, Search } from "lucide-react";
+import { BookOpenCheck, Download, LockKeyhole, Search } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
