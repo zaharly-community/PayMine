@@ -48,7 +48,7 @@ function ShiftsPage() {
       ...shift,
       end: "28 Sep 2026, 23:59",
       actualBalance: actual,
-      status: Math.abs(delta) < 0.01 ? "Closed · matched" : "Variance found",
+      status: Math.abs(delta) < 0.01 ? ("Closed · matched" as const) : ("Variance found" as const),
       reviewer: "Awaiting independent review",
       note: closeNote.trim() || (Math.abs(delta) < 0.01 ? "Closing count submitted; independent review still required" : "Closing count submitted with unexplained variance of " + formatTnd(delta)),
     }));
