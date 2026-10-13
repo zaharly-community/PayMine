@@ -161,7 +161,7 @@ export const treasuryAccounts: TreasuryAccount[] = [
   },
   {
     id: "ACCT-TT-004",
-    internalId: "ACC-004",
+    internalId: "ACC-TT-004",
     name: "Tunisie Telecom Float",
     provider: "Tunisie Telecom",
     maskedReference: "•••• 1004",
@@ -210,24 +210,43 @@ export const treasuryAccounts: TreasuryAccount[] = [
     supervisors: ["Koray Okumus"],
     lastVerified: "27 Sep 2026, 23:42",
   },
+  {
+    id: "ACCT-ED-007",
+    internalId: "ACC-004",
+    name: "E-Dinar Treasury",
+    provider: "e-Dinar",
+    maskedReference: "•••• 7732",
+    currency: "TND",
+    openingBalance: 61450,
+    deposits: 0,
+    withdrawals: 0,
+    providerFees: 0,
+    adjustments: 0,
+    expectedBalance: 61450,
+    actualBalance: 61450,
+    supervisors: ["Nicolas Martin"],
+    lastVerified: "28 Sep 2026, 16:00",
+  },
 ];
 
 export const initialLedgerEntries: LedgerEntry[] = [
   { id: "LED-260928-001", reference: "OPEN-SHF-019", date: "28 Sep 2026, 08:00", accountId: "ACCT-TN-002", accountName: "D17 Primary", kind: "Opening balance", amount: 10000, direction: "Neutral", debitAccount: "Payment account · D17", creditAccount: "Opening balance equity", actor: "System", shiftId: "SHF-260928-019", evidence: "Verified", state: "Posted", note: "Opening balance accepted at shift start" },
-  { id: "LED-260928-002", reference: "DEP-02026022", date: "28 Sep 2026, 09:14", accountId: "ACCT-TN-002", accountName: "D17 Primary", kind: "Deposit collection", amount: 4000, direction: "In", debitAccount: "Payment account · D17", creditAccount: "Player funds clearing", actor: "Koray Okumus", shiftId: "SHF-260928-019", evidence: "Attached", state: "Posted", note: "Batch of approved deposits" },
+  { id: "LED-260928-002", reference: "DEP-02026022", date: "28 Sep 2026, 09:14", accountId: "ACCT-TN-002", accountName: "D17 Primary", kind: "Deposit collection", amount: 4000, direction: "In", debitAccount: "Payment account · D17", creditAccount: "Player funds clearing", actor: "Sami Ben Salah", shiftId: "SHF-260928-019", evidence: "Attached", state: "Posted", note: "Batch of approved deposits" },
   { id: "LED-260928-003", reference: "WDR-260928-104", date: "28 Sep 2026, 11:42", accountId: "ACCT-TN-002", accountName: "D17 Primary", kind: "Withdrawal payout", amount: 1180, direction: "Out", debitAccount: "Player withdrawal payable", creditAccount: "Payment account · D17", actor: "Sami Ben Salah", shiftId: "SHF-260928-019", evidence: "Attached", state: "Posted", note: "Approved payout batch" },
   { id: "LED-260928-004", reference: "FEE-260928-007", date: "28 Sep 2026, 12:05", accountId: "ACCT-TN-002", accountName: "D17 Primary", kind: "Provider fee", amount: 40, direction: "Out", debitAccount: "Provider fee expense", creditAccount: "Payment account · D17", actor: "Maya Chen", shiftId: "SHF-260928-019", evidence: "Verified", state: "Posted", note: "Approved fee with attached evidence" },
   { id: "LED-260928-005", reference: "DEP-02026025", date: "28 Sep 2026, 13:24", accountId: "ACCT-TN-001", accountName: "Flouci Clearing", kind: "Deposit collection", amount: 10000, direction: "In", debitAccount: "Payment account · Flouci", creditAccount: "Player funds clearing", actor: "Youssef Trabelsi", shiftId: "SHF-260928-018", evidence: "Attached", state: "Posted", note: "Approved deposit batch" },
   { id: "LED-260928-006", reference: "WDR-260928-098", date: "28 Sep 2026, 14:02", accountId: "ACCT-TN-001", accountName: "Flouci Clearing", kind: "Withdrawal payout", amount: 1500, direction: "Out", debitAccount: "Player withdrawal payable", creditAccount: "Payment account · Flouci", actor: "Koray Okumus", shiftId: "SHF-260928-018", evidence: "Attached", state: "Posted", note: "Withdrawal batch confirmed" },
   { id: "LED-260928-007", reference: "FEE-260928-009", date: "28 Sep 2026, 14:05", accountId: "ACCT-TN-001", accountName: "Flouci Clearing", kind: "Provider fee", amount: 80, direction: "Out", debitAccount: "Provider fee expense", creditAccount: "Payment account · Flouci", actor: "Maya Chen", shiftId: "SHF-260928-018", evidence: "Verified", state: "Posted", note: "Approved provider cost" },
   { id: "LED-260928-008", reference: "REQ-APR-006", date: "28 Sep 2026, 16:12", accountId: "ACCT-TN-002", accountName: "D17 Primary", kind: "Requested fee reclassification", amount: 86, direction: "Out", debitAccount: "Unapproved adjustment · not posted", creditAccount: "Not posted", actor: "Sami Ben Salah", shiftId: "SHF-260928-019", evidence: "Missing", state: "Pending", note: "Request to classify the unexplained variance as a provider fee; evidence missing" },
-  { id: "LED-260928-009", reference: "ADJ-260927-003", date: "27 Sep 2026, 23:58", accountId: "ACCT-TN-005", accountName: "Ooredoo Float", kind: "Reconciliation variance", amount: 20, direction: "Out", debitAccount: "Unresolved variance · not posted", creditAccount: "Not posted", actor: "System", shiftId: "SHF-260927-017", evidence: "Missing", state: "Pending", note: "Open variance; adjustment prohibited until investigation" },
+  { id: "LED-260928-009", reference: "ADJ-260927-003", date: "27 Sep 2026, 23:58", accountId: "ACCT-TN-005", accountName: "Ooredoo Float", kind: "Reconciliation variance", amount: 20, direction: "Out", debitAccount: "Unresolved variance · not posted", creditAccount: "Not posted", actor: "System", shiftId: "SHF-260927-016", evidence: "Missing", state: "Pending", note: "Open variance; adjustment prohibited until investigation" },
 ];
 
 export const initialShifts: TreasuryShift[] = [
   { id: "SHF-260928-019", accountId: "ACCT-TN-002", accountName: "D17 Primary", provider: "D17", supervisor: "Sami Ben Salah", start: "28 Sep 2026, 08:00", end: "28 Sep 2026, 16:00", openingBalance: 10000, expectedBalance: 12780, actualBalance: 12694, transactionCount: 142, status: "Variance found", reviewer: "Maya Chen", note: "Closing balance is short by 86 TND; review requested" },
   { id: "SHF-260928-018", accountId: "ACCT-TN-001", accountName: "Flouci Clearing", provider: "Flouci", supervisor: "Koray Okumus", start: "28 Sep 2026, 08:00", end: "28 Sep 2026, 16:00", openingBalance: 10000, expectedBalance: 18420, actualBalance: 18420, transactionCount: 87, status: "Closed · matched", reviewer: "Maya Chen", note: "Closing evidence reviewed and matched" },
-  { id: "SHF-260928-021", accountId: "ACCT-TN-004", accountName: "E-Dinar Treasury", provider: "e-Dinar", supervisor: "Nicolas Martin", start: "28 Sep 2026, 16:00", end: null, openingBalance: 61450, expectedBalance: 61450, actualBalance: null, transactionCount: 42, status: "Open", reviewer: "Unassigned", note: "Live shift; closing balance not submitted yet" },
+  { id: "SHF-260928-021", accountId: "ACCT-ED-007", accountName: "E-Dinar Treasury", provider: "e-Dinar", supervisor: "Nicolas Martin", start: "28 Sep 2026, 16:00", end: null, openingBalance: 61450, expectedBalance: 61450, actualBalance: null, transactionCount: 42, status: "Open", reviewer: "Unassigned", note: "Live shift; closing balance not submitted yet" },
+  { id: "SHF-260927-016", accountId: "ACCT-TN-005", accountName: "Ooredoo Float", provider: "Ooredoo", supervisor: "Nicolas Martin", start: "27 Sep 2026, 16:00", end: "28 Sep 2026, 00:00", openingBalance: 4000, expectedBalance: 5210, actualBalance: 5190, transactionCount: 38, status: "Variance found", reviewer: "Maya Chen", note: "Closing balance is short by 20 TND; evidence requested" },
+  { id: "SHF-260927-015", accountId: "ACCT-TT-004", accountName: "Tunisie Telecom Float", provider: "Tunisie Telecom", supervisor: "Nicolas Martin", start: "27 Sep 2026, 16:00", end: "27 Sep 2026, 23:59", openingBalance: 8000, expectedBalance: 9630, actualBalance: 9712, transactionCount: 49, status: "Awaiting review", reviewer: "Maya Chen", note: "82 TND surplus; potential settlement timing difference" },
   { id: "SHF-260927-017", accountId: "ACCT-TN-003", accountName: "Kashy Reserve", provider: "Kashy", supervisor: "Youssef Trabelsi", start: "27 Sep 2026, 16:00", end: "28 Sep 2026, 00:00", openingBalance: 5000, expectedBalance: 7410, actualBalance: 7410, transactionCount: 61, status: "Closed · matched", reviewer: "Maya Chen", note: "Handover acknowledged by incoming supervisor" },
 ];
 
@@ -235,13 +254,13 @@ export const initialHandovers: TreasuryHandover[] = [
   { id: "HDV-260928-008", accountId: "ACCT-TN-002", accountName: "D17 Primary", outgoing: "Koray Okumus", incoming: "Sami Ben Salah", timestamp: "28 Sep 2026, 16:00", expectedBalance: 12780, receivedBalance: 12694, variance: -86, status: "Disputed", evidence: "Outgoing count recorded · incoming confirmation differs", note: "Recipient reported 86 TND less than the expected balance" },
   { id: "HDV-260928-007", accountId: "ACCT-TN-001", accountName: "Flouci Clearing", outgoing: "Youssef Trabelsi", incoming: "Koray Okumus", timestamp: "28 Sep 2026, 08:00", expectedBalance: 18420, receivedBalance: 18420, variance: 0, status: "Accepted", evidence: "Both confirmations present", note: "Opening and receiving balances match" },
   { id: "HDV-260927-006", accountId: "ACCT-TN-003", accountName: "Kashy Reserve", outgoing: "Sami Ben Salah", incoming: "Youssef Trabelsi", timestamp: "27 Sep 2026, 16:00", expectedBalance: 7410, receivedBalance: 7410, variance: 0, status: "Accepted", evidence: "Dual confirmation recorded", note: "No variance at handover" },
-  { id: "HDV-260928-009", accountId: "ACCT-TN-004", accountName: "E-Dinar Treasury", outgoing: "—", incoming: "Nicolas Martin", timestamp: "28 Sep 2026, 16:00", expectedBalance: 61450, receivedBalance: null, variance: null, status: "Pending confirmation", evidence: "Recipient count not submitted", note: "Awaiting opening balance confirmation" },
+  { id: "HDV-260928-009", accountId: "ACCT-ED-007", accountName: "E-Dinar Treasury", outgoing: "—", incoming: "Nicolas Martin", timestamp: "28 Sep 2026, 16:00", expectedBalance: 61450, receivedBalance: null, variance: null, status: "Pending confirmation", evidence: "Recipient count not submitted", note: "Awaiting opening balance confirmation" },
 ];
 
 export const initialIncidents: TreasuryIncident[] = [
-  { id: "INC-260928-014", date: "28 Sep 2026, 16:04", accountId: "ACCT-TN-002", accountName: "D17 Primary", shiftId: "SHF-260928-019", handoverId: "HDV-260928-008", supervisor: "Sami Ben Salah", reviewer: "Maya Chen", variance: -86, severity: "High", status: "Investigating", category: "Unexplained debit / possible unrecorded fee", summary: "Expected balance is 12,780 TND, while the reported actual balance is 12,694 TND. A request to reclassify the difference as provider fees has no evidence attached.", evidenceCount: 1, lastAction: "Finance review opened at 16:12" },
-  { id: "INC-260927-013", date: "27 Sep 2026, 23:59", accountId: "ACCT-TN-005", accountName: "Ooredoo Float", shiftId: "SHF-260927-017", handoverId: "—", supervisor: "Nicolas Martin", reviewer: "Maya Chen", variance: -20, severity: "Medium", status: "Awaiting evidence", category: "Unexplained balance shortage", summary: "The closing amount is 20 TND below expected. No provider-fee receipt or approved payout currently explains this variance.", evidenceCount: 0, lastAction: "Evidence requested from account supervisor" },
-  { id: "INC-260927-012", date: "27 Sep 2026, 23:59", accountId: "ACCT-TT-004", accountName: "Tunisie Telecom Float", shiftId: "SHF-260927-016", handoverId: "—", supervisor: "Nicolas Martin", reviewer: "Maya Chen", variance: 82, severity: "Low", status: "Open", category: "Unexpected balance surplus", summary: "Reported balance is 82 TND higher than the ledger. Possible settlement timing difference; hold any adjustment until the source is confirmed.", evidenceCount: 1, lastAction: "Incident created automatically by reconciliation" },
+  { id: "INC-260928-014", date: "28 Sep 2026, 16:04", accountId: "ACCT-TN-002", accountName: "D17 Primary", shiftId: "SHF-260928-019", handoverId: "HDV-260928-008", supervisor: "Koray Okumus / Sami Ben Salah", reviewer: "Maya Chen", variance: -86, severity: "High", status: "Investigating", category: "Unexplained debit / possible unrecorded fee", summary: "Expected balance is 12,780 TND, while the reported actual balance is 12,694 TND. A request to reclassify the difference as provider fees has no evidence attached.", evidenceCount: 1, lastAction: "Finance review opened at 16:12" },
+  { id: "INC-260927-013", date: "27 Sep 2026, 23:59", accountId: "ACCT-TN-005", accountName: "Ooredoo Float", shiftId: "SHF-260927-016", handoverId: "—", supervisor: "Nicolas Martin", reviewer: "Maya Chen", variance: -20, severity: "Medium", status: "Awaiting evidence", category: "Unexplained balance shortage", summary: "The closing amount is 20 TND below expected. No provider-fee receipt or approved payout currently explains this variance.", evidenceCount: 0, lastAction: "Evidence requested from account supervisor" },
+  { id: "INC-260927-012", date: "27 Sep 2026, 23:59", accountId: "ACCT-TT-004", accountName: "Tunisie Telecom Float", shiftId: "SHF-260927-015", handoverId: "—", supervisor: "Nicolas Martin", reviewer: "Maya Chen", variance: 82, severity: "Low", status: "Open", category: "Unexpected balance surplus", summary: "Reported balance is 82 TND higher than the ledger. Possible settlement timing difference; hold any adjustment until the source is confirmed.", evidenceCount: 1, lastAction: "Incident created automatically by reconciliation" },
 ];
 
 export const initialApprovals: TreasuryApproval[] = [
@@ -276,6 +295,7 @@ export const initialAssignments: SupervisorAssignment[] = [
   { id: "ASN-260901-008", accountId: "ACCT-TN-005", accountName: "Ooredoo Float", provider: "Ooredoo", supervisor: "Nicolas Martin", scope: "Execute & submit", status: "Active", assignedBy: "Maya Chen", assignedAt: "05 Sep 2026", lastUsed: "27 Sep 2026, 22:18", shiftRequired: true },
   { id: "ASN-260901-009", accountId: "ACCT-TN-005", accountName: "Ooredoo Float", provider: "Ooredoo", supervisor: "Sami Ben Salah", scope: "View only", status: "Active", assignedBy: "Maya Chen", assignedAt: "06 Sep 2026", lastUsed: "26 Sep 2026, 19:20", shiftRequired: true },
   { id: "ASN-260901-010", accountId: "ACCT-TN-006", accountName: "Orange Float", provider: "Orange", supervisor: "Koray Okumus", scope: "Execute & submit", status: "Active", assignedBy: "Aiy", assignedAt: "07 Sep 2026", lastUsed: "27 Sep 2026, 23:42", shiftRequired: true },
+  { id: "ASN-260901-011", accountId: "ACCT-ED-007", accountName: "E-Dinar Treasury", provider: "e-Dinar", supervisor: "Nicolas Martin", scope: "Execute & submit", status: "Active", assignedBy: "Maya Chen", assignedAt: "08 Sep 2026", lastUsed: "28 Sep 2026, 16:00", shiftRequired: true },
 ];
 
 export function formatTnd(value: number) {
