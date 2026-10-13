@@ -386,14 +386,14 @@ export function Deposits({ deposits }: { deposits: DepositRow[] }) {
 
   return (
     <section data-content-padding="false" className="flex min-h-full flex-col bg-background">
-      <div className="flex items-start justify-between gap-4 border-b px-4 py-3">
+      <div className="flex flex-col gap-3 border-b px-3 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-4">
         <div className="min-w-0">
           <h1 className="text-xl font-semibold tracking-tight">Deposits</h1>
           <p className="text-muted-foreground text-sm">Manage player deposit transactions and payment processing.</p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <InputGroup className="h-8 w-64">
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:shrink-0">
+          <InputGroup className="h-8 w-full min-w-0 sm:w-64">
             <InputGroupAddon align="inline-start">
               <Search className="size-3.5" />
             </InputGroupAddon>
