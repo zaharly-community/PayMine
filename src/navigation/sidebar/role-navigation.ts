@@ -16,6 +16,10 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     "treasury-handovers": true,
     "treasury-incidents": true,
     "treasury-approvals": true,
+    transactions: true,
+    settlements: true,
+    reconciliation: true,
+    "fees-revenue": true,
   },
   "Brand Admin": {
     dashboard: true,
