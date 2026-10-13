@@ -47,7 +47,7 @@ function HandoversPage() {
       ...row,
       receivedBalance: value,
       variance,
-      status: Math.abs(variance) < 0.01 ? "Accepted" : "Disputed",
+      status: Math.abs(variance) < 0.01 ? ("Accepted" as const) : ("Disputed" as const),
       evidence: receiptNote.trim() ? "Incoming confirmation entered · " + receiptNote.trim() : "Incoming confirmation entered; independent evidence not attached",
       note: Math.abs(variance) < 0.01 ? "Counts match in demo; independent review remains required" : "Balance mismatch of " + formatTnd(variance) + "; preserve both declarations and open an incident",
     })));
