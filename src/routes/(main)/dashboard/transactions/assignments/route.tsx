@@ -30,7 +30,7 @@ function AssignmentsPage() {
   const activeSupervisors = new Set(assignments.filter((row) => row.status === "Active").map((row) => row.supervisor)).size;
 
   function toggleAssignment(id: string) {
-    setAssignments((current) => current.map((row) => row.id !== id ? row : ({ ...row, status: row.status === "Active" ? "Suspended" : "Active" })));
+    setAssignments((current) => current.map((row) => row.id !== id ? row : ({ ...row, status: row.status === "Active" ? ("Suspended" as const) : ("Active" as const) })));
   }
 
   return (
