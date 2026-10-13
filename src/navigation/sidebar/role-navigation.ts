@@ -8,6 +8,14 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     subscriptions: true,
     reports: true,
     settings: true,
+    "treasury-control": true,
+    "treasury-overview": true,
+    "treasury-ledger": true,
+    "treasury-assignments": true,
+    "treasury-shifts": true,
+    "treasury-handovers": true,
+    "treasury-incidents": true,
+    "treasury-approvals": true,
   },
   "Brand Admin": {
     dashboard: true,
@@ -22,6 +30,14 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     reconciliation: true,
     "fees-revenue": true,
     settings: true,
+    "treasury-control": true,
+    "treasury-overview": true,
+    "treasury-ledger": true,
+    "treasury-assignments": true,
+    "treasury-shifts": true,
+    "treasury-handovers": true,
+    "treasury-incidents": true,
+    "treasury-approvals": true,
   },
   Supervisor: {
     dashboard: true,
@@ -32,6 +48,10 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     analytics: true,
     disagreements: true,
     transactions: true,
+    "treasury-control": true,
+    "treasury-shifts": true,
+    "treasury-handovers": true,
+    "treasury-incidents": true,
   },
   Agent: {
     dashboard: true,
@@ -61,6 +81,13 @@ const routeKeys: Array<{ prefix: string; id: string }> = [
   { prefix: "/dashboard/withdrawls", id: "withdrawls" },
   { prefix: "/dashboard/analytics/disagreements", id: "disagreements" },
   { prefix: "/dashboard/analytics", id: "analytics" },
+  { prefix: "/dashboard/treasury-control", id: "treasury-overview" },
+  { prefix: "/dashboard/transactions/ledger", id: "treasury-ledger" },
+  { prefix: "/dashboard/transactions/assignments", id: "treasury-assignments" },
+  { prefix: "/dashboard/transactions/shifts", id: "treasury-shifts" },
+  { prefix: "/dashboard/transactions/handovers", id: "treasury-handovers" },
+  { prefix: "/dashboard/transactions/incidents", id: "treasury-incidents" },
+  { prefix: "/dashboard/transactions/approvals", id: "treasury-approvals" },
   { prefix: "/dashboard/transactions/settlements", id: "settlements" },
   { prefix: "/dashboard/transactions/reconciliation", id: "reconciliation" },
   { prefix: "/dashboard/transactions/fees-revenue", id: "fees-revenue" },
@@ -83,7 +110,15 @@ export function filterSidebarItemsForRole<T extends { id: string }>(
     .map((group) => ({
       ...group,
       label: role === "SaaS Owner" && group.id === 4 ? undefined : group.label,
-      items: group.items.filter((item) => access[item.id] === true),
+      items: group.items
+        .filter((item) => access[item.id] === true)
+        .map((item) => {
+          if ("subItems" in item && Array.isArray(item.subItems)) {
+            return { ...item, subItems: item.subItems.filter((subItem) => access[subItem.id] === true) };
+          }
+          return item;
+        })
+        .filter((item) => !("subItems" in item) || !Array.isArray(item.subItems) || item.subItems.length > 0),
     }))
     .filter((group) => group.items.length > 0);
 }
