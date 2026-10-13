@@ -31,11 +31,6 @@ export function WalletMenu() {
       >
         <WalletCards className="size-4" />
         <span className="hidden tabular-nums sm:inline">-$2,450.75</span>
-        <Progress
-          value={usage}
-          className="hidden h-1.5 w-12 sm:flex"
-          aria-label={`Package usage ${Math.round(usage)}%`}
-        />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-80">
