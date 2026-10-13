@@ -313,9 +313,10 @@ function Page() {
     setRentOpen(false);
   }
 
-  const rentedOfferRecords = rentalOffers
-    .filter((offer) => Boolean(rentedOffers[offer.id]))
-    .map((offer) => ({ ...offer, rentalExpiresAt: rentedOffers[offer.id] }));
+  const rentedOfferRecords = rentalOffers.flatMap((offer) => {
+    const rentalExpiresAt = rentedOffers[offer.id];
+    return rentalExpiresAt ? [{ ...offer, rentalExpiresAt }] : [];
+  });
 
   return (
     <section className="flex min-h-full flex-col gap-5 bg-background">
