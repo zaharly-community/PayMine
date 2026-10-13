@@ -146,7 +146,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
             return (
               <div
                 key={row.id}
-                data-deposit-row-id={deposit.id}
+                data-mobile-deposit-row-id={deposit.id}
                 data-state={table.state.rowSelection[row.id] && "selected"}
                 className={`relative min-w-0 px-3 py-3 transition-colors hover:bg-muted/30 ${getDepositRowIndicator(deposit.depositStatus)}`}
               >
