@@ -1,6 +1,12 @@
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
+  ArrowLeftRight,
+  BookOpenCheck,
+  ClipboardCheck,
+  Clock3,
+  FileWarning,
+  ShieldCheck,
   BarChart3,
   CircleDollarSign,
   CreditCard,
@@ -145,6 +151,20 @@ export const sidebarItems: NavGroup[] = [
     id: 3,
     label: "Finance",
     items: [
+      {
+        id: "treasury-control",
+        title: "Treasury Control",
+        icon: ShieldCheck,
+        subItems: [
+          { id: "treasury-overview", title: "Overview", url: "/dashboard/treasury-control" as AppPath, icon: PanelsTopLeft },
+          { id: "treasury-ledger", title: "Internal Ledger", url: "/dashboard/transactions/ledger" as AppPath, icon: BookOpenCheck },
+          { id: "treasury-assignments", title: "Supervisor Access", url: "/dashboard/transactions/assignments" as AppPath, icon: Users },
+          { id: "treasury-shifts", title: "Shifts", url: "/dashboard/transactions/shifts" as AppPath, icon: Clock3 },
+          { id: "treasury-handovers", title: "Handovers", url: "/dashboard/transactions/handovers" as AppPath, icon: ArrowLeftRight },
+          { id: "treasury-incidents", title: "Incidents", url: "/dashboard/transactions/incidents" as AppPath, icon: FileWarning },
+          { id: "treasury-approvals", title: "Approvals", url: "/dashboard/transactions/approvals" as AppPath, icon: ClipboardCheck },
+        ],
+      },
       {
         id: "transactions",
         title: "Transactions",
