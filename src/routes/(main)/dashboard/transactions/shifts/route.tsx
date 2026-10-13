@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, Clock3, Download, Search, ShieldCheck, SquareArrowOutUpRight } from "lucide-react";
+import { Clock3, Download, Search, ShieldCheck, SquareArrowOutUpRight } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
