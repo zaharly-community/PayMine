@@ -6,6 +6,8 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   CircleDollarSign,
   Clock3,
   Copy,
@@ -43,6 +45,7 @@ type PaymentMethod = {
   logoUrl?: string;
   logoClass: string;
   note: string;
+  automatic?: boolean;
 };
 
 const paymentMethods: PaymentMethod[] = [
@@ -56,6 +59,16 @@ const paymentMethods: PaymentMethod[] = [
       "https://play-lh.googleusercontent.com/7mMIDBQ-DsWB5GZluLfTwMXROjPTiJDS1LyQDPKRS8G20dW3LD8GGTU68FZ1hhbwM7-5jqe5QNMiDjQrIoDV",
     logoClass: "bg-white",
     note: "Complete the payment using your Flouci account. The deposit is credited after payment confirmation.",
+  },
+  {
+    id: "binance-pay",
+    name: "Binance Pay",
+    min: 1,
+    max: 10000,
+    currency: "USDT",
+    logoClass: "bg-[#F0B90B] text-slate-950",
+    note: "Binance Pay automatic checkout is not connected yet. Configure the provider API credentials and server-side payment verification before accepting real deposits.",
+    automatic: true,
   },
   {
     id: "d17",
@@ -136,6 +149,8 @@ function PaymentMethodMark({ method }: { method: PaymentMethod }) {
           loading="lazy"
           referrerPolicy="no-referrer"
         />
+      ) : method.id === "binance-pay" ? (
+        <span className="text-[10px] font-black tracking-tight">BNB</span>
       ) : (
         <span className="px-0.5 text-center leading-tight">e-Dinar</span>
       )}
@@ -154,39 +169,94 @@ function PaymentMethodSelector({
   onToggle: () => void;
   onSelect: (method: PaymentMethod) => void;
 }) {
+  const sliderRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const viewport = sliderRef.current;
+    if (!viewport) return;
+    const selected = viewport.querySelector<HTMLElement>("[data-payment-method-id='" + method.id + "']");
+    if (!selected) return;
+
+    const viewportRect = viewport.getBoundingClientRect();
+    const selectedRect = selected.getBoundingClientRect();
+    const itemStart = selectedRect.left - viewportRect.left + viewport.scrollLeft;
+    const itemEnd = itemStart + selectedRect.width;
+
+    if (itemStart < viewport.scrollLeft) {
+      viewport.scrollTo({ left: Math.max(0, itemStart - 8), behavior: "smooth" });
+    } else if (itemEnd > viewport.scrollLeft + viewport.clientWidth) {
+      viewport.scrollTo({ left: itemEnd - viewport.clientWidth + 8, behavior: "smooth" });
+    }
+  }, [method.id]);
+
+  const slide = (direction: -1 | 1) => {
+    sliderRef.current?.scrollBy({ left: direction * 230, behavior: "smooth" });
+  };
+
   return (
     <div className="relative">
-      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {paymentMethods.map((item) => {
-          const selected = item.id === method.id;
+      <div className="flex min-w-0 items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => slide(-1)}
+          aria-label="Previous payment methods"
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-slate-900/80 text-slate-300 transition-colors hover:border-white/15 hover:bg-slate-800"
+        >
+          <ChevronLeft className="size-4" />
+        </button>
 
-          return (
-            <Link
-              key={item.id}
-              to="/portal/$method"
-              params={{ method: item.id }}
-              onClick={() => onSelect(item)}
-              className={cn(
-                "group flex min-w-[104px] shrink-0 flex-col items-center gap-1.5 rounded-lg border px-2.5 py-2 transition-colors",
-                selected
-                  ? "border-white/25 bg-slate-800/80"
-                  : "border-white/8 bg-slate-900/60 hover:border-white/15 hover:bg-slate-800/60",
-              )}
-              aria-current={selected ? "page" : undefined}
-            >
-              <PaymentMethodMark method={item} />
-              <span className="max-w-full truncate text-[10px] font-medium text-slate-200">
-                {item.name}
-              </span>
-            </Link>
-          );
-        })}
+        <div
+          ref={sliderRef}
+          className="min-w-0 flex-1 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <div className="flex min-w-max items-stretch gap-2 px-1 py-2">
+            {paymentMethods.map((item) => {
+              const selected = item.id === method.id;
+
+              return (
+                <Link
+                  key={item.id}
+                  data-payment-method-id={item.id}
+                  to="/portal/$method"
+                  params={{ method: item.id }}
+                  onClick={() => onSelect(item)}
+                  className={cn(
+                    "group relative mt-1 flex min-w-[104px] shrink-0 flex-col items-center gap-1.5 rounded-lg border px-2.5 pb-2 pt-2.5 transition-colors",
+                    selected
+                      ? "border-white/25 bg-slate-800/80"
+                      : "border-white/8 bg-slate-900/60 hover:border-white/15 hover:bg-slate-800/60",
+                  )}
+                  aria-current={selected ? "page" : undefined}
+                >
+                  {item.automatic ? (
+                    <span className="absolute -top-2 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-emerald-300/40 bg-emerald-300 px-1.5 py-0.5 text-[8px] font-bold leading-none text-slate-950 shadow-sm">
+                      Automatique
+                    </span>
+                  ) : null}
+                  <PaymentMethodMark method={item} />
+                  <span className="max-w-full truncate text-[10px] font-medium text-slate-200">
+                    {item.name}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => slide(1)}
+          aria-label="Next payment methods"
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-slate-900/80 text-slate-300 transition-colors hover:border-white/15 hover:bg-slate-800"
+        >
+          <ChevronRight className="size-4" />
+        </button>
 
         <button
           type="button"
           onClick={onToggle}
           aria-label="Show all payment methods"
-          className="flex min-w-9 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-slate-900/60 px-2 text-slate-400 hover:bg-slate-800/60"
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-slate-900/80 text-slate-400 transition-colors hover:bg-slate-800"
         >
           <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
         </button>
@@ -213,6 +283,7 @@ function PaymentMethodSelector({
               >
                 <PaymentMethodMark method={item} />
                 <span className="min-w-0 truncate">{item.name}</span>
+                {item.automatic ? <span className="ml-auto rounded-full bg-emerald-300 px-1.5 py-0.5 text-[8px] font-bold text-slate-950">Auto</span> : null}
               </Link>
             ))}
           </div>
@@ -5311,6 +5382,11 @@ export function CustomerPortal({ initialMethodId }: { initialMethodId?: string }
           method.currency +
           ".",
       );
+      return;
+    }
+
+    if (method.automatic) {
+      setError("Binance Pay is marked as an automatic method, but its API connection is not configured yet. Connect the provider server-side before accepting deposits.");
       return;
     }
 
