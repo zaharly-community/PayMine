@@ -1941,7 +1941,9 @@ function AccountDetailsDialog({
 
           <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
             <ShieldCheck className="size-4 shrink-0" />
-            Credentials are shown as masked placeholders in this UI template.
+            {account.type === "Payment Gateway"
+              ? "Gateway API secrets will be managed securely on the server when the real integration is implemented. This account is not connected yet."
+              : "Credentials are shown as masked placeholders in this UI template."}
           </div>
         </div>
       </DialogContent>
