@@ -14,6 +14,7 @@ import {
   Gauge,
   Info,
   Plus,
+  PlugZap,
   Sparkles,
   TicketCheck,
   Search,
@@ -33,9 +34,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { distributors } from "../../distributors/-components/data";
 
-type AccountType = "Wallet" | "Voucher";
-type AccountStatus = "Active" | "Disabled";
-type AccountMethod = "D17" | "Flouci" | "Kashy" | "e-Dinar" | "Voucher";
+type AccountType = "Wallet" | "Voucher" | "Payment Gateway";
+type AccountStatus = "Active" | "Disabled" | "Not connected";
+type GatewayMode = "Test" | "Live";
+type LimitCurrency = "TND" | "USD" | "EUR" | "USDT";
+type AccountMethod =
+  | "D17"
+  | "Flouci"
+  | "Kashy"
+  | "e-Dinar"
+  | "Voucher"
+  | "Binance Pay"
+  | "Stripe"
+  | "PayPal"
+  | "Coinbase Commerce"
+  | "NOWPayments";
 
 type SupervisorPolicy = "All" | "Include only" | "Exclude selected";
 
@@ -47,6 +60,9 @@ type SupervisorRule = {
 
 type AccountConfig = {
   ownerName: string;
+  merchantAccountId: string;
+  integrationMode: GatewayMode;
+  limitCurrency: LimitCurrency;
   cardNumber: string;
   expiry: string;
   walletNumber: string;
@@ -93,6 +109,14 @@ const supervisorDirectory: SupervisorRule[] = distributors
   }));
 
 const walletMethods: AccountMethod[] = ["D17", "Flouci", "Kashy", "e-Dinar"];
+const gatewayMethods: AccountMethod[] = [
+  "Binance Pay",
+  "Stripe",
+  "PayPal",
+  "Coinbase Commerce",
+  "NOWPayments",
+  "Flouci",
+];
 
 const dayOptions = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -105,6 +129,9 @@ function createDefaultConfig(method: AccountMethod): AccountConfig {
 
   return {
     ownerName: "",
+    merchantAccountId: "",
+    integrationMode: "Test",
+    limitCurrency: "TND",
     cardNumber: "",
     expiry: "",
     walletNumber: "",
@@ -322,7 +349,7 @@ function Page() {
     <section className="flex min-h-full flex-col gap-5 bg-background">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
-          {(["All", "Wallet", "Voucher"] as const).map((filter) => (
+          {(["All", "Wallet", "Voucher", "Payment Gateway"] as const).map((filter) => (
             <button
               key={filter}
               type="button"
@@ -389,7 +416,7 @@ function Page() {
             </span>
             <span>
               <span className="block text-sm font-medium">Link New Account</span>
-              <span className="mt-1 block text-xs text-muted-foreground">Wallet or voucher account</span>
+              <span className="mt-1 block text-xs text-muted-foreground">Wallet, voucher or payment gateway</span>
             </span>
           </span>
         </button>
@@ -442,6 +469,7 @@ const accountMethodImages: Partial<Record<AccountMethod, string>> = {
 
 function AccountCard({ account, onView }: { account: PaymentAccount; onView: () => void }) {
   const positive = account.change >= 0;
+  const isGateway = account.type === "Payment Gateway";
   const rentalExpired = account.source === "rented" && account.rentalExpiresAt
     ? getRentalTimeRemaining(account.rentalExpiresAt) === "Expired"
     : false;
@@ -464,7 +492,7 @@ function AccountCard({ account, onView }: { account: PaymentAccount; onView: () 
             </div>
           </div>
           <span className="inline-flex shrink-0 items-center gap-1.5 pt-0.5 text-[11px] text-muted-foreground">
-            <span className={account.status === "Active" ? "size-1.5 rounded-full bg-emerald-500" : "size-1.5 rounded-full bg-muted-foreground"} />
+            <span className={account.status === "Active" ? "size-1.5 rounded-full bg-emerald-500" : account.status === "Not connected" ? "size-1.5 rounded-full bg-amber-500" : "size-1.5 rounded-full bg-muted-foreground"} />
             {account.status}
           </span>
         </div>
@@ -493,8 +521,14 @@ function AccountCard({ account, onView }: { account: PaymentAccount; onView: () 
       <CardContent className="flex flex-1 flex-col px-4 pb-4 pt-0">
         <div className="flex items-center justify-between gap-2 py-1">
           <div className="min-w-0">
-            <p className="text-[11px] text-muted-foreground">Available balance</p>
-            <p className="mt-1 truncate text-xl font-semibold tracking-tight tabular-nums">{formatMoney(account.balance)}</p>
+            <p className="text-[11px] text-muted-foreground">{isGateway ? "Daily amount limit" : "Available balance"}</p>
+            <p className="mt-1 truncate text-xl font-semibold tracking-tight tabular-nums">
+              {isGateway
+                ? account.config.maxAmount
+                  ? Number(account.config.maxAmount).toLocaleString("en-US") + " " + account.config.limitCurrency
+                  : "Unlimited"
+                : formatMoney(account.balance)}
+            </p>
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
             <button type="button" onClick={onView} className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={"View " + account.accountName} title="View account">
@@ -508,15 +542,21 @@ function AccountCard({ account, onView }: { account: PaymentAccount; onView: () 
 
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/60 pt-3">
           <div className="min-w-0">
-            <p className="text-[10px] text-muted-foreground">Today</p>
-            <span className={positive ? "mt-0.5 inline-flex max-w-full items-center gap-1 text-xs font-semibold text-emerald-600" : "mt-0.5 inline-flex max-w-full items-center gap-1 text-xs font-semibold text-rose-600"}>
-              {positive ? <ArrowUpRight className="size-3 shrink-0" /> : <ArrowDownRight className="size-3 shrink-0" />}
-              <span className="truncate tabular-nums">{positive ? "+" : "-"}{formatMoney(Math.abs(account.change))}</span>
-            </span>
+            <p className="text-[10px] text-muted-foreground">{isGateway ? "Daily transaction limit" : "Today"}</p>
+            {isGateway ? (
+              <p className="mt-0.5 truncate text-xs font-semibold text-foreground">
+                {account.config.maxTransactions ? account.config.maxTransactions + " transactions" : "Unlimited"}
+              </p>
+            ) : (
+              <span className={positive ? "mt-0.5 inline-flex max-w-full items-center gap-1 text-xs font-semibold text-emerald-600" : "mt-0.5 inline-flex max-w-full items-center gap-1 text-xs font-semibold text-rose-600"}>
+                {positive ? <ArrowUpRight className="size-3 shrink-0" /> : <ArrowDownRight className="size-3 shrink-0" />}
+                <span className="truncate tabular-nums">{positive ? "+" : "-"}{formatMoney(Math.abs(account.change))}</span>
+              </span>
+            )}
           </div>
           <div className="min-w-0 text-right">
-            <p className="text-[10px] text-muted-foreground">Last activity</p>
-            <p className="mt-0.5 truncate text-xs font-medium text-foreground">{account.lastActivity}</p>
+            <p className="text-[10px] text-muted-foreground">{isGateway ? "Integration" : "Last activity"}</p>
+            <p className="mt-0.5 truncate text-xs font-medium text-foreground">{isGateway ? account.status : account.lastActivity}</p>
           </div>
         </div>
       </CardContent>
@@ -553,7 +593,8 @@ function AccountWizard({
   }
 
   function changeType(nextType: AccountType) {
-    const nextMethod: AccountMethod = nextType === "Wallet" ? "D17" : "Voucher";
+    const nextMethod: AccountMethod =
+      nextType === "Wallet" ? "D17" : nextType === "Voucher" ? "Voucher" : "Binance Pay";
     setType(nextType);
     setMethod(nextMethod);
     setConfig(emptyConfig(nextMethod));
@@ -593,6 +634,7 @@ function AccountWizard({
       if (type === "Wallet" && method === "D17" && (!config.cardNumber.trim() || !config.expiry.trim() || !config.walletName.trim() || !config.pin.trim())) return false;
       if (type === "Wallet" && method === "Flouci" && !config.pin.trim()) return false;
       if (type === "Voucher" && (!config.voucherCode.trim() || !config.issuer.trim() || !config.denomination.trim())) return false;
+      if (type === "Payment Gateway" && !config.merchantAccountId.trim()) return false;
     }
     if (step === 2) {
       if (config.supervisorPolicy !== "All" && config.selectedSupervisorIds.length === 0) return false;
@@ -608,9 +650,11 @@ function AccountWizard({
 
   function createAccount() {
     const identifier =
-      type === "Voucher"
-        ? config.voucherCode || accountName
-        : config.walletNumber || accountName;
+      type === "Payment Gateway"
+        ? config.merchantAccountId || method
+        : type === "Voucher"
+          ? config.voucherCode || accountName
+          : config.walletNumber || accountName;
 
     onCreate({
       id: "ACC-" + String(Date.now()).slice(-6),
@@ -619,9 +663,9 @@ function AccountWizard({
       method,
       type,
       identifier,
-      balance: config.openingBalance,
-      currency: "TND",
-      status: "Active",
+      balance: type === "Payment Gateway" ? 0 : config.openingBalance,
+      currency: config.limitCurrency,
+      status: type === "Payment Gateway" ? "Not connected" : "Active",
       lastActivity: "Just now",
       change: 0,
       config,
@@ -630,7 +674,12 @@ function AccountWizard({
     reset();
   }
 
-  const titleByStep = ["Account details", "Supervisors & limits", "Schedule", "Opening balance & review"];
+  const titleByStep = [
+    "Account details",
+    "Supervisors & limits",
+    "Schedule",
+    type === "Payment Gateway" ? "Integration review" : "Opening balance & review",
+  ];
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -639,7 +688,7 @@ function AccountWizard({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <DialogTitle>Link new account</DialogTitle>
-              <DialogDescription>Create a Wallet or Voucher account using a method-specific configuration.</DialogDescription>
+              <DialogDescription>Choose a wallet, voucher or payment gateway, then configure its own limits and access rules.</DialogDescription>
             </div>
             <Badge variant="outline">Step {step} of 4</Badge>
           </div>
@@ -677,6 +726,7 @@ function AccountWizard({
 
           {step === 2 ? (
             <StepSupervisors
+              type={type}
               config={config}
               onPolicyChange={setSupervisorPolicy}
               onToggleSupervisor={toggleSupervisor}
@@ -759,10 +809,11 @@ function StepAccountDetails({
     <div className="space-y-5">
       <div>
         <Label className="text-sm">Account type</Label>
-        <div className="mt-2 grid gap-3 sm:grid-cols-2">
+        <div className="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {[
-            { value: "Wallet" as const, title: "Wallet", description: "Live wallet balance used for deposits and withdrawals.", icon: WalletCards },
+            { value: "Wallet" as const, title: "Wallet", description: "Local wallet balance used for manual deposit and withdrawal operations.", icon: WalletCards },
             { value: "Voucher" as const, title: "Voucher", description: "Code / inventory based payment account.", icon: CreditCard },
+            { value: "Payment Gateway" as const, title: "Payment Gateway", description: "Prepare an automated provider account with transaction and amount limits.", icon: PlugZap },
           ].map((item) => {
             const Icon = item.icon;
             const active = type === item.value;
@@ -790,9 +841,11 @@ function StepAccountDetails({
       </div>
 
       <div>
-        <Label className="text-sm">{type === "Wallet" ? "Wallet method" : "Voucher method"}</Label>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          {(type === "Wallet" ? walletMethods : ["Voucher" as const]).map((item) => {
+        <Label className="text-sm">
+          {type === "Wallet" ? "Wallet method" : type === "Voucher" ? "Voucher method" : "Payment gateway provider"}
+        </Label>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          {(type === "Wallet" ? walletMethods : type === "Voucher" ? (["Voucher"] as const) : gatewayMethods).map((item) => {
             const active = method === item;
             const descriptions: Record<string, string> = {
               D17: "Card, wallet number and PIN based wallet.",
@@ -800,6 +853,11 @@ function StepAccountDetails({
               Kashy: "Wallet number and PIN based wallet.",
               "e-Dinar": "Card, wallet number and PIN based wallet.",
               Voucher: "Code, issuer and denomination based account.",
+              "Binance Pay": "Crypto checkout for Binance Pay merchant accounts.",
+              Stripe: "Card and wallet checkout for supported regions.",
+              PayPal: "PayPal checkout and eligible wallet payments.",
+              "Coinbase Commerce": "Crypto checkout using hosted payment sessions.",
+              NOWPayments: "Multi-asset crypto payment processing.",
             };
             return (
               <button
@@ -830,7 +888,11 @@ function StepAccountDetails({
           </div>
           <div>
             <p className="text-sm font-medium">{method} account details</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">The fields below change with the selected method. Each linked account keeps its own configuration.</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              {type === "Payment Gateway"
+                ? "This creates a gateway account record only. Secure server-side credentials and provider webhooks must be connected before accepting real payments."
+                : "The fields below change with the selected method. Each linked account keeps its own configuration."}
+            </p>
           </div>
         </div>
       </div>
@@ -841,9 +903,32 @@ function StepAccountDetails({
           <Input value={accountName} onChange={(event) => onAccountNameChange(event.target.value)} placeholder={"Example: " + method + " Primary"} />
         </div>
         <div className="grid gap-2 sm:col-span-2">
-          <Label>Account holder name</Label>
-          <Input value={config.ownerName} onChange={(event) => onConfigChange({ ownerName: event.target.value })} placeholder="Full name" />
+          <Label>{type === "Payment Gateway" ? "Merchant / business name" : "Account holder name"}</Label>
+          <Input value={config.ownerName} onChange={(event) => onConfigChange({ ownerName: event.target.value })} placeholder={type === "Payment Gateway" ? "Registered merchant or business name" : "Full name"} />
         </div>
+
+        {type === "Payment Gateway" ? (
+          <>
+            <Field
+              label="Merchant account ID"
+              value={config.merchantAccountId}
+              onChange={(value) => onConfigChange({ merchantAccountId: value })}
+              placeholder="Enter the provider merchant / account ID"
+            />
+            <div className="grid gap-2">
+              <Label>Integration mode</Label>
+              <select
+                value={config.integrationMode}
+                onChange={(event) => onConfigChange({ integrationMode: event.target.value as GatewayMode })}
+                className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+              >
+                <option value="Test">Test / sandbox</option>
+                <option value="Live">Live mode (not activated)</option>
+              </select>
+              <p className="text-[11px] leading-4 text-muted-foreground">Mode is saved as a setup preference only; this screen does not connect to the provider.</p>
+            </div>
+          </>
+        ) : null}
 
         {type === "Wallet" && method === "D17" ? (
           <>
@@ -894,11 +979,13 @@ function StepAccountDetails({
 }
 
 function StepSupervisors({
+  type,
   config,
   onPolicyChange,
   onToggleSupervisor,
   onConfigChange,
 }: {
+  type: AccountType;
   config: AccountConfig;
   onPolicyChange: (policy: SupervisorPolicy) => void;
   onToggleSupervisor: (id: string) => void;
@@ -981,6 +1068,23 @@ function StepSupervisors({
         </div>
       )}
 
+      {type === "Payment Gateway" ? (
+        <div className="grid gap-2 sm:max-w-xs">
+          <Label>Limit currency</Label>
+          <select
+            value={config.limitCurrency}
+            onChange={(event) => onConfigChange({ limitCurrency: event.target.value as LimitCurrency })}
+            className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+          >
+            <option value="TND">TND · Tunisian dinar</option>
+            <option value="USD">USD · US dollar</option>
+            <option value="EUR">EUR · Euro</option>
+            <option value="USDT">USDT · Tether</option>
+          </select>
+          <p className="text-[11px] text-muted-foreground">Daily amount limits use the currency selected here.</p>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <LimitField
           icon={<Activity className="size-4" />}
@@ -998,7 +1102,7 @@ function StepSupervisors({
           value={config.maxAmount}
           onChange={(value) => onConfigChange({ maxAmount: value })}
           placeholder="50000"
-          suffix="TND / day"
+          suffix={config.limitCurrency + " / day"}
         />
       </div>
     </div>
@@ -1108,7 +1212,7 @@ function StepReview({
       ? "All active supervisors"
       : config.selectedSupervisorIds.length + (config.supervisorPolicy === "Include only" ? " included" : " excluded");
 
-  const accountIdentifier = config.walletNumber || config.voucherCode || "—";
+  const accountIdentifier = config.merchantAccountId || config.walletNumber || config.voucherCode || "—";
 
   return (
     <div className="space-y-5">
@@ -1116,8 +1220,14 @@ function StepReview({
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 size-4 text-amber-600" />
           <div>
-            <p className="text-sm font-medium">Confirm the current balance before activation</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">Enter the exact balance shown in the wallet right now. It becomes the opening balance for this account and keeps the starting ledger aligned with the provider.</p>
+            <p className="text-sm font-medium">
+              {type === "Payment Gateway" ? "Review gateway settings before connecting" : "Confirm the current balance before activation"}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              {type === "Payment Gateway"
+                ? "This adds a local account record with its own limits. API credentials, signed webhooks and live activation will be implemented server-side in a later integration step."
+                : "Enter the exact balance shown in the wallet right now. It becomes the opening balance for this account and keeps the starting ledger aligned with the provider."}
+            </p>
           </div>
         </div>
       </div>
@@ -1137,15 +1247,36 @@ function StepReview({
             <div className="divide-y">
               <SummaryRow label="Account name" value={accountName || "—"} />
               <SummaryRow label="Method" value={method} />
-              <SummaryRow label="Account holder" value={config.ownerName || "—"} />
-              <SummaryRow label="Identifier" value={accountIdentifier} />
+              <SummaryRow label={type === "Payment Gateway" ? "Merchant / business" : "Account holder"} value={config.ownerName || "—"} />
+              <SummaryRow label={type === "Payment Gateway" ? "Merchant account ID" : "Identifier"} value={accountIdentifier} />
+              {type === "Payment Gateway" ? <SummaryRow label="Integration mode" value={config.integrationMode + " · Not connected"} /> : null}
               <SummaryRow label="Supervisors" value={supervisorSummary} />
-              <SummaryRow label="Limits" value={(config.maxTransactions || "Unlimited") + " transactions · " + (config.maxAmount ? config.maxAmount + " TND" : "Unlimited amount")} />
+              <SummaryRow label="Limits" value={(config.maxTransactions || "Unlimited") + " transactions/day · " + (config.maxAmount ? config.maxAmount + " " + config.limitCurrency + "/day" : "Unlimited amount")} />
               <SummaryRow label="Schedule" value={config.scheduleEnabled ? (config.days.length === dayOptions.length ? "All days" : config.days.join(", ") || "No days") + " · " + config.startTime + "–" + config.endTime : "Always available"} />
             </div>
           </CardContent>
         </Card>
 
+        {type === "Payment Gateway" ? (
+          <Card className="shadow-none">
+            <CardHeader className="border-b pb-3">
+              <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Connection</p>
+              <CardTitle className="mt-1 text-base">Gateway setup status</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+                <PlugZap className="mt-0.5 size-4 shrink-0 text-amber-600" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">Not connected</p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">The provider is registered in Accounts, but no API request or payment is enabled yet.</p>
+                </div>
+              </div>
+              <SummaryRow label="Provider" value={method} />
+              <SummaryRow label="Mode" value={config.integrationMode} />
+              <SummaryRow label="Limit currency" value={config.limitCurrency} />
+            </CardContent>
+          </Card>
+        ) : (
         <Card className="shadow-none">
           <CardHeader className="border-b pb-3">
             <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Required</p>
@@ -1174,12 +1305,17 @@ function StepReview({
             </div>
           </CardContent>
         </Card>
+        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <ReviewStat icon={<UsersRound className="size-4" />} label="Supervisors" value={supervisorSummary} />
         <ReviewStat icon={<Clock3 className="size-4" />} label="Availability" value={config.scheduleEnabled ? "Scheduled" : "Always on"} />
-        <ReviewStat icon={<WalletCards className="size-4" />} label="Opening balance" value={formatMoney(config.openingBalance)} />
+        <ReviewStat
+          icon={type === "Payment Gateway" ? <PlugZap className="size-4" /> : <WalletCards className="size-4" />}
+          label={type === "Payment Gateway" ? "Connection status" : "Opening balance"}
+          value={type === "Payment Gateway" ? "Not connected" : formatMoney(config.openingBalance)}
+        />
       </div>
     </div>
   );
@@ -1739,16 +1875,29 @@ function AccountDetailsDialog({
         </DialogHeader>
 
         <div className="grid gap-4">
-          <Card className="shadow-none">
-            <CardHeader className="pb-3"><CardTitle className="text-sm">Balance</CardTitle></CardHeader>
-            <CardContent className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="text-2xl font-semibold tabular-nums">{formatMoney(account.balance)}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Opening balance recorded at account creation.</p>
-              </div>
-              <Badge variant="outline">{account.identifier}</Badge>
-            </CardContent>
-          </Card>
+          {account.type === "Payment Gateway" ? (
+            <Card className="shadow-none">
+              <CardHeader className="pb-3"><CardTitle className="text-sm">Gateway limits & connection</CardTitle></CardHeader>
+              <CardContent className="grid gap-3 sm:grid-cols-2">
+                <ReviewItem label="Daily amount limit" value={account.config.maxAmount ? Number(account.config.maxAmount).toLocaleString("en-US") + " " + account.config.limitCurrency : "Unlimited"} />
+                <ReviewItem label="Daily transaction limit" value={account.config.maxTransactions ? account.config.maxTransactions + " transactions" : "Unlimited"} />
+                <ReviewItem label="Integration mode" value={account.config.integrationMode} />
+                <ReviewItem label="Connection status" value={account.status} />
+                <div className="sm:col-span-2"><ReviewItem label="Merchant account ID" value={account.config.merchantAccountId || account.identifier} /></div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="shadow-none">
+              <CardHeader className="pb-3"><CardTitle className="text-sm">Balance</CardTitle></CardHeader>
+              <CardContent className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className="text-2xl font-semibold tabular-nums">{formatMoney(account.balance)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Opening balance recorded at account creation.</p>
+                </div>
+                <Badge variant="outline">{account.identifier}</Badge>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="shadow-none">
             <CardHeader className="pb-3"><CardTitle className="text-sm">Account-specific configuration</CardTitle></CardHeader>
@@ -1756,7 +1905,9 @@ function AccountDetailsDialog({
               <div className="grid gap-3 sm:grid-cols-3">
                 <ReviewItem label="Owner" value={account.config.ownerName || "—"} />
                 <ReviewItem label="Max transactions" value={account.config.maxTransactions || "Unlimited"} />
-                <ReviewItem label="Max amount" value={account.config.maxAmount ? account.config.maxAmount + " TND / day" : "Unlimited"} />
+                <ReviewItem label="Max amount" value={account.config.maxAmount ? account.config.maxAmount + " " + account.config.limitCurrency + " / day" : "Unlimited"} />
+                {account.type === "Payment Gateway" ? <ReviewItem label="Merchant account ID" value={account.config.merchantAccountId || "—"} /> : null}
+                {account.type === "Payment Gateway" ? <ReviewItem label="Integration mode" value={account.config.integrationMode + " · " + account.status} /> : null}
                 {account.source === "rented" && account.rentalExpiresAt ? (
                   <ReviewItem label="Rental expires" value={formatRentalDate(account.rentalExpiresAt) + " · " + getRentalTimeRemaining(account.rentalExpiresAt)} />
                 ) : (
