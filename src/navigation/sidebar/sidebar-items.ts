@@ -19,6 +19,7 @@ import {
 import type { FileRoutesByTo } from "@/routeTree.gen";
 
 export type NavBadge = "new" | "soon";
+export type NavCountBadge = { count: number; tone: "green" | "red" };
 export type AppPath = keyof FileRoutesByTo;
 
 export interface NavSubItem {
@@ -27,6 +28,7 @@ export interface NavSubItem {
   url: AppPath;
   icon?: LucideIcon;
   badge?: NavBadge;
+  countBadge?: NavCountBadge;
   disabled?: boolean;
   newTab?: boolean;
 }
