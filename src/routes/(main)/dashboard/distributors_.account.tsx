@@ -849,30 +849,28 @@ function ActivityPanel({ distributor }: { distributor: (typeof distributors)[num
         <Badge variant="outline" className="w-fit">Demo activity</Badge>
       </div>
 
-      <div className="rounded-xl border p-4 sm:p-5">
-        {events.map((event) => (
-          <article key={event.id} className="relative grid grid-cols-[36px_minmax(0,1fr)] gap-3 pb-5 last:pb-0">
+      <div className="pl-0">
+        {events.map((event, index) => (
+          <article key={event.id} className="relative grid grid-cols-[24px_minmax(0,1fr)] gap-3 pb-6 last:pb-0 sm:grid-cols-[28px_minmax(0,1fr)] sm:gap-4">
             <div className="relative flex justify-center">
-              {event.id !== events[events.length - 1]?.id ? (
-                <span className="absolute bottom-[-20px] top-8 w-px bg-border" aria-hidden="true" />
+              {index < events.length - 1 ? (
+                <span className="absolute bottom-[-2px] top-5 w-px bg-border" aria-hidden="true" />
               ) : null}
-              <span className="relative z-10 flex size-8 items-center justify-center rounded-full border bg-background text-muted-foreground">
+              <span className="relative z-10 flex size-5 items-center justify-center bg-background text-muted-foreground sm:size-6">
                 {activityIcon(event.type)}
               </span>
             </div>
-            <div className="min-w-0 rounded-lg border p-3 transition-colors hover:bg-muted/20 sm:p-4">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">{event.title}</p>
-                  <p className="mt-1 text-sm leading-5 text-muted-foreground">{event.description}</p>
-                </div>
+            <div className="min-w-0 space-y-1">
+              <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                <p className="text-sm font-medium">{event.title}</p>
                 {event.badge ? (
-                  <Badge variant="outline" className={cn("w-fit shrink-0", badgeClass[event.badgeTone ?? "neutral"])}>
+                  <Badge variant="outline" className={cn("h-5 shrink-0 px-1.5 text-[10px] font-normal", badgeClass[event.badgeTone ?? "neutral"])}>
                     {event.badge}
                   </Badge>
                 ) : null}
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+              <p className="text-sm leading-5 text-muted-foreground">{event.description}</p>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1 text-xs text-muted-foreground">
                 <span className="whitespace-nowrap tabular-nums">{event.dateLabel}</span>
                 <span aria-hidden="true">·</span>
                 <span>{event.actor}</span>
