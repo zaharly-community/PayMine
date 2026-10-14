@@ -151,7 +151,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
         </Table>
       </div>
 
-      <div className="space-y-2 px-2 md:hidden">
+      <div className="overflow-hidden border-y md:hidden">
         {table.getRowModel().rows.length ? (
           table.getRowModel().rows.map((row) => {
             const deposit = row.original;
@@ -164,72 +164,80 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
                 key={row.id}
                 data-mobile-deposit-row-id={deposit.id}
                 data-state={table.state.rowSelection[row.id] && "selected"}
-                aria-label={`Deposit ${deposit.id}; verification status ${deposit.verificationStatus}`}
-                className={`relative min-w-0 rounded-lg border bg-card px-3 py-2.5 transition-colors hover:bg-muted/30 ${getVerificationIndicator(deposit.verificationStatus)}`}
+                aria-label={`Deposit ${deposit.id}; payment method ${deposit.paymentMethod}; verification status ${deposit.verificationStatus}`}
+                className={`relative min-w-0 border-b border-border/70 bg-background px-3 py-3 last:border-b-0 sm:px-4 ${getVerificationIndicator(deposit.verificationStatus)}`}
               >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Deposit ID</p>
-                    <p className="mt-0.5 truncate font-mono text-[11px] leading-4">{deposit.id}</p>
+                <div className="flex min-w-0 items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span
+                      className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-card p-1 shadow-sm"
+                      title={deposit.paymentMethod}
+                      aria-label={`${deposit.paymentMethod} payment method`}
+                    >
+                      {deposit.paymentMethodImage ? (
+                        <img
+                          src={deposit.paymentMethodImage}
+                          alt={deposit.paymentMethod}
+                          className="size-full object-contain"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <span className="text-xs font-semibold text-muted-foreground">
+                          {deposit.paymentMethod.slice(0, 1)}
+                        </span>
+                      )}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-muted-foreground">Deposit ID</p>
+                      <p className="mt-0.5 truncate font-mono text-sm font-semibold leading-5 text-foreground">
+                        {deposit.id}
+                      </p>
+                    </div>
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Amount</p>
-                    <p className="mt-0.5 text-sm font-semibold leading-4 tabular-nums text-emerald-600 dark:text-emerald-400">
+                    <p className="text-xs font-medium text-muted-foreground">Amount</p>
+                    <p className="mt-0.5 text-base font-semibold leading-5 tabular-nums text-emerald-600 dark:text-emerald-400">
                       +{formatCurrency(deposit.amount)}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2 border-t pt-2">
+                <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border/60 pt-3">
                   <div className="min-w-0">
-                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Payment Method</p>
-                    <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
-                      <span className="flex size-5 shrink-0 items-center justify-center overflow-hidden rounded border bg-background">
-                        {deposit.paymentMethodImage ? (
-                          <img src={deposit.paymentMethodImage} alt="" className="size-full object-contain p-0.5" loading="lazy" referrerPolicy="no-referrer" />
-                        ) : null}
-                      </span>
-                      <span className="truncate text-xs font-medium">{deposit.paymentMethod}</span>
-                    </div>
+                    <p className="text-xs font-medium text-muted-foreground">Player</p>
+                    <p className="mt-0.5 truncate text-sm font-medium leading-5">{deposit.name}</p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Player</p>
-                    <p className="mt-0.5 truncate text-xs font-medium">{deposit.name}</p>
+                    <p className="text-xs font-medium text-muted-foreground">Date</p>
+                    <p className="mt-0.5 text-sm leading-5 tabular-nums">{deposit.date}</p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Date</p>
-                    <p className="mt-0.5 truncate text-[11px] tabular-nums">{deposit.date}</p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Fees</p>
-                    <p className="mt-0.5 truncate text-[11px] tabular-nums">
+                    <p className="text-xs font-medium text-muted-foreground">Fees</p>
+                    <p className="mt-0.5 text-sm leading-5 tabular-nums">
                       {deposit.feePercent > 0 ? `${deposit.feePercent}% · ${formatCurrency(deposit.feeAmount)}` : "Not concerned"}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-2 flex min-w-0 items-center justify-between gap-2 border-t pt-2">
-                  <div className="flex min-w-0 items-center gap-1.5">
-                    <span className="shrink-0 text-[10px] text-muted-foreground">Deposit status</span>
-                    <span className="min-w-0">{statusCell ? <table.FlexRender cell={statusCell} /> : null}</span>
+                <div className="mt-3 flex min-w-0 items-center justify-between gap-3 border-t border-border/60 pt-3">
+                  <div className="min-w-0">
+                    {statusCell ? <table.FlexRender cell={statusCell} /> : null}
                   </div>
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    <span className="hidden min-[375px]:inline text-[10px] font-medium text-muted-foreground">Actions</span>
-                    {actionsCell ? (
-                      <div className="flex items-center rounded-md border bg-background px-1 py-0.5 shadow-sm">
-                        <table.FlexRender cell={actionsCell} />
-                      </div>
-                    ) : null}
-                  </div>
+                  {actionsCell ? (
+                    <div className="flex shrink-0 items-center rounded-lg border bg-muted/30 p-1 shadow-sm">
+                      <table.FlexRender cell={actionsCell} />
+                    </div>
+                  ) : null}
                 </div>
 
                 {isLocked ? (
                   <div
-                    className="absolute inset-0 z-20 flex cursor-not-allowed items-center justify-center rounded-lg bg-background/75 px-3 backdrop-blur-[3px]"
+                    className="absolute inset-0 z-20 flex cursor-not-allowed items-center justify-center bg-background/75 px-3 backdrop-blur-[3px]"
                     onClick={(event) => { event.preventDefault(); event.stopPropagation(); }}
                     onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); }}
                   >
-                    <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                    <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                       <LockKeyhole className="size-4 shrink-0" />
                       Processing by {deposit.processedBy.name}
                     </span>
