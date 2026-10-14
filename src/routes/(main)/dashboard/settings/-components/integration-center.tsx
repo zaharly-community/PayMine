@@ -61,8 +61,6 @@ const categoryIcons: Record<IntegrationCategory, typeof PlugZap> = {
   Identity: LockKeyhole,
 };
 
-export function IntegrationCenter() { component: IntegrationCenter });
-
 function IntegrationLogo({ item, large = false }: { item: Integration; large?: boolean }) {
   return (
     <div className={"flex shrink-0 items-center justify-center rounded-xl border bg-background font-semibold tracking-tight " + (large ? "size-12 text-sm" : "size-10 text-xs")}>
