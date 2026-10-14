@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Copy,
   Download,
-  Mail,
   Maximize2,
   Minus,
   MoreVertical,
@@ -46,9 +45,9 @@ function Field({
   mono?: boolean;
 }) {
   return (
-    <div className="min-w-0 space-y-1.5">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={cn("truncate text-sm font-medium", mono && "font-mono text-xs")}>
+    <div className="min-w-0 rounded-lg border bg-muted/15 px-3 py-3">
+      <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className={cn("mt-1.5 truncate text-sm font-medium leading-5 text-foreground", mono && "font-mono text-[11px] tracking-tight")}>
         {value}
       </div>
     </div>
@@ -558,7 +557,7 @@ function TimelineItem({
   active?: boolean;
 }) {
   return (
-    <div className="grid grid-cols-[72px_20px_1fr] gap-3">
+    <div className="grid grid-cols-[60px_16px_minmax(0,1fr)] gap-2 sm:grid-cols-[72px_20px_minmax(0,1fr)] sm:gap-3">
       <div className="pt-0.5 text-right text-xs text-muted-foreground">
         <div>{date}</div>
         <div>{time}</div>
@@ -1547,10 +1546,10 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
   const paymentMethod = isVoucher ? "Tunisie Telecom" : "Flouci";
 
   return (
-    <section className="min-h-full bg-background pb-24">
-      <header className="border-b px-6 py-5">
+    <section className="min-h-full bg-background pb-32">
+      <header className="border-b bg-muted/10 px-4 py-5 sm:px-6 md:py-6">
         <div className="mx-auto max-w-[1500px]">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <Badge
@@ -1566,17 +1565,17 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
               </div>
 
               <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-semibold tracking-tight">
+                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
                   Deposit DEP-02026010
                 </h1>
               </div>
 
-              <p className="mt-2 max-w-4xl text-sm text-muted-foreground">
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
                 Review payment evidence, processor routing, and audit changes before releasing the capture hold.
               </p>
             </div>
 
-            <div className="relative flex min-h-[110px] w-[220px] shrink-0 items-center justify-center self-stretch max-w-full">
+            <div className="relative flex min-h-[116px] w-full max-w-[260px] shrink-0 items-center justify-center self-start overflow-hidden rounded-xl border bg-card px-3 py-2 lg:self-auto">
               <div
                 className="absolute top-0 h-[90px] w-[180px] rounded-full blur-3xl"
                 style={{ background: "radial-gradient(rgba(59, 130, 246, 0.094) 0%, transparent 70%)" }}
@@ -1638,11 +1637,11 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1500px] gap-8 px-6 py-10 xl:grid-cols-[minmax(0,1fr)_304px]">
-        <main className="min-w-0 space-y-10">
-          <section className="space-y-5">
+      <div className="mx-auto grid max-w-[1500px] gap-6 px-4 py-6 sm:px-6 md:py-8 xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-8">
+        <main className="min-w-0 space-y-6">
+          <section className="space-y-4 rounded-xl border bg-card p-4 sm:p-5">
             <SectionHeading>Deposit Details</SectionHeading>
-            <div className="grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <Field label="Player Identifier" value="helio-supply-0429" mono />
               <Field label="Amount" value="$8,120.50" />
               <Field label="Fees" value="$183.63" />
@@ -1655,7 +1654,7 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
           </section>
 
           {isVoucher ? (
-            <section className="space-y-5">
+            <section className="space-y-4 rounded-xl border bg-card p-4 sm:p-5">
               <SectionHeading>Payment methods</SectionHeading>
               <p className="text-xs text-muted-foreground">
                 Voucher payment methods configured for this deposit.
@@ -1664,9 +1663,9 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
             </section>
           ) : null}
 
-          <section className="space-y-5">
+          <section className="space-y-4 rounded-xl border bg-card p-4 sm:p-5">
             <SectionHeading>History</SectionHeading>
-            <div>
+            <div className="pt-1">
               <TimelineItem
                 date="May 29"
                 time="08:56"
@@ -1699,27 +1698,15 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
             </div>
           </section>
 
-          <div className="pt-2">
-            <Button asChild variant="ghost" size="sm">
-              <a href="/dashboard/deposits">
-                <ArrowLeft />
-                Back to deposits
-              </a>
-            </Button>
-          </div>
         </main>
 
         <div className="min-w-0 self-start">
-          <div className="sticky top-6 space-y-4">
+          <div className="space-y-4 xl:sticky xl:top-6">
             <EvidenceGallery />
-            <Button variant="outline" className="mt-4 w-full">
-              <Mail />
-              Email customer
-            </Button>
             <Button
               type="button"
-              variant="destructive"
-              className="w-full"
+              variant="outline"
+              className="w-full border-destructive/25 text-destructive hover:bg-destructive/5 hover:text-destructive"
               onClick={() => setReportOpen(true)}
             >
               <AlertTriangle />
