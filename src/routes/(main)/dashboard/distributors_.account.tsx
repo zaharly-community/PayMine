@@ -3,6 +3,8 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Activity,
+  ArrowDownToLine,
+  ArrowUpFromLine,
   BarChart3,
   Building2,
   CalendarDays,
@@ -17,11 +19,13 @@ import {
   MessageSquare,
   Pencil,
   Settings2,
+  Search,
   Star,
   UserRound,
   Users,
   WalletCards,
 } from "lucide-react";
+import { parse } from "date-fns";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -36,6 +40,8 @@ import {
 import { cn } from "cn";
 
 import { distributors, type DistributorRow } from "./distributors/-components/data";
+import { deposits } from "./deposits/-components/data";
+import { withdrawls } from "./withdrawls/-components/data";
 import {
   readDistributorReports,
   subscribeToDistributorReports,
@@ -106,7 +112,7 @@ const chartConfig = {
 function Page() {
   const distributor = distributors[0];
   const [leftTab, setLeftTab] = React.useState<LeftTab>("Details");
-  const [mainTab, setMainTab] = React.useState<MainTab>("Invoices");
+  const [mainTab, setMainTab] = React.useState<MainTab>("Transactions");
 
   const totalBilled = billedMonths.reduce(
     (total, item) => total + item.paid + item.open + item.overdue,
@@ -395,7 +401,7 @@ function Page() {
           </div>
 
           <div className="p-5">
-            {mainTab === "Transactions" ? <InvoicesPanel /> : null}
+            {mainTab === "Transactions" ? <TransactionsPanel distributor={distributor} /> : null}
             {mainTab === "Analytics" ? <AnalyticsPanel /> : null}
             {mainTab === "Reviews" ? <ReviewsPanel /> : null}
             {mainTab === "Score" ? <ScorePanel distributor={distributor} /> : null}
@@ -407,6 +413,206 @@ function Page() {
       </div>
     </section>
   );
+}
+
+
+type AccountTransaction = {
+  id: string;
+  kind: "Deposit" | "Withdrawal";
+  player: string;
+  method: string;
+  date: string;
+  amount: number;
+  status: string;
+  processedBy: { name: string; image: string };
+};
+
+type TransactionFilter = "All" | "Deposit" | "Withdrawal";
+
+function normalizeProcessorName(value: string) {
+  return value.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
+  const [filter, setFilter] = React.useState<TransactionFilter>("All");
+  const [query, setQuery] = React.useState("");
+
+  const rows = React.useMemo<AccountTransaction[]>(() => {
+    const selectedProcessor = normalizeProcessorName(distributor.name);
+    const depositRows: AccountTransaction[] = deposits
+      .filter((row) => normalizeProcessorName(row.processedBy.name) === selectedProcessor)
+      .map((row) => ({
+        id: row.id,
+        kind: "Deposit",
+        player: row.name,
+        method: row.paymentMethod,
+        date: row.date,
+        amount: row.amount,
+        status: row.depositStatus,
+        processedBy: row.processedBy,
+      }));
+
+    const withdrawalRows: AccountTransaction[] = withdrawls
+      .filter((row) => normalizeProcessorName(row.processedBy.name) === selectedProcessor)
+      .map((row) => ({
+        id: row.id,
+        kind: "Withdrawal",
+        player: row.name,
+        method: row.withdrawlMethod,
+        date: row.date,
+        amount: row.amount,
+        status: row.status,
+        processedBy: row.processedBy,
+      }));
+
+    return [...depositRows, ...withdrawalRows].sort(
+      (left, right) =>
+        parse(right.date, "dd MMM yyyy, hh:mm a", new Date()).getTime() -
+        parse(left.date, "dd MMM yyyy, hh:mm a", new Date()).getTime(),
+    );
+  }, [distributor.name]);
+
+  const visibleRows = rows.filter((row) => {
+    if (filter !== "All" && row.kind !== filter) return false;
+    const term = query.trim().toLowerCase();
+    if (!term) return true;
+    return [row.id, row.player, row.method, row.status, row.kind]
+      .some((value) => value.toLowerCase().includes(term));
+  });
+
+  const depositCount = rows.filter((row) => row.kind === "Deposit").length;
+  const withdrawalCount = rows.filter((row) => row.kind === "Withdrawal").length;
+  const depositTotal = rows
+    .filter((row) => row.kind === "Deposit")
+    .reduce((sum, row) => sum + row.amount, 0);
+  const withdrawalTotal = rows
+    .filter((row) => row.kind === "Withdrawal")
+    .reduce((sum, row) => sum + row.amount, 0);
+
+  return (
+    <div className="min-w-0">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border p-4">
+          <p className="text-xs text-muted-foreground">Transactions processed</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums">{rows.length}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Deposits and withdrawals by this account</p>
+        </div>
+        <div className="rounded-xl border p-4">
+          <p className="flex items-center gap-2 text-xs text-muted-foreground"><ArrowDownToLine className="size-3.5" /> Deposits · {depositCount}</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums">{formatCurrency(depositTotal)}</p>
+        </div>
+        <div className="rounded-xl border p-4">
+          <p className="flex items-center gap-2 text-xs text-muted-foreground"><ArrowUpFromLine className="size-3.5" /> Withdrawals · {withdrawalCount}</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums">{formatCurrency(withdrawalTotal)}</p>
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-1 rounded-lg border bg-muted/30 p-1">
+          {(["All", "Deposit", "Withdrawal"] as TransactionFilter[]).map((item) => (
+            <button
+              type="button"
+              key={item}
+              onClick={() => setFilter(item)}
+              aria-pressed={filter === item}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                filter === item
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {item === "Deposit" ? "Deposits" : item === "Withdrawal" ? "Withdrawals" : "All"}
+            </button>
+          ))}
+        </div>
+        <div className="relative w-full sm:max-w-[280px]">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            aria-label="Search transactions"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search ID, player or method..."
+            className="h-9 w-full rounded-md border bg-background pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </div>
+      </div>
+
+      <div className="mt-3 overflow-hidden rounded-xl border">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[780px] text-sm">
+            <thead className="border-b bg-muted/30 text-xs text-muted-foreground">
+              <tr>
+                {["Type", "Transaction ID", "Player", "Payment method", "Date", "Amount", "Status"].map((heading) => (
+                  <th key={heading} className="whitespace-nowrap px-3 py-3 text-left font-medium">{heading}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {visibleRows.map((row) => (
+                <tr key={row.kind + row.id} className="transition-colors hover:bg-muted/20">
+                  <td className="px-3 py-3">
+                    <Badge
+                      variant="outline"
+                      className={row.kind === "Deposit"
+                        ? "gap-1.5 border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                        : "gap-1.5 border-orange-500/20 bg-orange-500/10 text-orange-700 dark:text-orange-300"}
+                    >
+                      {row.kind === "Deposit" ? <ArrowDownToLine className="size-3" /> : <ArrowUpFromLine className="size-3" />}
+                      {row.kind}
+                    </Badge>
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 font-mono text-xs">{row.id}</td>
+                  <td className="px-3 py-3 font-medium">{row.player}</td>
+                  <td className="px-3 py-3">{row.method}</td>
+                  <td className="whitespace-nowrap px-3 py-3 text-muted-foreground">{row.date}</td>
+                  <td className="whitespace-nowrap px-3 py-3 text-right font-medium tabular-nums">{formatCurrency(row.amount)}</td>
+                  <td className="px-3 py-3">
+                    <Badge variant="outline" className={getTransactionStatusClass(row.status)}>{row.status}</Badge>
+                  </td>
+                </tr>
+              ))}
+              {visibleRows.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-5 py-12 text-center">
+                    <WalletCards className="mx-auto size-5 text-muted-foreground" />
+                    <p className="mt-3 text-sm font-medium">
+                      {rows.length === 0 ? "No transactions recorded for this account" : "No matching transactions"}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {rows.length === 0
+                        ? "Deposits and withdrawals will appear here when this account is recorded as the processor."
+                        : "Try another filter or search term."}
+                    </p>
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex items-center justify-between gap-3 border-t px-3 py-2 text-xs text-muted-foreground">
+          <span>Showing {visibleRows.length} of {rows.length} transactions</span>
+          <span>Filtered by processor: <span className="font-medium text-foreground">{distributor.name}</span></span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getTransactionStatusClass(status: string) {
+  if (["Completed", "Approved"].includes(status)) {
+    return "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+  }
+  if (["Processing", "In Process"].includes(status)) {
+    return "border-blue-500/25 bg-blue-500/10 text-blue-700 dark:text-blue-300";
+  }
+  if (["Canceled", "Failed"].includes(status)) {
+    return "border-destructive/25 bg-destructive/10 text-destructive";
+  }
+  if (status === "Waiting Correction") {
+    return "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+  }
+  return "border-border bg-muted/40 text-muted-foreground";
 }
 
 function InvoicesPanel() {
