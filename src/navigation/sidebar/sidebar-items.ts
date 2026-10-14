@@ -138,7 +138,7 @@ export const sidebarItems: NavGroup[] = [
       {
         id: "disagreements",
         title: "Disagreements",
-        url: "/dashboard/analytics/disagreements",
+        url: "/dashboard/disagreements",
         icon: Scale,
       },
     ],
