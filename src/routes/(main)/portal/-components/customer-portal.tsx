@@ -1046,6 +1046,11 @@ export function DepositRequestTrackingPage({
 
           {status === "received" ? (
             <div className="mt-4 border-t border-slate-700 pt-4">
+              {reportSubmittedId ? (
+                <div className="mb-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-200">
+                  Report submitted successfully. Ticket <span className="font-semibold">{reportSubmittedId}</span> is now available in Dashboard → Disagreements.
+                </div>
+              ) : null}
               {postAction === null ? (
                 <>
                   <div className="flex items-center gap-3">
