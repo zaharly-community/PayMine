@@ -38,13 +38,15 @@ function Field({
   label,
   value,
   mono = false,
+  wide = false,
 }: {
   label: string;
   value: string;
   mono?: boolean;
+  wide?: boolean;
 }) {
   return (
-    <div className="min-w-0 border-b border-border/60 py-3 pr-3">
+    <div className={cn("min-w-0 border-b border-border/60 py-2.5 pr-2 sm:py-3 sm:pr-3", wide && "col-span-2 lg:col-span-1")}>
       <div className="text-xs font-medium text-muted-foreground">{label}</div>
       <div className={cn("mt-1.5 truncate text-sm font-medium leading-5 text-foreground", mono && "font-mono text-xs tracking-tight")}>
         {value}
@@ -656,7 +658,7 @@ function EvidenceGallery() {
         "relative overflow-hidden bg-black/5",
         isFullscreen
           ? "flex h-[100dvh] w-full items-center justify-center"
-          : "h-[320px] w-full",
+          : "h-[210px] w-full sm:h-[260px] md:h-[320px]",
         dragging
           ? "cursor-grabbing"
           : scale > 1
@@ -817,7 +819,7 @@ function EvidenceGallery() {
           <div className="flex items-center justify-between gap-3 px-0 pb-3">
             <div>
               <CardTitle className="text-sm">Payment evidence</CardTitle>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 hidden text-xs text-muted-foreground sm:block">
                 Full preview in the card. Open the viewer for detailed inspection.
               </p>
             </div>
@@ -867,73 +869,126 @@ function SummaryCard() {
 
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 z-40 overflow-hidden border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:left-(--sidebar-width)">
-        <div className="flex min-h-[72px] w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 md:flex-nowrap md:px-5 lg:px-6">
-          <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
-            <div className="shrink-0 text-xl font-semibold tracking-tight tabular-nums sm:text-2xl">$8,120.50</div>
-            <div className="h-9 w-px shrink-0 bg-border" />
-            <div className="flex min-w-0 items-center gap-2">
-              <div className="min-w-0 px-1">
-                <div className="whitespace-nowrap text-[9px] text-muted-foreground sm:text-[11px]">Processor fee</div>
-                <div className="mt-0.5 text-xs font-semibold tabular-nums sm:text-sm">$183.63</div>
-              </div>
-              <div className="h-7 w-px shrink-0 bg-border/70" />
-              <div className="min-w-0 px-1">
-                <div className="whitespace-nowrap text-[9px] text-muted-foreground sm:text-[11px]">Net after fees</div>
-                <div className="mt-0.5 text-xs font-semibold tabular-nums sm:text-sm">$7,936.87</div>
-              </div>
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40 overflow-hidden border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:bottom-0 md:left-(--sidebar-width)">
+        <div className="hidden min-h-[72px] w-full min-w-0 items-center gap-3 px-4 py-2.5 md:flex md:flex-nowrap md:px-5 lg:px-6">
+          <div className="shrink-0 text-2xl font-semibold tracking-tight tabular-nums">$8,120.50</div>
+
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="rounded-lg bg-muted/40 px-3 py-2">
+              <div className="text-[11px] text-muted-foreground">Processor fee</div>
+              <div className="mt-0.5 text-sm font-semibold tabular-nums">$183.63</div>
+            </div>
+            <div className="rounded-lg bg-muted/40 px-3 py-2">
+              <div className="text-[11px] text-muted-foreground">Net after fees</div>
+              <div className="mt-0.5 text-sm font-semibold tabular-nums">$7,936.87</div>
             </div>
           </div>
 
-          <div className="ml-auto flex w-full shrink-0 items-center justify-end gap-1 border-t border-border/70 pt-2 md:w-auto md:border-0 md:pt-0 md:gap-1.5">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5">
             <Button
               type="button"
               variant="outline"
-              aria-label="Cancel payment"
-              title="Cancel payment"
-              className="h-8 shrink-0 px-2 sm:h-9 sm:px-3"
+              className="h-9 shrink-0 px-3"
               onClick={() => setCancelOpen(true)}
               disabled={verificationConfirmed}
             >
-              <X className="size-4" />
-              <span className="hidden xl:inline">Cancel payment</span>
+              <X />
+              Cancel payment
             </Button>
 
             <Button
               type="button"
               variant="outline"
-              aria-label="Request modification"
-              title="Request modification"
-              className="h-8 shrink-0 px-2 sm:h-9 sm:px-3"
+              className="h-9 shrink-0 px-3"
               onClick={() => setModificationOpen(true)}
               disabled={verificationConfirmed}
             >
-              <RefreshCcw className="size-4" />
-              <span className="hidden xl:inline">Request modification</span>
+              <RefreshCcw />
+              Request modification
             </Button>
 
             {verificationConfirmed ? (
               <Button
                 type="button"
                 variant="outline"
-                aria-label="Approve verification"
                 disabled={countdown > 0}
-                className="h-8 min-w-[36px] shrink-0 px-2 sm:min-w-[116px] sm:px-3 text-[11px] text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
+                className="h-8 min-w-[116px] px-3 text-[11px] text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
               >
                 <CheckCircle2 className="size-3.5" />
-                <span className="hidden sm:inline">{"Approve" + (countdown > 0 ? " · " + countdown + "s" : "")}</span>
-                <span className="sm:hidden">{countdown > 0 ? countdown + "s" : "Approve"}</span>
+                {"Approve" + (countdown > 0 ? " · " + countdown + "s" : "")}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                className="h-9 shrink-0 px-3"
+                onClick={() => setApproveOpen(true)}
+              >
+                <CheckCircle2 />
+                Confirm Verification
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2.5 px-3 pb-2 pt-2.5 md:hidden">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2.5">
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium text-muted-foreground">Deposit amount</p>
+              <p className="mt-0.5 whitespace-nowrap text-base font-bold leading-5 tabular-nums tracking-tight">$8,120.50</p>
+            </div>
+            <div className="min-w-0 border-l border-border/70 pl-2.5">
+              <p className="whitespace-nowrap text-[9px] font-medium text-muted-foreground">Processor fee</p>
+              <p className="mt-0.5 whitespace-nowrap text-xs font-semibold tabular-nums">$183.63</p>
+            </div>
+            <div className="min-w-0 border-l border-border/70 pl-2.5">
+              <p className="whitespace-nowrap text-[9px] font-medium text-muted-foreground">Net after fees</p>
+              <p className="mt-0.5 whitespace-nowrap text-xs font-semibold tabular-nums">$7,936.87</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 border-t border-border/70 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              aria-label="Cancel payment"
+              className="h-9 min-w-0 gap-1 px-1.5 text-[11px]"
+              onClick={() => setCancelOpen(true)}
+              disabled={verificationConfirmed}
+            >
+              <X className="size-3.5" />
+              <span>Cancel</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              aria-label="Request modification"
+              className="h-9 min-w-0 gap-1 px-1.5 text-[11px]"
+              onClick={() => setModificationOpen(true)}
+              disabled={verificationConfirmed}
+            >
+              <RefreshCcw className="size-3.5" />
+              <span>Modify</span>
+            </Button>
+            {verificationConfirmed ? (
+              <Button
+                type="button"
+                variant="outline"
+                aria-label="Approve verification"
+                disabled={countdown > 0}
+                className="h-9 min-w-0 gap-1 px-1.5 text-[11px] text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
+              >
+                <CheckCircle2 className="size-3.5" />
+                <span>{countdown > 0 ? `${countdown}s` : "Approve"}</span>
               </Button>
             ) : (
               <Button
                 type="button"
                 aria-label="Confirm verification"
-                className="h-8 shrink-0 px-2 sm:h-9 sm:px-3"
+                className="h-9 min-w-0 gap-1 px-1.5 text-[11px]"
                 onClick={() => setApproveOpen(true)}
               >
-                <CheckCircle2 className="size-4" />
-                <span className="hidden xl:inline">Confirm verification</span>
-                <span className="xl:hidden">Confirm</span>
+                <CheckCircle2 className="size-3.5" />
+                <span>Confirm</span>
               </Button>
             )}
           </div>
@@ -1556,8 +1611,8 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
   const paymentMethod = isVoucher ? "Tunisie Telecom" : "Flouci";
 
   return (
-    <section className="min-h-full bg-background pb-32">
-      <header className="border-b px-4 py-6 sm:px-6 md:py-8">
+    <section className="min-h-full bg-background pb-[calc(15rem+env(safe-area-inset-bottom))] md:pb-32">
+      <header className="border-b px-4 py-4 sm:px-6 sm:py-6 md:py-8">
         <div className="mx-auto max-w-[1500px]">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
@@ -1575,7 +1630,7 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
               </div>
 
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                <h1 className="text-xl leading-tight font-semibold tracking-tight sm:text-3xl">
                   Deposit DEP-02026010
                 </h1>
               </div>
@@ -1585,8 +1640,8 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
               </p>
             </div>
 
-            <div className="flex w-full max-w-[280px] shrink-0 items-center gap-4 border-t pt-4 lg:w-auto lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
-              <div className="relative grid size-[68px] shrink-0 place-items-center">
+            <div className="flex w-full max-w-none shrink-0 items-center gap-3 border-t pt-3 lg:w-auto lg:max-w-[280px] lg:gap-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+              <div className="relative grid size-[56px] shrink-0 place-items-center lg:size-[68px]">
                 <svg viewBox="0 0 68 68" className="absolute inset-0 size-full -rotate-90" aria-hidden="true">
                   <circle cx="34" cy="34" r="28" fill="none" stroke="currentColor" strokeWidth="5" className="text-muted-foreground/30" />
                   <circle cx="34" cy="34" r="28" fill="none" stroke="#3b82f6" strokeWidth="5" strokeLinecap="round" strokeDasharray="175.93" strokeDashoffset="38.7" />
@@ -1609,24 +1664,24 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1500px] gap-8 px-4 py-7 sm:px-6 lg:py-9 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-10">
-        <main className="min-w-0 space-y-9">
-          <section className="space-y-4">
+      <div className="mx-auto grid max-w-[1500px] gap-6 px-4 py-5 sm:px-6 md:gap-8 md:py-7 lg:py-9 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-10">
+        <main className="contents xl:order-1 xl:block xl:space-y-9">
+          <section className="order-1 min-w-0 space-y-4">
             <SectionHeading>Deposit Details</SectionHeading>
-            <div className="grid gap-x-6 sm:grid-cols-2 lg:grid-cols-4">
-              <Field label="Player Identifier" value="helio-supply-0429" mono />
+            <div className="grid grid-cols-2 gap-x-4 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-4">
+              <Field label="Player Identifier" value="helio-supply-0429" mono wide />
               <Field label="Amount" value="$8,120.50" />
               <Field label="Fees" value="$183.63" />
               <Field label="Payment Method" value={paymentMethod} />
               <Field label="Account ID" value="ACC-001" mono />
               <Field label="Account Owner" value="Yassine Trabelsi" />
               <Field label="Account Number" value="4123 8801 4290" mono />
-              <Field label="Transaction ID" value="txn_R8M42QH91L6C" mono />
+              <Field label="Transaction ID" value="txn_R8M42QH91L6C" mono wide />
             </div>
           </section>
 
           {isVoucher ? (
-            <section className="space-y-4">
+            <section className="order-2 min-w-0 space-y-4">
               <SectionHeading>Payment methods</SectionHeading>
               <p className="text-xs text-muted-foreground">
                 Voucher payment methods configured for this deposit.
@@ -1635,7 +1690,7 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
             </section>
           ) : null}
 
-          <section className="space-y-4">
+          <section className="order-4 min-w-0 space-y-4">
             <SectionHeading>History</SectionHeading>
             <div className="mt-1 border-t border-border/60 pt-5">
               <TimelineItem
@@ -1672,7 +1727,7 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
 
         </main>
 
-        <div className="min-w-0 self-start">
+        <div className="order-3 min-w-0 self-start xl:order-2">
           <div className="space-y-4 xl:sticky xl:top-6">
             <EvidenceGallery />
             <Button
