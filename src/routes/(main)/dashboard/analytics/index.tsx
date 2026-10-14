@@ -14,7 +14,7 @@ const revenueTrend = [
 ];
 const countries = [
   { name: "Tunisia", count: 8420, share: 64 }, { name: "France", count: 1720, share: 21 },
-  { name: "Italy", count: 980, share: 12 }, { name: "Other", count: 440, share: 7 },
+  { name: "Italy", count: 980, share: 8 }, { name: "Other", count: 440, share: 7 },
 ];
 const funnel = [
   { stage: "Checkout opened", count: 18420, rate: 100 },
