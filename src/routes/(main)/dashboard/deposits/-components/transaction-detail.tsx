@@ -29,8 +29,8 @@ import { Label } from "@/components/ui/label";
 function SectionHeading({ children }: { children: ReactNode }) {
   return (
     <div className="flex items-center gap-3">
-      <h2 className="shrink-0 text-lg font-semibold tracking-tight">{children}</h2>
-      <div className="h-px flex-1 bg-border" />
+      <span aria-hidden="true" className="h-5 w-1 shrink-0 rounded-full bg-primary" />
+      <h2 className="text-base font-semibold tracking-tight sm:text-lg">{children}</h2>
     </div>
   );
 }
@@ -45,9 +45,9 @@ function Field({
   mono?: boolean;
 }) {
   return (
-    <div className="min-w-0 rounded-lg border bg-muted/15 px-3 py-3">
-      <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className={cn("mt-1.5 truncate text-sm font-medium leading-5 text-foreground", mono && "font-mono text-[11px] tracking-tight")}>
+    <div className="min-w-0 border-b border-border/60 py-3 pr-3">
+      <div className="text-xs font-medium text-muted-foreground">{label}</div>
+      <div className={cn("mt-1.5 truncate text-sm font-medium leading-5 text-foreground", mono && "font-mono text-xs tracking-tight")}>
         {value}
       </div>
     </div>
@@ -869,61 +869,72 @@ function SummaryCard() {
   return (
     <>
       <div className="fixed inset-x-0 bottom-0 z-40 overflow-hidden border-t bg-background/95 shadow-[0_-8px_24px_-18px_rgba(0,0,0,0.35)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:left-(--sidebar-width)">
-        <div className="flex min-h-[72px] w-full min-w-0 items-center gap-3 px-4 py-2.5 md:px-5 lg:px-6">
-          <div className="shrink-0 text-2xl font-semibold tracking-tight tabular-nums">$8,120.50</div>
-
-          <div className="flex shrink-0 items-center gap-3">
-            <div className="rounded-lg bg-muted/40 px-3 py-2">
-              <div className="text-[11px] text-muted-foreground">Processor fee</div>
-              <div className="mt-0.5 text-sm font-semibold tabular-nums">$183.63</div>
-            </div>
-            <div className="rounded-lg bg-muted/40 px-3 py-2">
-              <div className="text-[11px] text-muted-foreground">Net after fees</div>
-              <div className="mt-0.5 text-sm font-semibold tabular-nums">$7,936.87</div>
+        <div className="flex min-h-[72px] w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 md:flex-nowrap md:px-5 lg:px-6">
+          <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
+            <div className="shrink-0 text-xl font-semibold tracking-tight tabular-nums sm:text-2xl">$8,120.50</div>
+            <div className="h-9 w-px shrink-0 bg-border" />
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="min-w-0 px-1">
+                <div className="whitespace-nowrap text-[9px] text-muted-foreground sm:text-[11px]">Processor fee</div>
+                <div className="mt-0.5 text-xs font-semibold tabular-nums sm:text-sm">$183.63</div>
+              </div>
+              <div className="h-7 w-px shrink-0 bg-border/70" />
+              <div className="min-w-0 px-1">
+                <div className="whitespace-nowrap text-[9px] text-muted-foreground sm:text-[11px]">Net after fees</div>
+                <div className="mt-0.5 text-xs font-semibold tabular-nums sm:text-sm">$7,936.87</div>
+              </div>
             </div>
           </div>
 
-          <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <div className="ml-auto flex w-full shrink-0 items-center justify-end gap-1 border-t border-border/70 pt-2 md:w-auto md:border-0 md:pt-0 md:gap-1.5">
             <Button
               type="button"
               variant="outline"
-              className="h-9 shrink-0 px-3"
+              aria-label="Cancel payment"
+              title="Cancel payment"
+              className="h-8 shrink-0 px-2 sm:h-9 sm:px-3"
               onClick={() => setCancelOpen(true)}
               disabled={verificationConfirmed}
             >
-              <X />
-              Cancel payment
+              <X className="size-4" />
+              <span className="hidden xl:inline">Cancel payment</span>
             </Button>
 
             <Button
               type="button"
               variant="outline"
-              className="h-9 shrink-0 px-3"
+              aria-label="Request modification"
+              title="Request modification"
+              className="h-8 shrink-0 px-2 sm:h-9 sm:px-3"
               onClick={() => setModificationOpen(true)}
               disabled={verificationConfirmed}
             >
-              <RefreshCcw />
-              Request modification
+              <RefreshCcw className="size-4" />
+              <span className="hidden xl:inline">Request modification</span>
             </Button>
 
             {verificationConfirmed ? (
               <Button
                 type="button"
                 variant="outline"
+                aria-label="Approve verification"
                 disabled={countdown > 0}
-                className="h-8 min-w-[116px] px-3 text-[11px] text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
+                className="h-8 min-w-[36px] shrink-0 px-2 sm:min-w-[116px] sm:px-3 text-[11px] text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
               >
                 <CheckCircle2 className="size-3.5" />
-                {"Approve" + (countdown > 0 ? " · " + countdown + "s" : "")}
+                <span className="hidden sm:inline">{"Approve" + (countdown > 0 ? " · " + countdown + "s" : "")}</span>
+                <span className="sm:hidden">{countdown > 0 ? countdown + "s" : "Approve"}</span>
               </Button>
             ) : (
               <Button
                 type="button"
-                className="h-9 shrink-0 px-3"
+                aria-label="Confirm verification"
+                className="h-8 shrink-0 px-2 sm:h-9 sm:px-3"
                 onClick={() => setApproveOpen(true)}
               >
-                <CheckCircle2 />
-                Confirm Verification
+                <CheckCircle2 className="size-4" />
+                <span className="hidden xl:inline">Confirm verification</span>
+                <span className="xl:hidden">Confirm</span>
               </Button>
             )}
           </div>
@@ -1547,7 +1558,7 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
 
   return (
     <section className="min-h-full bg-background pb-32">
-      <header className="border-b bg-muted/10 px-4 py-5 sm:px-6 md:py-6">
+      <header className="border-b px-4 py-6 sm:px-6 md:py-8">
         <div className="mx-auto max-w-[1500px]">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
@@ -1571,77 +1582,39 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
               </div>
 
               <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                Review payment evidence, processor routing, and audit changes before releasing the capture hold.
+                Review the submitted evidence and transaction history before confirming this deposit.
               </p>
             </div>
 
-            <div className="relative flex min-h-[116px] w-full max-w-[260px] shrink-0 items-center justify-center self-start overflow-hidden rounded-xl border bg-card px-3 py-2 lg:self-auto">
-              <div
-                className="absolute top-0 h-[90px] w-[180px] rounded-full blur-3xl"
-                style={{ background: "radial-gradient(rgba(59, 130, 246, 0.094) 0%, transparent 70%)" }}
-              />
-              <svg width="200" height="122" viewBox="0 0 180 110" className="h-auto w-[200px] overflow-visible max-w-full">
-                <defs>
-                  <linearGradient id="health-gauge-grad" x1="0%" y1="50%" x2="100%" y2="50%">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
-                    <stop offset="50%" stopColor="#3b82f6" />
-                    <stop offset="100%" stopColor="#60a5fa" />
-                  </linearGradient>
-                  <filter id="health-gauge-glow">
-                    <feGaussianBlur stdDeviation="4" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-                <path
-                  d="M 20 95 A 70 70 0 0 1 160 95"
-                  fill="none"
-                  stroke="var(--color-muted, hsl(var(--muted)))"
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                  opacity="0.2"
-                />
-                <path
-                  d="M 20 95 A 70 70 0 0 1 160 95"
-                  fill="none"
-                  stroke="url(#health-gauge-grad)"
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                  strokeDasharray="219.9114857512855"
-                  filter="url(#health-gauge-glow)"
-                  strokeDashoffset="48.3805268652828"
-                />
-                <text x="18" y="109" textAnchor="middle" className="fill-muted-foreground/40 text-[9px] tabular-nums">
-                  0
-                </text>
-                <text x="90" y="19" textAnchor="middle" className="fill-muted-foreground/40 text-[9px] tabular-nums">
-                  50
-                </text>
-                <text x="162" y="109" textAnchor="middle" className="fill-muted-foreground/40 text-[9px] tabular-nums">
-                  100
-                </text>
-              </svg>
-              <div className="absolute bottom-0 flex flex-col items-center">
-                <span className="text-3xl font-bold tabular-nums tracking-tight">78</span>
-                <span className="text-[11px] font-bold text-muted-foreground">
-                  AI Desicion
-                </span>
-                <span className="text-[11px] text-muted-foreground">
-                  Safe
-                </span>
+            <div className="flex w-full max-w-[280px] shrink-0 items-center gap-4 border-t pt-4 lg:w-auto lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+              <div className="relative grid size-[68px] shrink-0 place-items-center">
+                <svg viewBox="0 0 68 68" className="absolute inset-0 size-full -rotate-90" aria-hidden="true">
+                  <circle cx="34" cy="34" r="28" fill="none" stroke="currentColor" strokeWidth="5" className="text-muted/70" />
+                  <circle cx="34" cy="34" r="28" fill="none" stroke="#3b82f6" strokeWidth="5" strokeLinecap="round" strokeDasharray="175.93" strokeDashoffset="38.7" />
+                </svg>
+                <span className="text-2xl font-semibold tabular-nums tracking-tight">78</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">AI assessment</p>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span className="text-sm font-semibold">Safe decision</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                    <span className="size-1.5 rounded-full bg-emerald-500" />
+                    Safe
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">Risk score · 78/100</p>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1500px] gap-6 px-4 py-6 sm:px-6 md:py-8 xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-8">
-        <main className="min-w-0 space-y-6">
-          <section className="space-y-4 rounded-xl border bg-card p-4 sm:p-5">
+      <div className="mx-auto grid max-w-[1500px] gap-8 px-4 py-7 sm:px-6 lg:py-9 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-10">
+        <main className="min-w-0 space-y-9">
+          <section className="space-y-4">
             <SectionHeading>Deposit Details</SectionHeading>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-x-6 sm:grid-cols-2 lg:grid-cols-4">
               <Field label="Player Identifier" value="helio-supply-0429" mono />
               <Field label="Amount" value="$8,120.50" />
               <Field label="Fees" value="$183.63" />
@@ -1654,7 +1627,7 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
           </section>
 
           {isVoucher ? (
-            <section className="space-y-4 rounded-xl border bg-card p-4 sm:p-5">
+            <section className="space-y-4">
               <SectionHeading>Payment methods</SectionHeading>
               <p className="text-xs text-muted-foreground">
                 Voucher payment methods configured for this deposit.
@@ -1663,9 +1636,9 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
             </section>
           ) : null}
 
-          <section className="space-y-4 rounded-xl border bg-card p-4 sm:p-5">
+          <section className="space-y-4">
             <SectionHeading>History</SectionHeading>
-            <div className="pt-1">
+            <div className="mt-1 border-t border-border/60 pt-5">
               <TimelineItem
                 date="May 29"
                 time="08:56"
