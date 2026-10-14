@@ -2,7 +2,7 @@ import type { MouseEvent } from "react";
 
 
 import type { ReactTable } from "@tanstack/react-table";
-import { ArrowDownRight, LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 
 import {
   Pagination,
@@ -37,6 +37,23 @@ function getDepositRowIndicator(status: DepositRow["depositStatus"]) {
     case "Canceled":
     default:
       return "shadow-[inset_5px_0_0_var(--color-red-500)]";
+  }
+}
+
+function getVerificationIndicator(status: DepositRow["verificationStatus"]) {
+  switch (status) {
+    case "Approved":
+      return "border-l-4 border-l-emerald-500";
+    case "Processing":
+      return "border-l-4 border-l-blue-500";
+    case "Pending":
+      return "border-l-4 border-l-amber-400";
+    case "Canceled":
+      return "border-l-4 border-l-red-500";
+    case "Waiting Correction":
+      return "border-l-4 border-l-orange-500";
+    case "In Process":
+      return "border-l-4 border-l-violet-500";
   }
 }
 
@@ -134,57 +151,81 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
         </Table>
       </div>
 
-      <div className="divide-y md:hidden">
+      <div className="space-y-2 px-2 md:hidden">
         {table.getRowModel().rows.length ? (
           table.getRowModel().rows.map((row) => {
             const deposit = row.original;
             const statusCell = row.getAllCells().find((cell) => cell.column.id === "depositStatus");
-            const verificationCell = row.getAllCells().find((cell) => cell.column.id === "verificationStatus");
             const actionsCell = row.getAllCells().find((cell) => cell.column.id === "actions");
             const isLocked = processingLockedRows.has(deposit.id);
 
             return (
-              <div
+              <article
                 key={row.id}
                 data-mobile-deposit-row-id={deposit.id}
                 data-state={table.state.rowSelection[row.id] && "selected"}
-                className={`relative min-w-0 px-3 py-3 transition-colors hover:bg-muted/30 ${getDepositRowIndicator(deposit.depositStatus)}`}
+                aria-label={`Deposit ${deposit.id}; verification status ${deposit.verificationStatus}`}
+                className={`relative min-w-0 rounded-lg border bg-card px-3 py-2.5 transition-colors hover:bg-muted/30 ${getVerificationIndicator(deposit.verificationStatus)}`}
               >
-                <div className="flex min-w-0 items-start gap-3">
-                  <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border bg-primary/10 text-primary">
-                    <ArrowDownRight className="size-4" />
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Deposit ID</p>
+                    <p className="mt-0.5 truncate font-mono text-[11px] leading-4">{deposit.id}</p>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex min-w-0 items-center justify-between gap-3">
-                      <span className="truncate text-sm font-medium">{deposit.name}</span>
-                      <span className="shrink-0 text-right text-sm font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-                        +{formatCurrency(deposit.amount)}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex min-w-0 items-center justify-between gap-2">
-                      <span className="truncate text-xs text-muted-foreground">Deposit · {deposit.paymentMethod}</span>
-                      <span className="shrink-0">{statusCell ? <table.FlexRender cell={statusCell} /> : null}</span>
-                    </div>
-                    <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-[10px] leading-4 text-muted-foreground">
-                      <span className="shrink-0 font-mono">{deposit.id}</span>
-                      <span aria-hidden="true">·</span>
-                      <span className="min-w-0 truncate">{deposit.date}</span>
-                    </div>
-                    <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
-                      <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        {verificationCell ? <table.FlexRender cell={verificationCell} /> : null}
-                        <span className="text-[10px] text-muted-foreground">
-                          Fee: {deposit.feePercent > 0 ? `${deposit.feePercent}% · ${formatCurrency(deposit.feeAmount)}` : "Not concerned"}
-                        </span>
-                        <span className="max-w-full truncate text-[10px] text-muted-foreground">By {deposit.processedBy.name}</span>
-                      </div>
-                      {actionsCell ? <div className="ml-auto shrink-0"><table.FlexRender cell={actionsCell} /></div> : null}
-                    </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Amount</p>
+                    <p className="mt-0.5 text-sm font-semibold leading-4 tabular-nums text-emerald-600 dark:text-emerald-400">
+                      +{formatCurrency(deposit.amount)}
+                    </p>
                   </div>
                 </div>
+
+                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2 border-t pt-2">
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Payment Method</p>
+                    <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+                      <span className="flex size-5 shrink-0 items-center justify-center overflow-hidden rounded border bg-background">
+                        {deposit.paymentMethodImage ? (
+                          <img src={deposit.paymentMethodImage} alt="" className="size-full object-contain p-0.5" loading="lazy" referrerPolicy="no-referrer" />
+                        ) : null}
+                      </span>
+                      <span className="truncate text-xs font-medium">{deposit.paymentMethod}</span>
+                    </div>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Player</p>
+                    <p className="mt-0.5 truncate text-xs font-medium">{deposit.name}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Date</p>
+                    <p className="mt-0.5 truncate text-[11px] tabular-nums">{deposit.date}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Fees</p>
+                    <p className="mt-0.5 truncate text-[11px] tabular-nums">
+                      {deposit.feePercent > 0 ? `${deposit.feePercent}% · ${formatCurrency(deposit.feeAmount)}` : "Not concerned"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-2 flex min-w-0 items-center justify-between gap-2 border-t pt-2">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <span className="shrink-0 text-[10px] text-muted-foreground">Deposit status</span>
+                    <span className="min-w-0">{statusCell ? <table.FlexRender cell={statusCell} /> : null}</span>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <span className="hidden min-[375px]:inline text-[10px] font-medium text-muted-foreground">Actions</span>
+                    {actionsCell ? (
+                      <div className="flex items-center rounded-md border bg-background px-1 py-0.5 shadow-sm">
+                        <table.FlexRender cell={actionsCell} />
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
                 {isLocked ? (
                   <div
-                    className="absolute inset-0 z-20 flex cursor-not-allowed items-center justify-center bg-background/65 px-3 backdrop-blur-[3px]"
+                    className="absolute inset-0 z-20 flex cursor-not-allowed items-center justify-center rounded-lg bg-background/75 px-3 backdrop-blur-[3px]"
                     onClick={(event) => { event.preventDefault(); event.stopPropagation(); }}
                     onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); }}
                   >
@@ -194,7 +235,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
                     </span>
                   </div>
                 ) : null}
-              </div>
+              </article>
             );
           })
         ) : (
