@@ -14,11 +14,14 @@ import {
   CreditCard,
   FileText,
   Gauge,
+  LogIn,
+  LogOut,
   Mail,
   MapPin,
   MessageSquare,
   Pencil,
   Settings2,
+  ShieldCheck,
   Star,
   UserRound,
   Users,
@@ -90,13 +93,6 @@ const notes = [
   ["12 Jun 2026", "Quarterly settlement review completed. Distributor volume is tracking above plan and no unreconciled balance remains."],
   ["28 Apr 2026", "Finance confirmed every statement should include the distributor reference ID to avoid matching delays."],
   ["15 Feb 2026", "Adjusted the commission plan after a duplicate payout was identified and corrected."],
-] as const;
-
-const activities = [
-  ["Invoice INV-2081 passed its due date", "$96,000.00 · first reminder sent", "12 days ago", "warning"],
-  ["Invoice INV-2074 issued", "$88,000.00 · September settlement", "18 days ago", "invoice"],
-  ["Payment received for INV-2055", "$88,000.00 · bank transfer cleared", "14 May 2026", "success"],
-  ["Wallet reconciliation completed", "$28,450.75 · ledger matched", "12 May 2026", "wallet"],
 ] as const;
 
 const chartConfig = {
@@ -404,7 +400,7 @@ function Page() {
             {mainTab === "Analytics" ? <AnalyticsPanel /> : null}
             {mainTab === "Reviews" ? <ReviewsPanel /> : null}
             {mainTab === "Score" ? <ScorePanel distributor={distributor} /> : null}
-            {mainTab === "Activity" ? <ActivityPanel /> : null}
+            {mainTab === "Activity" ? <ActivityPanel distributor={distributor} /> : null}
             {mainTab === "Complaints" ? <ComplaintsPanel distributor={distributor} /> : null}
             {mainTab === "Settings" ? <SettingsPanel distributor={distributor} /> : null}
           </div>
@@ -660,30 +656,246 @@ function getTransactionStatusClass(status: string) {
   return "border-border bg-muted/40 text-muted-foreground";
 }
 
-function ActivityPanel() {
+type AccountActivityEvent = {
+  id: string;
+  timestamp: string;
+  dateLabel: string;
+  type: "login" | "logout" | "withdrawal" | "deposit" | "settings" | "review" | "complaint" | "score" | "security";
+  title: string;
+  description: string;
+  actor: string;
+  reference?: string;
+  amount?: string;
+  badge?: string;
+  badgeTone?: "success" | "warning" | "danger" | "info" | "neutral";
+};
+
+function ActivityPanel({ distributor }: { distributor: (typeof distributors)[number] }) {
+  const events = React.useMemo<AccountActivityEvent[]>(() => [
+    {
+      id: "ACT-014",
+      timestamp: "2026-10-14T10:42:00+01:00",
+      dateLabel: "14 Oct 2026 · 10:42",
+      type: "withdrawal",
+      title: "Withdrawal processed",
+      description: "Withdrawal request was marked as completed for the linked player.",
+      actor: distributor.name,
+      reference: `WDL-${distributor.id}-10482`,
+      amount: "$420.00",
+      badge: "Completed",
+      badgeTone: "success",
+    },
+    {
+      id: "ACT-013",
+      timestamp: "2026-10-14T10:18:00+01:00",
+      dateLabel: "14 Oct 2026 · 10:18",
+      type: "deposit",
+      title: "Deposit verified",
+      description: "A player's deposit was checked and confirmed successfully.",
+      actor: distributor.name,
+      reference: `DEP-${distributor.id}-20831`,
+      amount: "$150.00",
+      badge: "Verified",
+      badgeTone: "success",
+    },
+    {
+      id: "ACT-012",
+      timestamp: "2026-10-14T09:57:00+01:00",
+      dateLabel: "14 Oct 2026 · 09:57",
+      type: "login",
+      title: "Successful sign-in",
+      description: "A new account session was opened using valid credentials.",
+      actor: distributor.name,
+      badge: "Signed in",
+      badgeTone: "info",
+    },
+    {
+      id: "ACT-011",
+      timestamp: "2026-10-13T18:21:00+01:00",
+      dateLabel: "13 Oct 2026 · 18:21",
+      type: "logout",
+      title: "Signed out",
+      description: "The account session ended normally.",
+      actor: distributor.name,
+      badge: "Session ended",
+      badgeTone: "neutral",
+    },
+    {
+      id: "ACT-010",
+      timestamp: "2026-10-13T16:06:00+01:00",
+      dateLabel: "13 Oct 2026 · 16:06",
+      type: "settings",
+      title: "Payment method settings updated",
+      description: "The Flouci processing limit was changed from 50 to 75 requests per day.",
+      actor: distributor.name,
+      reference: "CFG-FLOUCI-075",
+      badge: "Settings changed",
+      badgeTone: "info",
+    },
+    {
+      id: "ACT-009",
+      timestamp: "2026-10-13T14:32:00+01:00",
+      dateLabel: "13 Oct 2026 · 14:32",
+      type: "withdrawal",
+      title: "Withdrawal sent for correction",
+      description: "The request needs additional verification before it can be processed.",
+      actor: "Risk & Operations",
+      reference: `WDL-${distributor.id}-10467`,
+      amount: "$275.00",
+      badge: "Needs correction",
+      badgeTone: "warning",
+    },
+    {
+      id: "ACT-008",
+      timestamp: "2026-10-13T11:48:00+01:00",
+      dateLabel: "13 Oct 2026 · 11:48",
+      type: "review",
+      title: "Customer review received",
+      description: "A player submitted a 5-star rating after a successful transaction.",
+      actor: "Player feedback",
+      badge: "5-star review",
+      badgeTone: "success",
+    },
+    {
+      id: "ACT-007",
+      timestamp: "2026-10-12T17:02:00+01:00",
+      dateLabel: "12 Oct 2026 · 17:02",
+      type: "complaint",
+      title: "Complaint resolved in the player's favor",
+      description: "The review confirmed a processing error. The outcome was recorded and 10 points were deducted from the account score.",
+      actor: "Support review",
+      reference: "CMP-882",
+      badge: "Resolved · −10 pts",
+      badgeTone: "danger",
+    },
+    {
+      id: "ACT-006",
+      timestamp: "2026-10-12T15:34:00+01:00",
+      dateLabel: "12 Oct 2026 · 15:34",
+      type: "score",
+      title: "Performance score increased",
+      description: "15 points were awarded for positive customer feedback.",
+      actor: "System",
+      reference: "SCR-2026-008",
+      badge: "+15 points",
+      badgeTone: "success",
+    },
+    {
+      id: "ACT-005",
+      timestamp: "2026-10-11T12:18:00+01:00",
+      dateLabel: "11 Oct 2026 · 12:18",
+      type: "security",
+      title: "Account password changed",
+      description: "Account security credentials were updated successfully.",
+      actor: distributor.name,
+      badge: "Security update",
+      badgeTone: "info",
+    },
+    {
+      id: "ACT-004",
+      timestamp: "2026-10-10T09:10:00+01:00",
+      dateLabel: "10 Oct 2026 · 09:10",
+      type: "deposit",
+      title: "Deposit processed",
+      description: "A deposit request passed review and was marked as completed.",
+      actor: distributor.name,
+      reference: `DEP-${distributor.id}-20796`,
+      amount: "$80.00",
+      badge: "Completed",
+      badgeTone: "success",
+    },
+    {
+      id: "ACT-003",
+      timestamp: "2026-10-09T22:03:00+01:00",
+      dateLabel: "09 Oct 2026 · 22:03",
+      type: "login",
+      title: "Sign-in attempt blocked",
+      description: "An authentication attempt was rejected because the provided credentials were invalid.",
+      actor: "Security monitor",
+      badge: "Blocked",
+      badgeTone: "danger",
+    },
+  ].sort((left, right) => Date.parse(right.timestamp) - Date.parse(left.timestamp)), [distributor.id, distributor.name]);
+
+  const badgeClass: Record<NonNullable<AccountActivityEvent["badgeTone"]>, string> = {
+    success: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    warning: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+    danger: "border-red-500/25 bg-red-500/10 text-red-700 dark:text-red-300",
+    info: "border-blue-500/25 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+    neutral: "border-border bg-muted/50 text-muted-foreground",
+  };
+
+  const activityIcon = (type: AccountActivityEvent["type"]) => {
+    if (type === "login") return <LogIn className="size-4" />;
+    if (type === "logout") return <LogOut className="size-4" />;
+    if (type === "withdrawal") return <ArrowUpFromLine className="size-4" />;
+    if (type === "deposit") return <ArrowDownToLine className="size-4" />;
+    if (type === "settings") return <Settings2 className="size-4" />;
+    if (type === "review") return <Star className="size-4" />;
+    if (type === "complaint") return <CircleAlert className="size-4" />;
+    if (type === "score") return <Gauge className="size-4" />;
+    return <ShieldCheck className="size-4" />;
+  };
+
   return (
-    <div className="space-y-0">
-      {activities.map(([title, detail, date, tone]) => (
-        <div key={title} className="flex items-start gap-4 border-b py-4 first:pt-0">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
-            {tone === "success" ? (
-              <CheckCircle2 className="size-4" />
-            ) : tone === "invoice" ? (
-              <FileText className="size-4" />
-            ) : tone === "wallet" ? (
-              <WalletCards className="size-4" />
-            ) : (
-              <CreditCard className="size-4" />
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium">{title}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
-          </div>
-          <span className="shrink-0 text-xs text-muted-foreground">{date}</span>
+    <section className="space-y-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-sm font-semibold">Account activity timeline</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Authentication, transaction processing, reviews, and account changes.
+          </p>
         </div>
-      ))}
-    </div>
+        <Badge variant="outline" className="w-fit">Demo activity</Badge>
+      </div>
+
+      <div className="rounded-xl border p-4 sm:p-5">
+        {events.map((event) => (
+          <article key={event.id} className="relative grid grid-cols-[36px_minmax(0,1fr)] gap-3 pb-5 last:pb-0">
+            <div className="relative flex justify-center">
+              <span className="absolute bottom-[-20px] top-8 w-px bg-border last:hidden" aria-hidden="true" />
+              <span className="relative z-10 flex size-8 items-center justify-center rounded-full border bg-background text-muted-foreground">
+                {activityIcon(event.type)}
+              </span>
+            </div>
+            <div className="min-w-0 rounded-lg border p-3 transition-colors hover:bg-muted/20 sm:p-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{event.title}</p>
+                  <p className="mt-1 text-sm leading-5 text-muted-foreground">{event.description}</p>
+                </div>
+                {event.badge ? (
+                  <Badge variant="outline" className={cn("w-fit shrink-0", badgeClass[event.badgeTone ?? "neutral"])}>
+                    {event.badge}
+                  </Badge>
+                ) : null}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                <span className="whitespace-nowrap tabular-nums">{event.dateLabel}</span>
+                <span aria-hidden="true">·</span>
+                <span>{event.actor}</span>
+                {event.reference ? (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="font-mono">{event.reference}</span>
+                  </>
+                ) : null}
+                {event.amount ? (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="font-medium tabular-nums text-foreground">{event.amount}</span>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <p className="text-[11px] text-muted-foreground">
+        These are sample events for this account, not live audit records. In production, populate this timeline from a server-side audit log that records the actor, timestamp, action, outcome, and related transaction reference.
+      </p>
+    </section>
   );
 }
 
