@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Input } from "@/components/ui/input";
 import { cn } from "cn";
+import { createDistributorReport } from "@/lib/distributor-reports";
 
 import { distributors } from "@/routes/(main)/dashboard/distributors/-components/data";
 
@@ -644,6 +645,7 @@ export function DepositRequestTrackingPage({
   const [reviewText, setReviewText] = React.useState("");
   const [reportReason, setReportReason] = React.useState("");
   const [reportDetails, setReportDetails] = React.useState("");
+  const [reportSubmittedId, setReportSubmittedId] = React.useState<string | null>(null);
 
   const createdAt = new Date(request.createdAt);
   const formattedCreatedAt = Number.isNaN(createdAt.getTime())
@@ -1044,6 +1046,11 @@ export function DepositRequestTrackingPage({
 
           {status === "received" ? (
             <div className="mt-4 border-t border-slate-700 pt-4">
+              {reportSubmittedId ? (
+                <div className="mb-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-200">
+                  Report submitted successfully. Ticket <span className="font-semibold">{reportSubmittedId}</span> is now available in Dashboard → Disagreements.
+                </div>
+              ) : null}
               {postAction === null ? (
                 <>
                   <div className="flex items-center gap-3">
@@ -1075,7 +1082,10 @@ export function DepositRequestTrackingPage({
                       type="button"
                       variant="outline"
                       title="Report an issue"
-                      onClick={() => setPostAction("report")}
+                      onClick={() => {
+                        setReportSubmittedId(null);
+                        setPostAction("report");
+                      }}
                       className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:border-red-400/40 hover:bg-slate-800 hover:text-white"
                     >
                       <Info className="size-3.5" />
@@ -1214,7 +1224,26 @@ export function DepositRequestTrackingPage({
                   <Button
                     type="button"
                     disabled={!reportReason}
-                    onClick={() => setPostAction(null)}
+                    onClick={() => {
+                      const report = createDistributorReport({
+                        distributorId: flouciSupervisor?.id ?? "unknown",
+                        distributorName: flouciSupervisor?.name ?? "Supervisor",
+                        distributorEmail: flouciSupervisor?.email ?? "",
+                        distributorAvatarUrl: flouciSupervisor?.avatarUrl,
+                        reporterReference: request.playerId,
+                        reporterLookupType: request.playerLookupType,
+                        depositRequestId: request.id,
+                        paymentMethod: request.methodName,
+                        amount: request.amount,
+                        currency: request.currency,
+                        reason: reportReason,
+                        details: reportDetails.trim(),
+                      });
+                      setReportSubmittedId(report.id);
+                      setPostAction(null);
+                      setReportReason("");
+                      setReportDetails("");
+                    }}
                     className="mt-3 h-10 w-full bg-red-400 text-sm font-medium text-slate-950 hover:bg-red-300 disabled:opacity-40"
                   >
                     <Info className="size-4" />
@@ -2248,6 +2277,7 @@ function WaitingTimeline({
   const [reviewText, setReviewText] = React.useState("");
   const [reportReason, setReportReason] = React.useState("");
   const [reportDetails, setReportDetails] = React.useState("");
+  const [reportSubmittedId, setReportSubmittedId] = React.useState<string | null>(null);
 
   const reportReasons = [
     "Transfer not received",
@@ -2541,6 +2571,11 @@ function WaitingTimeline({
         </div>
       {status === "received" ? (
         <div className="mt-4 border-t border-slate-700 pt-4">
+          {reportSubmittedId ? (
+            <div className="mb-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-200">
+              Report submitted successfully. Ticket <span className="font-semibold">{reportSubmittedId}</span> is now available in Dashboard → Disagreements.
+            </div>
+          ) : null}
           {postAction === null ? (
             <>
               <div className="flex items-center gap-3">
@@ -2572,7 +2607,10 @@ function WaitingTimeline({
                   type="button"
                   variant="outline"
                   title="Report an issue"
-                  onClick={() => setPostAction("report")}
+                  onClick={() => {
+                        setReportSubmittedId(null);
+                        setPostAction("report");
+                      }}
                   className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:border-red-400/40 hover:bg-slate-800 hover:text-white"
                 >
                   <Info className="size-3.5" />
@@ -2705,7 +2743,25 @@ function WaitingTimeline({
               <Button
                 type="button"
                 disabled={!reportReason}
-                onClick={() => setPostAction(null)}
+                onClick={() => {
+                  const report = createDistributorReport({
+                    distributorId: flouciSupervisor?.id ?? "unknown",
+                    distributorName: flouciSupervisor?.name ?? "Supervisor",
+                    distributorEmail: flouciSupervisor?.email ?? "",
+                    distributorAvatarUrl: flouciSupervisor?.avatarUrl,
+                    reporterReference: playerId,
+                    reporterLookupType: playerLookupType,
+                    paymentMethod: method.name,
+                    amount,
+                    currency: method.currency,
+                    reason: reportReason,
+                    details: reportDetails.trim(),
+                  });
+                  setReportSubmittedId(report.id);
+                  setPostAction(null);
+                  setReportReason("");
+                  setReportDetails("");
+                }}
                 className="mt-3 h-10 w-full bg-red-400 text-sm font-medium text-slate-950 hover:bg-red-300 disabled:opacity-40"
               >
                 <Info className="size-4" />
