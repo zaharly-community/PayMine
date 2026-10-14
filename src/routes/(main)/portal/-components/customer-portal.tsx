@@ -5290,7 +5290,6 @@ function BinancePayFlow({
   method,
   playerRequestStatus,
   openRequest,
-  onViewRequest,
   openMethods,
   onToggleMethods,
   onSelectMethod,
@@ -5304,7 +5303,6 @@ function BinancePayFlow({
   method: PaymentMethod;
   playerRequestStatus: PlayerRequestLookupStatus;
   openRequest: DepositRequest | null;
-  onViewRequest: (request: DepositRequest) => void;
   openMethods: boolean;
   onToggleMethods: () => void;
   onSelectMethod: (method: PaymentMethod) => void;
@@ -5875,7 +5873,6 @@ export function CustomerPortal({ initialMethodId }: { initialMethodId?: string }
         method={method}
         playerRequestStatus={playerRequestStatus}
         openRequest={openRequest}
-        onViewRequest={openTrackingPage}
         openMethods={openMethods}
         onToggleMethods={() => setOpenMethods((current) => !current)}
         onSelectMethod={selectMethod}
