@@ -225,26 +225,26 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
 
   return (
     <>
-      <div className="flex items-center justify-end gap-0.5">
+      <div className="flex items-center justify-end gap-1 md:gap-0.5">
         <Button
           type="button"
           aria-label={`Download receipt for ${deposit.id}`}
           title="Download receipt"
-          className="size-7 rounded-[min(var(--radius-md),12px)] text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="size-9 md:size-7 rounded-[min(var(--radius-md),12px)] text-muted-foreground hover:bg-muted hover:text-foreground"
           size="icon-sm"
           variant="ghost"
           onClick={downloadReceipt}
         >
-          <Download className="size-3.5" />
+          <Download className="size-4 md:size-3.5" />
         </Button>
 
         <Link
           to={getDepositDetailPath(deposit.paymentMethod)}
           aria-label={`Open deposit ${deposit.id} for processing`}
           title="Open deposit"
-          className="inline-flex size-7 items-center justify-center rounded-[min(var(--radius-md),12px)] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="inline-flex size-9 md:size-7 items-center justify-center rounded-[min(var(--radius-md),12px)] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-          <Eye className="size-3.5" />
+          <Eye className="size-4 md:size-3.5" />
         </Link>
 
         {canceled ? (
@@ -252,24 +252,24 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
             type="button"
             aria-label={`Enable deposit ${deposit.id}`}
             title="Enable deposit"
-            className="size-7 rounded-[min(var(--radius-md),12px)] text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="size-9 md:size-7 rounded-[min(var(--radius-md),12px)] text-muted-foreground hover:bg-muted hover:text-foreground"
             size="icon-sm"
             variant="ghost"
             onClick={() => setCanceled(false)}
           >
-            <RotateCcw className="size-3.5" />
+            <RotateCcw className="size-4 md:size-3.5" />
           </Button>
         ) : (
           <Button
             type="button"
             aria-label={`Cancel deposit ${deposit.id}`}
             title="Cancel deposit"
-            className="size-7 rounded-[min(var(--radius-md),12px)] text-red-500 hover:bg-red-500/10 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+            className="size-9 md:size-7 rounded-[min(var(--radius-md),12px)] text-red-500 hover:bg-red-500/10 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
             size="icon-sm"
             variant="ghost"
             onClick={() => setCancelOpen(true)}
           >
-            <Ban className="size-3.5" />
+            <Ban className="size-4 md:size-3.5" />
           </Button>
         )}
       </div>
