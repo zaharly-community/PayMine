@@ -70,17 +70,6 @@ const billedMonths = [
   { month: "Jul", paid: 82000, open: 18000, overdue: 66000 },
 ];
 
-const invoices = [
-  ["INV-2081", "Q3 workspace expansion · 40 seats", 96000, "Overdue", "Due 12 days ago"],
-  ["INV-2074", "Annual agreement · Q3 instalment", 88000, "Overdue", "Due 4 days ago"],
-  ["INV-2068", "Priority support retainer", 18000, "Open", "Due in 16 days"],
-  ["INV-2055", "Annual agreement · Q2 instalment", 88000, "Paid", "Paid 14 May 2026"],
-  ["INV-2041", "Custom component commission · design system", 42500, "Paid", "Paid 2 Apr 2026"],
-  ["INV-2029", "Annual agreement · Q1 instalment", 88000, "Paid", "Paid 19 Feb 2026"],
-  ["INV-2014", "Figma kit handoff · design system", 12400, "Paid", "Paid 8 Jan 2026"],
-  ["INV-2098", "Q4 workspace expansion · product team", 74000, "Draft", "Not yet issued"],
-] as const;
-
 const contacts = [
   ["IS", "Ingrid Sandoval", "Account manager", "ingrid@paymine.tn", true],
   ["MP", "Maya Patel", "Head of Product", "maya@paymine.tn", false],
@@ -615,36 +604,6 @@ function getTransactionStatusClass(status: string) {
   return "border-border bg-muted/40 text-muted-foreground";
 }
 
-function InvoicesPanel() {
-  return (
-    <div>
-      <p className="mb-5 text-sm text-muted-foreground">Total: 8 invoices</p>
-
-      <div className="grid gap-3 md:grid-cols-2">
-        {invoices.map(([id, description, amount, status, meta]) => (
-          <div
-            key={id}
-            className="rounded-xl border p-4 transition-colors hover:bg-muted/20"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium">{id}</p>
-                <p className="mt-1 truncate text-xs text-muted-foreground">{description}</p>
-              </div>
-              <InvoiceBadge status={status} />
-            </div>
-
-            <div className="mt-3 text-sm">
-              <span className="font-semibold tabular-nums">{formatCurrency(amount)}</span>
-              <span className="text-muted-foreground"> · {meta}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function ActivityPanel() {
   return (
     <div className="space-y-0">
@@ -1002,26 +961,6 @@ function Legend({
       <span className="text-muted-foreground">{label}</span>
       <span className="font-medium text-foreground">{value}</span>
     </span>
-  );
-}
-
-function InvoiceBadge({ status }: { status: string }) {
-  const styles =
-    status === "Paid"
-      ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
-      : status === "Open"
-        ? "border-blue-500/30 text-blue-600 dark:text-blue-400"
-        : status === "Draft"
-          ? "border-border text-muted-foreground"
-          : "border-red-500/30 text-red-500";
-
-  return (
-    <Badge
-      variant="outline"
-      className={cn("rounded-full px-2 py-0.5 text-[10px] font-normal", styles)}
-    >
-      {status}
-    </Badge>
   );
 }
 
