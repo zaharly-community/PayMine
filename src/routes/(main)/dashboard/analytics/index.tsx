@@ -33,8 +33,19 @@ const money = (value: number) => value.toLocaleString("en-US", { style: "currenc
 
 function AnalyticsOverview() {
   const [period, setPeriod] = useState("7 days");
-  const scale = useMemo(() => period === "24 hours" ? 0.24 : period === "30 days" ? 3.5 : 1, [period]);
-  const total = revenueTrend.reduce((sum, item) => sum + item.value, 0) * scale;
+  const visibleTrend = useMemo(() => {
+    if (period === "24 hours") return [
+      { label: "00:00", value: 3400 }, { label: "04:00", value: 3800 }, { label: "08:00", value: 5200 },
+      { label: "12:00", value: 6100 }, { label: "16:00", value: 5800 }, { label: "20:00", value: 7100 }, { label: "Now", value: 8400 },
+    ];
+    if (period === "30 days") return [
+      { label: "Sep 16", value: 125000 }, { label: "Sep 20", value: 138000 }, { label: "Sep 24", value: 142000 },
+      { label: "Sep 28", value: 160000 }, { label: "Oct 02", value: 177000 }, { label: "Oct 08", value: 189000 }, { label: "Oct 14", value: 205000 },
+    ];
+    return revenueTrend;
+  }, [period]);
+  const total = visibleTrend.reduce((sum, item) => sum + item.value, 0);
+  const maxTrend = Math.max(...visibleTrend.map((item) => item.value));
   const totalAttempts = channels.reduce((sum, item) => sum + item.attempts, 0);
   const totalCompleted = channels.reduce((sum, item) => sum + item.completed, 0);
 
@@ -48,7 +59,7 @@ function AnalyticsOverview() {
       <Card className="shadow-none"><CardContent className="p-4"><div className="flex items-center justify-between"><p className="text-sm text-muted-foreground">Countries represented</p><Globe2 className="size-4 text-muted-foreground" /></div><p className="mt-2 text-2xl font-semibold">{countries.length}</p><p className="mt-1 text-xs text-muted-foreground">Based on demo customer profile data</p></CardContent></Card>
     </div>
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.8fr)]">
-      <Card className="shadow-none"><CardHeader><CardTitle className="text-base">Revenue over time</CardTitle><p className="text-sm text-muted-foreground">Daily payment volume · sample TND amounts</p></CardHeader><CardContent><div className="flex h-52 items-end gap-3 border-b pb-2">{revenueTrend.map((item) => <div key={item.label} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"><span className="text-[10px] tabular-nums text-muted-foreground">{Math.round(item.value * scale / 1000)}k</span><div className="flex w-full items-end justify-center" style={{ height: "78%" }}><div className="w-full max-w-12 rounded-t-md bg-primary/80" style={{ height: Math.max(8, item.value / 57400 * 100) + "%" }} /></div><span className="text-[10px] text-muted-foreground">{item.label}</span></div>)}</div><div className="mt-3 flex items-center justify-between text-sm"><span className="text-muted-foreground">Total in selected demo period</span><span className="font-semibold tabular-nums">{money(total)}</span></div></CardContent></Card>
+      <Card className="shadow-none"><CardHeader><CardTitle className="text-base">Revenue over time</CardTitle><p className="text-sm text-muted-foreground">Payment volume · sample TND amounts · {period}</p></CardHeader><CardContent><div className="flex h-52 items-end gap-3 border-b pb-2">{visibleTrend.map((item) => <div key={item.label} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"><span className="text-[10px] tabular-nums text-muted-foreground">{Math.round(item.value / 1000)}k</span><div className="flex w-full items-end justify-center" style={{ height: "78%" }}><div className="w-full max-w-12 rounded-t-md bg-primary/80" style={{ height: Math.max(8, item.value / maxTrend * 100) + "%" }} /></div><span className="text-[10px] text-muted-foreground">{item.label}</span></div>)}</div><div className="mt-3 flex items-center justify-between text-sm"><span className="text-muted-foreground">Total in selected demo period</span><span className="font-semibold tabular-nums">{money(total)}</span></div></CardContent></Card>
       <Card className="shadow-none"><CardHeader><CardTitle className="text-base">Customers by country</CardTitle><p className="text-sm text-muted-foreground">Illustrative customer profile distribution</p></CardHeader><CardContent className="space-y-4">{countries.map((item) => <div key={item.name}><div className="mb-1.5 flex items-center justify-between text-sm"><span>{item.name}</span><span className="tabular-nums text-muted-foreground">{fmt(item.count)}</span></div><div className="h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-primary/80" style={{ width: item.share + "%" }} /></div></div>)}<p className="text-xs leading-5 text-muted-foreground">Country reporting should follow privacy rules and the trusted country source configured for each tenant.</p></CardContent></Card>
     </div>
     <div className="grid gap-4 xl:grid-cols-2">
