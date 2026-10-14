@@ -10,7 +10,6 @@ import {
   Download,
   Maximize2,
   Minus,
-  MoreVertical,
   Pencil,
   Plus,
   RefreshCcw,
@@ -1589,7 +1588,7 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
             <div className="flex w-full max-w-[280px] shrink-0 items-center gap-4 border-t pt-4 lg:w-auto lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
               <div className="relative grid size-[68px] shrink-0 place-items-center">
                 <svg viewBox="0 0 68 68" className="absolute inset-0 size-full -rotate-90" aria-hidden="true">
-                  <circle cx="34" cy="34" r="28" fill="none" stroke="currentColor" strokeWidth="5" className="text-muted/70" />
+                  <circle cx="34" cy="34" r="28" fill="none" stroke="currentColor" strokeWidth="5" className="text-muted-foreground/30" />
                   <circle cx="34" cy="34" r="28" fill="none" stroke="#3b82f6" strokeWidth="5" strokeLinecap="round" strokeDasharray="175.93" strokeDashoffset="38.7" />
                 </svg>
                 <span className="text-2xl font-semibold tabular-nums tracking-tight">78</span>
@@ -1597,7 +1596,7 @@ export function TransactionDetail({ variant }: { variant: DepositDetailVariant }
               <div className="min-w-0">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">AI assessment</p>
                 <div className="mt-1.5 flex items-center gap-2">
-                  <span className="text-sm font-semibold">Safe decision</span>
+                  <span className="text-sm font-semibold">Decision</span>
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
                     <span className="size-1.5 rounded-full bg-emerald-500" />
                     Safe
