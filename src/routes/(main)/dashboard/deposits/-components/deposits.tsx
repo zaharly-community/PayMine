@@ -16,6 +16,11 @@ import { Kbd } from "@/components/ui/kbd";
 import { AddTransactionDialog, type AddTransactionFieldValues } from "@/components/transactions/add-transaction-dialog";
 import { PaymentLinkTools } from "./payment-link-tools";
 import { readPaymentLinkDeposits } from "@/lib/payment-links";
+import {
+  countOpenDeposits,
+  getInitialOpenOrderCounts,
+  publishOpenOrderCount,
+} from "@/navigation/sidebar/open-order-counts";
 import { dataTableFeatures } from "@/lib/data-table-features";
 
 import type { DepositRow, DepositStatus, PaymentMethod, VerificationStatus } from "./data";
@@ -280,6 +285,23 @@ export function Deposits({ deposits }: { deposits: DepositRow[] }) {
     const seededIds = new Set(deposits.map((row) => row.id));
     return [...linkRows.filter((row) => !seededIds.has(row.id)), ...deposits];
   });
+
+  React.useEffect(() => {
+    publishOpenOrderCount({
+      section: "deposits",
+      count: countOpenDeposits(rows),
+    });
+  }, [rows]);
+
+  React.useEffect(
+    () => () => {
+      publishOpenOrderCount({
+        section: "deposits",
+        count: getInitialOpenOrderCounts().deposits,
+      });
+    },
+    [],
+  );
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "date", desc: true }]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
