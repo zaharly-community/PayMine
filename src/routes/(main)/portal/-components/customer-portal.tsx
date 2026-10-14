@@ -6,8 +6,6 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   CircleDollarSign,
   Clock3,
   Copy,
@@ -27,6 +25,7 @@ import {
   Plus,
   Trash2,
   Wifi,
+  QrCode,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -170,11 +169,21 @@ function PaymentMethodSelector({
   onSelect: (method: PaymentMethod) => void;
 }) {
   const sliderRef = React.useRef<HTMLDivElement>(null);
+  const dragRef = React.useRef({
+    pointerId: -1,
+    startX: 0,
+    startScrollLeft: 0,
+    moved: false,
+    dragging: false,
+  });
+  const [isDragging, setIsDragging] = React.useState(false);
 
   React.useEffect(() => {
     const viewport = sliderRef.current;
     if (!viewport) return;
-    const selected = viewport.querySelector<HTMLElement>("[data-payment-method-id='" + method.id + "']");
+    const selected = viewport.querySelector<HTMLElement>(
+      "[data-payment-method-id='" + method.id + "']",
+    );
     if (!selected) return;
 
     const viewportRect = viewport.getBoundingClientRect();
@@ -185,29 +194,82 @@ function PaymentMethodSelector({
     if (itemStart < viewport.scrollLeft) {
       viewport.scrollTo({ left: Math.max(0, itemStart - 8), behavior: "smooth" });
     } else if (itemEnd > viewport.scrollLeft + viewport.clientWidth) {
-      viewport.scrollTo({ left: itemEnd - viewport.clientWidth + 8, behavior: "smooth" });
+      viewport.scrollTo({
+        left: itemEnd - viewport.clientWidth + 8,
+        behavior: "smooth",
+      });
     }
   }, [method.id]);
 
-  const slide = (direction: -1 | 1) => {
-    sliderRef.current?.scrollBy({ left: direction * 230, behavior: "smooth" });
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    const viewport = sliderRef.current;
+    if (!viewport) return;
+
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScrollLeft: viewport.scrollLeft,
+      moved: false,
+      dragging: true,
+    };
+  };
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    const viewport = sliderRef.current;
+    if (!viewport || !drag.dragging || drag.pointerId !== event.pointerId) return;
+
+    const delta = event.clientX - drag.startX;
+    if (Math.abs(delta) > 5 && !drag.moved) {
+      drag.moved = true;
+      setIsDragging(true);
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        // Pointer capture can fail in a few embedded browser contexts.
+      }
+    }
+
+    if (drag.moved) {
+      event.preventDefault();
+      viewport.scrollLeft = drag.startScrollLeft - delta;
+    }
+  };
+
+  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (drag.pointerId !== event.pointerId) return;
+    drag.dragging = false;
+    setIsDragging(false);
+    try {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    } catch {
+      // Ignore a release that happened automatically in the browser.
+    }
+  };
+
+  const onPointerCancel = () => {
+    dragRef.current.dragging = false;
+    setIsDragging(false);
   };
 
   return (
     <div className="relative">
       <div className="flex min-w-0 items-center gap-1.5">
-        <button
-          type="button"
-          onClick={() => slide(-1)}
-          aria-label="Previous payment methods"
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-slate-900/80 text-slate-300 transition-colors hover:border-white/15 hover:bg-slate-800"
-        >
-          <ChevronLeft className="size-4" />
-        </button>
-
         <div
           ref={sliderRef}
-          className="min-w-0 flex-1 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
+          className={cn(
+            "min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x select-none",
+            isDragging ? "cursor-grabbing" : "cursor-grab",
+          )}
+          aria-label="Payment methods. Drag or swipe horizontally to browse."
         >
           <div className="flex min-w-max items-stretch gap-2 px-1 py-2">
             {paymentMethods.map((item) => {
@@ -219,6 +281,14 @@ function PaymentMethodSelector({
                   data-payment-method-id={item.id}
                   to="/portal/$method"
                   params={{ method: item.id }}
+                  onClickCapture={(event) => {
+                    if (dragRef.current.moved) {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      dragRef.current.moved = false;
+                    }
+                  }}
+                  onDragStart={(event) => event.preventDefault()}
                   onClick={() => onSelect(item)}
                   className={cn(
                     "group relative mt-1 flex min-w-[104px] shrink-0 flex-col items-center gap-1.5 rounded-lg border px-2.5 pb-2 pt-2.5 transition-colors",
@@ -245,17 +315,9 @@ function PaymentMethodSelector({
 
         <button
           type="button"
-          onClick={() => slide(1)}
-          aria-label="Next payment methods"
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-slate-900/80 text-slate-300 transition-colors hover:border-white/15 hover:bg-slate-800"
-        >
-          <ChevronRight className="size-4" />
-        </button>
-
-        <button
-          type="button"
           onClick={onToggle}
           aria-label="Show all payment methods"
+          title="Show all payment methods"
           className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-slate-900/80 text-slate-400 transition-colors hover:bg-slate-800"
         >
           <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
@@ -283,7 +345,11 @@ function PaymentMethodSelector({
               >
                 <PaymentMethodMark method={item} />
                 <span className="min-w-0 truncate">{item.name}</span>
-                {item.automatic ? <span className="ml-auto rounded-full bg-emerald-300 px-1.5 py-0.5 text-[8px] font-bold text-slate-950">Auto</span> : null}
+                {item.automatic ? (
+                  <span className="ml-auto rounded-full bg-emerald-300 px-1.5 py-0.5 text-[8px] font-bold text-slate-950">
+                    Auto
+                  </span>
+                ) : null}
               </Link>
             ))}
           </div>
@@ -5220,6 +5286,413 @@ function EDinarDepositFlow({
   );
 }
 
+function BinancePayFlow({
+  method,
+  playerRequestStatus,
+  openRequest,
+  openMethods,
+  onToggleMethods,
+  onSelectMethod,
+  playerId,
+  setPlayerId,
+  playerLookupType,
+  setPlayerLookupType,
+  amount,
+  setAmount,
+}: {
+  method: PaymentMethod;
+  playerRequestStatus: PlayerRequestLookupStatus;
+  openRequest: DepositRequest | null;
+  openMethods: boolean;
+  onToggleMethods: () => void;
+  onSelectMethod: (method: PaymentMethod) => void;
+  playerId: string;
+  setPlayerId: React.Dispatch<React.SetStateAction<string>>;
+  playerLookupType: PlayerLookupType;
+  setPlayerLookupType: React.Dispatch<React.SetStateAction<PlayerLookupType>>;
+  amount: string;
+  setAmount: React.Dispatch<React.SetStateAction<string>>;
+}) {
+  const [step, setStep] = React.useState<1 | 2>(1);
+  const [error, setError] = React.useState("");
+  const presets = [10, 20, 50, 100, 200, 500];
+
+  React.useEffect(() => {
+    setStep(1);
+    setError("");
+  }, [method.id]);
+
+  const continueToCheckout = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (playerRequestStatus !== "available") {
+      setError(
+        playerRequestStatus === "open"
+          ? "You already have an open deposit request. View it before starting another deposit."
+          : "Checking your player request. Please wait a moment and try again.",
+      );
+      return;
+    }
+
+    if (!playerId.trim()) {
+      setError(
+        playerLookupType === "playerId"
+          ? "Enter your player ID."
+          : playerLookupType === "username"
+            ? "Enter your username."
+            : "Enter your email address.",
+      );
+      return;
+    }
+
+    const numericAmount = Number(amount);
+    if (
+      !Number.isFinite(numericAmount) ||
+      numericAmount < method.min ||
+      numericAmount > method.max
+    ) {
+      setError(
+        "Amount must be between " +
+          method.min.toLocaleString("en-US") +
+          " and " +
+          method.max.toLocaleString("en-US") +
+          " " +
+          method.currency +
+          ".",
+      );
+      return;
+    }
+
+    setError("");
+    setStep(2);
+  };
+
+  const formattedAmount =
+    Number(amount) > 0 ? Number(amount).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }) : "0.00";
+
+  return (
+    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
+        {step === 1 ? (
+          <>
+            <div className="mb-4">
+              <PaymentMethodSelector
+                method={method}
+                open={openMethods}
+                onToggle={onToggleMethods}
+                onSelect={onSelectMethod}
+              />
+            </div>
+
+            <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+              <div className="mb-4 flex items-center gap-3 border-b border-slate-700/80 pb-4">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#F0B90B] text-slate-950">
+                  <span className="text-sm font-black">B</span>
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-white">Binance Pay</p>
+                  <p className="mt-0.5 text-[11px] text-slate-400">
+                    Enter your player details and deposit amount
+                  </p>
+                </div>
+                <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-1 text-[9px] font-semibold text-emerald-200">
+                  Automatic
+                </span>
+              </div>
+
+              <form onSubmit={continueToCheckout} className="space-y-4">
+                <div>
+                  <FieldLabel>
+                    {playerLookupType === "playerId"
+                      ? "Player ID"
+                      : playerLookupType === "username"
+                        ? "Username"
+                        : "Email"}
+                  </FieldLabel>
+
+                  <div className="flex items-stretch gap-2">
+                    <div className="min-w-0 flex-1">
+                      <Input
+                        type={playerLookupType === "email" ? "email" : "text"}
+                        value={playerId}
+                        onChange={(event) => {
+                          setPlayerId(event.target.value);
+                          setError("");
+                        }}
+                        placeholder={
+                          playerLookupType === "playerId"
+                            ? "Enter your player ID"
+                            : playerLookupType === "username"
+                              ? "Enter your username"
+                              : "Enter your email address"
+                        }
+                        title={
+                          playerLookupType === "playerId"
+                            ? "Player ID"
+                            : playerLookupType === "username"
+                              ? "Username"
+                              : "Email"
+                        }
+                        autoComplete={playerLookupType === "email" ? "email" : "off"}
+                        className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
+                      />
+                    </div>
+
+                    <div
+                      className="flex h-12 shrink-0 items-center gap-1.5"
+                      role="tablist"
+                      aria-label="Player identification type"
+                    >
+                      {(
+                        [
+                          ["playerId", "Player ID", Hash],
+                          ["username", "Username", UserRound],
+                          ["email", "Email", Mail],
+                        ] as const
+                      ).map(([type, label, Icon]) => {
+                        const active = playerLookupType === type;
+
+                        return (
+                          <button
+                            key={type}
+                            type="button"
+                            role="tab"
+                            aria-selected={active}
+                            aria-label={label}
+                            title={label}
+                            onClick={() => {
+                              setPlayerLookupType(type);
+                              setPlayerId("");
+                              setError("");
+                            }}
+                            className={cn(
+                              "group flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg bg-slate-700/90 px-3 text-slate-400 transition-all",
+                              active
+                                ? "min-w-[92px] text-slate-100 shadow-[0_0_16px_rgba(255,255,255,0.04)]"
+                                : "w-12 hover:bg-slate-800 hover:text-slate-100",
+                              "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
+                            )}
+                          >
+                            <Icon
+                              className={cn(
+                                "size-4 shrink-0 transition-colors",
+                                active
+                                  ? "text-emerald-300"
+                                  : "text-slate-400 group-hover:text-slate-200",
+                              )}
+                            />
+                            {active ? (
+                              <span className="truncate text-xs font-medium">{label}</span>
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <FieldLabel>Deposit amount</FieldLabel>
+                  <div className="rounded-lg bg-slate-700/90 px-3 py-2">
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      value={amount}
+                      onChange={(event) => {
+                        setAmount(event.target.value);
+                        setError("");
+                      }}
+                      placeholder="Enter deposit amount"
+                      title="Deposit amount"
+                      aria-label="Deposit amount"
+                      className="h-12 border-0 bg-transparent p-0 text-sm text-slate-100 shadow-none placeholder:text-slate-500 focus-visible:ring-0"
+                    />
+                  </div>
+
+                  <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
+                    {presets.map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => {
+                          setAmount(String(preset));
+                          setError("");
+                        }}
+                        title="Select preset deposit amount"
+                        className={cn(
+                          "rounded-md border px-2.5 py-2 text-xs font-medium tabular-nums transition-colors",
+                          Number(amount) === preset
+                            ? "border-emerald-400/60 bg-emerald-400/10 text-emerald-300"
+                            : "border-slate-700 bg-slate-800/60 text-slate-300 hover:border-slate-600 hover:bg-slate-800",
+                        )}
+                      >
+                        {preset} {method.currency}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-4 text-sm">
+                  <span className="font-medium text-slate-400">Min/Max</span>
+                  <span className="font-medium tabular-nums text-slate-100">
+                    {method.min.toLocaleString("en-US")} - {method.max.toLocaleString("en-US")} {method.currency}
+                  </span>
+                </div>
+
+                {error ? (
+                  <div className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+                    {error}
+                  </div>
+                ) : null}
+
+                <PlayerRequestStatusNote
+                  status={playerRequestStatus}
+                  openRequest={openRequest}
+                />
+
+                {playerRequestStatus === "open" && openRequest ? (
+                  <Link
+                    to="/portal/tracking-depoist"
+                    search={{ request: openRequest.id }}
+                    title="View your open deposit request"
+                    className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-amber-300 text-sm font-medium text-slate-950 transition-colors hover:bg-amber-200"
+                  >
+                    <CircleDollarSign className="size-4" />
+                    <span>View Request</span>
+                  </Link>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
+                    title="Continue to Binance Pay checkout preview"
+                    className="h-10 w-full rounded-md bg-[#F0B90B] text-sm font-semibold text-slate-950 hover:bg-[#F8D33A] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Continue to Binance Pay
+                    <ArrowRight className="size-4" />
+                  </Button>
+                )}
+              </form>
+            </section>
+
+            <p className="mt-3 px-1 text-xs leading-relaxed text-slate-400">
+              Choose the player identifier linked to your gaming account. The amount is shown in USDT.
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setError("");
+                  setStep(1);
+                }}
+                className="px-0 text-slate-300 hover:bg-transparent hover:text-white"
+              >
+                <ArrowLeft className="size-4" />
+                Back to deposit
+              </Button>
+              <span className="rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-amber-100">
+                Checkout preview
+              </span>
+            </div>
+
+            <section className="overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900 shadow-2xl">
+              <div className="flex items-center gap-3 border-b border-slate-700/80 px-4 py-4 sm:px-5">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#F0B90B] text-slate-950">
+                  <span className="text-base font-black">B</span>
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-white">Binance Pay</p>
+                  <p className="mt-0.5 text-[11px] text-slate-400">Merchant payment page</p>
+                </div>
+                <ShieldCheck className="size-5 text-emerald-300" />
+              </div>
+
+              <div className="px-4 py-5 sm:px-5">
+                <div className="text-center">
+                  <p className="text-xs font-medium text-slate-400">Pay with Binance Pay</p>
+                  <p className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                    {formattedAmount} <span className="text-base font-medium text-slate-400">{method.currency}</span>
+                  </p>
+                  <p className="mt-2 text-xs text-slate-500">Deposit to your player account</p>
+                </div>
+
+                <div className="mt-5 rounded-xl bg-white p-4 text-slate-900">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="flex size-20 items-center justify-center rounded-2xl bg-[#F0B90B]/15 text-slate-900">
+                      <QrCode className="size-12" strokeWidth={1.5} />
+                    </div>
+                    <p className="mt-3 text-sm font-semibold">Payment QR code unavailable</p>
+                    <p className="mt-1 max-w-xs text-xs leading-relaxed text-slate-500">
+                      A real checkout QR code will be provided by Binance after the merchant API is connected.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 divide-y divide-slate-700/80 rounded-xl border border-slate-700/80">
+                  <div className="flex items-center justify-between gap-4 px-3 py-3">
+                    <span className="text-xs text-slate-400">Merchant</span>
+                    <span className="text-xs font-medium text-slate-100">iPayCash</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4 px-3 py-3">
+                    <span className="text-xs text-slate-400">
+                      {playerLookupType === "playerId"
+                        ? "Player ID"
+                        : playerLookupType === "username"
+                          ? "Username"
+                          : "Email"}
+                    </span>
+                    <span className="max-w-[60%] truncate text-xs font-medium text-slate-100">
+                      {playerId}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4 px-3 py-3">
+                    <span className="text-xs text-slate-400">Payment method</span>
+                    <span className="text-xs font-medium text-slate-100">Binance Pay</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4 px-3 py-3">
+                    <span className="text-xs text-slate-400">Order status</span>
+                    <span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-2 py-0.5 text-[10px] font-medium text-amber-100">
+                      Awaiting API connection
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-300/25 bg-amber-300/5 px-3 py-2.5">
+                  <Info className="mt-0.5 size-4 shrink-0 text-amber-200" />
+                  <p className="text-[11px] leading-relaxed text-amber-100/90">
+                    Preview only. Binance Pay is not connected yet, so no payment order was created and no funds have been requested.
+                  </p>
+                </div>
+
+                <Button
+                  type="button"
+                  disabled
+                  title="Connect Binance Pay server-side before enabling checkout"
+                  className="mt-4 h-11 w-full rounded-lg bg-[#F0B90B] text-sm font-semibold text-slate-950 opacity-60"
+                >
+                  Binance Pay is not connected
+                </Button>
+              </div>
+            </section>
+          </>
+        )}
+
+        <div className="mt-4 flex items-center justify-end gap-2 px-1 text-[10px] uppercase tracking-[0.12em] text-slate-500">
+          <ShieldCheck className="size-3.5" />
+          Secure checkout design preview
+        </div>
+      </div>
+    </main>
+  );
+}
+
 function GenericDepositSummary({
   method,
   amount,
@@ -5393,6 +5866,25 @@ export function CustomerPortal({ initialMethodId }: { initialMethodId?: string }
     setError("");
     setDepositStarted(true);
   };
+
+  if (method.id === "binance-pay") {
+    return (
+      <BinancePayFlow
+        method={method}
+        playerRequestStatus={playerRequestStatus}
+        openRequest={openRequest}
+        openMethods={openMethods}
+        onToggleMethods={() => setOpenMethods((current) => !current)}
+        onSelectMethod={selectMethod}
+        playerId={playerId}
+        setPlayerId={setPlayerId}
+        playerLookupType={playerLookupType}
+        setPlayerLookupType={setPlayerLookupType}
+        amount={amount}
+        setAmount={setAmount}
+      />
+    );
+  }
 
   if (isEDinarMethod(method)) {
     return (
