@@ -214,7 +214,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
                     <span className="min-w-0">{statusCell ? <table.FlexRender cell={statusCell} /> : null}</span>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
-                    <span className="text-[10px] font-medium text-muted-foreground">Actions</span>
+                    <span className="hidden min-[375px]:inline text-[10px] font-medium text-muted-foreground">Actions</span>
                     {actionsCell ? (
                       <div className="flex items-center rounded-md border bg-background px-1 py-0.5 shadow-sm">
                         <table.FlexRender cell={actionsCell} />
