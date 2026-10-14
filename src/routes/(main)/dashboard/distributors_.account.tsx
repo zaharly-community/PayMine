@@ -853,7 +853,9 @@ function ActivityPanel({ distributor }: { distributor: (typeof distributors)[num
         {events.map((event) => (
           <article key={event.id} className="relative grid grid-cols-[36px_minmax(0,1fr)] gap-3 pb-5 last:pb-0">
             <div className="relative flex justify-center">
-              <span className="absolute bottom-[-20px] top-8 w-px bg-border last:hidden" aria-hidden="true" />
+              {event.id !== events[events.length - 1]?.id ? (
+                <span className="absolute bottom-[-20px] top-8 w-px bg-border" aria-hidden="true" />
+              ) : null}
               <span className="relative z-10 flex size-8 items-center justify-center rounded-full border bg-background text-muted-foreground">
                 {activityIcon(event.type)}
               </span>
