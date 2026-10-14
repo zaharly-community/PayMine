@@ -319,9 +319,11 @@ function SaasOwnerDashboard() {
           </div>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-3">
+          <DashboardLink title="Brand portfolio" detail="Compare tenant activity, revenue and open operational risks." to="/dashboard/brands" />
           <DashboardLink title="User analytics" detail="Growth, activation, retention, and user quality." to="/dashboard/reports" />
           <DashboardLink title="Commission analytics" detail="Commission by period, brand, package, and volume." to="/dashboard/reports" />
           <DashboardLink title="Subscription analytics" detail="MRR, ARR, churn, upgrades, and package mix." to="/dashboard/reports" />
+          <DashboardLink title="Provider operations" detail="Review provider readiness and webhook event activity." to="/dashboard/providers" />
         </CardContent>
       </Card>
     </DashboardShell>
@@ -398,10 +400,10 @@ function BrandAdminDashboard() {
             />
           </CardHeader>
           <CardContent className="space-y-3">
-            <QueueCard label="Pending deposits" value="28" note="Oldest 18 min" />
-            <QueueCard label="Pending withdrawals" value="11" note="Oldest 27 min" />
-            <QueueCard label="Unmatched transactions" value="4" note="2 need review" />
-            <QueueCard label="Open disagreements" value="3" note="1 high priority" />
+            <QueueCard label="Pending deposits" value="28" note="Oldest 18 min" to="/dashboard/deposits" />
+            <QueueCard label="Pending withdrawals" value="11" note="Oldest 27 min" to="/dashboard/withdrawls" />
+            <QueueCard label="Unmatched transactions" value="4" note="2 need review" to="/dashboard/transactions/reconciliation" />
+            <QueueCard label="Open disagreements" value="3" note="1 high priority" to="/dashboard/disagreements" />
           </CardContent>
         </Card>
       </div>
@@ -425,16 +427,20 @@ function BrandAdminDashboard() {
   );
 }
 
-function QueueCard({ label, value, note }: { label: string; value: string; note: string }) {
-  return (
-    <div className="rounded-lg border p-3">
+function QueueCard({ label, value, note, to }: { label: string; value: string; note: string; to?: string }) {
+  const content = (
+    <>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium">{label}</p>
         <Badge variant="outline" className="tabular-nums">{value}</Badge>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">{note}</p>
-    </div>
+    </>
   );
+  if (to) {
+    return <a href={to} className="block rounded-lg border p-3 transition-colors hover:bg-muted/30">{content}</a>;
+  }
+  return <div className="rounded-lg border p-3">{content}</div>;
 }
 
 function SupervisorDashboard() {
@@ -550,10 +556,10 @@ function AgentDashboard() {
             />
           </CardHeader>
           <CardContent className="grid gap-2">
-            <Button className="justify-start" variant="outline"><CreditCard /> Review next transaction</Button>
-            <Button className="justify-start" variant="outline"><UserCheck /> Verify a player</Button>
-            <Button className="justify-start" variant="outline"><MessageIcon /> Add internal note</Button>
-            <Button className="justify-start" variant="outline"><LifeBuoy /> Ask supervisor</Button>
+            <Button className="justify-start" variant="outline" onClick={() => window.location.assign("/dashboard/transactions")}><CreditCard /> Review next transaction</Button>
+            <Button className="justify-start" variant="outline" onClick={() => window.location.assign("/dashboard/players")}><UserCheck /> Verify a player</Button>
+            <Button className="justify-start" variant="outline" onClick={() => window.location.assign("/dashboard/players")}><MessageIcon /> Open player records</Button>
+            <Button className="justify-start" variant="outline" onClick={() => window.location.assign("/dashboard/disagreements")}><LifeBuoy /> Ask supervisor</Button>
           </CardContent>
         </Card>
       </div>
