@@ -35,7 +35,12 @@ import {
 } from "@/components/ui/chart";
 import { cn } from "cn";
 
-import { distributors } from "./distributors/-components/data";
+import { distributors, type DistributorRow } from "./distributors/-components/data";
+import {
+  readDistributorReports,
+  subscribeToDistributorReports,
+  type DistributorReport,
+} from "@/lib/distributor-reports";
 
 export const Route = createFileRoute("/(main)/dashboard/distributors_/account")({
   component: Page,
@@ -395,7 +400,7 @@ function Page() {
             {mainTab === "Reviews" ? <ReviewsPanel /> : null}
             {mainTab === "Score" ? <ScorePanel distributor={distributor} /> : null}
             {mainTab === "Activity" ? <ActivityPanel /> : null}
-            {mainTab === "Complaints" ? <ComplaintsPanel /> : null}
+            {mainTab === "Complaints" ? <ComplaintsPanel distributor={distributor} /> : null}
             {mainTab === "Settings" ? <SettingsPanel distributor={distributor} /> : null}
           </div>
         </main>
@@ -555,32 +560,88 @@ function ScorePanel({ distributor }: { distributor: (typeof distributors)[number
   );
 }
 
-function ComplaintsPanel() {
-  const complaints = [
-    ["CMP-1042", "Settlement delay inquiry", "Resolved", "2 days ago"],
-    ["CMP-1037", "Payment routing question", "In review", "5 days ago"],
-    ["CMP-1028", "Duplicate transaction report", "Resolved", "9 days ago"],
-  ] as const;
+function ComplaintsPanel({ distributor }: { distributor: DistributorRow }) {
+  const [complaints, setComplaints] = React.useState<DistributorReport[]>([]);
+
+  React.useEffect(() => {
+    const refresh = () => {
+      setComplaints(
+        readDistributorReports()
+          .filter((report) => report.distributorId === distributor.id)
+          .sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
+      );
+    };
+
+    refresh();
+    return subscribeToDistributorReports(refresh);
+  }, [distributor.id]);
+
+  const statusClasses: Record<DistributorReport["status"], string> = {
+    Open: "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300",
+    "In progress": "border-blue-500/25 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+    "Waiting for player": "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+    Resolved: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  };
 
   return (
     <div className="space-y-2">
-      {complaints.map(([id, subject, status, date]) => (
-        <div key={id} className="flex items-center gap-4 rounded-xl border p-4">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {complaints.length} {complaints.length === 1 ? "report" : "reports"} against {distributor.name}
+        </p>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => window.location.assign("/dashboard/disagreements")}
+        >
+          Open ticket queue
+        </Button>
+      </div>
+
+      {complaints.map((complaint) => (
+        <div key={complaint.id} className="flex items-start gap-4 rounded-xl border p-4">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
             <CircleAlert className="size-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium">{subject}</p>
-              <Badge variant="outline" className="text-[10px]">
-                {status}
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-medium">{complaint.reason}</p>
+              <Badge variant="outline" className={statusClasses[complaint.status]}>
+                {complaint.status}
               </Badge>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">{id}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {complaint.id} · Reported by {complaint.reporterReference} · {complaint.paymentMethod}
+            </p>
+            {complaint.details ? (
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-5 text-muted-foreground">
+                {complaint.details}
+              </p>
+            ) : null}
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Submitted {new Date(complaint.createdAt).toLocaleString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
           </div>
-          <span className="shrink-0 text-xs text-muted-foreground">{date}</span>
+          <Badge variant="outline" className="shrink-0">{complaint.priority}</Badge>
         </div>
       ))}
+
+      {complaints.length === 0 ? (
+        <div className="rounded-xl border border-dashed px-5 py-10 text-center">
+          <CircleAlert className="mx-auto size-5 text-muted-foreground" />
+          <p className="mt-3 text-sm font-medium">No reports against this distributor</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Player reports will appear here and in the Disagreements ticket queue.
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
