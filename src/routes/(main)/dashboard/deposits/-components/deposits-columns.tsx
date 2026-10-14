@@ -148,7 +148,7 @@ function DepositStatusBadge({ status }: { status: DepositStatus }) {
     <Badge
       variant="outline"
       className={cn(
-        "h-5 rounded-sm px-1.5 py-0.5 font-medium",
+        "h-6 max-w-full gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold md:h-5 md:rounded-sm md:px-1.5 md:text-xs",
         className,
       )}
     >
@@ -230,7 +230,7 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
           type="button"
           aria-label={`Download receipt for ${deposit.id}`}
           title="Download receipt"
-          className="size-9 md:size-7 rounded-[min(var(--radius-md),12px)] text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="size-8 md:size-7 rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           size="icon-sm"
           variant="ghost"
           onClick={downloadReceipt}
@@ -242,7 +242,7 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
           to={getDepositDetailPath(deposit.paymentMethod)}
           aria-label={`Open deposit ${deposit.id} for processing`}
           title="Open deposit"
-          className="inline-flex size-9 md:size-7 items-center justify-center rounded-[min(var(--radius-md),12px)] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="inline-flex size-8 md:size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <Eye className="size-4 md:size-3.5" />
         </Link>
@@ -252,7 +252,7 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
             type="button"
             aria-label={`Enable deposit ${deposit.id}`}
             title="Enable deposit"
-            className="size-9 md:size-7 rounded-[min(var(--radius-md),12px)] text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="size-8 md:size-7 rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             size="icon-sm"
             variant="ghost"
             onClick={() => setCanceled(false)}
@@ -264,7 +264,7 @@ function DepositActions({ deposit }: { deposit: DepositRow }) {
             type="button"
             aria-label={`Cancel deposit ${deposit.id}`}
             title="Cancel deposit"
-            className="size-9 md:size-7 rounded-[min(var(--radius-md),12px)] text-red-500 hover:bg-red-500/10 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+            className="size-8 md:size-7 rounded-md text-red-500 transition-colors hover:bg-red-500/10 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
             size="icon-sm"
             variant="ghost"
             onClick={() => setCancelOpen(true)}
