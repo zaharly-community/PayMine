@@ -1,3 +1,5 @@
+import * as React from "react";
+
 import { Link, useRouterState } from "@tanstack/react-router";
 
 import { cn } from "cn";
@@ -33,6 +35,12 @@ import type {
   NavMainLinkItem,
   NavMainParentItem,
 } from "@/navigation/sidebar/sidebar-items";
+import {
+  getInitialOpenOrderCounts,
+  OPEN_ORDER_COUNTS_EVENT,
+  type OpenOrderCountDetail,
+  type OpenOrderCounts,
+} from "@/navigation/sidebar/open-order-counts";
 
 interface NavMainProps {
   readonly items: readonly NavGroup[];
@@ -84,6 +92,53 @@ function hasSubItems(item: NavMainItem): item is NavMainParentItem {
 
 export function NavMain({ items, showQuickCreate = true }: NavMainProps) {
   const path = useRouterState({ select: (state) => state.location.pathname });
+  const [orderCounts, setOrderCounts] = React.useState<OpenOrderCounts>({
+    deposits: 0,
+    withdrawls: 0,
+  });
+
+  React.useEffect(() => {
+    const syncInitialCounts = () => setOrderCounts(getInitialOpenOrderCounts());
+    const handleOrderCountChange = (event: Event) => {
+      const detail = (event as CustomEvent<OpenOrderCountDetail>).detail;
+      if (!detail || (detail.section !== "deposits" && detail.section !== "withdrawls")) {
+        return;
+      }
+
+      setOrderCounts((current) => ({
+        ...current,
+        [detail.section]: Math.max(0, detail.count),
+      }));
+    };
+
+    syncInitialCounts();
+    window.addEventListener(OPEN_ORDER_COUNTS_EVENT, handleOrderCountChange);
+    window.addEventListener("storage", syncInitialCounts);
+
+    return () => {
+      window.removeEventListener(OPEN_ORDER_COUNTS_EVENT, handleOrderCountChange);
+      window.removeEventListener("storage", syncInitialCounts);
+    };
+  }, []);
+
+  const itemsWithCounts = items.map((group) => ({
+    ...group,
+    items: group.items.map((item) => {
+      if (item.id === "deposits") {
+        return {
+          ...item,
+          countBadge: { count: orderCounts.deposits, tone: "green" as const },
+        };
+      }
+      if (item.id === "withdrawls") {
+        return {
+          ...item,
+          countBadge: { count: orderCounts.withdrawls, tone: "red" as const },
+        };
+      }
+      return item;
+    }),
+  }));
 
   const isItemActive = (item: NavMainItem) => {
     if (hasSubItems(item)) {
@@ -128,7 +183,7 @@ export function NavMain({ items, showQuickCreate = true }: NavMainProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       ) : null}
-      {items.map((group) => (
+      {itemsWithCounts.map((group) => (
         <SidebarGroup key={group.id}>
           {group.label && (
             <SidebarGroupLabel className="group-data-[collapsible=icon]:pointer-events-none">
@@ -194,7 +249,7 @@ function NavLinkItem({ item, isActive, showIconFallback }: NavLinkItemProps) {
         <NavLinkIcon item={item} showFallback={showIconFallback} />
         <span>{item.title}</span>
       </SidebarMenuButton>
-      <NavItemBadge badge={item.badge} />
+      <NavItemBadge badge={item.badge} countBadge={item.countBadge} />
     </SidebarMenuItem>
   );
 }
@@ -305,21 +360,46 @@ function NavCollapsibleItem({ item, isActive, defaultOpen, isSubItemActive }: Na
   );
 }
 
-function NavItemBadge({ badge }: { badge?: NavBadge }) {
-  if (!badge) {
+function NavItemBadge({
+  badge,
+  countBadge,
+}: {
+  badge?: NavBadge;
+  countBadge?: { count: number; tone: "green" | "red" };
+}) {
+  const showCount = Boolean(countBadge && countBadge.count > 0);
+  if (!badge && !showCount) {
     return null;
   }
 
   return (
-    <SidebarMenuBadge
-      className={cn(
-        "rounded-sm border capitalize",
-        badge === "new" &&
-          "border-green-600 text-green-600 peer-hover/menu-button:text-green-600 peer-data-active/menu-button:text-green-600",
-        badge === "soon" && "border-muted-foreground text-muted-foreground",
-      )}
-    >
-      {badge}
-    </SidebarMenuBadge>
+    <>
+      {badge ? (
+        <SidebarMenuBadge
+          className={cn(
+            "rounded-sm border capitalize",
+            badge === "new" &&
+              "border-green-600 text-green-600 peer-hover/menu-button:text-green-600 peer-data-active/menu-button:text-green-600",
+            badge === "soon" && "border-muted-foreground text-muted-foreground",
+          )}
+        >
+          {badge}
+        </SidebarMenuBadge>
+      ) : null}
+      {showCount && countBadge ? (
+        <SidebarMenuBadge
+          aria-label={countBadge.count + " open requests"}
+          className={cn(
+            "min-w-5 rounded-full border px-1 text-center text-[10px] font-semibold tabular-nums",
+            countBadge.tone === "green" &&
+              "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 peer-hover/menu-button:text-emerald-400 peer-data-active/menu-button:text-emerald-400",
+            countBadge.tone === "red" &&
+              "border-red-500/30 bg-red-500/10 text-red-400 peer-hover/menu-button:text-red-400 peer-data-active/menu-button:text-red-400",
+          )}
+        >
+          {countBadge.count > 99 ? "99+" : countBadge.count}
+        </SidebarMenuBadge>
+      ) : null}
+    </>
   );
 }
