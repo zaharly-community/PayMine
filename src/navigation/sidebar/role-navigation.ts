@@ -63,7 +63,7 @@ const routeKeys: Array<{ prefix: string; id: string }> = [
   { prefix: "/dashboard/distributors", id: "distributors" },
   { prefix: "/dashboard/deposits", id: "deposits" },
   { prefix: "/dashboard/withdrawls", id: "withdrawls" },
-  { prefix: "/dashboard/analytics/disagreements", id: "disagreements" },
+  { prefix: "/dashboard/disagreements", id: "disagreements" },
   { prefix: "/dashboard/analytics", id: "analytics" },
   { prefix: "/dashboard/transactions/settlements", id: "settlements" },
   { prefix: "/dashboard/transactions/reconciliation", id: "reconciliation" },
