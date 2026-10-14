@@ -749,34 +749,146 @@ function ReviewsPanel() {
 }
 
 function ScorePanel({ distributor }: { distributor: (typeof distributors)[number] }) {
-  let seed = 0;
-  for (const char of distributor.email) seed += char.charCodeAt(0);
-  const score = Number(((seed % 101) / 10).toFixed(1));
-  const filled = Math.min(10, Math.max(0, Math.round(score)));
+  const scoreHistory = [
+    {
+      id: "SCR-2026-014",
+      date: "12 Oct 2026",
+      reason: "Complaint upheld in the player's favor",
+      details: "The investigation confirmed a processing error by the distributor.",
+      change: -10,
+      balance: 80,
+      type: "Complaint",
+    },
+    {
+      id: "SCR-2026-011",
+      date: "08 Oct 2026",
+      reason: "Late request processing",
+      details: "Requests exceeded the expected processing-time target.",
+      change: -5,
+      balance: 90,
+      type: "Service quality",
+    },
+    {
+      id: "SCR-2026-008",
+      date: "02 Oct 2026",
+      reason: "Positive customer rating",
+      details: "A customer left a 5-star review after a smooth transaction.",
+      change: 15,
+      balance: 95,
+      type: "Customer review",
+    },
+  ] as const;
+
+  const score = scoreHistory[0]?.balance ?? 80;
+  const pointsAdded = scoreHistory
+    .filter((entry) => entry.change > 0)
+    .reduce((total, entry) => total + entry.change, 0);
+  const pointsDeducted = Math.abs(
+    scoreHistory
+      .filter((entry) => entry.change < 0)
+      .reduce((total, entry) => total + entry.change, 0),
+  );
 
   return (
-    <div className="max-w-2xl rounded-xl border p-5">
-      <div className="flex items-start justify-between gap-6">
-        <div>
-          <p className="text-sm font-semibold">Distributor score</p>
-          <p className="mt-1 text-xs text-muted-foreground">Operational score for this distributor account.</p>
+    <div className="space-y-4">
+      <section className="rounded-xl border p-4 sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold">Performance score</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {distributor.name} · points are adjusted based on service quality and verified outcomes.
+            </p>
+          </div>
+          <div className="shrink-0 sm:text-right">
+            <div className="flex items-baseline gap-1 sm:justify-end">
+              <span className="text-3xl font-semibold tabular-nums">{score}</span>
+              <span className="text-sm text-muted-foreground">/ 100 points</span>
+            </div>
+            <Badge variant="outline" className="mt-1 border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+              Good standing
+            </Badge>
+          </div>
         </div>
-        <div className="text-right">
-          <p className="text-3xl font-semibold tabular-nums">{score.toFixed(1)}</p>
-          <p className="text-xs text-muted-foreground">out of 10</p>
+
+        <div
+          className="mt-4 h-2 overflow-hidden rounded-full bg-muted"
+          role="progressbar"
+          aria-label="Distributor performance score"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={score}
+        >
+          <div className="h-full rounded-full bg-foreground transition-[width]" style={{ width: `${score}%` }} />
         </div>
-      </div>
-      <div className="mt-5 flex items-center gap-1.5">
-        {Array.from({ length: 10 }, (_, index) => (
-          <span
-            key={index}
-            className={cn(
-              "h-6 w-2 rounded-full",
-              index < filled ? "bg-foreground" : "bg-muted",
-            )}
-          />
-        ))}
-      </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">Current score</p>
+            <p className="mt-1 text-lg font-semibold tabular-nums">{score}<span className="ml-1 text-xs font-normal text-muted-foreground">pts</span></p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">Points awarded</p>
+            <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">+{pointsAdded}<span className="ml-1 text-xs font-normal text-muted-foreground">pts</span></p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">Points deducted</p>
+            <p className="mt-1 text-lg font-semibold tabular-nums text-red-600 dark:text-red-400">−{pointsDeducted}<span className="ml-1 text-xs font-normal text-muted-foreground">pts</span></p>
+          </div>
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded-xl border">
+        <div className="flex flex-col gap-1 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold">Score history</p>
+            <p className="text-xs text-muted-foreground">A record of rewards and deductions applied to this account.</p>
+          </div>
+          <Badge variant="secondary" className="w-fit">{scoreHistory.length} adjustments</Badge>
+        </div>
+
+        <div className="w-full overflow-x-auto">
+          <Table className="min-w-[760px]">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-32 whitespace-nowrap">Date</TableHead>
+                <TableHead className="min-w-52">Reason</TableHead>
+                <TableHead>Details</TableHead>
+                <TableHead className="w-28 whitespace-nowrap">Points</TableHead>
+                <TableHead className="w-28 whitespace-nowrap text-right">Balance</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {scoreHistory.map((entry) => (
+                <TableRow key={entry.id}>
+                  <TableCell className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">{entry.date}</TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">{entry.reason}</p>
+                      <Badge variant="outline" className="text-[10px] font-normal">{entry.type}</Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell className="max-w-sm text-sm leading-5 text-muted-foreground">{entry.details}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={entry.change > 0
+                        ? "border-emerald-500/25 bg-emerald-500/10 font-semibold text-emerald-700 dark:text-emerald-300"
+                        : "border-red-500/25 bg-red-500/10 font-semibold text-red-700 dark:text-red-300"}
+                    >
+                      {entry.change > 0 ? "+" : "−"}{Math.abs(entry.change)} pts
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right text-sm font-medium tabular-nums">{entry.balance} / 100</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <p className="border-t px-4 py-2.5 text-[11px] text-muted-foreground">
+          Demo score history for this account. In production, each adjustment should retain its reviewer, evidence, and timestamp.
+        </p>
+      </section>
     </div>
   );
 }
