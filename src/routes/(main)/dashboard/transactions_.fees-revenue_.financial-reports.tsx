@@ -40,7 +40,10 @@ function formatMoney(value: number) {
 }
 
 function makeCsv(year: number, tab: ReportTab, values: Array<Array<number | null>>, totals: number[]) {
-  const rows = [
+  return [
+    `Report,${tab}`,
+    `Year,${year}`,
+    "",
     ["Day", ...MONTHS, "Total"].join(","),
     ...values.map((months, index) => [
       String(index + 1),
@@ -48,8 +51,7 @@ function makeCsv(year: number, tab: ReportTab, values: Array<Array<number | null
       months.reduce<number>((sum, value) => sum + (value ?? 0), 0).toFixed(2),
     ].join(",")),
     ["Total", ...totals.map((value) => value.toFixed(2)), totals.reduce((sum, value) => sum + value, 0).toFixed(2)].join(","),
-  ];
-  return [["Report", tab], ["Year", String(year)], [], ...rows.map((row) => [row])].map((row) => Array.isArray(row) ? row.join(",") : String(row)).join("\n");
+  ].join("\n");
 }
 
 export const Route = createFileRoute("/(main)/dashboard/transactions_/fees-revenue_/financial-reports")({
@@ -178,7 +180,7 @@ function FinancialReportsPage() {
                 </tr>
               ))}
               <tr className="bg-muted/40">
-                <th className="sticky bottom-0 left-0 z-20 border-t-2 bg-muted/90 px-4 py-3 text-left font-semibold">Total</th>
+                <th className="sticky left-0 z-20 border-t-2 bg-muted/90 px-4 py-3 text-left font-semibold">Total</th>
                 {totals.map((total, monthIndex) => (
                   <td
                     key={MONTHS[monthIndex]}
