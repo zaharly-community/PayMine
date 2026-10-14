@@ -21,6 +21,7 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     settlements: true,
     reconciliation: true,
     "fees-revenue": true,
+    "financial-reports": true,
     settings: true,
   },
   Supervisor: {
@@ -51,6 +52,7 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     settlements: true,
     reconciliation: true,
     "fees-revenue": true,
+    "financial-reports": true,
   },
 };
 
@@ -67,6 +69,7 @@ const routeKeys: Array<{ prefix: string; id: string }> = [
   { prefix: "/dashboard/analytics", id: "analytics" },
   { prefix: "/dashboard/transactions/settlements", id: "settlements" },
   { prefix: "/dashboard/transactions/reconciliation", id: "reconciliation" },
+  { prefix: "/dashboard/transactions/fees-revenue/financial-reports", id: "financial-reports" },
   { prefix: "/dashboard/transactions/fees-revenue", id: "fees-revenue" },
   { prefix: "/dashboard/transactions", id: "transactions" },
   { prefix: "/dashboard/settings", id: "settings" },
