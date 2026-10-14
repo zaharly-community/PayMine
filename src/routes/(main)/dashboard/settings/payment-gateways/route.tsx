@@ -2,12 +2,9 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  ArrowDownToLine,
   ArrowRight,
-  ArrowUpFromLine,
   CheckCircle2,
   CircleDollarSign,
-  CreditCard,
   ExternalLink,
   KeyRound,
   LockKeyhole,
@@ -64,7 +61,7 @@ const initialGateways: Gateway[] = [
     accent: "bg-[#F0B90B]/15 text-[#B88600]",
     fields: [
       { name: "merchantId", label: "Merchant ID", placeholder: "Enter your Binance Pay merchant ID" },
-      { name: "apiKey", label: "API identity key", placeholder: "Paste the API identity key" },
+      { name: "apiKey", label: "API identity key", placeholder: "Paste the API identity key", secret: true },
       { name: "apiSecret", label: "API secret key", placeholder: "Enter the API secret", secret: true },
     ],
     docsUrl: "https://developers.binance.com/en/docs/products/binance-pay-merchant/api-common",
@@ -371,6 +368,7 @@ function GatewaySetupDialog({
   const [deposits, setDeposits] = useState(gateway.deposits);
   const [refunds, setRefunds] = useState(gateway.refunds);
   const [payouts, setPayouts] = useState(gateway.payouts);
+  const [copied, setCopied] = useState(false);
   const webhookUrl = "https://YOUR_API_DOMAIN/webhooks/payment-gateways/" + gateway.id;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -383,7 +381,9 @@ function GatewaySetupDialog({
   const handleCopyWebhook = async () => {
     try {
       await navigator.clipboard.writeText(webhookUrl);
+      setCopied(true);
     } catch {
+      setCopied(false);
       // Clipboard access can be unavailable on non-secure/local browser contexts.
     }
   };
@@ -409,7 +409,12 @@ function GatewaySetupDialog({
         <form onSubmit={handleSubmit} className="space-y-5 px-5 py-5 sm:px-6">
           <section className="space-y-3">
             <div>
-              <h3 className="text-sm font-semibold">API credentials</h3>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold">API credentials</h3>
+                <a href={gateway.docsUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+                  Provider documentation <ExternalLink className="size-3.5" />
+                </a>
+              </div>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
                 Use credentials issued by your provider. This prototype clears credential fields after save and does not send them anywhere.
               </p>
@@ -471,7 +476,7 @@ function GatewaySetupDialog({
             </div>
             <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
               <code className="min-w-0 flex-1 break-all rounded-md bg-muted px-3 py-2 text-[11px]">{webhookUrl}</code>
-              <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={handleCopyWebhook}>Copy template</Button>
+              <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={handleCopyWebhook}>{copied ? <CheckCircle2 className="size-3.5" /> : null}{copied ? "Copied" : "Copy template"}</Button>
             </div>
             <p className="text-xs leading-5 text-muted-foreground">
               Replace YOUR_API_DOMAIN with your deployed HTTPS API. Implement signature verification and deduplicate event IDs on the server before changing a transaction status.
