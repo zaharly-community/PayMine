@@ -19,7 +19,6 @@ import {
   MessageSquare,
   Pencil,
   Settings2,
-  Search,
   Star,
   UserRound,
   Users,
@@ -400,7 +399,7 @@ function Page() {
             ))}
           </div>
 
-          <div className="p-5">
+          <div className={mainTab === "Transactions" ? "p-0" : "p-5"}>
             {mainTab === "Transactions" ? <TransactionsPanel distributor={distributor} /> : null}
             {mainTab === "Analytics" ? <AnalyticsPanel /> : null}
             {mainTab === "Reviews" ? <ReviewsPanel /> : null}
@@ -426,25 +425,15 @@ type AccountTransaction = {
   amount: number;
   feeLabel: string;
   status: string;
-  processedBy: { name: string; image: string };
 };
 
-type TransactionFilter = "All" | "Deposit" | "Withdrawal";
-
 function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
-  const [filter, setFilter] = React.useState<TransactionFilter>("All");
-  const [query, setQuery] = React.useState("");
   const [pageIndex, setPageIndex] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(25);
 
   // This account page intentionally uses isolated mock transactions. They are not
   // copied back into the global Deposits / Withdrawals datasets.
   const rows = React.useMemo<AccountTransaction[]>(() => {
-    const processor = {
-      name: distributor.name,
-      image: distributor.avatarUrl ?? "",
-    };
-
     const depositRows: AccountTransaction[] = deposits.slice(0, 12).map((row, index) => ({
       id: `${distributor.id}-DEP-${String(index + 1).padStart(3, "0")}`,
       kind: "Deposit",
@@ -457,7 +446,6 @@ function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
         ? `${row.feePercent}% · ${formatCurrency(row.feeAmount)}`
         : "Not concerned",
       status: row.depositStatus,
-      processedBy: processor,
     }));
 
     const withdrawalRows: AccountTransaction[] = withdrawls.slice(0, 12).map((row, index) => ({
@@ -472,7 +460,6 @@ function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
         ? `${row.commissionPercent}% · ${formatCurrency(row.commissionAmount)}`
         : "Not concerned",
       status: row.status,
-      processedBy: processor,
     }));
 
     return [...depositRows, ...withdrawalRows].sort(
@@ -480,28 +467,15 @@ function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
         parse(right.date, "dd MMM yyyy, hh:mm a", new Date()).getTime() -
         parse(left.date, "dd MMM yyyy, hh:mm a", new Date()).getTime(),
     );
-  }, [distributor.avatarUrl, distributor.id, distributor.name]);
+  }, [distributor.id, distributor.name]);
 
-  const visibleRows = rows.filter((row) => {
-    if (filter !== "All" && row.kind !== filter) return false;
-    const term = query.trim().toLowerCase();
-    if (!term) return true;
-    return [row.id, row.player, row.method, row.status, row.kind]
-      .some((value) => value.toLowerCase().includes(term));
-  });
+  const visibleRows = rows;
 
   const pageCount = Math.max(1, Math.ceil(visibleRows.length / pageSize));
   const currentPageIndex = Math.min(pageIndex, pageCount - 1);
   const pagedRows = visibleRows.slice(currentPageIndex * pageSize, (currentPageIndex + 1) * pageSize);
-  const depositCount = rows.filter((row) => row.kind === "Deposit").length;
-  const withdrawalCount = rows.filter((row) => row.kind === "Withdrawal").length;
   const from = visibleRows.length === 0 ? 0 : currentPageIndex * pageSize + 1;
   const to = Math.min((currentPageIndex + 1) * pageSize, visibleRows.length);
-
-  const setTransactionFilter = (next: TransactionFilter) => {
-    setFilter(next);
-    setPageIndex(0);
-  };
 
   const getRowIndicator = (row: AccountTransaction) => {
     if (["Canceled", "Failed"].includes(row.status)) {
@@ -514,46 +488,12 @@ function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
   };
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-3">
-      <div className="flex flex-col gap-3 border-b px-0 pb-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-1 rounded-lg border bg-muted/30 p-1">
-          {(["All", "Deposit", "Withdrawal"] as TransactionFilter[]).map((item) => (
-            <button
-              type="button"
-              key={item}
-              onClick={() => setTransactionFilter(item)}
-              aria-pressed={filter === item}
-              className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                filter === item
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {item === "Deposit" ? `Deposits · ${depositCount}` : item === "Withdrawal" ? `Withdrawals · ${withdrawalCount}` : `All · ${rows.length}`}
-            </button>
-          ))}
-        </div>
-        <div className="relative w-full sm:max-w-[280px]">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            aria-label="Search transactions"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setPageIndex(0);
-            }}
-            placeholder="Search ID, player or method..."
-            className="h-8 w-full rounded-md border bg-background pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-          />
-        </div>
-      </div>
-
+    <div className="flex min-w-0 flex-1 flex-col gap-0">
       <div className="hidden md:block">
-        <Table className="w-full border-collapse **:data-[slot='table-cell']:border-b **:data-[slot='table-cell']:border-border/70 **:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:border-b **:data-[slot='table-head']:border-border/70 **:data-[slot='table-head']:px-4">
+        <Table className="w-full border-collapse **:data-[slot='table-cell']:border-b **:data-[slot='table-cell']:border-border/70 **:data-[slot='table-cell']:px-2 **:data-[slot='table-head']:border-b **:data-[slot='table-head']:border-border/70 **:data-[slot='table-head']:px-2">
           <TableHeader className="[&_tr]:border-t">
             <TableRow className="hover:bg-transparent">
-              {["Type", "Transaction ID", "Player", "Payment Method", "Date", "Amount", "Fees", "Status", "Processed By"].map((heading) => (
+              {["Type", "Transaction ID", "Player", "Payment Method", "Date", "Amount", "Fees", "Status"].map((heading) => (
                 <TableHead key={heading} className="h-10 whitespace-nowrap py-2.5 text-xs font-medium text-muted-foreground">
                   {heading}
                 </TableHead>
@@ -563,7 +503,7 @@ function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
           <TableBody>
             {pagedRows.length ? pagedRows.map((row) => (
               <TableRow key={row.kind + row.id} className={cn("relative h-7 border-border/60 transition-colors hover:bg-muted/35", getRowIndicator(row))}>
-                <TableCell className="px-4 py-0 align-middle leading-none">
+                <TableCell className="px-2 py-0 align-middle leading-none">
                   <Badge
                     variant="outline"
                     className={row.kind === "Deposit"
@@ -574,8 +514,8 @@ function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
                     {row.kind}
                   </Badge>
                 </TableCell>
-                <TableCell className="whitespace-nowrap px-4 py-0 font-mono text-xs leading-none">{row.id}</TableCell>
-                <TableCell className="px-4 py-0 align-middle leading-none">
+                <TableCell className="whitespace-nowrap px-2 py-0 font-mono text-xs leading-none">{row.id}</TableCell>
+                <TableCell className="px-2 py-0 align-middle leading-none">
                   <div className="flex min-w-36 items-center gap-2.5">
                     <Avatar size="sm" className="size-7 shrink-0">
                       <AvatarFallback className="bg-muted text-[10px] font-medium">{getInitials(row.player)}</AvatarFallback>
@@ -583,7 +523,7 @@ function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
                     <span className="truncate text-sm font-medium">{row.player}</span>
                   </div>
                 </TableCell>
-                <TableCell className="px-4 py-0 align-middle leading-none">
+                <TableCell className="px-2 py-0 align-middle leading-none">
                   <div className="flex min-w-32 items-center gap-2">
                     <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-xs border bg-background">
                       {row.methodImage ? <img src={row.methodImage} alt="" className="size-full object-contain p-0.5" loading="lazy" referrerPolicy="no-referrer" /> : <span className="text-[10px] font-semibold">{row.method.slice(0, 1)}</span>}
@@ -591,29 +531,20 @@ function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
                     <span className="truncate text-sm">{row.method}</span>
                   </div>
                 </TableCell>
-                <TableCell className="whitespace-nowrap px-4 py-0 text-sm tabular-nums leading-none">{row.date}</TableCell>
-                <TableCell className="whitespace-nowrap px-4 py-0 text-right text-sm font-medium tabular-nums leading-none">
+                <TableCell className="whitespace-nowrap px-2 py-0 text-sm tabular-nums leading-none">{row.date}</TableCell>
+                <TableCell className="whitespace-nowrap px-2 py-0 text-right text-sm font-medium tabular-nums leading-none">
                   <span className={row.kind === "Deposit" ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}>
                     {row.kind === "Deposit" ? "+" : "−"}{formatCurrency(row.amount)}
                   </span>
                 </TableCell>
-                <TableCell className="whitespace-nowrap px-4 py-0 text-sm tabular-nums leading-none text-muted-foreground">{row.feeLabel}</TableCell>
-                <TableCell className="px-4 py-0 align-middle leading-none">
+                <TableCell className="whitespace-nowrap px-2 py-0 text-sm tabular-nums leading-none text-muted-foreground">{row.feeLabel}</TableCell>
+                <TableCell className="px-2 py-0 align-middle leading-none">
                   <Badge variant="outline" className={cn("h-5 rounded-4xl px-1.5 py-0.5 text-[11px] font-medium", getTransactionStatusClass(row.status))}>{row.status}</Badge>
-                </TableCell>
-                <TableCell className="px-4 py-0 align-middle leading-none">
-                  <div className="flex min-w-36 items-center gap-2">
-                    <Avatar size="sm" className="size-7 shrink-0">
-                      <AvatarImage src={row.processedBy.image} alt="" referrerPolicy="no-referrer" />
-                      <AvatarFallback className="bg-muted text-[10px] font-medium">{getInitials(row.processedBy.name)}</AvatarFallback>
-                    </Avatar>
-                    <span className="truncate text-sm font-medium">{row.processedBy.name}</span>
-                  </div>
                 </TableCell>
               </TableRow>
             )) : (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center text-sm text-muted-foreground">No results.</TableCell>
+                <TableCell colSpan={8} className="h-24 text-center text-sm text-muted-foreground">No results.</TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -622,7 +553,7 @@ function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
 
       <div className="divide-y divide-border/70 md:hidden">
         {pagedRows.length ? pagedRows.map((row) => (
-          <article key={row.kind + row.id} className={cn("relative min-w-0 px-3 py-3 transition-colors hover:bg-muted/30", getRowIndicator(row))}>
+          <article key={row.kind + row.id} className={cn("relative min-w-0 px-2 py-2 transition-colors hover:bg-muted/30", getRowIndicator(row))}>
             <div className="flex min-w-0 items-start gap-3">
               <div className={cn("mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border", row.kind === "Deposit" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "border-orange-500/20 bg-orange-500/10 text-orange-600 dark:text-orange-400")}>
                 {row.kind === "Deposit" ? <ArrowDownToLine className="size-4" /> : <ArrowUpFromLine className="size-4" />}
@@ -643,10 +574,7 @@ function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
                   <span aria-hidden="true">·</span>
                   <span className="min-w-0 truncate">{row.date}</span>
                 </div>
-                <div className="mt-1.5 flex min-w-0 items-center justify-between gap-2 text-[10px] text-muted-foreground">
-                  <span className="truncate">Processed by {row.processedBy.name}</span>
-                  <span className="shrink-0">{row.feeLabel}</span>
-                </div>
+                <div className="mt-1.5 text-right text-[10px] text-muted-foreground">{row.feeLabel}</div>
               </div>
             </div>
           </article>
