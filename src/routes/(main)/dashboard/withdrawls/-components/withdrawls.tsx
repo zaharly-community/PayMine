@@ -27,6 +27,11 @@ import { dataTableFeatures } from "@/lib/data-table-features";
 import type { WithdrawlMethod, WithdrawlRow, WithdrawlStatus } from "./data";
 import { withdrawlsColumns } from "./withdrawls-columns";
 import { WithdrawlsTable } from "./withdrawls-table";
+import {
+  countOpenWithdrawls,
+  getInitialOpenOrderCounts,
+  publishOpenOrderCount,
+} from "@/navigation/sidebar/open-order-counts";
 
 const withdrawlMethods: WithdrawlMethod[] = ["Flouci", "D17", "Kashy", "Bank Transfer"];
 
@@ -142,6 +147,23 @@ function buildImportedWithdrawl(
 
 export function Withdrawls({ withdrawls }: { withdrawls: WithdrawlRow[] }) {
   const [rows, setRows] = React.useState(withdrawls);
+
+  React.useEffect(() => {
+    publishOpenOrderCount({
+      section: "withdrawls",
+      count: countOpenWithdrawls(rows),
+    });
+  }, [rows]);
+
+  React.useEffect(
+    () => () => {
+      publishOpenOrderCount({
+        section: "withdrawls",
+        count: getInitialOpenOrderCounts().withdrawls,
+      });
+    },
+    [],
+  );
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "date", desc: true }]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
