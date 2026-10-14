@@ -168,8 +168,21 @@ export const sidebarItems: NavGroup[] = [
       {
         id: "fees-revenue",
         title: "Fees & Revenue",
-        url: "/dashboard/transactions/fees-revenue",
         icon: CircleDollarSign,
+        subItems: [
+          {
+            id: "fees-revenue-overview",
+            title: "Overview",
+            url: "/dashboard/transactions/fees-revenue" as AppPath,
+            icon: CircleDollarSign,
+          },
+          {
+            id: "financial-reports",
+            title: "Financial Reports",
+            url: "/dashboard/transactions/fees-revenue/financial-reports" as AppPath,
+            icon: BarChart3,
+          },
+        ],
       },
     ],
   },
@@ -192,4 +205,3 @@ export const sidebarItems: NavGroup[] = [
     ],
   },
 ];
-
