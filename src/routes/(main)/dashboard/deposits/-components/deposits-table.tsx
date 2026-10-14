@@ -2,7 +2,7 @@ import type { MouseEvent } from "react";
 
 
 import type { ReactTable } from "@tanstack/react-table";
-import { LockKeyhole } from "lucide-react";
+import { CalendarDays, LockKeyhole, ReceiptText } from "lucide-react";
 
 import {
   Pagination,
@@ -151,7 +151,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
         </Table>
       </div>
 
-      <div className="overflow-hidden border-y md:hidden">
+      <div className="overflow-hidden rounded-xl border bg-card shadow-sm md:hidden">
         {table.getRowModel().rows.length ? (
           table.getRowModel().rows.map((row) => {
             const deposit = row.original;
@@ -164,68 +164,62 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
                 key={row.id}
                 data-mobile-deposit-row-id={deposit.id}
                 data-state={table.state.rowSelection[row.id] && "selected"}
-                aria-label={`Deposit ${deposit.id}; payment method ${deposit.paymentMethod}; verification status ${deposit.verificationStatus}`}
-                className={`relative min-w-0 border-b border-border/70 bg-background px-3 py-3 last:border-b-0 sm:px-4 ${getVerificationIndicator(deposit.verificationStatus)}`}
+                aria-label={`Deposit ${deposit.id}; player ${deposit.name}; verification status ${deposit.verificationStatus}`}
+                className={`relative grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-3 border-b border-border/70 bg-background px-3 py-3.5 last:border-b-0 transition-colors hover:bg-muted/25 data-[state=selected]:bg-muted/40 sm:px-4 ${getVerificationIndicator(deposit.verificationStatus)}`}
               >
-                <div className="flex min-w-0 items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span
-                      className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-card p-1 shadow-sm"
-                      title={deposit.paymentMethod}
-                      aria-label={`${deposit.paymentMethod} payment method`}
-                    >
-                      {deposit.paymentMethodImage ? (
-                        <img
-                          src={deposit.paymentMethodImage}
-                          alt={deposit.paymentMethod}
-                          className="size-full object-contain"
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <span className="text-xs font-semibold text-muted-foreground">
-                          {deposit.paymentMethod.slice(0, 1)}
-                        </span>
-                      )}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-muted-foreground">Deposit ID</p>
-                      <p className="mt-0.5 truncate font-mono text-sm font-semibold leading-5 text-foreground">
-                        {deposit.id}
-                      </p>
+                <div className="flex min-w-0 items-start gap-2.5">
+                  <span
+                    className="mt-0.5 flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-white p-1 shadow-sm dark:bg-white"
+                    title={deposit.paymentMethod}
+                    aria-label={`${deposit.paymentMethod} payment method`}
+                  >
+                    {deposit.paymentMethodImage ? (
+                      <img
+                        src={deposit.paymentMethodImage}
+                        alt={deposit.paymentMethod}
+                        className="size-full object-contain"
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <span className="text-sm font-semibold text-muted-foreground">
+                        {deposit.paymentMethod.slice(0, 1)}
+                      </span>
+                    )}
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-mono text-[12px] font-semibold leading-4 tracking-tight text-foreground">
+                      {deposit.id}
+                    </p>
+                    <p className="mt-1 truncate text-[13px] font-medium leading-4 text-foreground">
+                      {deposit.name}
+                    </p>
+                    <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[11px] leading-4 text-muted-foreground">
+                      <CalendarDays className="size-3.5 shrink-0" />
+                      <span className="truncate">{deposit.date}</span>
+                    </div>
+                    <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] leading-4 text-muted-foreground">
+                      <ReceiptText className="size-3.5 shrink-0" />
+                      <span className="shrink-0">Fee</span>
+                      <span className="truncate font-medium text-foreground">
+                        {deposit.feePercent > 0
+                          ? `${deposit.feePercent}% · ${formatCurrency(deposit.feeAmount)}`
+                          : "Not concerned"}
+                      </span>
                     </div>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-xs font-medium text-muted-foreground">Amount</p>
-                    <p className="mt-0.5 text-base font-semibold leading-5 tabular-nums text-emerald-600 dark:text-emerald-400">
-                      +{formatCurrency(deposit.amount)}
-                    </p>
-                  </div>
                 </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border/60 pt-3">
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground">Player</p>
-                    <p className="mt-0.5 truncate text-sm font-medium leading-5">{deposit.name}</p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground">Date</p>
-                    <p className="mt-0.5 text-sm leading-5 tabular-nums">{deposit.date}</p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground">Fees</p>
-                    <p className="mt-0.5 text-sm leading-5 tabular-nums">
-                      {deposit.feePercent > 0 ? `${deposit.feePercent}% · ${formatCurrency(deposit.feeAmount)}` : "Not concerned"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-3 flex min-w-0 items-center justify-between gap-3 border-t border-border/60 pt-3">
-                  <div className="min-w-0">
+                <div className="flex w-[104px] shrink-0 flex-col items-end gap-2 pt-0.5">
+                  <p className="whitespace-nowrap text-right text-sm font-semibold leading-5 tabular-nums tracking-tight text-emerald-600 dark:text-emerald-400">
+                    +{formatCurrency(deposit.amount)}
+                  </p>
+                  <span className="max-w-full">
                     {statusCell ? <table.FlexRender cell={statusCell} /> : null}
-                  </div>
+                  </span>
                   {actionsCell ? (
-                    <div className="flex shrink-0 items-center rounded-lg border bg-muted/30 p-1 shadow-sm">
+                    <div className="flex w-full items-center justify-end gap-0.5 pt-0.5">
                       <table.FlexRender cell={actionsCell} />
                     </div>
                   ) : null}
@@ -233,7 +227,7 @@ export function DepositsTable({ table }: { table: ReactTable<DataTableFeatures, 
 
                 {isLocked ? (
                   <div
-                    className="absolute inset-0 z-20 flex cursor-not-allowed items-center justify-center bg-background/75 px-3 backdrop-blur-[3px]"
+                    className="absolute inset-0 z-20 flex cursor-not-allowed items-center justify-center bg-background/80 px-3 backdrop-blur-[3px]"
                     onClick={(event) => { event.preventDefault(); event.stopPropagation(); }}
                     onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); }}
                   >
