@@ -2,17 +2,22 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   BarChart3,
+  BookOpenText,
+  Building2,
   CircleDollarSign,
+  ClipboardCheck,
   CreditCard,
   Landmark,
   Layers3,
   Network,
   PanelsTopLeft,
+  PlugZap,
   RefreshCcw,
   Scale,
   Settings2,
   Users,
   WalletCards,
+  Webhook,
   type LucideIcon,
 } from "lucide-react";
 
@@ -76,6 +81,12 @@ export const sidebarItems: NavGroup[] = [
     label: "Platform",
     items: [
       {
+        id: "brands",
+        title: "Brands",
+        url: "/dashboard/brands" as AppPath,
+        icon: Building2,
+      },
+      {
         id: "users",
         title: "Users",
         url: "/dashboard/users" as AppPath,
@@ -130,6 +141,12 @@ export const sidebarItems: NavGroup[] = [
         icon: ArrowUpFromLine,
       },
       {
+        id: "approvals",
+        title: "Approval center",
+        url: "/dashboard/approvals" as AppPath,
+        icon: ClipboardCheck,
+      },
+      {
         id: "analytics",
         title: "Analytics",
         url: "/dashboard/analytics",
@@ -152,6 +169,18 @@ export const sidebarItems: NavGroup[] = [
         title: "Transactions",
         url: "/dashboard/transactions",
         icon: WalletCards,
+      },
+      {
+        id: "wallets",
+        title: "Wallets",
+        url: "/dashboard/wallets" as AppPath,
+        icon: WalletCards,
+      },
+      {
+        id: "ledger",
+        title: "Ledger",
+        url: "/dashboard/ledger" as AppPath,
+        icon: BookOpenText,
       },
       {
         id: "settlements",
@@ -191,5 +220,22 @@ export const sidebarItems: NavGroup[] = [
       },
     ],
   },
+  {
+    id: 5,
+    label: "Integrations",
+    items: [
+      {
+        id: "providers",
+        title: "Provider operations",
+        url: "/dashboard/providers" as AppPath,
+        icon: PlugZap,
+      },
+      {
+        id: "webhooks",
+        title: "Webhook inbox",
+        url: "/dashboard/webhooks" as AppPath,
+        icon: Webhook,
+      },
+    ],
+  },
 ];
-
