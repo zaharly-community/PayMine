@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   UsersRound,
   WalletCards,
+  X,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -58,11 +59,25 @@ type SupervisorRule = {
   avatarUrl: string;
 };
 
+type GatewayCredentialKey = "apiKey" | "apiSecret" | "webhookPublicKey" | "publishableKey" | "webhookSecret" | "clientId" | "clientSecret" | "webhookId" | "ipnSecret" | "appToken" | "appSecret";
+type GatewayCredentialField = { key: GatewayCredentialKey; label: string; placeholder: string; secret?: boolean };
+
 type AccountConfig = {
   ownerName: string;
   merchantAccountId: string;
   integrationMode: GatewayMode;
   limitCurrency: LimitCurrency;
+  apiKey: string;
+  apiSecret: string;
+  webhookPublicKey: string;
+  publishableKey: string;
+  webhookSecret: string;
+  clientId: string;
+  clientSecret: string;
+  webhookId: string;
+  ipnSecret: string;
+  appToken: string;
+  appSecret: string;
   cardNumber: string;
   expiry: string;
   walletNumber: string;
@@ -118,6 +133,45 @@ const gatewayMethods: AccountMethod[] = [
   "Flouci",
 ];
 
+const gatewayCredentialFields: Partial<Record<AccountMethod, GatewayCredentialField[]>> = {
+  "Binance Pay": [
+    { key: "apiKey", label: "API Identity Key", placeholder: "Paste Binance Pay API identity key", secret: true },
+    { key: "apiSecret", label: "API Secret", placeholder: "Paste Binance Pay API secret", secret: true },
+    { key: "webhookPublicKey", label: "Webhook verification public key", placeholder: "Paste Binance Pay webhook public key" },
+  ],
+  Stripe: [
+    { key: "publishableKey", label: "Publishable key", placeholder: "pk_test_… or pk_live_…" },
+    { key: "apiSecret", label: "Secret key", placeholder: "sk_test_… or sk_live_…", secret: true },
+    { key: "webhookSecret", label: "Webhook signing secret", placeholder: "whsec_…", secret: true },
+  ],
+  PayPal: [
+    { key: "clientId", label: "Client ID", placeholder: "Paste PayPal app client ID" },
+    { key: "clientSecret", label: "Client Secret", placeholder: "Paste PayPal app client secret", secret: true },
+    { key: "webhookId", label: "Webhook ID", placeholder: "Paste the registered webhook ID" },
+  ],
+  "Coinbase Commerce": [
+    { key: "apiKey", label: "API Key", placeholder: "Paste Coinbase Commerce API key", secret: true },
+    { key: "webhookSecret", label: "Webhook shared secret", placeholder: "Paste the webhook shared secret", secret: true },
+  ],
+  NOWPayments: [
+    { key: "apiKey", label: "API Key", placeholder: "Paste NOWPayments API key", secret: true },
+    { key: "ipnSecret", label: "IPN Secret", placeholder: "Paste the IPN secret", secret: true },
+  ],
+  Flouci: [
+    { key: "appToken", label: "Application token", placeholder: "Paste Flouci application token", secret: true },
+    { key: "appSecret", label: "Application secret", placeholder: "Paste Flouci application secret", secret: true },
+    { key: "webhookSecret", label: "Callback verification secret", placeholder: "Paste callback verification secret", secret: true },
+  ],
+};
+const requiredGatewayCredentials: Partial<Record<AccountMethod, GatewayCredentialKey[]>> = {
+  "Binance Pay": ["apiKey", "apiSecret", "webhookPublicKey"],
+  Stripe: ["publishableKey", "apiSecret", "webhookSecret"],
+  PayPal: ["clientId", "clientSecret", "webhookId"],
+  "Coinbase Commerce": ["apiKey", "webhookSecret"],
+  NOWPayments: ["apiKey", "ipnSecret"],
+  Flouci: ["appToken", "appSecret", "webhookSecret"],
+};
+
 const dayOptions = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function createDefaultConfig(method: AccountMethod): AccountConfig {
@@ -132,6 +186,17 @@ function createDefaultConfig(method: AccountMethod): AccountConfig {
     merchantAccountId: "",
     integrationMode: "Test",
     limitCurrency: "TND",
+    apiKey: "",
+    apiSecret: "",
+    webhookPublicKey: "",
+    publishableKey: "",
+    webhookSecret: "",
+    clientId: "",
+    clientSecret: "",
+    webhookId: "",
+    ipnSecret: "",
+    appToken: "",
+    appSecret: "",
     cardNumber: "",
     expiry: "",
     walletNumber: "",
@@ -333,6 +398,14 @@ function Page() {
     setAddOpen(false);
   }
 
+  function toggleAccountStatus(accountId: string) {
+    setAccounts((current) => current.map((account) => {
+      if (account.id !== accountId) return account;
+      if (account.type === "Payment Gateway" && account.status === "Not connected") return account;
+      return { ...account, status: account.status === "Active" ? "Disabled" : "Active" };
+    }));
+  }
+
   function handleRent(offerId: string) {
     setRentedOffers((current) =>
       current[offerId] ? current : { ...current, [offerId]: getRentalExpiryDate() },
@@ -402,7 +475,7 @@ function Page() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredAccounts.map((account) => (
-          <AccountCard key={account.id} account={account} onView={() => setViewAccount(account)} />
+          <AccountCard key={account.id} account={account} onView={() => setViewAccount(account)} onToggleStatus={() => toggleAccountStatus(account.id)} />
         ))}
 
         <button
@@ -467,7 +540,7 @@ const accountMethodImages: Partial<Record<AccountMethod, string>> = {
   "e-Dinar": "https://www.ama-business.com/wp-content/uploads/2023/05/E-Dinar.jpg",
 };
 
-function AccountCard({ account, onView }: { account: PaymentAccount; onView: () => void }) {
+function AccountCard({ account, onView, onToggleStatus }: { account: PaymentAccount; onView: () => void; onToggleStatus: () => void }) {
   const positive = account.change >= 0;
   const isGateway = account.type === "Payment Gateway";
   const rentalExpired = account.source === "rented" && account.rentalExpiresAt
@@ -491,19 +564,9 @@ function AccountCard({ account, onView }: { account: PaymentAccount; onView: () 
               <p className="mt-1 truncate text-[11px] text-muted-foreground">{account.identifier}</p>
             </div>
           </div>
-          <span className="inline-flex shrink-0 items-center gap-1.5 pt-0.5 text-[11px] text-muted-foreground">
-            <span className={account.status === "Active" ? "size-1.5 rounded-full bg-emerald-500" : account.status === "Not connected" ? "size-1.5 rounded-full bg-amber-500" : "size-1.5 rounded-full bg-muted-foreground"} />
-            {account.status}
-          </span>
+          <AccountStatusSwitch account={account} onToggle={onToggleStatus} />
         </div>
 
-        <div className="flex items-center justify-between gap-2">
-          <span className={account.source === "rented" ? "inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-1 text-[10px] font-medium text-amber-700 dark:text-amber-400" : "inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground"}>
-            {account.source === "rented" ? <Clock3 className="size-3" /> : <ShieldCheck className="size-3" />}
-            {account.source === "rented" ? "Rented" : "Added by admin"}
-          </span>
-          <span className="text-[10px] text-muted-foreground">{account.method}</span>
-        </div>
 
         {account.source === "rented" && account.rentalExpiresAt ? (
           <div className={rentalExpired ? "flex items-center justify-between gap-2 rounded-lg bg-rose-500/5 px-2.5 py-2" : "flex items-center justify-between gap-2 rounded-lg bg-amber-500/5 px-2.5 py-2"}>
@@ -561,6 +624,26 @@ function AccountCard({ account, onView }: { account: PaymentAccount; onView: () 
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function AccountStatusSwitch({ account, onToggle }: { account: PaymentAccount; onToggle: () => void }) {
+  const isActive = account.status === "Active";
+  const requiresConnection = account.type === "Payment Gateway" && account.status === "Not connected";
+  return (
+    <div className="flex shrink-0 items-center gap-2">
+      {requiresConnection ? <span className="text-[10px] font-medium text-amber-600">Not connected</span> : null}
+      <button type="button" role="switch" aria-checked={isActive} aria-label={(isActive ? "Disable " : "Enable ") + account.accountName}
+        disabled={requiresConnection}
+        title={requiresConnection ? "Connect the gateway before enabling it" : isActive ? "Turn account off" : "Turn account on"}
+        onClick={onToggle}
+        className={["relative inline-flex h-7 w-[58px] shrink-0 items-center rounded-full border p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-80",
+          isActive ? "border-emerald-600 bg-emerald-600" : "border-border bg-muted-foreground/25"].join(" ")}>
+        <span className="pointer-events-none absolute left-1.5 flex size-4 items-center justify-center text-white/90" aria-hidden="true"><Check className="size-3.5" /></span>
+        <span className="pointer-events-none absolute right-1.5 flex size-4 items-center justify-center text-foreground/70" aria-hidden="true"><X className="size-3.5" /></span>
+        <span className={["relative z-10 flex size-5 items-center justify-center rounded-full bg-background shadow-sm transition-transform", isActive ? "translate-x-[30px]" : "translate-x-0"].join(" ")} aria-hidden="true" />
+      </button>
+    </div>
   );
 }
 
@@ -634,7 +717,10 @@ function AccountWizard({
       if (type === "Wallet" && method === "D17" && (!config.cardNumber.trim() || !config.expiry.trim() || !config.walletName.trim() || !config.pin.trim())) return false;
       if (type === "Wallet" && method === "Flouci" && !config.pin.trim()) return false;
       if (type === "Voucher" && (!config.voucherCode.trim() || !config.issuer.trim() || !config.denomination.trim())) return false;
-      if (type === "Payment Gateway" && !config.merchantAccountId.trim()) return false;
+      if (type === "Payment Gateway") {
+        if (!config.merchantAccountId.trim()) return false;
+        if (!(requiredGatewayCredentials[method] ?? []).every((key) => config[key].trim())) return false;
+      }
     }
     if (step === 2) {
       if (config.supervisorPolicy !== "All" && config.selectedSupervisorIds.length === 0) return false;
@@ -683,7 +769,7 @@ function AccountWizard({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+      <DialogContent className="max-h-[92vh] w-[calc(100vw-1.25rem)] max-w-[1200px] overflow-y-auto sm:w-[min(96vw,1200px)] sm:max-w-[1200px]">
         <DialogHeader>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -909,23 +995,34 @@ function StepAccountDetails({
 
         {type === "Payment Gateway" ? (
           <>
-            <Field
-              label="Merchant account ID"
-              value={config.merchantAccountId}
-              onChange={(value) => onConfigChange({ merchantAccountId: value })}
-              placeholder="Enter the provider merchant / account ID"
-            />
+            <Field label="Merchant account ID" value={config.merchantAccountId} onChange={(value) => onConfigChange({ merchantAccountId: value })} placeholder="Enter the provider merchant / account ID" />
             <div className="grid gap-2">
               <Label>Integration mode</Label>
-              <select
-                value={config.integrationMode}
-                onChange={(event) => onConfigChange({ integrationMode: event.target.value as GatewayMode })}
-                className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
-              >
+              <select value={config.integrationMode} onChange={(event) => onConfigChange({ integrationMode: event.target.value as GatewayMode })} className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20">
                 <option value="Test">Test / sandbox</option>
                 <option value="Live">Live mode (not activated)</option>
               </select>
               <p className="text-[11px] leading-4 text-muted-foreground">Mode is saved as a setup preference only; this screen does not connect to the provider.</p>
+            </div>
+            <div className="space-y-3 border-t pt-4 sm:col-span-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div><h3 className="text-sm font-semibold">API credentials</h3><p className="mt-1 text-xs text-muted-foreground">Fields are specific to {method}; secret values are masked while typing.</p></div>
+                <Badge variant="outline">Required fields marked *</Badge>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {(gatewayCredentialFields[method] ?? []).map((field) => (
+                  <div key={field.key} className="grid min-w-0 gap-2">
+                    <Label htmlFor={"gateway-" + field.key}>{field.label} <span className="text-rose-500">*</span></Label>
+                    <Input id={"gateway-" + field.key} name={field.key} type={field.secret ? "password" : "text"} autoComplete="off" spellCheck={false}
+                      value={config[field.key]} onChange={(event) => onConfigChange({ [field.key]: event.target.value } as Partial<AccountConfig>)}
+                      placeholder={field.placeholder} />
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2.5 text-xs leading-5 text-muted-foreground">
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-amber-600" />
+                <p>Prototype only: these values remain in in-memory page state and are not sent to a backend or encrypted vault. Do not use production credentials until server-side secret storage is connected.</p>
+              </div>
             </div>
           </>
         ) : null}
