@@ -28,7 +28,6 @@ export interface NavSubItem {
   url: AppPath;
   icon?: LucideIcon;
   badge?: NavBadge;
-  countBadge?: NavCountBadge;
   disabled?: boolean;
   newTab?: boolean;
 }
@@ -38,6 +37,7 @@ interface NavItemBase {
   title: string;
   icon?: LucideIcon;
   badge?: NavBadge;
+  countBadge?: NavCountBadge;
   disabled?: boolean;
   newTab?: boolean;
 }
