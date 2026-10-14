@@ -12,6 +12,7 @@ import {
   CreditCard,
   Eye,
   Gauge,
+  Globe,
   Info,
   Plus,
   PlugZap,
@@ -91,6 +92,7 @@ type AccountConfig = {
   supervisorPolicy: SupervisorPolicy;
   selectedSupervisorIds: string[];
   supervisors: SupervisorRule[];
+  allowedCountries: string[];
   scheduleEnabled: boolean;
   days: string[];
   startTime: string;
@@ -173,6 +175,19 @@ const requiredGatewayCredentials: Partial<Record<AccountMethod, GatewayCredentia
 };
 
 const dayOptions = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const countryCodes =
+  "AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW XK".split(" ");
+const countryNameDisplay = new Intl.DisplayNames(["en"], { type: "region" });
+const countryOptions = countryCodes
+  .map((code) => ({ code, name: countryNameDisplay.of(code) ?? code }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+function formatAllowedCountries(codes: string[]) {
+  if (!codes.length) return "All countries";
+  return codes
+    .map((code) => countryOptions.find((country) => country.code === code)?.name ?? code)
+    .join(", ");
+}
 
 function createDefaultConfig(method: AccountMethod): AccountConfig {
   const supervisorRules = supervisorDirectory.map((supervisor) => ({
@@ -210,6 +225,7 @@ function createDefaultConfig(method: AccountMethod): AccountConfig {
     supervisorPolicy: "All",
     selectedSupervisorIds: [],
     supervisors: supervisorRules,
+    allowedCountries: [],
     scheduleEnabled: true,
     days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
     startTime: "08:00",
@@ -763,7 +779,7 @@ function AccountWizard({
   const titleByStep = [
     "Account details",
     "Supervisors & limits",
-    "Schedule",
+    "Visibility",
     type === "Payment Gateway" ? "Integration review" : "Opening balance & review",
   ];
 
@@ -1223,8 +1239,8 @@ function StepSchedule({
         <div className="flex items-start gap-3">
           <Clock3 className="mt-0.5 size-4 text-muted-foreground" />
           <div>
-            <p className="text-sm font-medium">Scheduled activation</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">Choose whether this account follows a weekly schedule or stays available all the time.</p>
+            <p className="text-sm font-medium">Payment method visibility hours</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">Choose the days and hours when this method appears in the player portal. Times use the platform timezone.</p>
           </div>
         </div>
         <Switch checked={config.scheduleEnabled} onCheckedChange={(checked) => onConfigChange({ scheduleEnabled: checked })} />
@@ -1235,38 +1251,29 @@ function StepSchedule({
           <div className="flex items-center gap-3">
             <Sparkles className="size-4 text-emerald-600" />
             <div>
-              <p className="text-sm font-medium">Always available</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">The account is available 24/7 and does not use day or time restrictions.</p>
+              <p className="text-sm font-medium">Visible all day</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">This method has no day or time restrictions. The country allowlist below still applies.</p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 rounded-xl border p-4">
           <div className="grid gap-2">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <Label>Active days</Label>
+                <Label>Visible days</Label>
                 <p className="mt-0.5 text-[11px] text-muted-foreground">{allDays ? "All days" : config.days.join(", ") || "No days selected"}</p>
               </div>
               <Button type="button" size="sm" variant={allDays ? "default" : "outline"} onClick={() => onConfigChange({ days: allDays ? [] : [...dayOptions] })}>
                 {allDays ? "All days" : "Use all days"}
               </Button>
             </div>
-
             {!allDays ? (
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-7">
                 {dayOptions.map((day) => {
                   const selected = config.days.includes(day);
                   return (
-                    <button
-                      key={day}
-                      type="button"
-                      onClick={() => onToggleDay(day)}
-                      className={[
-                        "rounded-lg border px-2 py-2 text-xs font-medium transition-colors",
-                        selected ? "bg-foreground text-background" : "bg-background text-muted-foreground hover:bg-muted",
-                      ].join(" ")}
-                    >
+                    <button key={day} type="button" onClick={() => onToggleDay(day)} className={["rounded-lg border px-2 py-2 text-xs font-medium transition-colors", selected ? "bg-foreground text-background" : "bg-background text-muted-foreground hover:bg-muted"].join(" ")}>
                       {day}
                     </button>
                   );
@@ -1274,19 +1281,92 @@ function StepSchedule({
               </div>
             ) : null}
           </div>
-
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label>Start time</Label>
-              <Input type="time" value={config.startTime} onChange={(event) => onConfigChange({ startTime: event.target.value })} />
-            </div>
-            <div className="grid gap-2">
-              <Label>End time</Label>
-              <Input type="time" value={config.endTime} onChange={(event) => onConfigChange({ endTime: event.target.value })} />
-            </div>
+            <div className="grid gap-2"><Label>Display start time</Label><Input type="time" value={config.startTime} onChange={(event) => onConfigChange({ startTime: event.target.value })} /></div>
+            <div className="grid gap-2"><Label>Display end time</Label><Input type="time" value={config.endTime} onChange={(event) => onConfigChange({ endTime: event.target.value })} /></div>
           </div>
         </div>
       )}
+
+      <CountryAllowlist
+        selectedCountries={config.allowedCountries}
+        onChange={(allowedCountries) => onConfigChange({ allowedCountries })}
+      />
+    </div>
+  );
+}
+
+function CountryAllowlist({
+  selectedCountries,
+  onChange,
+}: {
+  selectedCountries: string[];
+  onChange: (countries: string[]) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const allowAll = selectedCountries.length === 0;
+  const filteredCountries = countryOptions.filter(({ code, name }) =>
+    (name + " " + code).toLowerCase().includes(query.trim().toLowerCase()),
+  );
+
+  function toggleCountry(code: string) {
+    onChange(
+      selectedCountries.includes(code)
+        ? selectedCountries.filter((selected) => selected !== code)
+        : [...selectedCountries, code].sort(),
+    );
+  }
+
+  return (
+    <div className="space-y-3 rounded-xl border p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <Globe className="mt-0.5 size-4 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-semibold">Allowed countries</p>
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
+              Leave the selection empty to allow every country supported by the provider. Select countries to show this payment method only in those markets.
+            </p>
+          </div>
+        </div>
+        <Badge variant={allowAll ? "secondary" : "outline"}>{allowAll ? "All countries" : selectedCountries.length + " allowed"}</Badge>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[220px] flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={query} onChange={(event) => setQuery(event.target.value)} className="pl-9" placeholder="Search country or code..." />
+        </div>
+        <Button type="button" size="sm" variant={allowAll ? "secondary" : "outline"} onClick={() => onChange([])}>
+          <Globe className="mr-1.5 size-3.5" />
+          Allow all countries
+        </Button>
+      </div>
+      {selectedCountries.length ? (
+        <div className="flex flex-wrap gap-1.5">
+          {selectedCountries.map((code) => (
+            <Badge key={code} variant="secondary" className="gap-1">
+              {countryOptions.find((country) => country.code === code)?.name ?? code}
+              <button type="button" aria-label={"Remove " + code} onClick={() => toggleCountry(code)} className="ml-0.5 rounded-full hover:text-foreground">×</button>
+            </Badge>
+          ))}
+          <Button type="button" variant="ghost" size="sm" onClick={() => onChange([])}>Clear restrictions</Button>
+        </div>
+      ) : null}
+      <div className="grid max-h-56 gap-2 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
+        {filteredCountries.map(({ code, name }) => {
+          const selected = selectedCountries.includes(code);
+          return (
+            <button key={code} type="button" aria-pressed={selected} onClick={() => toggleCountry(code)} className={["flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2 text-left text-xs transition-colors", selected ? "border-foreground bg-muted/50 text-foreground" : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"].join(" ")}>
+              <span className={selected ? "flex size-4 shrink-0 items-center justify-center rounded border border-foreground bg-foreground text-background" : "flex size-4 shrink-0 items-center justify-center rounded border"}>
+                {selected ? <Check className="size-3" /> : null}
+              </span>
+              <span className="min-w-0 flex-1 truncate">{name}</span>
+              <span className="text-[10px] text-muted-foreground">{code}</span>
+            </button>
+          );
+        })}
+        {!filteredCountries.length ? <p className="col-span-full py-5 text-center text-xs text-muted-foreground">No countries match your search.</p> : null}
+      </div>
     </div>
   );
 }
@@ -1349,7 +1429,8 @@ function StepReview({
               {type === "Payment Gateway" ? <SummaryRow label="Integration mode" value={config.integrationMode + " · Not connected"} /> : null}
               <SummaryRow label="Supervisors" value={supervisorSummary} />
               <SummaryRow label="Limits" value={(config.maxTransactions || "Unlimited") + " transactions/day · " + (config.maxAmount ? config.maxAmount + " " + config.limitCurrency + "/day" : "Unlimited amount")} />
-              <SummaryRow label="Schedule" value={config.scheduleEnabled ? (config.days.length === dayOptions.length ? "All days" : config.days.join(", ") || "No days") + " · " + config.startTime + "–" + config.endTime : "Always available"} />
+              <SummaryRow label="Visibility hours" value={config.scheduleEnabled ? (config.days.length === dayOptions.length ? "All days" : config.days.join(", ") || "No days") + " · " + config.startTime + "–" + config.endTime : "All day · 24/7"} />
+              <SummaryRow label="Allowed countries" value={formatAllowedCountries(config.allowedCountries)} />
             </div>
           </CardContent>
         </Card>
@@ -1407,7 +1488,7 @@ function StepReview({
 
       <div className="grid gap-3 sm:grid-cols-3">
         <ReviewStat icon={<UsersRound className="size-4" />} label="Supervisors" value={supervisorSummary} />
-        <ReviewStat icon={<Clock3 className="size-4" />} label="Availability" value={config.scheduleEnabled ? "Scheduled" : "Always on"} />
+        <ReviewStat icon={<Clock3 className="size-4" />} label="Visibility" value={config.scheduleEnabled ? "Scheduled" : "All day"} />
         <ReviewStat
           icon={type === "Payment Gateway" ? <PlugZap className="size-4" /> : <WalletCards className="size-4" />}
           label={type === "Payment Gateway" ? "Connection status" : "Opening balance"}
@@ -1696,6 +1777,7 @@ function RentalClaimDialog({
   const [days, setDays] = useState<string[]>(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("22:00");
+  const [allowedCountries, setAllowedCountries] = useState<string[]>([]);
   const [openingBalance, setOpeningBalance] = useState("0");
 
   if (!offer) return null;
@@ -1714,6 +1796,7 @@ function RentalClaimDialog({
     setDays(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
     setStartTime("08:00");
     setEndTime("22:00");
+    setAllowedCountries([]);
     setOpeningBalance("0");
   };
 
@@ -1743,6 +1826,7 @@ function RentalClaimDialog({
     config.days = days;
     config.startTime = startTime;
     config.endTime = endTime;
+    config.allowedCountries = allowedCountries;
     config.openingBalance = Number(openingBalance) || 0;
     config.supervisors = supervisorDirectory.map((supervisor) => ({ ...supervisor }));
     return config;
@@ -1766,7 +1850,7 @@ function RentalClaimDialog({
         </DialogHeader>
 
         <div className="grid gap-2 sm:grid-cols-4">
-          {["Account details", "Supervisors & limits", "Schedule", "Opening balance & review"].map((title, index) => (
+          {["Account details", "Supervisors & limits", "Visibility", "Opening balance & review"].map((title, index) => (
             <div key={title} className="flex items-center gap-2 rounded-lg border px-3 py-2">
               <span className={index + 1 <= step ? "flex size-7 items-center justify-center rounded-full bg-foreground text-background text-xs font-semibold" : "flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs"}>
                 {index + 1}
@@ -1843,8 +1927,8 @@ function RentalClaimDialog({
           <div className="space-y-4">
             <div className="flex items-center justify-between rounded-xl border bg-muted/20 p-4">
               <div>
-                <p className="text-sm font-medium">Scheduled availability</p>
-                <p className="mt-1 text-xs text-muted-foreground">Uses the platform timezone automatically.</p>
+                <p className="text-sm font-medium">Payment method visibility hours</p>
+                <p className="mt-1 text-xs text-muted-foreground">Choose when the rented method appears in the player portal. Times use the platform timezone.</p>
               </div>
               <Switch checked={scheduleEnabled} onCheckedChange={setScheduleEnabled} />
             </div>
@@ -1874,8 +1958,9 @@ function RentalClaimDialog({
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm">Always available</div>
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm">Visible all day · 24/7</div>
             )}
+            <CountryAllowlist selectedCountries={allowedCountries} onChange={setAllowedCountries} />
           </div>
         ) : null}
 
@@ -1894,7 +1979,8 @@ function RentalClaimDialog({
                     <SummaryRow label="Account details" value={offer.identifier + " · provided"} />
                     <SummaryRow label="Supervisors" value={supervisorSummary} />
                     <SummaryRow label="Limits" value={maxTransactions + " transactions · " + maxAmount + " TND/day"} />
-                    <SummaryRow label="Schedule" value={scheduleEnabled ? (allDays ? "All days" : days.join(", ")) + " · " + startTime + "–" + endTime : "Always available"} />
+                    <SummaryRow label="Visibility hours" value={scheduleEnabled ? (allDays ? "All days" : days.join(", ")) + " · " + startTime + "–" + endTime : "All day · 24/7"} />
+                    <SummaryRow label="Allowed countries" value={formatAllowedCountries(allowedCountries)} />
                   </div>
                 </CardContent>
               </Card>
@@ -1915,7 +2001,7 @@ function RentalClaimDialog({
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <ReviewStat icon={<UsersRound className="size-4" />} label="Supervisors" value={supervisorSummary} />
-              <ReviewStat icon={<Clock3 className="size-4" />} label="Availability" value={scheduleEnabled ? "Scheduled" : "Always on"} />
+              <ReviewStat icon={<Clock3 className="size-4" />} label="Visibility" value={scheduleEnabled ? "Scheduled" : "All day"} />
               <ReviewStat icon={<WalletCards className="size-4" />} label="Opening balance" value={formatMoney(Number(openingBalance) || 0)} />
             </div>
           </div>
@@ -2025,13 +2111,15 @@ function AccountDetailsDialog({
               <div className="rounded-lg border p-3">
                 <div className="flex items-center gap-2">
                   <Clock3 className="size-3.5 text-muted-foreground" />
-                  <p className="text-sm font-medium">Schedule</p>
+                  <p className="text-sm font-medium">Visibility hours</p>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {account.config.scheduleEnabled
                     ? (account.config.days.length === dayOptions.length ? "All days" : account.config.days.join(", ")) + " · " + account.config.startTime + "–" + account.config.endTime
                     : "Always available"}
                 </p>
+                <p className="mt-3 text-[10px] uppercase tracking-wide text-muted-foreground">Allowed countries</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">{formatAllowedCountries(account.config.allowedCountries)}</p>
               </div>
             </CardContent>
           </Card>
