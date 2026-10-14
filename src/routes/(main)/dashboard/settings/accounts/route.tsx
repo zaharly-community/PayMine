@@ -2116,7 +2116,7 @@ function AccountDetailsDialog({
                 <p className="mt-1 text-xs text-muted-foreground">
                   {account.config.scheduleEnabled
                     ? (account.config.days.length === dayOptions.length ? "All days" : account.config.days.join(", ")) + " · " + account.config.startTime + "–" + account.config.endTime
-                    : "Always available"}
+                    : "All day · 24/7"}
                 </p>
                 <p className="mt-3 text-[10px] uppercase tracking-wide text-muted-foreground">Allowed countries</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">{formatAllowedCountries(account.config.allowedCountries)}</p>
