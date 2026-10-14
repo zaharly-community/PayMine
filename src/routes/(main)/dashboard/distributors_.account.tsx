@@ -37,6 +37,17 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import { cn } from "cn";
 
 import { distributors, type DistributorRow } from "./distributors/-components/data";
@@ -410,56 +421,66 @@ type AccountTransaction = {
   kind: "Deposit" | "Withdrawal";
   player: string;
   method: string;
+  methodImage: string;
   date: string;
   amount: number;
+  feeLabel: string;
   status: string;
   processedBy: { name: string; image: string };
 };
 
 type TransactionFilter = "All" | "Deposit" | "Withdrawal";
 
-function normalizeProcessorName(value: string) {
-  return value.trim().replace(/\s+/g, " ").toLowerCase();
-}
-
 function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
   const [filter, setFilter] = React.useState<TransactionFilter>("All");
   const [query, setQuery] = React.useState("");
+  const [pageIndex, setPageIndex] = React.useState(0);
+  const [pageSize, setPageSize] = React.useState(25);
 
+  // This account page intentionally uses isolated mock transactions. They are not
+  // copied back into the global Deposits / Withdrawals datasets.
   const rows = React.useMemo<AccountTransaction[]>(() => {
-    const selectedProcessor = normalizeProcessorName(distributor.name);
-    const depositRows: AccountTransaction[] = deposits
-      .filter((row) => normalizeProcessorName(row.processedBy.name) === selectedProcessor)
-      .map((row) => ({
-        id: row.id,
-        kind: "Deposit",
-        player: row.name,
-        method: row.paymentMethod,
-        date: row.date,
-        amount: row.amount,
-        status: row.depositStatus,
-        processedBy: row.processedBy,
-      }));
+    const processor = {
+      name: distributor.name,
+      image: distributor.avatarUrl ?? "",
+    };
 
-    const withdrawalRows: AccountTransaction[] = withdrawls
-      .filter((row) => normalizeProcessorName(row.processedBy.name) === selectedProcessor)
-      .map((row) => ({
-        id: row.id,
-        kind: "Withdrawal",
-        player: row.name,
-        method: row.withdrawlMethod,
-        date: row.date,
-        amount: row.amount,
-        status: row.status,
-        processedBy: row.processedBy,
-      }));
+    const depositRows: AccountTransaction[] = deposits.slice(0, 12).map((row, index) => ({
+      id: `${distributor.id}-DEP-${String(index + 1).padStart(3, "0")}`,
+      kind: "Deposit",
+      player: row.name,
+      method: row.paymentMethod,
+      methodImage: row.paymentMethodImage,
+      date: row.date,
+      amount: row.amount,
+      feeLabel: row.feePercent > 0
+        ? `${row.feePercent}% · ${formatCurrency(row.feeAmount)}`
+        : "Not concerned",
+      status: row.depositStatus,
+      processedBy: processor,
+    }));
+
+    const withdrawalRows: AccountTransaction[] = withdrawls.slice(0, 12).map((row, index) => ({
+      id: `${distributor.id}-WDL-${String(index + 1).padStart(3, "0")}`,
+      kind: "Withdrawal",
+      player: row.name,
+      method: row.withdrawlMethod,
+      methodImage: row.withdrawlMethodImage,
+      date: row.date,
+      amount: row.amount,
+      feeLabel: row.commissionPercent > 0
+        ? `${row.commissionPercent}% · ${formatCurrency(row.commissionAmount)}`
+        : "Not concerned",
+      status: row.status,
+      processedBy: processor,
+    }));
 
     return [...depositRows, ...withdrawalRows].sort(
       (left, right) =>
         parse(right.date, "dd MMM yyyy, hh:mm a", new Date()).getTime() -
         parse(left.date, "dd MMM yyyy, hh:mm a", new Date()).getTime(),
     );
-  }, [distributor.name]);
+  }, [distributor.avatarUrl, distributor.id, distributor.name]);
 
   const visibleRows = rows.filter((row) => {
     if (filter !== "All" && row.kind !== filter) return false;
@@ -469,40 +490,38 @@ function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
       .some((value) => value.toLowerCase().includes(term));
   });
 
+  const pageCount = Math.max(1, Math.ceil(visibleRows.length / pageSize));
+  const currentPageIndex = Math.min(pageIndex, pageCount - 1);
+  const pagedRows = visibleRows.slice(currentPageIndex * pageSize, (currentPageIndex + 1) * pageSize);
   const depositCount = rows.filter((row) => row.kind === "Deposit").length;
   const withdrawalCount = rows.filter((row) => row.kind === "Withdrawal").length;
-  const depositTotal = rows
-    .filter((row) => row.kind === "Deposit")
-    .reduce((sum, row) => sum + row.amount, 0);
-  const withdrawalTotal = rows
-    .filter((row) => row.kind === "Withdrawal")
-    .reduce((sum, row) => sum + row.amount, 0);
+  const from = visibleRows.length === 0 ? 0 : currentPageIndex * pageSize + 1;
+  const to = Math.min((currentPageIndex + 1) * pageSize, visibleRows.length);
+
+  const setTransactionFilter = (next: TransactionFilter) => {
+    setFilter(next);
+    setPageIndex(0);
+  };
+
+  const getRowIndicator = (row: AccountTransaction) => {
+    if (["Canceled", "Failed"].includes(row.status)) {
+      return "shadow-[inset_5px_0_0_var(--color-red-500)]";
+    }
+    if (["Pending", "Processing", "Waiting Correction", "In Process"].includes(row.status)) {
+      return "shadow-[inset_5px_0_0_var(--color-amber-400)]";
+    }
+    return "shadow-[inset_5px_0_0_var(--color-emerald-500)]";
+  };
 
   return (
-    <div className="min-w-0">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border p-4">
-          <p className="text-xs text-muted-foreground">Transactions processed</p>
-          <p className="mt-1 text-xl font-semibold tabular-nums">{rows.length}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Deposits and withdrawals by this account</p>
-        </div>
-        <div className="rounded-xl border p-4">
-          <p className="flex items-center gap-2 text-xs text-muted-foreground"><ArrowDownToLine className="size-3.5" /> Deposits · {depositCount}</p>
-          <p className="mt-1 text-xl font-semibold tabular-nums">{formatCurrency(depositTotal)}</p>
-        </div>
-        <div className="rounded-xl border p-4">
-          <p className="flex items-center gap-2 text-xs text-muted-foreground"><ArrowUpFromLine className="size-3.5" /> Withdrawals · {withdrawalCount}</p>
-          <p className="mt-1 text-xl font-semibold tabular-nums">{formatCurrency(withdrawalTotal)}</p>
-        </div>
-      </div>
-
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-1 rounded-lg border bg-muted/30 p-1">
+    <div className="flex min-w-0 flex-1 flex-col gap-3">
+      <div className="flex flex-col gap-3 border-b px-0 pb-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-1 rounded-lg border bg-muted/30 p-1">
           {(["All", "Deposit", "Withdrawal"] as TransactionFilter[]).map((item) => (
             <button
               type="button"
               key={item}
-              onClick={() => setFilter(item)}
+              onClick={() => setTransactionFilter(item)}
               aria-pressed={filter === item}
               className={cn(
                 "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
@@ -511,7 +530,7 @@ function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {item === "Deposit" ? "Deposits" : item === "Withdrawal" ? "Withdrawals" : "All"}
+              {item === "Deposit" ? `Deposits · ${depositCount}` : item === "Withdrawal" ? `Withdrawals · ${withdrawalCount}` : `All · ${rows.length}`}
             </button>
           ))}
         </div>
@@ -520,70 +539,179 @@ function TransactionsPanel({ distributor }: { distributor: DistributorRow }) {
           <input
             aria-label="Search transactions"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPageIndex(0);
+            }}
             placeholder="Search ID, player or method..."
-            className="h-9 w-full rounded-md border bg-background pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-8 w-full rounded-md border bg-background pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
       </div>
 
-      <div className="mt-3 overflow-hidden rounded-xl border">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[780px] text-sm">
-            <thead className="border-b bg-muted/30 text-xs text-muted-foreground">
-              <tr>
-                {["Type", "Transaction ID", "Player", "Payment method", "Date", "Amount", "Status"].map((heading) => (
-                  <th key={heading} className="whitespace-nowrap px-3 py-3 text-left font-medium">{heading}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {visibleRows.map((row) => (
-                <tr key={row.kind + row.id} className="transition-colors hover:bg-muted/20">
-                  <td className="px-3 py-3">
-                    <Badge
-                      variant="outline"
-                      className={row.kind === "Deposit"
-                        ? "gap-1.5 border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                        : "gap-1.5 border-orange-500/20 bg-orange-500/10 text-orange-700 dark:text-orange-300"}
-                    >
-                      {row.kind === "Deposit" ? <ArrowDownToLine className="size-3" /> : <ArrowUpFromLine className="size-3" />}
-                      {row.kind}
-                    </Badge>
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-3 font-mono text-xs">{row.id}</td>
-                  <td className="px-3 py-3 font-medium">{row.player}</td>
-                  <td className="px-3 py-3">{row.method}</td>
-                  <td className="whitespace-nowrap px-3 py-3 text-muted-foreground">{row.date}</td>
-                  <td className="whitespace-nowrap px-3 py-3 text-right font-medium tabular-nums">{formatCurrency(row.amount)}</td>
-                  <td className="px-3 py-3">
-                    <Badge variant="outline" className={getTransactionStatusClass(row.status)}>{row.status}</Badge>
-                  </td>
-                </tr>
+      <div className="hidden md:block">
+        <Table className="w-full border-collapse **:data-[slot='table-cell']:border-b **:data-[slot='table-cell']:border-border/70 **:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:border-b **:data-[slot='table-head']:border-border/70 **:data-[slot='table-head']:px-4">
+          <TableHeader className="[&_tr]:border-t">
+            <TableRow className="hover:bg-transparent">
+              {["Type", "Transaction ID", "Player", "Payment Method", "Date", "Amount", "Fees", "Status", "Processed By"].map((heading) => (
+                <TableHead key={heading} className="h-10 whitespace-nowrap py-2.5 text-xs font-medium text-muted-foreground">
+                  {heading}
+                </TableHead>
               ))}
-              {visibleRows.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center">
-                    <WalletCards className="mx-auto size-5 text-muted-foreground" />
-                    <p className="mt-3 text-sm font-medium">
-                      {rows.length === 0 ? "No transactions recorded for this account" : "No matching transactions"}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {rows.length === 0
-                        ? "Deposits and withdrawals will appear here when this account is recorded as the processor."
-                        : "Try another filter or search term."}
-                    </p>
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex items-center justify-between gap-3 border-t px-3 py-2 text-xs text-muted-foreground">
-          <span>Showing {visibleRows.length} of {rows.length} transactions</span>
-          <span>Filtered by processor: <span className="font-medium text-foreground">{distributor.name}</span></span>
-        </div>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {pagedRows.length ? pagedRows.map((row) => (
+              <TableRow key={row.kind + row.id} className={cn("relative h-7 border-border/60 transition-colors hover:bg-muted/35", getRowIndicator(row))}>
+                <TableCell className="px-4 py-0 align-middle leading-none">
+                  <Badge
+                    variant="outline"
+                    className={row.kind === "Deposit"
+                      ? "gap-1 rounded-4xl border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-300"
+                      : "gap-1 rounded-4xl border-orange-500/20 bg-orange-500/10 px-1.5 py-0.5 text-[11px] font-medium text-orange-700 dark:text-orange-300"}
+                  >
+                    {row.kind === "Deposit" ? <ArrowDownToLine className="size-3" /> : <ArrowUpFromLine className="size-3" />}
+                    {row.kind}
+                  </Badge>
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-4 py-0 font-mono text-xs leading-none">{row.id}</TableCell>
+                <TableCell className="px-4 py-0 align-middle leading-none">
+                  <div className="flex min-w-36 items-center gap-2.5">
+                    <Avatar size="sm" className="size-7 shrink-0">
+                      <AvatarFallback className="bg-muted text-[10px] font-medium">{getInitials(row.player)}</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate text-sm font-medium">{row.player}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="px-4 py-0 align-middle leading-none">
+                  <div className="flex min-w-32 items-center gap-2">
+                    <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-xs border bg-background">
+                      {row.methodImage ? <img src={row.methodImage} alt="" className="size-full object-contain p-0.5" loading="lazy" referrerPolicy="no-referrer" /> : <span className="text-[10px] font-semibold">{row.method.slice(0, 1)}</span>}
+                    </span>
+                    <span className="truncate text-sm">{row.method}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-4 py-0 text-sm tabular-nums leading-none">{row.date}</TableCell>
+                <TableCell className="whitespace-nowrap px-4 py-0 text-right text-sm font-medium tabular-nums leading-none">
+                  <span className={row.kind === "Deposit" ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}>
+                    {row.kind === "Deposit" ? "+" : "−"}{formatCurrency(row.amount)}
+                  </span>
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-4 py-0 text-sm tabular-nums leading-none text-muted-foreground">{row.feeLabel}</TableCell>
+                <TableCell className="px-4 py-0 align-middle leading-none">
+                  <Badge variant="outline" className={cn("h-5 rounded-4xl px-1.5 py-0.5 text-[11px] font-medium", getTransactionStatusClass(row.status))}>{row.status}</Badge>
+                </TableCell>
+                <TableCell className="px-4 py-0 align-middle leading-none">
+                  <div className="flex min-w-36 items-center gap-2">
+                    <Avatar size="sm" className="size-7 shrink-0">
+                      <AvatarImage src={row.processedBy.image} alt="" referrerPolicy="no-referrer" />
+                      <AvatarFallback className="bg-muted text-[10px] font-medium">{getInitials(row.processedBy.name)}</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate text-sm font-medium">{row.processedBy.name}</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )) : (
+              <TableRow>
+                <TableCell colSpan={9} className="h-24 text-center text-sm text-muted-foreground">No results.</TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
+
+      <div className="divide-y divide-border/70 md:hidden">
+        {pagedRows.length ? pagedRows.map((row) => (
+          <article key={row.kind + row.id} className={cn("relative min-w-0 px-3 py-3 transition-colors hover:bg-muted/30", getRowIndicator(row))}>
+            <div className="flex min-w-0 items-start gap-3">
+              <div className={cn("mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border", row.kind === "Deposit" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "border-orange-500/20 bg-orange-500/10 text-orange-600 dark:text-orange-400")}>
+                {row.kind === "Deposit" ? <ArrowDownToLine className="size-4" /> : <ArrowUpFromLine className="size-4" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 items-center justify-between gap-3">
+                  <span className="truncate text-sm font-medium">{row.player}</span>
+                  <span className={cn("shrink-0 text-right text-sm font-semibold tabular-nums", row.kind === "Deposit" ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
+                    {row.kind === "Deposit" ? "+" : "−"}{formatCurrency(row.amount)}
+                  </span>
+                </div>
+                <div className="mt-1 flex min-w-0 items-center justify-between gap-2">
+                  <span className="truncate text-xs text-muted-foreground">{row.kind} · {row.method}</span>
+                  <Badge variant="outline" className={cn("h-5 rounded-4xl px-1.5 py-0.5 text-[10px]", getTransactionStatusClass(row.status))}>{row.status}</Badge>
+                </div>
+                <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-[10px] leading-4 text-muted-foreground">
+                  <span className="shrink-0 font-mono">{row.id}</span>
+                  <span aria-hidden="true">·</span>
+                  <span className="min-w-0 truncate">{row.date}</span>
+                </div>
+                <div className="mt-1.5 flex min-w-0 items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                  <span className="truncate">Processed by {row.processedBy.name}</span>
+                  <span className="shrink-0">{row.feeLabel}</span>
+                </div>
+              </div>
+            </div>
+          </article>
+        )) : (
+          <div className="px-4 py-12 text-center text-sm text-muted-foreground">No results.</div>
+        )}
+      </div>
+
+      <Separator />
+
+      <div className="flex flex-col gap-3 px-0 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted-foreground sm:gap-4 sm:text-sm">
+          <div className="flex items-center gap-2">
+            <span><span className="sm:hidden">Rows</span><span className="hidden sm:inline">Rows per page</span></span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={(value) => {
+                setPageSize(Number(value));
+                setPageIndex(0);
+              }}
+            >
+              <SelectTrigger size="sm" className="w-20" id="account-transactions-rows-per-page">
+                <SelectValue placeholder={String(pageSize)} />
+              </SelectTrigger>
+              <SelectContent side="top">
+                <SelectGroup>
+                  {[10, 25, 50].map((size) => <SelectItem key={size} value={String(size)}>{size}</SelectItem>)}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+          <span>Page {currentPageIndex + 1} of {pageCount}</span>
+          <span>Showing {from}–{to} of {visibleRows.length}</span>
+        </div>
+        <Pagination className="mx-0 w-auto justify-start sm:justify-end">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                text=""
+                className={currentPageIndex === 0 ? "pointer-events-none opacity-50" : undefined}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setPageIndex((page) => Math.max(0, Math.min(page, pageCount - 1) - 1));
+                }}
+              />
+            </PaginationItem>
+            <PaginationItem>
+              <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-md border bg-background px-3 text-sm">{currentPageIndex + 1}</span>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                text=""
+                className={currentPageIndex >= pageCount - 1 ? "pointer-events-none opacity-50" : undefined}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setPageIndex((page) => Math.min(pageCount - 1, page + 1));
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+      <p className="text-[11px] text-muted-foreground">Mock transactions for {distributor.name} only. These records are isolated demo data, not live payment records.</p>
     </div>
   );
 }
@@ -598,7 +726,7 @@ function getTransactionStatusClass(status: string) {
   if (["Canceled", "Failed"].includes(status)) {
     return "border-destructive/25 bg-destructive/10 text-destructive";
   }
-  if (status === "Waiting Correction") {
+  if (["Waiting Correction"].includes(status)) {
     return "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300";
   }
   return "border-border bg-muted/40 text-muted-foreground";
