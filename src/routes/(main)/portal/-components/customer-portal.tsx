@@ -6636,6 +6636,7 @@ function CustomerPortalExperience({
 
   if (method.id === "binance-pay") {
     return (
+      <PortalButtonLabelContext.Provider value={methodSpecificSettings?.blocks?.continue?.label || clientForm.appearance.buttonLabel || "Do Deposit"}>
       <PortalBuilderSettingsContext.Provider value={methodSpecificSettings}>
       <BinancePayFlow
         method={method}
@@ -6652,11 +6653,13 @@ function CustomerPortalExperience({
         setAmount={setAmount}
       />
       </PortalBuilderSettingsContext.Provider>
+      </PortalButtonLabelContext.Provider>
     );
   }
 
   if (isEDinarMethod(method)) {
     return (
+      <PortalButtonLabelContext.Provider value={methodSpecificSettings?.blocks?.continue?.label || clientForm.appearance.buttonLabel || "Do Deposit"}>
       <PortalBuilderSettingsContext.Provider value={methodSpecificSettings}>
       <EDinarDepositFlow
         method={method}
@@ -6676,11 +6679,13 @@ function CustomerPortalExperience({
         setAmount={setAmount}
       />
       </PortalBuilderSettingsContext.Provider>
+      </PortalButtonLabelContext.Provider>
     );
   }
 
   if (isCardDepositMethod(method)) {
     return (
+      <PortalButtonLabelContext.Provider value={methodSpecificSettings?.blocks?.continue?.label || clientForm.appearance.buttonLabel || "Do Deposit"}>
       <PortalBuilderSettingsContext.Provider value={methodSpecificSettings}>
       <CardDepositFlow
         method={method}
@@ -6700,11 +6705,13 @@ function CustomerPortalExperience({
         setAmount={setAmount}
       />
       </PortalBuilderSettingsContext.Provider>
+      </PortalButtonLabelContext.Provider>
     );
   }
 
   if (isManualTransferMethod(method)) {
     return (
+      <PortalButtonLabelContext.Provider value={methodSpecificSettings?.blocks?.continue?.label || clientForm.appearance.buttonLabel || "Do Deposit"}>
       <PortalBuilderSettingsContext.Provider value={methodSpecificSettings}>
       <FlouciDepositFlow
         method={method}
@@ -6724,6 +6731,7 @@ function CustomerPortalExperience({
         setAmount={setAmount}
       />
       </PortalBuilderSettingsContext.Provider>
+      </PortalButtonLabelContext.Provider>
     );
   }
 
