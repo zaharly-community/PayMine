@@ -149,6 +149,8 @@ const PortalPaymentMethodsContext = React.createContext<PaymentMethod[]>(payment
 const PortalButtonLabelContext = React.createContext<string>("Do Deposit");
 const PortalFormSlugContext = React.createContext<string | undefined>(undefined);
 const PortalPreviewContext = React.createContext(false);
+type PortalBuilderPreviewStep = "shared" | "payment" | null;
+const PortalBuilderPreviewStepContext = React.createContext<PortalBuilderPreviewStep>(null);
 
 type PortalBuilderSettingsRuntime = {
   template?: "stripe" | "classic" | "minimal";
@@ -184,6 +186,11 @@ type PortalBuilderSettingsRuntime = {
     scheduleEnd?: string;
     scheduleDays?: number[];
   };
+  methodBlocks?: Record<string, Record<string, {
+    label?: string;
+    placeholder?: string;
+    description?: string;
+  }>>;
   blocks?: Record<string, {
     label?: string;
     placeholder?: string;
@@ -3293,6 +3300,8 @@ function FlouciDepositFlow({
   setAmount: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const builderPreviewStep = React.useContext(PortalBuilderPreviewStepContext);
+
   const [demoStatus, setDemoStatus] = React.useState<FlouciDemoStatus>("reviewing");
   const [error, setError] = React.useState("");
   const [transactionId, setTransactionId] = React.useState("");
@@ -3328,6 +3337,10 @@ function FlouciDepositFlow({
     setCorrectedAmount(String(method.min));
     setSecondsLeft(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
   }, [method.id, portalBuilderSettings?.configs?.timerSeconds]);
+
+  React.useEffect(() => {
+    if (builderPreviewStep) setStep(builderPreviewStep === "payment" ? 2 : 1);
+  }, [builderPreviewStep, method.id]);
 
   React.useEffect(() => {
     if (!proofFile || portalBuilderSettings?.features?.aiRecognition === false) {
@@ -4239,6 +4252,8 @@ function CardDepositFlow({
   setAmount: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const builderPreviewStep = React.useContext(PortalBuilderPreviewStepContext);
+
   const [error, setError] = React.useState("");
   const [cardNumbers, setCardNumbers] = React.useState<string[]>([""]);
   const [proofFile, setProofFile] = React.useState<File | null>(null);
@@ -4285,6 +4300,10 @@ function CardDepositFlow({
       Object.values(recognitionTimers.current).forEach((timer) => window.clearTimeout(timer));
     };
   }, [method.id, portalBuilderSettings?.configs?.timerSeconds]);
+
+  React.useEffect(() => {
+    if (builderPreviewStep) setStep(builderPreviewStep === "payment" ? 2 : 1);
+  }, [builderPreviewStep, method.id]);
 
   React.useEffect(() => {
     if (!proofFile || portalBuilderSettings?.features?.aiRecognition === false) {
@@ -5404,6 +5423,8 @@ function EDinarDepositFlow({
   setAmount: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const builderPreviewStep = React.useContext(PortalBuilderPreviewStepContext);
+
   const [error, setError] = React.useState("");
   const [transactionId, setTransactionId] = React.useState("");
   const [proofFile, setProofFile] = React.useState<File | null>(null);
@@ -5425,6 +5446,10 @@ function EDinarDepositFlow({
     setDetectedTransactionId("");
     setSecondsLeft(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
   }, [method.id, portalBuilderSettings?.configs?.timerSeconds]);
+
+  React.useEffect(() => {
+    if (builderPreviewStep) setStep(builderPreviewStep === "payment" ? 2 : 1);
+  }, [builderPreviewStep, method.id]);
 
   React.useEffect(() => {
     if (!proofFile || portalBuilderSettings?.features?.aiRecognition === false) {
@@ -5677,6 +5702,8 @@ function BinancePayFlow({
   setAmount: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const [step, setStep] = React.useState<1 | 2>(1);
+  const builderPreviewStep = React.useContext(PortalBuilderPreviewStepContext);
+
   const [error, setError] = React.useState("");
   const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
   const presets = portalBuilderSettings?.configs?.presetAmounts?.length ? portalBuilderSettings.configs.presetAmounts : [10, 20, 50, 100, 200, 500];
@@ -5685,6 +5712,10 @@ function BinancePayFlow({
     setStep(1);
     setError("");
   }, [method.id]);
+
+  React.useEffect(() => {
+    if (builderPreviewStep) setStep(builderPreviewStep === "payment" ? 2 : 1);
+  }, [builderPreviewStep, method.id]);
 
   const continueToCheckout = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -6151,6 +6182,8 @@ export function CustomerPortal({
   preview = false,
   formOverride,
   builderEditMode = false,
+  builderPreviewStep,
+  builderPreviewMethod,
   onSelectBlock,
 }: {
   initialMethodId?: string;
@@ -6158,6 +6191,8 @@ export function CustomerPortal({
   preview?: boolean;
   formOverride?: ClientPortalForm & { builder?: PortalBuilderSettingsRuntime };
   builderEditMode?: boolean;
+  builderPreviewStep?: "shared" | "payment";
+  builderPreviewMethod?: string;
   onSelectBlock?: (blockId: string) => void;
 } = {}) {
   const [storedForm, setStoredForm] = React.useState<ClientPortalForm | null>(() => getClientPortalFormForSlug(formSlug ?? initialMethodId, preview));
@@ -6166,6 +6201,12 @@ export function CustomerPortal({
     () => clientForm ? getMethodsForClientForm(clientForm) : [],
     [clientForm?.methods],
   );
+  const builderPreviewMethodId = builderEditMode && builderPreviewMethod
+    ? availableMethods.find((method) =>
+        normalizePortalMethodName(method.name) === normalizePortalMethodName(builderPreviewMethod)
+        || normalizePortalMethodName(method.id) === normalizePortalMethodName(builderPreviewMethod),
+      )?.id ?? availableMethods[0]?.id
+    : initialMethodId;
 
   React.useEffect(() => {
     if (formOverride) return;
@@ -6279,6 +6320,7 @@ export function CustomerPortal({
 
   return (
     <PortalBuilderSettingsContext.Provider value={builderSettings}>
+    <PortalBuilderPreviewStepContext.Provider value={builderEditMode ? builderPreviewStep ?? "shared" : null}>
     <PortalPaymentMethodsContext.Provider value={availableMethods}>
       <PortalButtonLabelContext.Provider value={clientForm.appearance.buttonLabel || "Do Deposit"}>
       <PortalFormSlugContext.Provider value={clientForm.slug}>
@@ -6336,7 +6378,7 @@ export function CustomerPortal({
               </section>
             ) : null}
             <div style={{ order: (builderSettings?.layout?.order?.indexOf("paymentMethods") ?? 1) + 1 }}>
-              <CustomerPortalExperience initialMethodId={initialMethodId} clientForm={clientForm} availableMethods={availableMethods} />
+              <CustomerPortalExperience initialMethodId={builderPreviewMethodId} clientForm={clientForm} availableMethods={availableMethods} />
             </div>
             {builderSettings?.features?.playerRating && builderSettings.layout?.order?.includes("playerRating") && !builderSettings.layout.hidden?.includes("playerRating") ? (
               <div data-builder-block="playerRating" style={getPortalBuilderBlockStyle(builderSettings, "playerRating")}>
@@ -6350,6 +6392,7 @@ export function CustomerPortal({
       </PortalFormSlugContext.Provider>
       </PortalButtonLabelContext.Provider>
     </PortalPaymentMethodsContext.Provider>
+    </PortalBuilderPreviewStepContext.Provider>
     </PortalBuilderSettingsContext.Provider>
   );
 }
@@ -6454,8 +6497,13 @@ function CustomerPortalExperience({
   const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
   const methodDisplay = portalBuilderSettings?.configs?.methodDisplay ?? "cards";
   const initialMethod = availableMethods.find((item) => item.id === initialMethodId) ?? availableMethods[0] ?? paymentMethods[0];
+  const builderPreviewStep = React.useContext(PortalBuilderPreviewStepContext);
   const portalFormSlug = React.useContext(PortalFormSlugContext);
   const [method, setMethod] = React.useState<PaymentMethod>(initialMethod);
+  const methodBlockOverrides = portalBuilderSettings?.methodBlocks?.[normalizePortalMethodName(method.name)] ?? {};
+  const methodSpecificSettings = portalBuilderSettings
+    ? { ...portalBuilderSettings, blocks: { ...(portalBuilderSettings.blocks ?? {}), ...methodBlockOverrides } }
+    : null;
   const [amount, setAmount] = React.useState(() => String(initialMethod.min));
   const navigate = useNavigate();
   const [playerId, setPlayerId] = React.useState("");
@@ -6588,6 +6636,8 @@ function CustomerPortalExperience({
 
   if (method.id === "binance-pay") {
     return (
+      <PortalButtonLabelContext.Provider value={methodSpecificSettings?.blocks?.continue?.label || clientForm.appearance.buttonLabel || "Do Deposit"}>
+      <PortalBuilderSettingsContext.Provider value={methodSpecificSettings}>
       <BinancePayFlow
         method={method}
         playerRequestStatus={playerRequestStatus}
@@ -6602,11 +6652,15 @@ function CustomerPortalExperience({
         amount={amount}
         setAmount={setAmount}
       />
+      </PortalBuilderSettingsContext.Provider>
+      </PortalButtonLabelContext.Provider>
     );
   }
 
   if (isEDinarMethod(method)) {
     return (
+      <PortalButtonLabelContext.Provider value={methodSpecificSettings?.blocks?.continue?.label || clientForm.appearance.buttonLabel || "Do Deposit"}>
+      <PortalBuilderSettingsContext.Provider value={methodSpecificSettings}>
       <EDinarDepositFlow
         method={method}
         playerRequestStatus={playerRequestStatus}
@@ -6624,11 +6678,15 @@ function CustomerPortalExperience({
         amount={amount}
         setAmount={setAmount}
       />
+      </PortalBuilderSettingsContext.Provider>
+      </PortalButtonLabelContext.Provider>
     );
   }
 
   if (isCardDepositMethod(method)) {
     return (
+      <PortalButtonLabelContext.Provider value={methodSpecificSettings?.blocks?.continue?.label || clientForm.appearance.buttonLabel || "Do Deposit"}>
+      <PortalBuilderSettingsContext.Provider value={methodSpecificSettings}>
       <CardDepositFlow
         method={method}
         playerRequestStatus={playerRequestStatus}
@@ -6646,11 +6704,15 @@ function CustomerPortalExperience({
         amount={amount}
         setAmount={setAmount}
       />
+      </PortalBuilderSettingsContext.Provider>
+      </PortalButtonLabelContext.Provider>
     );
   }
 
   if (isManualTransferMethod(method)) {
     return (
+      <PortalButtonLabelContext.Provider value={methodSpecificSettings?.blocks?.continue?.label || clientForm.appearance.buttonLabel || "Do Deposit"}>
+      <PortalBuilderSettingsContext.Provider value={methodSpecificSettings}>
       <FlouciDepositFlow
         method={method}
         playerRequestStatus={playerRequestStatus}
@@ -6668,6 +6730,8 @@ function CustomerPortalExperience({
         amount={amount}
         setAmount={setAmount}
       />
+      </PortalBuilderSettingsContext.Provider>
+      </PortalButtonLabelContext.Provider>
     );
   }
 

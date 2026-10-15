@@ -120,6 +120,7 @@ type PortalBuilderSettings = {
     scheduleDays: number[];
   };
   blocks: Record<string, BlockCopy>;
+  methodBlocks: Record<string, Record<string, BlockCopy>>;
   blockStyles: Record<string, BlockStyleSettings>;
 };
 
@@ -354,6 +355,12 @@ type BuilderBlockDefinition = {
   section: BuilderSectionId;
 };
 
+const methodScopedBlockIds = ["transferNumber", "transactionId", "evidence", "cardDetails", "continue"];
+
+function portalStepMethodKey(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
 const builderBlockSections: { id: BuilderSectionId; label: string; description: string }[] = [
   { id: "header", label: "Header", description: "Brand header and page introduction" },
   { id: "checkout", label: "Checkout", description: "Payment method selection and player details" },
@@ -456,6 +463,7 @@ function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
             ? { ...value, label: form.appearance.buttonLabel || value.label }
             : { ...value },
     ])),
+    methodBlocks: {},
     blockStyles: Object.fromEntries(builderBlockCatalog.map((block) => [block.id, {
       alignment: "left" as const,
       width: block.id === "heading" ? "wide" as const : "full" as const,
@@ -471,6 +479,7 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
         features?: Partial<PortalBuilderSettings["features"]>;
         configs?: Partial<PortalBuilderSettings["configs"]>;
         blocks?: Record<string, Partial<BlockCopy> | undefined>;
+        methodBlocks?: Record<string, Record<string, Partial<BlockCopy> | undefined> | undefined>;
         blockStyles?: Record<string, Partial<BlockStyleSettings> | undefined>;
         layout?: { version?: number; order?: string[]; hidden?: string[]; sections?: Record<string, string> };
       })
@@ -510,6 +519,16 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
         : block.section];
     }),
   ) as Record<string, BuilderSectionId>;
+  const methodBlocks: Record<string, Record<string, BlockCopy>> = {};
+  for (const [methodKey, rawBlocks] of Object.entries(raw?.methodBlocks ?? {})) {
+    if (!rawBlocks) continue;
+    const normalizedKey = portalStepMethodKey(methodKey);
+    methodBlocks[normalizedKey] = {};
+    for (const [blockId, rawCopy] of Object.entries(rawBlocks)) {
+      if (!rawCopy || !methodScopedBlockIds.includes(blockId) || !defaults.blocks[blockId]) continue;
+      methodBlocks[normalizedKey][blockId] = { ...defaults.blocks[blockId], ...rawCopy };
+    }
+  }
   const blockStyles: Record<string, BlockStyleSettings> = { ...defaults.blockStyles };
   for (const [id, rawStyle] of Object.entries(raw?.blockStyles ?? {})) {
     if (!rawStyle || !blockStyles[id]) continue;
@@ -552,6 +571,7 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
       scheduleDays: Array.isArray(raw?.configs?.scheduleDays) ? [...new Set(raw.configs.scheduleDays.map(Number).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6))] : [...defaults.configs.scheduleDays],
     },
     blocks,
+    methodBlocks,
     blockStyles,
   };
   return { ...form, builder: settings };
@@ -603,6 +623,12 @@ export function ClientPortalBuilder({
   const [notice, setNotice] = useState("");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
+  const [activeBuilderStep, setActiveBuilderStep] = useState("shared");
+
+  useEffect(() => {
+    setActiveBuilderStep("shared");
+    setSelectedBlock(null);
+  }, [selectedId]);
 
   useEffect(() => {
     const refresh = () => {
@@ -648,6 +674,7 @@ export function ClientPortalBuilder({
       features: { ...selected.builder.features, ...(patch.features ?? {}) },
       configs: { ...selected.builder.configs, ...(patch.configs ?? {}) },
       blocks: { ...selected.builder.blocks, ...(patch.blocks ?? {}) },
+      methodBlocks: { ...selected.builder.methodBlocks, ...(patch.methodBlocks ?? {}) },
       blockStyles: { ...selected.builder.blockStyles, ...(patch.blockStyles ?? {}) },
       layout: {
         version: 2,
@@ -734,6 +761,20 @@ export function ClientPortalBuilder({
 
   const updateBlock = (key: string, patch: Partial<BlockCopy>) => {
     if (!selected) return;
+    const activeMethodKey = activeBuilderStep.startsWith("method:") ? activeBuilderStep.slice("method:".length) : null;
+    if (activeMethodKey && methodScopedBlockIds.includes(key)) {
+      const overrides = selected.builder.methodBlocks[activeMethodKey] ?? {};
+      updateBuilder({
+        methodBlocks: {
+          ...selected.builder.methodBlocks,
+          [activeMethodKey]: {
+            ...overrides,
+            [key]: { ...(overrides[key] ?? selected.builder.blocks[key]), ...patch },
+          },
+        },
+      });
+      return;
+    }
     updateBuilder({
       blocks: {
         ...selected.builder.blocks,
@@ -755,6 +796,13 @@ export function ClientPortalBuilder({
   const updateConfig = (key: keyof PortalBuilderSettings["configs"], value: PortalBuilderSettings["configs"][typeof key]) => {
     if (!selected) return;
     const configs = { ...selected.builder.configs, [key]: value };
+    if (key === "paymentMethods" && activeBuilderStep.startsWith("method:")) {
+      const currentStepKey = activeBuilderStep.slice("method:".length);
+      if (!(value as string[]).some((methodName) => portalStepMethodKey(methodName) === currentStepKey)) {
+        setActiveBuilderStep("shared");
+        setSelectedBlock(null);
+      }
+    }
     const builder = { ...selected.builder, configs, customized: true };
     const patch: Partial<EditableBuilderForm> = { builder };
     if (key === "paymentMethods") patch.methods = value as string[];
@@ -825,6 +873,7 @@ export function ClientPortalBuilder({
         features: { ...selected.builder.features },
         configs: { ...selected.builder.configs, paymentMethods: [...selected.builder.configs.paymentMethods], presetAmounts: [...selected.builder.configs.presetAmounts] },
         blocks: Object.fromEntries(Object.entries(selected.builder.blocks).map(([key, value]) => [key, { ...value }])),
+        methodBlocks: Object.fromEntries(Object.entries(selected.builder.methodBlocks).map(([methodKey, methodBlocks]) => [methodKey, Object.fromEntries(Object.entries(methodBlocks).map(([key, value]) => [key, { ...value }]))])),
         blockStyles: Object.fromEntries(Object.entries(selected.builder.blockStyles).map(([key, value]) => [key, { ...value }])),
         layout: {
           version: 2,
@@ -845,7 +894,15 @@ export function ClientPortalBuilder({
     return <div className="flex min-h-dvh items-center justify-center text-sm text-muted-foreground">No checkout form exists yet.</div>;
   }
 
-  const selectedCopy = selectedBlock ? selected.builder.blocks[selectedBlock] : null;
+  const activeStepMethod = activeBuilderStep.startsWith("method:")
+    ? selected.builder.configs.paymentMethods.find((method) => portalStepMethodKey(method) === activeBuilderStep.slice("method:".length)) ?? null
+    : null;
+  const activeStepMethodKey = activeStepMethod ? portalStepMethodKey(activeStepMethod) : null;
+  const selectedCopy = selectedBlock
+    ? (activeStepMethodKey && methodScopedBlockIds.includes(selectedBlock)
+      ? selected.builder.methodBlocks[activeStepMethodKey]?.[selectedBlock] ?? selected.builder.blocks[selectedBlock]
+      : selected.builder.blocks[selectedBlock])
+    : null;
   const selectedBlockProfile = selectedBlock ? blockEditorProfiles[selectedBlock] : undefined;
   const selectedTemplate = templateOptions.find((option) => option.id === selected.builder.template) ?? templateOptions[0];
   const fontQuery = fontSearch.trim().toLowerCase();
@@ -891,12 +948,33 @@ export function ClientPortalBuilder({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={selectedId} onValueChange={setSelectedId}>
-            <SelectTrigger className="h-8 w-[150px] max-w-[35vw] border border-white/20 bg-white/10 text-xs text-white [&_svg]:text-white"><SelectValue placeholder="Select checkout form" /></SelectTrigger>
-            <SelectContent>
-              {forms.map((form) => <SelectItem key={form.id} value={form.id}>{form.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div className="flex max-w-[min(52vw,680px)] items-center gap-1 overflow-x-auto rounded-lg border border-white/15 bg-white/5 p-1 [scrollbar-width:thin]" role="tablist" aria-label="Checkout steps">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeBuilderStep === "shared"}
+              onClick={() => { setActiveBuilderStep("shared"); setSelectedBlock(null); }}
+              className={"shrink-0 rounded-md px-3 py-1.5 text-[11px] font-medium transition " + (activeBuilderStep === "shared" ? "bg-white text-[#102c58] shadow-sm" : "text-blue-100 hover:bg-white/10")}
+            >
+              Shared step
+            </button>
+            {selected.builder.configs.paymentMethods.map((methodName) => {
+              const key = "method:" + portalStepMethodKey(methodName);
+              const active = activeBuilderStep === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => { setActiveBuilderStep(key); setSelectedBlock(null); }}
+                  className={"shrink-0 rounded-md px-3 py-1.5 text-[11px] font-medium transition " + (active ? "bg-white text-[#102c58] shadow-sm" : "text-blue-100 hover:bg-white/10")}
+                >
+                  {methodName} details
+                </button>
+              );
+            })}
+          </div>
           <Badge variant="outline" className={selected.status === "Published" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-amber-300/30 bg-amber-300/10 text-amber-200"}>{selected.status === "Published" ? "● LIVE" : "DRAFT"}</Badge>
           <Button variant="ghost" size="icon" className="size-8 text-blue-100 hover:bg-white/10 hover:text-white" aria-label="Appearance mode" title="Appearance mode" onClick={() => updateBuilder({ colors: { websiteBackground: isLightColor(selected.builder.colors.websiteBackground) ? "#020617" : "#f8fafc" } })}><Moon className="size-4" /></Button>
           <div className="flex items-center rounded-lg border border-white/20 bg-white/10 p-0.5">
@@ -921,11 +999,22 @@ export function ClientPortalBuilder({
             {selectedBlock ? <Button variant="ghost" size="sm" onClick={() => setSelectedBlock(null)}>Theme settings</Button> : null}
           </div>
 
+          <div className="border-b border-slate-200 bg-white px-3 py-2.5">
+            <Label className="mb-1.5 block text-[10px] uppercase tracking-wide text-slate-500">Checkout form</Label>
+            <Select value={selectedId} onValueChange={setSelectedId}>
+              <SelectTrigger className="h-8 w-full border-slate-200 bg-white text-xs"><SelectValue placeholder="Select checkout form" /></SelectTrigger>
+              <SelectContent>
+                {forms.map((form) => <SelectItem key={form.id} value={form.id}>{form.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
           {selectedBlock && selectedCopy ? (
             <div className="space-y-5 p-4">
               <div className="rounded-lg border bg-muted/20 p-3">
                 <p className="text-xs font-semibold">{selectedBlockProfile?.title ?? "Block settings"}</p>
-                <p className="mt-1 text-xs text-muted-foreground">These options are tailored to the selected element. Unsupported settings are hidden instead of being shown for every block.</p>
+                <p className="mt-1 text-xs text-muted-foreground">{activeStepMethod ? `Editing payment details specifically for ${activeStepMethod}. Shared settings remain unchanged.` : "Editing the shared step. Payment-detail changes made from a method tab are saved only for that method."}</p>
+                {activeStepMethodKey && methodScopedBlockIds.includes(selectedBlock) && !selected.builder.methodBlocks[activeStepMethodKey]?.[selectedBlock] ? <p className="mt-2 rounded-md bg-blue-50 px-2.5 py-2 text-[11px] leading-4 text-blue-700">This field currently inherits its shared-step value. Your first edit here creates a separate value for {activeStepMethod}.</p> : null}
               </div>
 
               {selectedBlockProfile?.controls.length ? (
@@ -1504,6 +1593,8 @@ export function ClientPortalBuilder({
                   formOverride={previewForm}
                   preview
                   builderEditMode
+                  builderPreviewStep={activeStepMethod ? "payment" : "shared"}
+                  builderPreviewMethod={activeStepMethod ?? selected.builder.configs.paymentMethods[0]}
                   onSelectBlock={setSelectedBlock}
                 />
               </div>
