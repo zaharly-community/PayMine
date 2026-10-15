@@ -5884,19 +5884,40 @@ function GenericDepositSummary({
   );
 }
 
-export function CustomerPortal({ initialMethodId }: { initialMethodId?: string } = {}) {
-  const [clientForm, setClientForm] = React.useState<ClientPortalForm>(() => getClientPortalFormForSlug(initialMethodId));
-  const availableMethods = React.useMemo(() => getMethodsForClientForm(clientForm), [clientForm.methods]);
+export function CustomerPortal({
+  initialMethodId,
+  preview = false,
+}: {
+  initialMethodId?: string;
+  preview?: boolean;
+} = {}) {
+  const [clientForm, setClientForm] = React.useState<ClientPortalForm | null>(() => getClientPortalFormForSlug(initialMethodId, preview));
+  const availableMethods = React.useMemo(
+    () => clientForm ? getMethodsForClientForm(clientForm) : [],
+    [clientForm?.methods],
+  );
 
   React.useEffect(() => {
-    const refresh = () => setClientForm(getClientPortalFormForSlug(initialMethodId));
+    const refresh = () => setClientForm(getClientPortalFormForSlug(initialMethodId, preview));
     window.addEventListener(CLIENT_PORTAL_FORMS_CHANGE_EVENT, refresh);
     window.addEventListener("storage", refresh);
     return () => {
       window.removeEventListener(CLIENT_PORTAL_FORMS_CHANGE_EVENT, refresh);
       window.removeEventListener("storage", refresh);
     };
-  }, [initialMethodId]);
+  }, [initialMethodId, preview]);
+
+  if (!clientForm) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center bg-slate-950 px-5 py-10 text-slate-100">
+        <section className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 text-center">
+          <ShieldAlert className="mx-auto size-8 text-slate-400" />
+          <h1 className="mt-4 text-lg font-semibold">Checkout unavailable</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-400">This checkout form is not published or the link is no longer active. Please contact the merchant for a valid payment link.</p>
+        </section>
+      </main>
+    );
+  }
 
   const style = {
     "--portal-page-background": clientForm.appearance.backgroundColor,
