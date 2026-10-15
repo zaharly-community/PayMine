@@ -33,6 +33,11 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Input } from "@/components/ui/input";
 import { cn } from "cn";
 import { createDistributorReport } from "@/lib/distributor-reports";
+import {
+  CLIENT_PORTAL_FORMS_CHANGE_EVENT,
+  getClientPortalFormForSlug,
+  type ClientPortalForm,
+} from "@/lib/client-portal-config";
 
 import { distributors } from "@/routes/(main)/dashboard/distributors/-components/data";
 
@@ -133,6 +138,46 @@ const paymentMethods: PaymentMethod[] = [
   },
 ];
 
+const PortalPaymentMethodsContext = React.createContext<PaymentMethod[]>(paymentMethods);
+
+function normalizePortalMethodName(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function getMethodsForClientForm(form: ClientPortalForm) {
+  const methods = paymentMethods.filter((method) =>
+    form.methods.some((name) =>
+      normalizePortalMethodName(name) === normalizePortalMethodName(method.name)
+      || normalizePortalMethodName(name) === normalizePortalMethodName(method.id),
+    ),
+  );
+  return methods.length ? methods : paymentMethods;
+}
+
+function PortalBrandHeader({ form }: { form: ClientPortalForm }) {
+  const { appearance } = form;
+  return (
+    <div className="mx-auto flex w-full items-center justify-between gap-3 border-b px-4 py-3 sm:px-6" style={{ maxWidth: appearance.width === "wide" ? "72rem" : "48rem", color: appearance.theme === "dark" ? "#f8fafc" : "#0f172a", borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0" }}>
+      <div className="flex min-w-0 items-center gap-3">
+        {appearance.showLogo ? (
+          appearance.logoUrl ? (
+            <img src={appearance.logoUrl} alt={appearance.brandName + " logo"} className="size-9 shrink-0 rounded-lg object-contain" />
+          ) : (
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold" style={{ backgroundColor: appearance.primaryColor, color: appearance.theme === "dark" ? "#052e22" : "#ffffff" }}>{(appearance.brandName || "iP").slice(0, 2).toUpperCase()}</span>
+          )
+        ) : null}
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{appearance.brandName || "Your brand"}</p>
+          <p className="text-[10px]" style={{ color: appearance.theme === "dark" ? "#94a3b8" : "#64748b" }}>Secure checkout</p>
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px]" style={{ borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0", color: appearance.primaryColor }}>
+        <ShieldCheck className="size-3.5" /> Protected payment
+      </div>
+    </div>
+  );
+}
+
 function PaymentMethodMark({ method }: { method: PaymentMethod }) {
   return (
     <span
@@ -169,6 +214,7 @@ function PaymentMethodSelector({
   onToggle: () => void;
   onSelect: (method: PaymentMethod) => void;
 }) {
+  const availableMethods = React.useContext(PortalPaymentMethodsContext);
   const sliderRef = React.useRef<HTMLDivElement>(null);
   const dragRef = React.useRef({
     pointerId: -1,
@@ -273,7 +319,7 @@ function PaymentMethodSelector({
           aria-label="Payment methods. Drag or swipe horizontally to browse."
         >
           <div className="flex min-w-max items-stretch gap-2 px-1 py-2">
-            {paymentMethods.map((item) => {
+            {availableMethods.map((item) => {
               const selected = item.id === method.id;
 
               return (
@@ -328,7 +374,7 @@ function PaymentMethodSelector({
       {open ? (
         <div className="absolute inset-x-0 top-full z-20 mt-2 rounded-xl border border-white/10 bg-slate-900 p-2 shadow-2xl">
           <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-            {paymentMethods.map((item) => (
+            {availableMethods.map((item) => (
               <Link
                 key={item.id + "-menu"}
                 to="/portal/$method"
@@ -5839,10 +5885,69 @@ function GenericDepositSummary({
 }
 
 export function CustomerPortal({ initialMethodId }: { initialMethodId?: string } = {}) {
-  const [method, setMethod] = React.useState<PaymentMethod>(() => paymentMethods.find((item) => item.id === initialMethodId) ?? paymentMethods[0]);
-  const [amount, setAmount] = React.useState(() =>
-    String((paymentMethods.find((item) => item.id === initialMethodId) ?? paymentMethods[0]).min),
+  const [clientForm, setClientForm] = React.useState<ClientPortalForm>(() => getClientPortalFormForSlug(initialMethodId));
+  const availableMethods = React.useMemo(() => getMethodsForClientForm(clientForm), [clientForm.methods]);
+
+  React.useEffect(() => {
+    const refresh = () => setClientForm(getClientPortalFormForSlug(initialMethodId));
+    window.addEventListener(CLIENT_PORTAL_FORMS_CHANGE_EVENT, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(CLIENT_PORTAL_FORMS_CHANGE_EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, [initialMethodId]);
+
+  const style = {
+    "--portal-page-background": clientForm.appearance.backgroundColor,
+    "--portal-surface": clientForm.appearance.surfaceColor,
+    "--portal-accent": clientForm.appearance.primaryColor,
+    "--portal-border": clientForm.appearance.theme === "dark" ? "#334155" : "#e2e8f0",
+    "--portal-radius": clientForm.appearance.radius === "small" ? "8px" : clientForm.appearance.radius === "large" ? "22px" : "14px",
+    "--portal-content-width": clientForm.appearance.width === "wide" ? "72rem" : "48rem",
+  } as React.CSSProperties;
+
+  return (
+    <PortalPaymentMethodsContext.Provider value={availableMethods}>
+      <div id="ipaycash-client-portal" data-theme={clientForm.appearance.theme} data-width={clientForm.appearance.width} data-radius={clientForm.appearance.radius} style={style}>
+        <style>{'#ipaycash-client-portal [class~="bg-slate-950"]{background-color:var(--portal-page-background)!important;}' +
+          '#ipaycash-client-portal [class~="bg-slate-900"],#ipaycash-client-portal [class~="bg-slate-900/80"],#ipaycash-client-portal [class~="bg-slate-900/90"],#ipaycash-client-portal [class~="bg-slate-800"],#ipaycash-client-portal [class~="bg-slate-800/80"],#ipaycash-client-portal [class~="bg-slate-800/60"],#ipaycash-client-portal [class~="bg-slate-700/90"]{background-color:var(--portal-surface)!important;}' +
+          '#ipaycash-client-portal [class~="bg-emerald-400"],#ipaycash-client-portal [class~="bg-emerald-300"]{background-color:var(--portal-accent)!important;}' +
+          '#ipaycash-client-portal [class~="text-emerald-300"]{color:var(--portal-accent)!important;}' +
+          '#ipaycash-client-portal [class~="border-slate-700"],#ipaycash-client-portal [class~="border-white/10"],#ipaycash-client-portal [class~="border-white/8"]{border-color:var(--portal-border)!important;}' +
+          '#ipaycash-client-portal [class~="max-w-3xl"]{max-width:var(--portal-content-width)!important;}' +
+          '#ipaycash-client-portal [class~="rounded-xl"],#ipaycash-client-portal [class~="rounded-2xl"]{border-radius:var(--portal-radius)!important;}' +
+          '#ipaycash-client-portal [class~="min-h-dvh"]{min-height:max(560px,calc(100dvh - 4.5rem))!important;}' +
+          '#ipaycash-client-portal[data-theme="light"] [class~="text-slate-100"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-200"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-300"]{color:#0f172a!important;}' +
+          '#ipaycash-client-portal[data-theme="light"] [class~="text-slate-400"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-500"]{color:#64748b!important;}'}</style>
+        <div style={{ backgroundColor: clientForm.appearance.backgroundColor }}>
+          <PortalBrandHeader form={clientForm} />
+          <div className="mx-auto w-full" style={{ maxWidth: clientForm.appearance.width === "wide" ? "80rem" : "64rem" }}>
+            <div className="px-4 pb-2 pt-4 sm:px-6">
+              <h1 className="text-lg font-semibold" style={{ color: clientForm.appearance.theme === "dark" ? "#f8fafc" : "#0f172a" }}>{clientForm.appearance.title || clientForm.name}</h1>
+              <p className="mt-1 text-xs leading-5" style={{ color: clientForm.appearance.theme === "dark" ? "#94a3b8" : "#64748b" }}>{clientForm.appearance.description}</p>
+            </div>
+            <CustomerPortalExperience initialMethodId={initialMethodId} clientForm={clientForm} availableMethods={availableMethods} />
+          </div>
+          {clientForm.appearance.showPlatformBranding ? <p className="px-4 py-3 text-center text-[10px]" style={{ color: clientForm.appearance.theme === "dark" ? "#64748b" : "#94a3b8" }}>Powered by iPayCash</p> : null}
+        </div>
+      </div>
+    </PortalPaymentMethodsContext.Provider>
   );
+}
+
+function CustomerPortalExperience({
+  initialMethodId,
+  clientForm,
+  availableMethods,
+}: {
+  initialMethodId?: string;
+  clientForm: ClientPortalForm;
+  availableMethods: PaymentMethod[];
+}) {
+  const initialMethod = availableMethods.find((item) => item.id === initialMethodId) ?? availableMethods[0] ?? paymentMethods[0];
+  const [method, setMethod] = React.useState<PaymentMethod>(initialMethod);
+  const [amount, setAmount] = React.useState(() => String(initialMethod.min));
   const navigate = useNavigate();
   const [playerId, setPlayerId] = React.useState("");
   const [playerLookupType, setPlayerLookupType] = React.useState<PlayerLookupType>("playerId");
@@ -5857,6 +5962,24 @@ export function CustomerPortal({ initialMethodId }: { initialMethodId?: string }
   );
   const minLabel = method.min.toLocaleString("en-US");
   const maxLabel = method.max.toLocaleString("en-US");
+  const availableMethodIds = availableMethods.map((item) => item.id).join("|");
+
+  React.useEffect(() => {
+    const routeMethod = availableMethods.find((item) => item.id === initialMethodId);
+    if (routeMethod && routeMethod.id !== method.id) {
+      setMethod(routeMethod);
+      setAmount(String(routeMethod.min));
+      setError("");
+      setDepositStarted(false);
+      return;
+    }
+    if (!availableMethods.some((item) => item.id === method.id) && availableMethods[0]) {
+      setMethod(availableMethods[0]);
+      setAmount(String(availableMethods[0].min));
+      setError("");
+      setDepositStarted(false);
+    }
+  }, [initialMethodId, availableMethodIds, method.id]);
 
   const openTrackingPage = (request: DepositRequest) => {
     void navigate({
@@ -6072,7 +6195,7 @@ export function CustomerPortal({ initialMethodId }: { initialMethodId?: string }
               >
                 <CircleDollarSign className="size-4" />
                 <span>
-                  Do Deposit
+                  {clientForm.appearance.buttonLabel || "Do Deposit"}
                   <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
                     Net Amount:{" "}
                     {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"}{" "}
