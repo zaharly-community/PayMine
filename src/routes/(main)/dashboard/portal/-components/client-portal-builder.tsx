@@ -941,12 +941,33 @@ export function ClientPortalBuilder({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={selectedId} onValueChange={setSelectedId}>
-            <SelectTrigger className="h-8 w-[150px] max-w-[35vw] border border-white/20 bg-white/10 text-xs text-white [&_svg]:text-white"><SelectValue placeholder="Select checkout form" /></SelectTrigger>
-            <SelectContent>
-              {forms.map((form) => <SelectItem key={form.id} value={form.id}>{form.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div className="flex max-w-[min(52vw,680px)] items-center gap-1 overflow-x-auto rounded-lg border border-white/15 bg-white/5 p-1 [scrollbar-width:thin]" role="tablist" aria-label="Checkout steps">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeBuilderStep === "shared"}
+              onClick={() => { setActiveBuilderStep("shared"); setSelectedBlock(null); }}
+              className={"shrink-0 rounded-md px-3 py-1.5 text-[11px] font-medium transition " + (activeBuilderStep === "shared" ? "bg-white text-[#102c58] shadow-sm" : "text-blue-100 hover:bg-white/10")}
+            >
+              Shared step
+            </button>
+            {selected.builder.configs.paymentMethods.map((methodName) => {
+              const key = "method:" + portalStepMethodKey(methodName);
+              const active = activeBuilderStep === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => { setActiveBuilderStep(key); setSelectedBlock(null); }}
+                  className={"shrink-0 rounded-md px-3 py-1.5 text-[11px] font-medium transition " + (active ? "bg-white text-[#102c58] shadow-sm" : "text-blue-100 hover:bg-white/10")}
+                >
+                  {methodName} details
+                </button>
+              );
+            })}
+          </div>
           <Badge variant="outline" className={selected.status === "Published" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-amber-300/30 bg-amber-300/10 text-amber-200"}>{selected.status === "Published" ? "● LIVE" : "DRAFT"}</Badge>
           <Button variant="ghost" size="icon" className="size-8 text-blue-100 hover:bg-white/10 hover:text-white" aria-label="Appearance mode" title="Appearance mode" onClick={() => updateBuilder({ colors: { websiteBackground: isLightColor(selected.builder.colors.websiteBackground) ? "#020617" : "#f8fafc" } })}><Moon className="size-4" /></Button>
           <div className="flex items-center rounded-lg border border-white/20 bg-white/10 p-0.5">
@@ -971,11 +992,21 @@ export function ClientPortalBuilder({
             {selectedBlock ? <Button variant="ghost" size="sm" onClick={() => setSelectedBlock(null)}>Theme settings</Button> : null}
           </div>
 
+          <div className="border-b border-slate-200 bg-white px-3 py-2.5">
+            <Label className="mb-1.5 block text-[10px] uppercase tracking-wide text-slate-500">Checkout form</Label>
+            <Select value={selectedId} onValueChange={setSelectedId}>
+              <SelectTrigger className="h-8 w-full border-slate-200 bg-white text-xs"><SelectValue placeholder="Select checkout form" /></SelectTrigger>
+              <SelectContent>
+                {forms.map((form) => <SelectItem key={form.id} value={form.id}>{form.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
           {selectedBlock && selectedCopy ? (
             <div className="space-y-5 p-4">
               <div className="rounded-lg border bg-muted/20 p-3">
                 <p className="text-xs font-semibold">{selectedBlockProfile?.title ?? "Block settings"}</p>
-                <p className="mt-1 text-xs text-muted-foreground">These options are tailored to the selected element. Unsupported settings are hidden instead of being shown for every block.</p>
+                <p className="mt-1 text-xs text-muted-foreground">{activeStepMethod ? `Editing payment details specifically for ${activeStepMethod}. Shared settings remain unchanged.` : "Editing the shared step. Payment-detail changes made from a method tab are saved only for that method."}</p>
               </div>
 
               {selectedBlockProfile?.controls.length ? (
@@ -1554,6 +1585,8 @@ export function ClientPortalBuilder({
                   formOverride={previewForm}
                   preview
                   builderEditMode
+                  builderPreviewStep={activeStepMethod ? "payment" : "shared"}
+                  builderPreviewMethod={activeStepMethod ?? selected.builder.configs.paymentMethods[0]}
                   onSelectBlock={setSelectedBlock}
                 />
               </div>
