@@ -140,6 +140,8 @@ const paymentMethods: PaymentMethod[] = [
 
 const PortalPaymentMethodsContext = React.createContext<PaymentMethod[]>(paymentMethods);
 const PortalButtonLabelContext = React.createContext<string>("Do Deposit");
+const PortalFormSlugContext = React.createContext<string | undefined>(undefined);
+const PortalPreviewContext = React.createContext(false);
 
 function normalizePortalMethodName(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -216,6 +218,9 @@ function PaymentMethodSelector({
   onSelect: (method: PaymentMethod) => void;
 }) {
   const availableMethods = React.useContext(PortalPaymentMethodsContext);
+  const formSlug = React.useContext(PortalFormSlugContext);
+  const portalPreview = React.useContext(PortalPreviewContext);
+  const selectorSearch = formSlug ? { form: formSlug, preview: portalPreview } : { preview: portalPreview };
   const sliderRef = React.useRef<HTMLDivElement>(null);
   const dragRef = React.useRef({
     pointerId: -1,
@@ -329,6 +334,7 @@ function PaymentMethodSelector({
                   data-payment-method-id={item.id}
                   to="/portal/$method"
                   params={{ method: item.id }}
+                  search={selectorSearch}
                   onClickCapture={(event) => {
                     if (dragRef.current.moved) {
                       event.preventDefault();
@@ -380,6 +386,7 @@ function PaymentMethodSelector({
                 key={item.id + "-menu"}
                 to="/portal/$method"
                 params={{ method: item.id }}
+                  search={selectorSearch}
                 onClick={() => {
                   onSelect(item);
                   onToggle();
@@ -5890,26 +5897,28 @@ function GenericDepositSummary({
 
 export function CustomerPortal({
   initialMethodId,
+  formSlug,
   preview = false,
 }: {
   initialMethodId?: string;
+  formSlug?: string;
   preview?: boolean;
 } = {}) {
-  const [clientForm, setClientForm] = React.useState<ClientPortalForm | null>(() => getClientPortalFormForSlug(initialMethodId, preview));
+  const [clientForm, setClientForm] = React.useState<ClientPortalForm | null>(() => getClientPortalFormForSlug(formSlug ?? initialMethodId, preview));
   const availableMethods = React.useMemo(
     () => clientForm ? getMethodsForClientForm(clientForm) : [],
     [clientForm?.methods],
   );
 
   React.useEffect(() => {
-    const refresh = () => setClientForm(getClientPortalFormForSlug(initialMethodId, preview));
+    const refresh = () => setClientForm(getClientPortalFormForSlug(formSlug ?? initialMethodId, preview));
     window.addEventListener(CLIENT_PORTAL_FORMS_CHANGE_EVENT, refresh);
     window.addEventListener("storage", refresh);
     return () => {
       window.removeEventListener(CLIENT_PORTAL_FORMS_CHANGE_EVENT, refresh);
       window.removeEventListener("storage", refresh);
     };
-  }, [initialMethodId, preview]);
+  }, [initialMethodId, formSlug, preview]);
 
   if (!clientForm) {
     return (
@@ -5936,6 +5945,8 @@ export function CustomerPortal({
   return (
     <PortalPaymentMethodsContext.Provider value={availableMethods}>
       <PortalButtonLabelContext.Provider value={clientForm.appearance.buttonLabel || "Do Deposit"}>
+      <PortalFormSlugContext.Provider value={clientForm.slug}>
+      <PortalPreviewContext.Provider value={preview}>
       <div id="ipaycash-client-portal" data-theme={clientForm.appearance.theme} data-width={clientForm.appearance.width} data-radius={clientForm.appearance.radius} style={style}>
         <style>{'#ipaycash-client-portal [class~="bg-slate-950"]{background-color:var(--portal-page-background)!important;}' +
           '#ipaycash-client-portal [class~="bg-slate-900"],#ipaycash-client-portal [class~="bg-slate-900/80"],#ipaycash-client-portal [class~="bg-slate-900/90"],#ipaycash-client-portal [class~="bg-slate-800"],#ipaycash-client-portal [class~="bg-slate-800/80"],#ipaycash-client-portal [class~="bg-slate-800/60"],#ipaycash-client-portal [class~="bg-slate-700/90"]{background-color:var(--portal-surface)!important;}' +
@@ -5959,6 +5970,8 @@ export function CustomerPortal({
           {clientForm.appearance.showPlatformBranding ? <p className="px-4 py-3 text-center text-[10px]" style={{ color: clientForm.appearance.theme === "dark" ? "#64748b" : "#94a3b8" }}>Powered by iPayCash</p> : null}
         </div>
       </div>
+      </PortalPreviewContext.Provider>
+      </PortalFormSlugContext.Provider>
       </PortalButtonLabelContext.Provider>
     </PortalPaymentMethodsContext.Provider>
   );
