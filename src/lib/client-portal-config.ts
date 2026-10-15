@@ -53,10 +53,10 @@ export type ClientPortalForm = {
 };
 
 const defaultAppearance: ClientPortalAppearance = {
-  brandName: "iPayCash",
+  brandName: "Your brand",
   logoUrl: "",
   showLogo: true,
-  showPlatformBranding: true,
+  showPlatformBranding: false,
   title: "Make a deposit",
   description: "Choose your preferred payment method and complete your deposit securely.",
   buttonLabel: "Continue securely",
