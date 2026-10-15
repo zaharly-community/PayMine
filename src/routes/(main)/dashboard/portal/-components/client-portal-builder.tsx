@@ -773,10 +773,10 @@ export function ClientPortalBuilder({
                   <div className="space-y-4">
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <h3 className="text-sm font-semibold">Page blocks</h3>
+                        <h3 className="text-sm font-semibold">Page sections</h3>
                         <Badge variant="outline">{selected.builder.layout.order.length} active</Badge>
                       </div>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">Drag blocks to reorder the checkout flow. Select a block to edit its content. Required fields can move, but cannot be hidden or removed.</p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">Each page section contains its own blocks. Drag to reorder within a section, or select a block to edit its settings. Required blocks can move but cannot be hidden or removed.</p>
                     </div>
 
                     <div className="space-y-2">
@@ -889,7 +889,7 @@ export function ClientPortalBuilder({
                             className={"flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-blue-300 hover:bg-blue-50" + (draggingBlock === block.id ? " opacity-40" : "")}
                           >
                             <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500"><Plus className="size-3.5" /></span>
-                            <span className="min-w-0 flex-1"><span className="block text-xs font-medium text-slate-800">{block.label}</span><span className="block text-[10px] text-slate-500">{block.description}</span></span>
+                            <span className="min-w-0 flex-1"><span className="block text-xs font-medium text-slate-800">{block.label}</span><span className="block text-[10px] text-slate-500">{block.description}</span><span className="mt-1 block text-[9px] font-medium uppercase tracking-wide text-blue-700">{builderBlockSections.find((section) => section.id === block.section)?.label}</span></span>
                           </button>
                         ))}
                         {builderBlockCatalog.every((block) => selected.builder.layout.order.includes(block.id)) ? <p className="py-2 text-center text-[11px] text-muted-foreground">All blocks are already on this page.</p> : null}
@@ -904,11 +904,12 @@ export function ClientPortalBuilder({
 
                     <div className="space-y-2">
                       <Label>Payment method presentation</Label>
+                      <p className="text-[11px] leading-4 text-muted-foreground">Tabs displays a horizontal selector. Cards displays a responsive grid. Selecting any method opens that method's own payment form.</p>
                       <div className="grid grid-cols-2 gap-2">
                         {([
                           ["tabs", "Tabs"],
                           ["cards", "Cards"],
-                        ] as [MethodDisplay, string][]).map(([value, label]) => <button key={value} type="button" onClick={() => updateConfig("methodDisplay", value)} className={"rounded-lg border px-3 py-3 text-sm font-medium transition " + (selected.builder.configs.methodDisplay === value ? "border-primary bg-primary/5 text-primary" : "hover:bg-muted/40")}>{label}<span className="mt-2 flex gap-1">{value === "tabs" ? <><span className="h-1.5 flex-1 rounded-full bg-muted-foreground/40" /><span className="h-1.5 flex-1 rounded-full bg-muted" /><span className="h-1.5 flex-1 rounded-full bg-muted" /></> : <><span className="h-5 flex-1 rounded border bg-muted/50" /><span className="h-5 flex-1 rounded border bg-muted/50" /></>}</span></button>)}
+                        ] as [MethodDisplay, string][]).map(([value, label]) => <button key={value} type="button" onClick={() => updateConfig("methodDisplay", value)} className={"rounded-lg border px-3 py-3 text-sm font-medium transition " + (selected.builder.configs.methodDisplay === value ? "border-primary bg-primary/5 text-primary" : "hover:bg-muted/40")}>{label}<span className="mt-2 flex gap-1">{value === "tabs" ? <><span className="h-1.5 flex-1 rounded-full bg-muted-foreground/40" /><span className="h-1.5 flex-1 rounded-full bg-muted" /><span className="h-1.5 flex-1 rounded-full bg-muted" /></> : <span className="grid flex-1 grid-cols-2 gap-1"><span className="h-3 rounded border bg-muted/50" /><span className="h-3 rounded border bg-muted/50" /><span className="h-3 rounded border bg-muted/50" /><span className="h-3 rounded border bg-muted/50" /></span>}</span></button>)}
                       </div>
                     </div>
 
