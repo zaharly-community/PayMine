@@ -6,6 +6,9 @@ import {
   Copy,
   ExternalLink,
   Eye,
+  EyeOff,
+  GripVertical,
+  LockKeyhole,
   Monitor,
   Save,
   Smartphone,
@@ -767,11 +770,11 @@ export function ClientPortalBuilder({
                                 <span className="mt-0.5 block truncate text-[10px] text-slate-500">{hidden ? "Hidden" : definition.description}</span>
                               </button>
                               {definition.required ? (
-                                <span title="Required block" className="flex size-7 shrink-0 items-center justify-center rounded-md text-slate-400"><icon name="lock-keyhole" size="xs" /></span>
+                                <span title="Required block" className="flex size-7 shrink-0 items-center justify-center rounded-md text-slate-400"><LockKeyhole className="size-3.5" /></span>
                               ) : (
                                 <>
-                                  <button type="button" title={hidden ? "Show block" : "Hide block"} aria-label={hidden ? "Show block" : "Hide block"} onClick={() => toggleBlockHidden(id)} className="flex size-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100"><icon name={hidden ? "eye-off" : "eye"} size="xs" /></button>
-                                  <button type="button" title="Remove block" aria-label="Remove block" onClick={() => removeBlock(id)} className="flex size-7 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-600"><icon name="x" size="xs" /></button>
+                                  <button type="button" title={hidden ? "Show block" : "Hide block"} aria-label={hidden ? "Show block" : "Hide block"} onClick={() => toggleBlockHidden(id)} className="flex size-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100">{hidden ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}</button>
+                                  <button type="button" title="Remove block" aria-label="Remove block" onClick={() => removeBlock(id)} className="flex size-7 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-600"><X className="size-3.5" /></button>
                                 </>
                               )}
                             </div>
@@ -792,7 +795,7 @@ export function ClientPortalBuilder({
                       <div className="space-y-1.5">
                         {builderBlockCatalog.filter((block) => !selected.builder.layout.order.includes(block.id) && (block.label + " " + block.description).toLowerCase().includes(blockSearch.toLowerCase())).map((block) => (
                           <button key={block.id} type="button" onClick={() => addBlock(block.id)} className="flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-blue-300 hover:bg-blue-50">
-                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500"><icon name="plus" size="xs" /></span>
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500"><Plus className="size-3.5" /></span>
                             <span className="min-w-0 flex-1"><span className="block text-xs font-medium text-slate-800">{block.label}</span><span className="block text-[10px] text-slate-500">{block.description}</span></span>
                           </button>
                         ))}
