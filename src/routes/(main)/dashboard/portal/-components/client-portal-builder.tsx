@@ -1074,9 +1074,9 @@ export function ClientPortalBuilder({
                     <p className="mt-1 text-[11px] leading-4 text-muted-foreground">Choose which types players can switch between. At least one must remain enabled.</p>
                   </div>
                   {([
+                    ["email", "Email"],
                     ["playerId", "Player ID"],
                     ["username", "Username"],
-                    ["email", "Email"],
                   ] as [IdentifierType, string][]).map(([value, label]) => {
                     const enabled = selectedCopy.enabledIdentifierTypes ?? ["playerId", "username", "email"];
                     const checked = enabled.includes(value);
