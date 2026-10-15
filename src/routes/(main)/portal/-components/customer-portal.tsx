@@ -172,6 +172,11 @@ type PortalBuilderSettingsRuntime = {
     scheduleEnd?: string;
   };
   blocks?: Record<string, { label?: string; placeholder?: string; description?: string }>;
+  blockStyles?: Record<string, {
+    alignment?: "left" | "center" | "right";
+    width?: "full" | "wide" | "medium" | "narrow";
+    spacing?: "compact" | "normal" | "relaxed";
+  }>;
 };
 
 const PortalBuilderSettingsContext = React.createContext<PortalBuilderSettingsRuntime | null>(null);
@@ -181,9 +186,25 @@ function getPortalBuilderBlockStyle(settings: PortalBuilderSettingsRuntime | nul
   const explicitIndex = order?.indexOf(blockId) ?? -1;
   const index = explicitIndex >= 0 ? explicitIndex : blockId === "email" ? (order?.indexOf("playerId") ?? -1) : -1;
   const notPlaced = settings?.layout?.version === 2 && Array.isArray(order) && !order.includes(blockId) && !(blockId === "email" && order.includes("playerId"));
+  const blockStyle = settings?.blockStyles?.[blockId];
+  const maxWidth = blockStyle?.width === "wide"
+    ? "min(100%, 72rem)"
+    : blockStyle?.width === "medium"
+      ? "min(100%, 48rem)"
+      : blockStyle?.width === "narrow"
+        ? "min(100%, 32rem)"
+        : undefined;
+  const spacing = blockStyle?.spacing === "compact" ? "0.25rem" : blockStyle?.spacing === "relaxed" ? "1.5rem" : "0.75rem";
   return {
     order: index >= 0 ? index + 1 : undefined,
     display: settings?.layout?.hidden?.includes(blockId) || notPlaced ? "none" : undefined,
+    width: "100%",
+    maxWidth,
+    marginLeft: blockStyle?.alignment === "center" || blockStyle?.alignment === "right" ? "auto" : undefined,
+    marginRight: blockStyle?.alignment === "center" ? "auto" : blockStyle?.alignment === "right" ? "0" : undefined,
+    textAlign: blockStyle?.alignment ?? "left",
+    marginTop: spacing,
+    marginBottom: spacing,
   };
 }
 
