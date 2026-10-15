@@ -149,6 +149,8 @@ const PortalPaymentMethodsContext = React.createContext<PaymentMethod[]>(payment
 const PortalButtonLabelContext = React.createContext<string>("Do Deposit");
 const PortalFormSlugContext = React.createContext<string | undefined>(undefined);
 const PortalPreviewContext = React.createContext(false);
+type PortalBuilderPreviewStep = "shared" | "payment" | null;
+const PortalBuilderPreviewStepContext = React.createContext<PortalBuilderPreviewStep>(null);
 
 type PortalBuilderSettingsRuntime = {
   template?: "stripe" | "classic" | "minimal";
@@ -184,6 +186,11 @@ type PortalBuilderSettingsRuntime = {
     scheduleEnd?: string;
     scheduleDays?: number[];
   };
+  methodBlocks?: Record<string, Record<string, {
+    label?: string;
+    placeholder?: string;
+    description?: string;
+  }>>;
   blocks?: Record<string, {
     label?: string;
     placeholder?: string;
@@ -6151,6 +6158,8 @@ export function CustomerPortal({
   preview = false,
   formOverride,
   builderEditMode = false,
+  builderPreviewStep,
+  builderPreviewMethod,
   onSelectBlock,
 }: {
   initialMethodId?: string;
@@ -6158,6 +6167,8 @@ export function CustomerPortal({
   preview?: boolean;
   formOverride?: ClientPortalForm & { builder?: PortalBuilderSettingsRuntime };
   builderEditMode?: boolean;
+  builderPreviewStep?: "shared" | "payment";
+  builderPreviewMethod?: string;
   onSelectBlock?: (blockId: string) => void;
 } = {}) {
   const [storedForm, setStoredForm] = React.useState<ClientPortalForm | null>(() => getClientPortalFormForSlug(formSlug ?? initialMethodId, preview));
@@ -6166,6 +6177,12 @@ export function CustomerPortal({
     () => clientForm ? getMethodsForClientForm(clientForm) : [],
     [clientForm?.methods],
   );
+  const builderPreviewMethodId = builderEditMode && builderPreviewMethod
+    ? availableMethods.find((method) =>
+        normalizePortalMethodName(method.name) === normalizePortalMethodName(builderPreviewMethod)
+        || normalizePortalMethodName(method.id) === normalizePortalMethodName(builderPreviewMethod),
+      )?.id ?? availableMethods[0]?.id
+    : initialMethodId;
 
   React.useEffect(() => {
     if (formOverride) return;
@@ -6279,6 +6296,7 @@ export function CustomerPortal({
 
   return (
     <PortalBuilderSettingsContext.Provider value={builderSettings}>
+    <PortalBuilderPreviewStepContext.Provider value={builderEditMode ? builderPreviewStep ?? "shared" : null}>
     <PortalPaymentMethodsContext.Provider value={availableMethods}>
       <PortalButtonLabelContext.Provider value={clientForm.appearance.buttonLabel || "Do Deposit"}>
       <PortalFormSlugContext.Provider value={clientForm.slug}>
@@ -6336,7 +6354,7 @@ export function CustomerPortal({
               </section>
             ) : null}
             <div style={{ order: (builderSettings?.layout?.order?.indexOf("paymentMethods") ?? 1) + 1 }}>
-              <CustomerPortalExperience initialMethodId={initialMethodId} clientForm={clientForm} availableMethods={availableMethods} />
+              <CustomerPortalExperience initialMethodId={builderPreviewMethodId} clientForm={clientForm} availableMethods={availableMethods} />
             </div>
             {builderSettings?.features?.playerRating && builderSettings.layout?.order?.includes("playerRating") && !builderSettings.layout.hidden?.includes("playerRating") ? (
               <div data-builder-block="playerRating" style={getPortalBuilderBlockStyle(builderSettings, "playerRating")}>
@@ -6350,6 +6368,7 @@ export function CustomerPortal({
       </PortalFormSlugContext.Provider>
       </PortalButtonLabelContext.Provider>
     </PortalPaymentMethodsContext.Provider>
+    </PortalBuilderPreviewStepContext.Provider>
     </PortalBuilderSettingsContext.Provider>
   );
 }
@@ -6454,6 +6473,11 @@ function CustomerPortalExperience({
   const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
   const methodDisplay = portalBuilderSettings?.configs?.methodDisplay ?? "cards";
   const initialMethod = availableMethods.find((item) => item.id === initialMethodId) ?? availableMethods[0] ?? paymentMethods[0];
+  const methodBlockOverrides = portalBuilderSettings?.methodBlocks?.[normalizePortalMethodName(initialMethod.name)] ?? {};
+  const methodSpecificSettings = portalBuilderSettings
+    ? { ...portalBuilderSettings, blocks: { ...(portalBuilderSettings.blocks ?? {}), ...methodBlockOverrides } }
+    : null;
+  const builderPreviewStep = React.useContext(PortalBuilderPreviewStepContext);
   const portalFormSlug = React.useContext(PortalFormSlugContext);
   const [method, setMethod] = React.useState<PaymentMethod>(initialMethod);
   const [amount, setAmount] = React.useState(() => String(initialMethod.min));
