@@ -6600,3 +6600,234 @@ function CustomerPortalExperience({
     </main>
   );
 }
+
+
+function getPortalPageForm(formSlug?: string) {
+  return getClientPortalFormForSlug(formSlug, true) ?? getClientPortalFormForSlug(undefined, true);
+}
+
+function formatPortalActivityDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export function PortalPlayerHistoryPage({ formSlug }: { formSlug?: string }) {
+  const form = getPortalPageForm(formSlug);
+  const [lookupType, setLookupType] = React.useState<PlayerLookupType>("playerId");
+  const [identifier, setIdentifier] = React.useState("");
+  const [requests, setRequests] = React.useState<DepositRequest[]>([]);
+  const [searched, setSearched] = React.useState(false);
+
+  React.useEffect(() => {
+    const refresh = () => setRequests(readOpenDepositRequests());
+    refresh();
+    window.addEventListener("storage", refresh);
+    return () => window.removeEventListener("storage", refresh);
+  }, []);
+
+  const query = normalizeRequestPlayerValue(identifier);
+  const filteredRequests = searched && query
+    ? requests
+        .filter((request) =>
+          request.playerLookupType === lookupType &&
+          normalizeRequestPlayerValue(request.playerId) === query
+        )
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    : [];
+
+  if (!form) {
+    return <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">Checkout profile unavailable.</main>;
+  }
+
+  return (
+    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+      <div className="mx-auto w-full max-w-3xl">
+        <PortalBrandHeader form={form} />
+        <div className="mt-6 flex items-start gap-3">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-200"><HistoryIcon className="size-5" /></div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-300">Player portal</p>
+            <h1 className="mt-1 text-xl font-semibold text-white">Deposit history</h1>
+            <p className="mt-1 text-sm leading-5 text-slate-400">Find transfers submitted from this browser using the same identifier you entered at checkout.</p>
+          </div>
+        </div>
+
+        <section className="mt-5 rounded-2xl border border-slate-700/70 bg-slate-900/75 p-4 sm:p-5">
+          <div className="mb-3 flex flex-wrap gap-2">
+            {([
+              ["playerId", "Player ID"],
+              ["username", "Username"],
+              ["email", "Email"],
+            ] as [PlayerLookupType, string][]).map(([value, label]) => (
+              <button key={value} type="button" onClick={() => { setLookupType(value); setSearched(false); }} className={"rounded-lg border px-3 py-2 text-xs font-medium transition " + (lookupType === value ? "border-emerald-300/50 bg-emerald-300/10 text-emerald-200" : "border-slate-700 text-slate-400 hover:bg-slate-800")}>{label}</button>
+            ))}
+          </div>
+          <form onSubmit={(event) => { event.preventDefault(); setSearched(true); }} className="flex flex-col gap-2 sm:flex-row">
+            <Input value={identifier} onChange={(event) => { setIdentifier(event.target.value); setSearched(false); }} placeholder={lookupType === "email" ? "Enter your email address" : lookupType === "username" ? "Enter your username" : "Enter your Player ID"} className="h-11 border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500" />
+            <Button type="submit" className="h-11 shrink-0 bg-emerald-300 text-slate-950 hover:bg-emerald-200">Find transfers</Button>
+          </form>
+        </section>
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-white">Your transfers</h2>
+          <span className="text-xs text-slate-500">{filteredRequests.length} found</span>
+        </div>
+        {!searched ? (
+          <div className="mt-3 rounded-xl border border-dashed border-slate-700 p-8 text-center">
+            <HistoryIcon className="mx-auto size-6 text-slate-500" />
+            <p className="mt-3 text-sm font-medium text-slate-200">Search your deposit history</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Enter the same Player ID, username, or email used to submit a transfer.</p>
+          </div>
+        ) : filteredRequests.length === 0 ? (
+          <div className="mt-3 rounded-xl border border-dashed border-slate-700 p-8 text-center">
+            <p className="text-sm font-medium text-slate-200">No transfers found</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Check the identifier and try again. This history contains requests recorded in this browser.</p>
+          </div>
+        ) : (
+          <div className="mt-3 space-y-3">
+            {filteredRequests.map((request) => (
+              <article key={request.id} className="rounded-xl border border-slate-700/80 bg-slate-900/70 p-4 transition hover:border-slate-600">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-950 text-slate-300"><CircleDollarSign className="size-4.5" /></div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-white">{request.methodName}</p>
+                      <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium text-amber-200">Submitted</span>
+                    </div>
+                    <p className="mt-1 truncate text-[11px] text-slate-500">{request.id}</p>
+                    <p className="mt-1 text-xs text-slate-400">{formatPortalActivityDate(request.createdAt)}</p>
+                  </div>
+                  <div className="sm:text-right">
+                    <p className="text-base font-semibold tabular-nums text-white">{Number(request.amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-xs font-medium text-slate-400">{request.currency}</span></p>
+                    <a href={"/portal/tracking-depoist?request=" + encodeURIComponent(request.id)} className="mt-2 inline-flex text-xs font-medium text-emerald-200 hover:text-emerald-100">Track transfer <ArrowRight className="ml-1 size-3.5" /></a>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
+        <a href={"/portal" + (formSlug ? "?form=" + encodeURIComponent(formSlug) : "")} className="mt-5 inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white"><ArrowLeft className="size-3.5" /> Back to checkout</a>
+      </div>
+    </main>
+  );
+}
+
+export function PortalPlayerDisagreementsPage({ formSlug }: { formSlug?: string }) {
+  const form = getPortalPageForm(formSlug);
+  const [lookupType, setLookupType] = React.useState<PlayerLookupType>("playerId");
+  const [identifier, setIdentifier] = React.useState("");
+  const [reports, setReports] = React.useState<DistributorReport[]>([]);
+  const [searched, setSearched] = React.useState(false);
+
+  React.useEffect(() => {
+    const refresh = () => setReports(readDistributorReports());
+    refresh();
+    return subscribeToDistributorReports(refresh);
+  }, []);
+
+  const query = normalizeRequestPlayerValue(identifier);
+  const filteredReports = searched && query
+    ? reports
+        .filter((report) =>
+          report.reporterLookupType === lookupType &&
+          normalizeRequestPlayerValue(report.reporterReference) === query
+        )
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    : [];
+
+  if (!form) {
+    return <main className="min-h-dvh bg-slate-950 p-6 text-slate-100">Checkout profile unavailable.</main>;
+  }
+
+  return (
+    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+      <div className="mx-auto w-full max-w-3xl">
+        <PortalBrandHeader form={form} />
+        <div className="mt-6 flex items-start gap-3">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-rose-400/20 bg-rose-400/10 text-rose-200"><FileWarning className="size-5" /></div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-rose-300">Player support</p>
+            <h1 className="mt-1 text-xl font-semibold text-white">Disagreements</h1>
+            <p className="mt-1 text-sm leading-5 text-slate-400">Track reports you submitted about a transfer, distributor, or supervisor.</p>
+          </div>
+        </div>
+
+        <section className="mt-5 rounded-2xl border border-slate-700/70 bg-slate-900/75 p-4 sm:p-5">
+          <div className="mb-3 flex flex-wrap gap-2">
+            {([
+              ["playerId", "Player ID"],
+              ["username", "Username"],
+              ["email", "Email"],
+            ] as [PlayerLookupType, string][]).map(([value, label]) => (
+              <button key={value} type="button" onClick={() => { setLookupType(value); setSearched(false); }} className={"rounded-lg border px-3 py-2 text-xs font-medium transition " + (lookupType === value ? "border-emerald-300/50 bg-emerald-300/10 text-emerald-200" : "border-slate-700 text-slate-400 hover:bg-slate-800")}>{label}</button>
+            ))}
+          </div>
+          <form onSubmit={(event) => { event.preventDefault(); setSearched(true); }} className="flex flex-col gap-2 sm:flex-row">
+            <Input value={identifier} onChange={(event) => { setIdentifier(event.target.value); setSearched(false); }} placeholder={lookupType === "email" ? "Enter your email address" : lookupType === "username" ? "Enter your username" : "Enter your Player ID"} className="h-11 border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500" />
+            <Button type="submit" className="h-11 shrink-0 bg-emerald-300 text-slate-950 hover:bg-emerald-200">Find reports</Button>
+          </form>
+        </section>
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-white">Your reports</h2>
+          <span className="text-xs text-slate-500">{filteredReports.length} found</span>
+        </div>
+        {!searched ? (
+          <div className="mt-3 rounded-xl border border-dashed border-slate-700 p-8 text-center">
+            <FileWarning className="mx-auto size-6 text-slate-500" />
+            <p className="mt-3 text-sm font-medium text-slate-200">Search your reports</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Use the same Player ID, username, or email you used when submitting a disagreement.</p>
+          </div>
+        ) : filteredReports.length === 0 ? (
+          <div className="mt-3 rounded-xl border border-dashed border-slate-700 p-8 text-center">
+            <p className="text-sm font-medium text-slate-200">No reports found</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Check the identifier and try again.</p>
+          </div>
+        ) : (
+          <div className="mt-3 space-y-3">
+            {filteredReports.map((report) => (
+              <article key={report.id} className="rounded-xl border border-slate-700/80 bg-slate-900/70 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-950 text-slate-300"><FileWarning className="size-4.5" /></div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-white">{report.reason}</p>
+                      <span className={"rounded-full border px-2 py-0.5 text-[10px] font-medium " + (report.status === "Resolved" ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-200" : report.status === "In progress" ? "border-blue-400/20 bg-blue-400/10 text-blue-200" : report.status === "Waiting for player" ? "border-amber-400/20 bg-amber-400/10 text-amber-200" : "border-rose-400/20 bg-rose-400/10 text-rose-200")}>{report.status}</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-500">{report.id} · {report.paymentMethod}{report.depositRequestId ? " · " + report.depositRequestId : ""}</p>
+                    <p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-slate-300">{report.details || "No additional details were provided."}</p>
+                    <p className="mt-2 text-[10px] text-slate-500">Submitted {formatPortalActivityDate(report.createdAt)} · Updated {formatPortalActivityDate(report.updatedAt)}</p>
+                    {report.activities.length ? (
+                      <details className="mt-3 border-t border-slate-700 pt-2">
+                        <summary className="cursor-pointer text-xs font-medium text-slate-300">Activity history ({report.activities.length})</summary>
+                        <div className="mt-3 space-y-3">
+                          {report.activities.map((activity) => (
+                            <div key={activity.id} className="border-l border-slate-700 pl-3">
+                              <p className="text-[10px] font-medium text-slate-300">{activity.author} · {formatPortalActivityDate(activity.createdAt)}</p>
+                              <p className="mt-1 text-xs leading-5 text-slate-400">{activity.message}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    ) : null}
+                  </div>
+                  <p className="shrink-0 text-sm font-semibold tabular-nums text-white">{Number(report.amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">{report.currency}</span></p>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
+        <a href={"/portal" + (formSlug ? "?form=" + encodeURIComponent(formSlug) : "")} className="mt-5 inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white"><ArrowLeft className="size-3.5" /> Back to checkout</a>
+      </div>
+    </main>
+  );
+}
