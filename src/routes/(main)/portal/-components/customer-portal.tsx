@@ -506,6 +506,7 @@ const walletRecipientOwners: Record<string, string> = {
 
 type DepositRequest = {
   id: string;
+  formSlug?: string;
   playerId: string;
   playerLookupType: PlayerLookupType;
   methodId: string;
@@ -605,11 +606,13 @@ function findOpenDepositRequest(
 }
 
 function createOpenDepositRequest({
+  formSlug,
   playerId,
   playerLookupType,
   method,
   amount,
 }: {
+  formSlug?: string;
   playerId: string;
   playerLookupType: PlayerLookupType;
   method: PaymentMethod;
@@ -620,6 +623,7 @@ function createOpenDepositRequest({
 
   const request: DepositRequest = {
     id: "DEP-" + Date.now().toString(36).toUpperCase(),
+    formSlug,
     playerId: playerId.trim(),
     playerLookupType,
     methodId: method.id,
@@ -730,6 +734,8 @@ export function DepositRequestTrackingPage({
     | "expired";
 
   const [status, setStatus] = React.useState<TrackingStatus>("reviewing");
+  const sourceForm = request.formSlug ? getClientPortalFormForSlug(request.formSlug, true) : null;
+  const trackingBuilderSettings = (sourceForm as (ClientPortalForm & { builder?: PortalBuilderSettingsRuntime }) | null)?.builder ?? null;
   const method =
     paymentMethods.find((item) => item.id === request.methodId) ??
     ({
@@ -1188,16 +1194,18 @@ export function DepositRequestTrackingPage({
                   </div>
 
                   <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      title="Review supervisor"
-                      onClick={() => setPostAction("review")}
-                      className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:border-amber-400/40 hover:bg-slate-800 hover:text-white"
-                    >
-                      <Star className="size-3.5" />
-                      Review Supervisor
-                    </Button>
+                    {trackingBuilderSettings?.features?.supervisorRating !== false ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        title="Review supervisor"
+                        onClick={() => setPostAction("review")}
+                        className="h-10 border-slate-700 bg-slate-900/60 text-xs text-slate-200 hover:border-amber-400/40 hover:bg-slate-800 hover:text-white"
+                      >
+                        <Star className="size-3.5" />
+                        {trackingBuilderSettings?.blocks?.supervisorRating?.label || "Review Supervisor"}
+                      </Button>
+                    ) : null}
                     <Button
                       type="button"
                       variant="outline"
@@ -1228,7 +1236,7 @@ export function DepositRequestTrackingPage({
                 <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-white">Review Supervisor</p>
+                      <p className="text-sm font-semibold text-white">{trackingBuilderSettings?.blocks?.supervisorRating?.label || "Review Supervisor"}</p>
                       <p className="mt-1 text-xs text-slate-400">
                         How was your experience with {flouciSupervisor?.name ?? "the supervisor"}?
                       </p>
@@ -6130,6 +6138,7 @@ function CustomerPortalExperience({
 }) {
   const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
   const initialMethod = availableMethods.find((item) => item.id === initialMethodId) ?? availableMethods[0] ?? paymentMethods[0];
+  const portalFormSlug = React.useContext(PortalFormSlugContext);
   const [method, setMethod] = React.useState<PaymentMethod>(initialMethod);
   const [amount, setAmount] = React.useState(() => String(initialMethod.min));
   const navigate = useNavigate();
@@ -6186,6 +6195,7 @@ function CustomerPortalExperience({
 
   const createCurrentPlayerRequest = () => {
     const request = createOpenDepositRequest({
+      formSlug: portalFormSlug,
       playerId,
       playerLookupType,
       method,
