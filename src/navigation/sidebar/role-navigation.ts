@@ -8,6 +8,7 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     subscriptions: true,
     reports: true,
     settings: true,
+    "client-portal": true,
   },
   "Brand Admin": {
     dashboard: true,
@@ -23,6 +24,7 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     "fees-revenue": true,
     "financial-reports": true,
     settings: true,
+    "client-portal": true,
   },
   Supervisor: {
     dashboard: true,
@@ -73,7 +75,8 @@ const routeKeys: Array<{ prefix: string; id: string }> = [
   { prefix: "/dashboard/transactions/fees-revenue", id: "fees-revenue" },
   { prefix: "/dashboard/transactions", id: "transactions" },
   { prefix: "/dashboard/settings", id: "settings" },
-  { prefix: "/dashboard/portal", id: "portal" },
+  { prefix: "/dashboard/client-portal", id: "client-portal" },
+  { prefix: "/dashboard/portal", id: "client-portal" },
 ];
 
 export function filterSidebarItemsForRole<T extends { id: string }>(
