@@ -396,9 +396,9 @@ export function ClientPortalBuilder() {
           <Card className="shadow-none">
             <CardHeader className="pb-3"><div className="flex items-center justify-between gap-3"><CardTitle className="text-sm">Public checkout link</CardTitle><Badge variant="outline">{selected.environment}</Badge></div></CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex flex-col gap-2 sm:flex-row"><Input value={liveUrl} readOnly /><Button variant="outline" onClick={() => void copyEmbed()}><Copy className="size-3.5" /> Copy embed</Button><Button variant="outline" render={<a href={liveUrl} target="_blank" rel="noreferrer" />}><ExternalLink className="size-3.5" /> Open</Button></div>
+              <div className="flex flex-col gap-2 sm:flex-row"><Input value={liveUrl} readOnly /><Button variant="outline" onClick={() => void copyEmbed()} disabled={selected.status !== "Published"}><Copy className="size-3.5" /> Copy embed</Button><Button variant="outline" disabled={selected.status !== "Published"} render={<a href={liveUrl} target="_blank" rel="noreferrer" />}><ExternalLink className="size-3.5" /> Open</Button></div>
               <pre className="overflow-x-auto rounded-xl border bg-muted/30 p-3 text-[11px] leading-5 text-muted-foreground"><code>{embedCode}</code></pre>
-              <p className="text-[11px] leading-5 text-muted-foreground">Demo behavior: form configuration is stored in this browser's localStorage. Publishing does not connect payment APIs, create provider sessions or persist settings to a server. A live multi-user product needs backend persistence and server-side payment validation.</p>
+              <p className="text-[11px] leading-5 text-muted-foreground">{selected.status === "Draft" ? "This form is a draft. Use the live preview above; publish it before opening the public URL or copying its embed code. " : ""}Demo behavior: form configuration is stored in this browser's localStorage. Publishing does not connect payment APIs, create provider sessions or persist settings to a server. A live multi-user product needs backend persistence and server-side payment validation.</p>
             </CardContent>
           </Card>
         </div>
