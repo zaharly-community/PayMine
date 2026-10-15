@@ -6118,7 +6118,6 @@ export function CustomerPortal({
           '#ipaycash-client-portal[data-template="classic"] section{border-radius:4px!important;}' +
           '#ipaycash-client-portal [data-builder-form="true"]{display:flex!important;flex-direction:column!important;gap:1rem!important;}' +
           '#ipaycash-client-portal [data-builder-form="true"]>*:not([data-builder-block]){order:500!important;}' +
-          '#ipaycash-client-portal[data-builder-edit-mode="true"] [data-builder-block]{cursor:pointer!important;outline:1px dashed transparent;outline-offset:2px;}' +
           '#ipaycash-client-portal [data-builder-block="playerRating"][style*="display: none"]{display:none!important;}' +
           '#ipaycash-client-portal[data-builder-edit-mode="true"] [data-builder-block]{cursor:pointer!important;outline:1px dashed transparent;outline-offset:2px;}' +
           '#ipaycash-client-portal[data-builder-edit-mode="true"] [data-builder-block]:hover{outline-color:#3b82f6!important;background-color:rgba(59,130,246,.06)!important;}'}</style>
