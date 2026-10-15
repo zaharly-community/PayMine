@@ -218,31 +218,40 @@ export function saveClientPortalForms(forms: ClientPortalForm[]) {
 
 const CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY = "ipaycash-client-portal-active-form-v1";
 
-export function getClientPortalFormForSlug(slug?: string): ClientPortalForm {
+export function getClientPortalFormForSlug(slug?: string, allowDraft = false): ClientPortalForm | null {
   const forms = getClientPortalForms();
-  if (slug) {
-    const bySlug = forms.find((form) => form.slug === slug && form.status === "Published");
-    if (bySlug) {
-      try {
-        if (typeof window !== "undefined") window.sessionStorage.setItem(CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY, bySlug.slug);
-      } catch {
-        // Session storage may be unavailable in restricted browser contexts.
-      }
-      return cloneForm(bySlug);
-    }
+  const knownMethodSlugs = ["flouci", "binance-pay", "d17", "kashy", "e-dinar", "ooredoo", "orange", "tunisie-telecom"];
 
-    try {
-      const activeSlug = typeof window !== "undefined" ? window.sessionStorage.getItem(CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY) : null;
-      const activeForm = activeSlug ? forms.find((form) => form.slug === activeSlug && form.status === "Published") : null;
-      if (activeForm) return cloneForm(activeForm);
-    } catch {
-      // Fall back to the configured default if session storage is unavailable.
+  if (slug) {
+    const bySlug = forms.find((form) => form.slug === slug);
+    if (bySlug) {
+      if (bySlug.status === "Published" || allowDraft) {
+        try {
+          if (typeof window !== "undefined") window.sessionStorage.setItem(CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY, bySlug.slug);
+        } catch {
+          // Session storage may be unavailable in restricted browser contexts.
+        }
+        return cloneForm(bySlug);
+      }
+      return null;
     }
+    if (!knownMethodSlugs.includes(slug)) return null;
   }
 
+  const activeSlug = (() => {
+    try {
+      return typeof window !== "undefined" ? window.sessionStorage.getItem(CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY) : null;
+    } catch {
+      return null;
+    }
+  })();
   const fallback = forms.find((form) => form.status === "Published" && form.isDefault)
+    ?? forms.find((form) => form.status === "Published" && form.slug === activeSlug)
     ?? forms.find((form) => form.status === "Published")
-    ?? defaultForms[0];
+    ?? (allowDraft ? forms[0] : null)
+    ?? (!forms.length ? defaultForms[0] : null);
+  if (!fallback) return null;
+
   try {
     if (typeof window !== "undefined") window.sessionStorage.setItem(CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY, fallback.slug);
   } catch {
@@ -250,7 +259,6 @@ export function getClientPortalFormForSlug(slug?: string): ClientPortalForm {
   }
   return cloneForm(fallback);
 }
-
 export function normalizeClientPortalSlug(value: string) {
   return value
     .trim()
