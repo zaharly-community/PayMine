@@ -6195,7 +6195,7 @@ function CustomerPortalExperience({
               >
                 <CircleDollarSign className="size-4" />
                 <span>
-                  Do Deposit
+                  {clientForm.appearance.buttonLabel || "Do Deposit"}
                   <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
                     Net Amount:{" "}
                     {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"}{" "}
