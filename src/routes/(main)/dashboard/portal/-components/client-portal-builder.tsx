@@ -887,7 +887,8 @@ export function ClientPortalBuilder({
               ) : null}
 
               <Button variant="outline" className="w-full" onClick={() => setSelectedBlock(null)}>Done editing block</Button>
-            </div>          ) : (
+            </div>
+          ) : (
             <>
               <div className="grid grid-cols-4 border-b border-slate-200 bg-white p-2">
                 {([
