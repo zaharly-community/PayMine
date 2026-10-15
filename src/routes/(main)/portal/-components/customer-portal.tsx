@@ -170,7 +170,12 @@ type PortalBuilderSettingsRuntime = {
 const PortalBuilderSettingsContext = React.createContext<PortalBuilderSettingsRuntime | null>(null);
 
 function getPortalBuilderBlockStyle(settings: PortalBuilderSettingsRuntime | null | undefined, blockId: string): React.CSSProperties {
-  const index = settings?.layout?.order?.indexOf(blockId) ?? -1;
+  const explicitIndex = settings?.layout?.order?.indexOf(blockId) ?? -1;
+  const index = explicitIndex >= 0
+    ? explicitIndex
+    : blockId === "email"
+      ? (settings?.layout?.order?.indexOf("playerId") ?? -1)
+      : -1;
   return {
     order: index >= 0 ? index + 1 : undefined,
     display: settings?.layout?.hidden?.includes(blockId) ? "none" : undefined,
@@ -1752,7 +1757,7 @@ function FlouciStepOne({
     <>
       <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
         <form data-builder-form="true" onSubmit={(event) => { event.preventDefault(); onContinue(); }} className="flex flex-col gap-4">
-          <div data-builder-block="playerId" style={getPortalBuilderBlockStyle(portalBuilderSettings, "playerId")}>
+          <div data-builder-block={playerLookupType === "email" ? "email" : "playerId"} style={getPortalBuilderBlockStyle(portalBuilderSettings, playerLookupType === "email" ? "email" : "playerId")}>
             <FieldLabel>
               {playerLookupType === "playerId"
                 ? "Player ID"
@@ -3713,7 +3718,7 @@ function CardDepositStepOne({
     <>
       <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
       <form data-builder-form="true" onSubmit={(event) => { event.preventDefault(); onContinue(); }} className="flex flex-col gap-4">
-        <div data-builder-block="playerId" style={getPortalBuilderBlockStyle(portalBuilderSettings, "playerId")}>
+        <div data-builder-block={playerLookupType === "email" ? "email" : "playerId"} style={getPortalBuilderBlockStyle(portalBuilderSettings, playerLookupType === "email" ? "email" : "playerId")}>
           <FieldLabel>
             {playerLookupType === "playerId" ? "Player ID" : playerLookupType === "username" ? "Username" : "Email"}
           </FieldLabel>
@@ -4666,7 +4671,7 @@ function EDinarStepOne({
         data-builder-form="true"
         className="flex flex-col gap-4"
       >
-        <div data-builder-block="playerId" style={getPortalBuilderBlockStyle(portalBuilderSettings, "playerId")}>
+        <div data-builder-block={playerLookupType === "email" ? "email" : "playerId"} style={getPortalBuilderBlockStyle(portalBuilderSettings, playerLookupType === "email" ? "email" : "playerId")}>
           <FieldLabel>
             {playerLookupType === "playerId"
               ? "Player ID"
@@ -5617,7 +5622,7 @@ function BinancePayFlow({
               </div>
 
               <form data-builder-form="true" onSubmit={continueToCheckout} className="flex flex-col gap-4">
-                <div data-builder-block="playerId" style={getPortalBuilderBlockStyle(portalBuilderSettings, "playerId")}>
+                <div data-builder-block={playerLookupType === "email" ? "email" : "playerId"} style={getPortalBuilderBlockStyle(portalBuilderSettings, playerLookupType === "email" ? "email" : "playerId")}>
                   <FieldLabel>
                     {playerLookupType === "playerId"
                       ? "Player ID"
