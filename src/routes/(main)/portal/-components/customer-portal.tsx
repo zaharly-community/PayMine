@@ -1837,7 +1837,7 @@ function FlouciStepOne({
               inputMode="decimal"
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
-              placeholder="Enter deposit amount"
+              placeholder={portalBuilderSettings?.blocks?.amount?.placeholder || "Enter deposit amount"}
               title="Deposit amount"
               className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
             />
@@ -4745,7 +4745,7 @@ function EDinarStepOne({
             inputMode="decimal"
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
-            placeholder="Enter deposit amount"
+            placeholder={portalBuilderSettings?.blocks?.amount?.placeholder || "Enter deposit amount"}
             title="Deposit amount"
             className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
           />
@@ -4939,7 +4939,7 @@ function EDinarStepTwo({
               <Input
                 value={transactionId}
                 onChange={(event) => setTransactionId(event.target.value)}
-                placeholder="Enter your E-Dinar transaction ID"
+                placeholder={portalBuilderSettings?.blocks?.transactionId?.placeholder || "Enter your E-Dinar transaction ID"}
                 title="E-Dinar transaction ID"
                 autoComplete="off"
                 disabled={expired}
@@ -5699,7 +5699,7 @@ function BinancePayFlow({
                         setAmount(event.target.value);
                         setError("");
                       }}
-                      placeholder="Enter deposit amount"
+                      placeholder={portalBuilderSettings?.blocks?.amount?.placeholder || "Enter deposit amount"}
                       title="Deposit amount"
                       aria-label="Deposit amount"
                       className="h-12 border-0 bg-transparent p-0 text-sm text-slate-100 shadow-none placeholder:text-slate-500 focus-visible:ring-0"
@@ -6023,7 +6023,7 @@ export function CustomerPortal({
   }
 
   const builderSettings = (clientForm as ClientPortalForm & { builder?: PortalBuilderSettingsRuntime }).builder ?? null;
-  if (builderSettings?.configs?.scheduleEnabled && !isPortalWithinSchedule(builderSettings.configs.scheduleStart, builderSettings.configs.scheduleEnd)) {
+  if (!builderEditMode && builderSettings?.configs?.scheduleEnabled && !isPortalWithinSchedule(builderSettings.configs.scheduleStart, builderSettings.configs.scheduleEnd)) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-slate-950 px-5 py-10 text-slate-100">
         <section className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 text-center">
@@ -6039,10 +6039,26 @@ export function CustomerPortal({
     if (!builderEditMode || !onSelectBlock) return;
     const target = event.target as HTMLElement;
     const block = target.closest<HTMLElement>("[data-builder-block]");
-    if (block?.dataset.builderBlock) {
+    let blockId = block?.dataset.builderBlock;
+    if (!blockId) {
+      const field = target.closest<HTMLElement>("input, textarea, button");
+      const hint = [
+        field?.getAttribute("title"),
+        field?.getAttribute("aria-label"),
+        field?.getAttribute("placeholder"),
+        field?.textContent,
+      ].filter(Boolean).join(" ").toLowerCase();
+      if (hint.includes("email")) blockId = "email";
+      else if (hint.includes("player id") || hint.includes("username")) blockId = "playerId";
+      else if (hint.includes("deposit amount") || hint.includes("preset deposit amount")) blockId = "amount";
+      else if (hint.includes("transaction id")) blockId = "transactionId";
+      else if (hint.includes("transfer number")) blockId = "transferNumber";
+      else if (hint.includes("payment evidence") || hint.includes("upload transfer screenshot") || field?.getAttribute("type") === "file") blockId = "evidence";
+    }
+    if (blockId) {
       event.preventDefault();
       event.stopPropagation();
-      onSelectBlock(block.dataset.builderBlock);
+      onSelectBlock(blockId);
     }
   };
 
@@ -6388,7 +6404,7 @@ function CustomerPortalExperience({
                       setAmount(event.target.value);
                       setError("");
                     }}
-                    placeholder="Enter deposit amount"
+                    placeholder={portalBuilderSettings?.blocks?.amount?.placeholder || "Enter deposit amount"}
                     title="Deposit amount"
                     aria-label="Deposit amount"
                     className="h-12 border-0 bg-transparent p-0 text-sm text-slate-100 placeholder:text-slate-500 shadow-none focus-visible:ring-0"
