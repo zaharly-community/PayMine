@@ -577,6 +577,8 @@ const walletRecipientOwners: Record<string, string> = {
 };
 
 
+type DepositRequestStatus = "open" | "reviewing" | "approved" | "received" | "correction" | "edited" | "expired";
+
 type DepositRequest = {
   id: string;
   formSlug?: string;
@@ -587,7 +589,7 @@ type DepositRequest = {
   amount: string;
   currency: string;
   createdAt: string;
-  status: "open";
+  status: DepositRequestStatus;
 };
 
 type PlayerRequestLookupStatus = "idle" | "checking" | "available" | "open";
@@ -622,6 +624,12 @@ function writeOpenDepositRequests(requests: DepositRequest[]) {
   } catch {
     // Local storage may be unavailable in restricted browser contexts.
   }
+}
+
+function updateDepositRequestStatus(requestId: string, status: DepositRequestStatus) {
+  const requests = readOpenDepositRequests();
+  const next = requests.map((request) => request.id === requestId ? { ...request, status } : request);
+  writeOpenDepositRequests(next);
 }
 
 const trackingDemoRequests: Record<string, DepositRequest> = {
@@ -670,7 +678,7 @@ function findOpenDepositRequest(
     readOpenDepositRequests()
       .filter(
         (request) =>
-          request.status === "open" &&
+          !["received", "expired"].includes(request.status) &&
           request.playerLookupType === playerLookupType &&
           normalizeRequestPlayerValue(request.playerId) === normalized,
       )
@@ -806,7 +814,15 @@ export function DepositRequestTrackingPage({
     | "edited"
     | "expired";
 
-  const [status, setStatus] = React.useState<TrackingStatus>("reviewing");
+  const [status, setStatusState] = React.useState<TrackingStatus>(request.status === "open" ? "reviewing" : request.status);
+
+  const setStatus: React.Dispatch<React.SetStateAction<TrackingStatus>> = (nextStatus) => {
+    setStatusState((current) => {
+      const resolved = typeof nextStatus === "function" ? nextStatus(current) : nextStatus;
+      updateDepositRequestStatus(request.id, resolved);
+      return resolved;
+    });
+  };
   const sourceForm = request.formSlug ? getClientPortalFormForSlug(request.formSlug, true) : null;
   const headerForm = sourceForm ?? getPortalPageForm();
   const trackingBuilderSettings = (sourceForm as (ClientPortalForm & { builder?: PortalBuilderSettingsRuntime }) | null)?.builder ?? null;
@@ -6701,7 +6717,7 @@ export function PortalPlayerHistoryPage({ formSlug }: { formSlug?: string }) {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-sm font-semibold text-white">{request.methodName}</p>
-                      <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium text-amber-200">Submitted</span>
+                      <span className={"rounded-full border px-2 py-0.5 text-[10px] font-medium " + (request.status === "received" ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-200" : request.status === "approved" ? "border-blue-400/20 bg-blue-400/10 text-blue-200" : request.status === "correction" || request.status === "expired" ? "border-rose-400/20 bg-rose-400/10 text-rose-200" : "border-amber-400/20 bg-amber-400/10 text-amber-200")}>{request.status === "open" ? "Submitted" : request.status.charAt(0).toUpperCase() + request.status.slice(1)}</span>
                     </div>
                     <p className="mt-1 truncate text-[11px] text-slate-500">{request.id}</p>
                     <p className="mt-1 text-xs text-slate-400">{formatPortalActivityDate(request.createdAt)}</p>
