@@ -476,10 +476,10 @@ function FieldLabel({
   const blockKey =
     text === "Player ID" || text === "Username" ? "playerId"
       : text === "Email" || text === "Email address" ? "email"
-      : text === "Deposit amount" ? "amount"
+      : text === "Deposit amount" || text === "Payment amount" ? "amount"
       : text === "Payment evidence" || text === "Upload transfer screenshot" ? "evidence"
-      : text === "Transaction ID" ? "transactionId"
-      : text === "Transfer number" ? "transferNumber"
+      : text.toLowerCase().includes("transaction id") ? "transactionId"
+      : text.toLowerCase().includes("transfer number") ? "transferNumber"
       : null;
   const displayChildren = blockKey && overrides[blockKey]?.label ? overrides[blockKey]?.label : children;
   const description = blockKey ? overrides[blockKey]?.description?.trim() : "";
