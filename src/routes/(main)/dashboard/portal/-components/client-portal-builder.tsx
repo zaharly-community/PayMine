@@ -796,6 +796,13 @@ export function ClientPortalBuilder({
   const updateConfig = (key: keyof PortalBuilderSettings["configs"], value: PortalBuilderSettings["configs"][typeof key]) => {
     if (!selected) return;
     const configs = { ...selected.builder.configs, [key]: value };
+    if (key === "paymentMethods" && activeBuilderStep.startsWith("method:")) {
+      const currentStepKey = activeBuilderStep.slice("method:".length);
+      if (!(value as string[]).some((methodName) => portalStepMethodKey(methodName) === currentStepKey)) {
+        setActiveBuilderStep("shared");
+        setSelectedBlock(null);
+      }
+    }
     const builder = { ...selected.builder, configs, customized: true };
     const patch: Partial<EditableBuilderForm> = { builder };
     if (key === "paymentMethods") patch.methods = value as string[];
@@ -1007,6 +1014,7 @@ export function ClientPortalBuilder({
               <div className="rounded-lg border bg-muted/20 p-3">
                 <p className="text-xs font-semibold">{selectedBlockProfile?.title ?? "Block settings"}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{activeStepMethod ? `Editing payment details specifically for ${activeStepMethod}. Shared settings remain unchanged.` : "Editing the shared step. Payment-detail changes made from a method tab are saved only for that method."}</p>
+                {activeStepMethodKey && methodScopedBlockIds.includes(selectedBlock) && !selected.builder.methodBlocks[activeStepMethodKey]?.[selectedBlock] ? <p className="mt-2 rounded-md bg-blue-50 px-2.5 py-2 text-[11px] leading-4 text-blue-700">This field currently inherits its shared-step value. Your first edit here creates a separate value for {activeStepMethod}.</p> : null}
               </div>
 
               {selectedBlockProfile?.controls.length ? (
