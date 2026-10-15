@@ -4522,7 +4522,7 @@ function CardDepositFlow({
               <div data-builder-form="true" className="flex flex-col gap-4">
                 <div data-builder-block="amount" style={getPortalBuilderBlockStyle(portalBuilderSettings, "amount")} className="flex items-center justify-between gap-3 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Total card amount</p>
+                    <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">{getPortalBuilderBlockLabel(portalBuilderSettings, "amount", "Total card amount", "Deposit amount")}</p>
                     <p className="mt-0.5 text-sm font-semibold tabular-nums text-white">
                       {Number(amount).toFixed(2)} {method.currency}
                     </p>
