@@ -79,6 +79,7 @@ export function ClientPortalBuilder({
   const [notice, setNotice] = useState("");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [showThemeSettings, setShowThemeSettings] = useState(true);
+  const [showTypography, setShowTypography] = useState(false);
   const [showHeaderSettings, setShowHeaderSettings] = useState(false);
 
   useEffect(() => {
@@ -229,6 +230,23 @@ export function ClientPortalBuilder({
               </div>
             ) : null}
 
+            <button type="button" onClick={() => setShowTypography((value) => !value)} className="flex w-full items-center justify-between rounded-lg border bg-background px-3 py-2.5 text-left">
+              <span><span className="block text-sm font-medium">Typography</span><span className="text-[10px] text-muted-foreground">Font style for this checkout</span></span><span className="text-muted-foreground">{showTypography ? "−" : "+"}</span>
+            </button>
+            {showTypography ? (
+              <div className="grid gap-2 rounded-lg border bg-background p-3">
+                <Label>Font family</Label>
+                <Select value={selected.appearance.fontFamily} onValueChange={(value) => updateAppearance({ fontFamily: value as ClientPortalAppearance["fontFamily"] })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sans">Modern sans-serif</SelectItem>
+                    <SelectItem value="system">System default</SelectItem>
+                    <SelectItem value="serif">Editorial serif</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+
             <button type="button" onClick={() => setSection("general")} className={"flex w-full items-center justify-between rounded-lg border px-3 py-3 text-left " + (section === "general" ? "border-primary/40 bg-primary/5" : "bg-background hover:bg-muted/30")}>
               <span><span className="block text-sm font-medium">Checkout content</span><span className="text-[10px] text-muted-foreground">Heading, URL and currency</span></span><span className="text-muted-foreground">›</span>
             </button>
@@ -317,7 +335,7 @@ function CheckoutPreview({
   const frameWidth = previewMode === "mobile" ? "390px" : appearance.width === "wide" ? "100%" : "600px";
 
   return (
-    <div className="mx-auto w-full transition-all duration-200" style={{ maxWidth: frameWidth }}>
+    <div className="mx-auto w-full transition-all duration-200" style={{ maxWidth: frameWidth, fontFamily: appearance.fontFamily === "serif" ? 'Georgia, "Times New Roman", serif' : appearance.fontFamily === "system" ? "system-ui, sans-serif" : "Inter, ui-sans-serif, system-ui, sans-serif" }}>
       <div className="overflow-hidden border bg-background shadow-lg" style={{ borderRadius: "14px", borderColor: border }}>
         <div className="flex items-center gap-1.5 border-b bg-muted/30 px-3 py-2.5" style={{ borderColor: border }}>
           <span className="size-2.5 rounded-full bg-rose-400" />
