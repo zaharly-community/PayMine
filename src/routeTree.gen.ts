@@ -48,6 +48,8 @@ import { Route as mainPortalRouteRouteImport } from './routes/(main)/portal/rout
 import { Route as mainPortalIndexRouteImport } from './routes/(main)/portal/index'
 import { Route as mainPortalMethodRouteRouteImport } from './routes/(main)/portal/$method/route'
 import { Route as mainPortalTrackingDepoistRouteRouteImport } from './routes/(main)/portal/tracking-depoist/route'
+import { Route as mainPortalHistoryRouteRouteImport } from './routes/(main)/portal/history/route'
+import { Route as mainPortalDisagreementsRouteRouteImport } from './routes/(main)/portal/disagreements/route'
 import { Route as mainAuthV1LoginRouteRouteImport } from './routes/(main)/auth/v1/login/route'
 import { Route as mainAuthV1RegisterRouteRouteImport } from './routes/(main)/auth/v1/register/route'
 import { Route as mainAuthV2LoginRouteRouteImport } from './routes/(main)/auth/v2/login/route'
@@ -254,6 +256,16 @@ const mainPortalTrackingDepoistRouteRoute = mainPortalTrackingDepoistRouteRouteI
   path: '/tracking-depoist',
   getParentRoute: () => mainPortalRouteRoute,
 } as any)
+const mainPortalHistoryRouteRoute = mainPortalHistoryRouteRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => mainPortalRouteRoute,
+} as any)
+const mainPortalDisagreementsRouteRoute = mainPortalDisagreementsRouteRouteImport.update({
+  id: '/disagreements',
+  path: '/disagreements',
+  getParentRoute: () => mainPortalRouteRoute,
+} as any)
 const mainAuthV1LoginRouteRoute = mainAuthV1LoginRouteRouteImport.update({
   id: '/(main)/auth/v1/login',
   path: '/auth/v1/login',
@@ -322,6 +334,8 @@ export interface FileRoutesByFullPath {
   '/portal/': typeof mainPortalIndexRoute
   '/portal/$method': typeof mainPortalMethodRouteRoute
   '/portal/tracking-depoist': typeof mainPortalTrackingDepoistRouteRoute
+  '/portal/history': typeof mainPortalHistoryRouteRoute
+  '/portal/disagreements': typeof mainPortalDisagreementsRouteRoute
   '/dashboard/  '/dashboard/': typeof mainDashboardIndexRoute
   '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
   '/auth/v1/register': typeof mainAuthV1RegisterRouteRoute
@@ -358,6 +372,8 @@ export interface FileRoutesByTo {
   '/portal/': typeof mainPortalIndexRoute
   '/portal/$method': typeof mainPortalMethodRouteRoute
   '/portal/tracking-depoist': typeof mainPortalTrackingDepoistRouteRoute
+  '/portal/history': typeof mainPortalHistoryRouteRoute
+  '/portal/disagreements': typeof mainPortalDisagreementsRouteRoute
   '/dashboard/': typeof mainDashboardIndexRoute
   '/auth/v1/login': typeof mainAuthV1LoginRouteRoute
   '/auth/v1/register': typeof mainAuthV1RegisterRouteRoute
@@ -404,6 +420,8 @@ export interface FileRoutesById {
   '/(main)/portal/': typeof mainPortalIndexRoute
   '/(main)/portal/$method': typeof mainPortalMethodRouteRoute
   '/(main)/portal/tracking-depoist': typeof mainPortalTrackingDepoistRouteRoute
+  '/(main)/portal/history': typeof mainPortalHistoryRouteRoute
+  '/(main)/portal/disagreements': typeof mainPortalDisagreementsRouteRoute
   '/(main)/dashboard/': typeof mainDashboardIndexRoute
   '/(main)/auth/v1/login': typeof mainAuthV1LoginRouteRoute
   '/(main)/auth/v1/register': typeof mainAuthV1RegisterRouteRoute
@@ -465,6 +483,8 @@ export interface FileRouteTypes {
     | '/portal/'
     | '/portal/$method'
     | '/portal/tracking-depoist'
+    | '/portal/history'
+    | '/portal/disagreements'
     | '/dashboard/'
     | '/auth/v1/login'
     | '/auth/v1/register'
@@ -485,6 +505,8 @@ export interface FileRouteTypes {
     | '/portal/'
     | '/portal/$method'
     | '/portal/tracking-depoist'
+    | '/portal/history'
+    | '/portal/disagreements'
     | '/dashboard'
     | '/dashboard/client-portal'
     | '/dashboard/portal'
@@ -524,6 +546,8 @@ export interface FileRouteTypes {
     | '/(main)/portal/'
     | '/(main)/portal/$method'
     | '/(main)/portal/tracking-depoist'
+    | '/(main)/portal/history'
+    | '/(main)/portal/disagreements'
     | '/(main)/dashboard/'
     | '/(main)/auth/v1/login'
     | '/(main)/auth/v1/register'
@@ -1019,12 +1043,16 @@ interface mainPortalRouteRouteChildren {
   mainPortalIndexRoute: typeof mainPortalIndexRoute
   mainPortalMethodRouteRoute: typeof mainPortalMethodRouteRoute
   mainPortalTrackingDepoistRouteRoute: typeof mainPortalTrackingDepoistRouteRoute
+  mainPortalHistoryRouteRoute: typeof mainPortalHistoryRouteRoute
+  mainPortalDisagreementsRouteRoute: typeof mainPortalDisagreementsRouteRoute
 }
 
 const mainPortalRouteRouteChildren: mainPortalRouteRouteChildren = {
   mainPortalIndexRoute: mainPortalIndexRoute,
   mainPortalMethodRouteRoute: mainPortalMethodRouteRoute,
   mainPortalTrackingDepoistRouteRoute: mainPortalTrackingDepoistRouteRoute,
+  mainPortalHistoryRouteRoute: mainPortalHistoryRouteRoute,
+  mainPortalDisagreementsRouteRoute: mainPortalDisagreementsRouteRoute,
 }
 
 const mainPortalRouteRouteWithChildren =
