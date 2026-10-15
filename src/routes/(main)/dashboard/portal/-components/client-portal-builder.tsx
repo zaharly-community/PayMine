@@ -355,7 +355,7 @@ type BuilderBlockDefinition = {
   section: BuilderSectionId;
 };
 
-const methodScopedBlockIds = ["transferNumber", "transactionId", "evidence", "cardDetails", "continue", "securityNotice", "supportInfo"];
+const methodScopedBlockIds = ["transferNumber", "transactionId", "evidence", "cardDetails", "continue"];
 
 function portalStepMethodKey(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
