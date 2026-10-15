@@ -480,6 +480,11 @@ function PaymentMethodSelector({
                   <span className={cn("max-w-full truncate text-[10px] font-medium text-slate-200", methodDisplay === "cards" && "text-center text-xs")}>
                     {item.name}
                   </span>
+                  {methodDisplay === "cards" ? (
+                    <span className="text-[9px] tabular-nums text-slate-500">
+                      {item.min.toLocaleString("en-US")}-{item.max.toLocaleString("en-US")} {item.currency}
+                    </span>
+                  ) : null}
                 </Link>
               );
             })}
