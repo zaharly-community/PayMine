@@ -152,9 +152,21 @@ const PortalPreviewContext = React.createContext(false);
 
 type PortalBuilderSettingsRuntime = {
   template?: "stripe" | "classic" | "minimal";
+  customized?: boolean;
   layout?: { version?: number; order?: string[]; hidden?: string[] };
   buttonShape?: "pill" | "rounded" | "rectangle";
-  colors?: { brand?: string; accent?: string };
+  fontFamily?: string;
+  colors?: {
+    websiteBackground?: string;
+    checkoutSurface?: string;
+    brand?: string;
+    accent?: string;
+    border?: string;
+    inputBackground?: string;
+    inputText?: string;
+    inputPlaceholder?: string;
+    inputBorder?: string;
+  };
   features?: {
     supervisorRating?: boolean;
     playerRating?: boolean;
@@ -180,6 +192,19 @@ type PortalBuilderSettingsRuntime = {
 };
 
 const PortalBuilderSettingsContext = React.createContext<PortalBuilderSettingsRuntime | null>(null);
+
+function getGoogleFontName(fontFamily?: string) {
+  if (!fontFamily || fontFamily === "sans") return "Inter";
+  if (fontFamily === "system" || fontFamily === "serif") return null;
+  return /^[A-Za-z0-9 -]{1,80}$/.test(fontFamily.trim()) ? fontFamily.trim() : "Inter";
+}
+
+function getPortalFontFamily(fontFamily?: string) {
+  if (fontFamily === "system") return "system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+  if (fontFamily === "serif") return 'Georgia, "Times New Roman", serif';
+  const fontName = getGoogleFontName(fontFamily) ?? "Inter";
+  return `"${fontName}", ui-sans-serif, system-ui, -apple-system, sans-serif`;
+}
 
 function getPortalBuilderBlockStyle(settings: PortalBuilderSettingsRuntime | null | undefined, blockId: string): React.CSSProperties {
   const order = settings?.layout?.order;
@@ -6133,6 +6158,26 @@ export function CustomerPortal({
     };
   }, [initialMethodId, formSlug, preview, formOverride]);
 
+  const googleFontName = getGoogleFontName(clientForm?.appearance.fontFamily);
+  React.useEffect(() => {
+    if (!googleFontName) return;
+    const id = "ipaycash-google-font-" + googleFontName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    let link = document.getElementById(id) as HTMLLinkElement | null;
+    const createdHere = !link;
+    if (!link) {
+      link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.dataset.ipaycashGoogleFont = "true";
+      document.head.appendChild(link);
+    }
+    const family = googleFontName.trim().split(/\s+/).map(encodeURIComponent).join("+");
+    link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700&display=swap`;
+    return () => {
+      if (createdHere) link?.remove();
+    };
+  }, [googleFontName]);
+
   if (!clientForm) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-slate-950 px-5 py-10 text-slate-100">
@@ -6198,14 +6243,18 @@ export function CustomerPortal({
   };
 
   const style = {
-    "--portal-page-background": clientForm.appearance.backgroundColor,
-    "--portal-surface": clientForm.appearance.surfaceColor,
+    "--portal-page-background": builderSettings?.colors?.websiteBackground ?? clientForm.appearance.backgroundColor,
+    "--portal-surface": builderSettings?.colors?.checkoutSurface ?? clientForm.appearance.surfaceColor,
     "--portal-accent": builderSettings?.colors?.accent ?? clientForm.appearance.primaryColor,
     "--portal-brand": builderSettings?.colors?.brand ?? (clientForm.appearance.theme === "dark" ? "#e2e8f0" : "#0f172a"),
-    "--portal-border": clientForm.appearance.theme === "dark" ? "#334155" : "#e2e8f0",
+    "--portal-border": builderSettings?.colors?.border ?? (clientForm.appearance.theme === "dark" ? "#334155" : "#e2e8f0"),
+    "--portal-input-background": builderSettings?.colors?.inputBackground ?? (clientForm.appearance.theme === "dark" ? "#111c31" : "#ffffff"),
+    "--portal-input-text": builderSettings?.colors?.inputText ?? (clientForm.appearance.theme === "dark" ? "#f8fafc" : "#111827"),
+    "--portal-input-placeholder": builderSettings?.colors?.inputPlaceholder ?? (clientForm.appearance.theme === "dark" ? "#94a3b8" : "#6b7280"),
+    "--portal-input-border": builderSettings?.colors?.inputBorder ?? (clientForm.appearance.theme === "dark" ? "#334155" : "#cbd5e1"),
     "--portal-radius": clientForm.appearance.radius === "small" ? "8px" : clientForm.appearance.radius === "large" ? "22px" : "14px",
     "--portal-content-width": clientForm.appearance.width === "wide" ? "72rem" : "48rem",
-    fontFamily: clientForm.appearance.fontFamily === "serif" ? 'Georgia, "Times New Roman", serif' : clientForm.appearance.fontFamily === "system" ? "system-ui, sans-serif" : "Inter, ui-sans-serif, system-ui, sans-serif",
+    fontFamily: getPortalFontFamily(clientForm.appearance.fontFamily),
   } as React.CSSProperties;
 
   return (
@@ -6214,12 +6263,14 @@ export function CustomerPortal({
       <PortalButtonLabelContext.Provider value={clientForm.appearance.buttonLabel || "Do Deposit"}>
       <PortalFormSlugContext.Provider value={clientForm.slug}>
       <PortalPreviewContext.Provider value={preview}>
-      <div id="ipaycash-client-portal" onClickCapture={handleBuilderClick} data-builder-edit-mode={builderEditMode ? "true" : "false"} data-theme={clientForm.appearance.theme} data-width={clientForm.appearance.width} data-radius={clientForm.appearance.radius} data-template={builderSettings?.template ?? "stripe"} data-button-shape={builderSettings?.buttonShape ?? "rounded"} data-supervisor-rating={builderSettings?.features?.supervisorRating === false ? "false" : "true"} data-ai-recognition={builderSettings?.features?.aiRecognition === false ? "false" : "true"} data-player-rating={builderSettings?.features?.playerRating === false ? "false" : "true"} data-player-id-mode={builderSettings?.configs?.playerIdMode ?? "both"} data-method-display={builderSettings?.configs?.methodDisplay ?? "cards"} style={style}>
+      <div id="ipaycash-client-portal" onClickCapture={handleBuilderClick} data-builder-edit-mode={builderEditMode ? "true" : "false"} data-theme={clientForm.appearance.theme} data-width={clientForm.appearance.width} data-radius={clientForm.appearance.radius} data-template={builderSettings?.template ?? "stripe"} data-button-shape={builderSettings?.buttonShape ?? "rounded"} data-theme-customized={builderSettings?.customized ? "true" : "false"} data-supervisor-rating={builderSettings?.features?.supervisorRating === false ? "false" : "true"} data-ai-recognition={builderSettings?.features?.aiRecognition === false ? "false" : "true"} data-player-rating={builderSettings?.features?.playerRating === false ? "false" : "true"} data-player-id-mode={builderSettings?.configs?.playerIdMode ?? "both"} data-method-display={builderSettings?.configs?.methodDisplay ?? "cards"} style={style}>
         <style>{'#ipaycash-client-portal [class~="bg-slate-950"]{background-color:var(--portal-page-background)!important;}' +
           '#ipaycash-client-portal [class~="bg-slate-900"],#ipaycash-client-portal [class~="bg-slate-900/80"],#ipaycash-client-portal [class~="bg-slate-900/90"],#ipaycash-client-portal [class~="bg-slate-800"],#ipaycash-client-portal [class~="bg-slate-800/80"],#ipaycash-client-portal [class~="bg-slate-800/60"],#ipaycash-client-portal [class~="bg-slate-700/90"]{background-color:var(--portal-surface)!important;}' +
           '#ipaycash-client-portal [class~="bg-emerald-400"],#ipaycash-client-portal [class~="bg-emerald-300"]{background-color:var(--portal-accent)!important;}' +
           '#ipaycash-client-portal [class~="text-emerald-300"]{color:var(--portal-accent)!important;}' +
-          '#ipaycash-client-portal [class~="border-slate-700"],#ipaycash-client-portal [class~="border-white/10"],#ipaycash-client-portal [class~="border-white/8"]{border-color:var(--portal-border)!important;}' +
+          '#ipaycash-client-portal [class*="border-slate-700"],#ipaycash-client-portal [class*="border-slate-600"],#ipaycash-client-portal [class*="border-white/10"],#ipaycash-client-portal [class*="border-white/8"]{border-color:var(--portal-border)!important;}' +
+          '#ipaycash-client-portal input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="range"]),#ipaycash-client-portal textarea,#ipaycash-client-portal select{background-color:var(--portal-input-background)!important;color:var(--portal-input-text)!important;border-color:var(--portal-input-border)!important;}' +
+          '#ipaycash-client-portal input::placeholder,#ipaycash-client-portal textarea::placeholder{color:var(--portal-input-placeholder)!important;opacity:1!important;}' +
           '#ipaycash-client-portal [class~="max-w-3xl"]{max-width:var(--portal-content-width)!important;}' +
           '#ipaycash-client-portal [class~="rounded-xl"],#ipaycash-client-portal [class~="rounded-2xl"]{border-radius:var(--portal-radius)!important;}' +
           '#ipaycash-client-portal [class~="min-h-dvh"]{min-height:max(560px,calc(100dvh - 4.5rem))!important;}' +
