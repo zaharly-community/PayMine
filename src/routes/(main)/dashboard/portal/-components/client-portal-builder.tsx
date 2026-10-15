@@ -298,7 +298,7 @@ export function ClientPortalBuilder({
             </div>
             <CheckoutPreview form={selected} previewMode={previewMode} />
             <div className="rounded-xl border bg-background p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-xs font-semibold">Public checkout URL</h3><p className="mt-1 break-all text-[11px] text-muted-foreground">{liveUrl}</p></div><Button size="sm" variant="outline" render={<a href={liveUrl} target="_blank" rel="noreferrer" />}><Eye className="size-3.5" /> Open preview</Button></div>
+              <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-xs font-semibold">Public checkout URL</h3><p className="mt-1 break-all text-[11px] text-muted-foreground">{liveUrl}</p></div><Button size="sm" variant="outline" render={<a href={liveUrl + "?preview=1"} target="_blank" rel="noreferrer" />}><Eye className="size-3.5" /> Open preview</Button></div>
               <div className="mt-3 grid gap-2"><Label>Embed snippet</Label><pre className="overflow-x-auto rounded-lg border bg-muted/20 p-2.5 text-[10px] leading-4 text-muted-foreground"><code>{embedCode}</code></pre></div>
             </div>
           </div>
