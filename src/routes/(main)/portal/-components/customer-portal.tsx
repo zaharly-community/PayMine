@@ -208,6 +208,16 @@ function getPortalBuilderBlockStyle(settings: PortalBuilderSettingsRuntime | nul
   };
 }
 
+function getPortalBuilderBlockLabel(
+  settings: PortalBuilderSettingsRuntime | null | undefined,
+  blockId: string,
+  fallback: string,
+  defaultLabel: string,
+) {
+  const configured = settings?.blocks?.[blockId]?.label?.trim();
+  return configured && configured !== defaultLabel ? configured : fallback;
+}
+
 function isPortalWithinSchedule(start?: string, end?: string) {
   if (!start || !end) return true;
   const [startHour, startMinute] = start.split(":").map(Number);
@@ -1838,12 +1848,12 @@ function FlouciStepOne({
         <form data-builder-form="true" onSubmit={(event) => { event.preventDefault(); onContinue(); }} className="flex flex-col gap-4">
           <div data-builder-block={playerLookupType === "email" ? "email" : "playerId"} style={getPortalBuilderBlockStyle(portalBuilderSettings, playerLookupType === "email" ? "email" : "playerId")}>
             <FieldLabel>
-              {playerLookupType === "playerId"
-                ? "Player ID"
-                : playerLookupType === "username"
-                  ? "Username"
-                  : "Email"}
-            </FieldLabel>
+            {playerLookupType === "playerId"
+              ? getPortalBuilderBlockLabel(portalBuilderSettings, "playerId", "Player ID", "Player ID")
+              : playerLookupType === "username"
+                ? "Username"
+                : getPortalBuilderBlockLabel(portalBuilderSettings, "email", "Email", "Email address")}
+          </FieldLabel>
 
             <div className="flex items-stretch gap-2">
               <div className="min-w-0 flex-1">
@@ -1925,7 +1935,7 @@ function FlouciStepOne({
 
 
           <div data-builder-block="amount" style={getPortalBuilderBlockStyle(portalBuilderSettings, "amount")}>
-            <FieldLabel>Deposit amount</FieldLabel>
+            <FieldLabel>{getPortalBuilderBlockLabel(portalBuilderSettings, "amount", "Deposit amount", "Deposit amount")}</FieldLabel>
             <Input
               type="text"
               inputMode="decimal"
@@ -2224,7 +2234,7 @@ function FlouciStepTwo({
       <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
         <div data-builder-form="true" className="flex flex-col gap-4">
           <div data-builder-block="transferNumber" style={getPortalBuilderBlockStyle(portalBuilderSettings, "transferNumber")}>
-          <FieldLabel>{method.name} transfer number</FieldLabel>
+          <FieldLabel>{getPortalBuilderBlockLabel(portalBuilderSettings, "transferNumber", method.name + " transfer number", "Transfer number")}</FieldLabel>
           <div className="flex items-stretch gap-2">
             <div className="flex min-w-0 flex-1 overflow-hidden rounded-lg bg-slate-700/90">
               <Input
@@ -2325,7 +2335,7 @@ function FlouciStepTwo({
           </div>
 
           <div data-builder-block="transactionId" style={getPortalBuilderBlockStyle(portalBuilderSettings, "transactionId")}>
-            <FieldLabel>Transaction ID</FieldLabel>
+            <FieldLabel>{getPortalBuilderBlockLabel(portalBuilderSettings, "transactionId", "Transaction ID", "Transaction ID")}</FieldLabel>
             <div className="flex items-stretch gap-2">
               <div className="min-w-0 flex-1">
                 <Input
@@ -2373,7 +2383,7 @@ function FlouciStepTwo({
           </div>
 
           <div data-builder-block="evidence" style={getPortalBuilderBlockStyle(portalBuilderSettings, "evidence")}>
-            <FieldLabel>Payment photo</FieldLabel>
+            <FieldLabel>{getPortalBuilderBlockLabel(portalBuilderSettings, "evidence", "Payment photo", "Payment evidence")}</FieldLabel>
             <label
               title="Upload payment photo"
               className={cn(
@@ -2692,7 +2702,7 @@ function WaitingTimeline({
 
             <div className="space-y-3">
               <div>
-                <FieldLabel>{method.name} transfer number</FieldLabel>
+                <FieldLabel>{getPortalBuilderBlockLabel(portalBuilderSettings, "transferNumber", method.name + " transfer number", "Transfer number")}</FieldLabel>
                 <Input
                   value={correctedTransferNumber}
                   onChange={(event) => setCorrectedTransferNumber(event.target.value)}
@@ -3805,7 +3815,11 @@ function CardDepositStepOne({
       <form data-builder-form="true" onSubmit={(event) => { event.preventDefault(); onContinue(); }} className="flex flex-col gap-4">
         <div data-builder-block={playerLookupType === "email" ? "email" : "playerId"} style={getPortalBuilderBlockStyle(portalBuilderSettings, playerLookupType === "email" ? "email" : "playerId")}>
           <FieldLabel>
-            {playerLookupType === "playerId" ? "Player ID" : playerLookupType === "username" ? "Username" : "Email"}
+            {playerLookupType === "playerId"
+              ? getPortalBuilderBlockLabel(portalBuilderSettings, "playerId", "Player ID", "Player ID")
+              : playerLookupType === "username"
+                ? "Username"
+                : getPortalBuilderBlockLabel(portalBuilderSettings, "email", "Email", "Email address")}
           </FieldLabel>
 
           <div className="flex items-stretch gap-2">
@@ -3866,7 +3880,7 @@ function CardDepositStepOne({
 
 
         <div data-builder-block="amount" style={getPortalBuilderBlockStyle(portalBuilderSettings, "amount")}>
-          <FieldLabel>Total card amount</FieldLabel>
+          <FieldLabel>{getPortalBuilderBlockLabel(portalBuilderSettings, "amount", "Total card amount", "Deposit amount")}</FieldLabel>
           <Input
             type="text"
             inputMode="decimal"
@@ -4520,7 +4534,7 @@ function CardDepositFlow({
 
                 <div data-builder-block="cardDetails" style={getPortalBuilderBlockStyle(portalBuilderSettings, "cardDetails")}>
                   <div className="mb-2 flex items-center justify-between gap-3">
-                    <FieldLabel>Card numbers</FieldLabel>
+                    <FieldLabel>{getPortalBuilderBlockLabel(portalBuilderSettings, "cardDetails", "Card numbers", "Card numbers")}</FieldLabel>
                     <span className="text-[10px] text-slate-500">16 digits · XXXX XXXX XXXX XXXX</span>
                   </div>
 
@@ -4581,7 +4595,7 @@ function CardDepositFlow({
                 </div>
 
                 <div data-builder-block="evidence" style={getPortalBuilderBlockStyle(portalBuilderSettings, "evidence")}>
-                  <FieldLabel>Card photo / OCR</FieldLabel>
+                  <FieldLabel>{getPortalBuilderBlockLabel(portalBuilderSettings, "evidence", "Card photo / OCR", "Payment evidence")}</FieldLabel>
                   <label
                     title={portalBuilderSettings?.blocks?.evidence?.placeholder || "Upload card photo for OCR"}
                     className={cn(
@@ -4759,10 +4773,10 @@ function EDinarStepOne({
         <div data-builder-block={playerLookupType === "email" ? "email" : "playerId"} style={getPortalBuilderBlockStyle(portalBuilderSettings, playerLookupType === "email" ? "email" : "playerId")}>
           <FieldLabel>
             {playerLookupType === "playerId"
-              ? "Player ID"
+              ? getPortalBuilderBlockLabel(portalBuilderSettings, "playerId", "Player ID", "Player ID")
               : playerLookupType === "username"
                 ? "Username"
-                : "Email"}
+                : getPortalBuilderBlockLabel(portalBuilderSettings, "email", "Email", "Email address")}
           </FieldLabel>
 
           <div className="flex items-stretch gap-2">
@@ -4845,7 +4859,7 @@ function EDinarStepOne({
 
 
         <div data-builder-block="amount" style={getPortalBuilderBlockStyle(portalBuilderSettings, "amount")}>
-          <FieldLabel>Deposit amount</FieldLabel>
+          <FieldLabel>{getPortalBuilderBlockLabel(portalBuilderSettings, "amount", "Deposit amount", "Deposit amount")}</FieldLabel>
           <Input
             type="text"
             inputMode="decimal"
@@ -5043,7 +5057,7 @@ function EDinarStepTwo({
           </div>
 
           <div data-builder-block="transactionId" style={getPortalBuilderBlockStyle(portalBuilderSettings, "transactionId")}>
-            <FieldLabel>Transaction ID</FieldLabel>
+            <FieldLabel>{getPortalBuilderBlockLabel(portalBuilderSettings, "transactionId", "Transaction ID", "Transaction ID")}</FieldLabel>
             <div className="flex items-stretch gap-2">
               <Input
                 value={transactionId}
@@ -5086,7 +5100,7 @@ function EDinarStepTwo({
           </div>
 
           <div data-builder-block="evidence" style={getPortalBuilderBlockStyle(portalBuilderSettings, "evidence")}>
-            <FieldLabel>Payment photo</FieldLabel>
+            <FieldLabel>{getPortalBuilderBlockLabel(portalBuilderSettings, "evidence", "Payment photo", "Payment evidence")}</FieldLabel>
             <label
               title="Upload payment photo"
               className={cn(
@@ -5709,12 +5723,12 @@ function BinancePayFlow({
               <form data-builder-form="true" onSubmit={continueToCheckout} className="flex flex-col gap-4">
                 <div data-builder-block={playerLookupType === "email" ? "email" : "playerId"} style={getPortalBuilderBlockStyle(portalBuilderSettings, playerLookupType === "email" ? "email" : "playerId")}>
                   <FieldLabel>
-                    {playerLookupType === "playerId"
-                      ? "Player ID"
-                      : playerLookupType === "username"
-                        ? "Username"
-                        : "Email"}
-                  </FieldLabel>
+            {playerLookupType === "playerId"
+              ? getPortalBuilderBlockLabel(portalBuilderSettings, "playerId", "Player ID", "Player ID")
+              : playerLookupType === "username"
+                ? "Username"
+                : getPortalBuilderBlockLabel(portalBuilderSettings, "email", "Email", "Email address")}
+          </FieldLabel>
 
                   <div className="flex items-stretch gap-2">
                     <div className="min-w-0 flex-1">
@@ -5798,7 +5812,7 @@ function BinancePayFlow({
                 </div>
 
                 <div data-builder-block="amount" style={getPortalBuilderBlockStyle(portalBuilderSettings, "amount")}>
-                  <FieldLabel>Deposit amount</FieldLabel>
+                  <FieldLabel>{getPortalBuilderBlockLabel(portalBuilderSettings, "amount", "Deposit amount", "Deposit amount")}</FieldLabel>
                   <div className="rounded-lg bg-slate-700/90 px-3 py-2">
                     <Input
                       type="text"
@@ -6570,7 +6584,7 @@ function CustomerPortalExperience({
               style={{ order: (portalBuilderSettings?.layout?.order?.indexOf("playerId") ?? 2) + 1 }}
             >
               <div data-builder-block="amount" style={getPortalBuilderBlockStyle(portalBuilderSettings, "amount")}>
-                <FieldLabel>Deposit amount</FieldLabel>
+                <FieldLabel>{getPortalBuilderBlockLabel(portalBuilderSettings, "amount", "Deposit amount", "Deposit amount")}</FieldLabel>
                 <div className="rounded-lg bg-slate-700/90 px-3 py-2">
                   <Input
                     type="text"
