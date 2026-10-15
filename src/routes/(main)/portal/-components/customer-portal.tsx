@@ -6145,8 +6145,8 @@ export function CustomerPortal({
     ? {
         ...rawBuilderSettings,
         blocks: {
-          ...rawBuilderSettings.blocks,
-          brandHeader: rawBrandHeader?.label === "iPayCash"
+          ...(rawBuilderSettings.blocks ?? {}),
+          brandHeader: rawBrandHeader?.label === "iPayCash" && rawBrandHeader
             ? { ...rawBrandHeader, label: clientForm.appearance.brandName || "Your brand" }
             : rawBrandHeader,
         },
