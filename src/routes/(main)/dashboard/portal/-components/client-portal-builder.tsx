@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { CustomerPortal } from "../../../portal/-components/customer-portal";
 import {
   Check,
   ChevronDown,
@@ -13,6 +14,9 @@ import {
   Save,
   Smartphone,
   Sparkles,
+  Undo2,
+  Redo2,
+  Moon,
   Plus,
   X,
   AlertTriangle,
@@ -426,74 +430,43 @@ export function ClientPortalBuilder({
 
   return (
     <main className="min-h-dvh w-full bg-muted/30 text-foreground">
-      <header className="sticky top-0 z-40 flex min-h-16 flex-wrap items-center justify-between gap-3 border-b bg-background/95 px-4 py-3 shadow-sm backdrop-blur-md lg:px-7">
+      <header className="sticky top-0 z-40 flex min-h-12 flex-wrap items-center justify-between gap-3 border-b border-[#23436e] bg-[#102c58] px-3 py-2 text-white shadow-md lg:px-4">
         <div className="flex min-w-0 items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onExit} className="shrink-0">
+          <Button variant="ghost" size="sm" onClick={onExit} className="shrink-0 text-slate-100 hover:bg-white/10 hover:text-white">
             <ExternalLink className="size-3.5 rotate-180" /> Exit
           </Button>
           <span className="hidden h-7 w-px bg-border sm:block" />
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <LayoutTemplate className="size-4" />
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-blue-300/30 bg-blue-500 text-sm font-bold text-white">
+            A
           </span>
           <div className="min-w-0">
-            <h1 className="truncate text-sm font-semibold">Portal Builder</h1>
-            <p className="truncate text-[11px] text-muted-foreground">Build and preview a payment experience independently</p>
+            <h1 className="truncate text-sm font-semibold text-white">{selected.appearance.brandName || "iPayCash"}</h1>
+            <p className="truncate text-[10px] text-blue-200">{selected.name}</p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select value={selectedId} onValueChange={setSelectedId}>
-            <SelectTrigger className="h-9 w-[190px] max-w-[42vw]"><SelectValue placeholder="Select checkout form" /></SelectTrigger>
+            <SelectTrigger className="h-8 w-[150px] max-w-[35vw] border border-white/20 bg-white/10 text-xs text-white [&_svg]:text-white"><SelectValue placeholder="Select checkout form" /></SelectTrigger>
             <SelectContent>
               {forms.map((form) => <SelectItem key={form.id} value={form.id}>{form.name}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Badge variant={selected.status === "Published" ? "secondary" : "outline"}>{selected.status === "Published" ? "LIVE" : "DRAFT"}</Badge>
-          <div className="flex items-center rounded-lg border bg-muted/30 p-0.5">
-            <Button variant={previewMode === "desktop" ? "secondary" : "ghost"} size="icon" className="size-8" aria-label="Desktop preview" title="Desktop preview" onClick={() => setPreviewMode("desktop")}><Monitor className="size-4" /></Button>
-            <Button variant={previewMode === "mobile" ? "secondary" : "ghost"} size="icon" className="size-8" aria-label="Mobile preview" title="Mobile preview" onClick={() => setPreviewMode("mobile")}><Smartphone className="size-4" /></Button>
+          <Badge variant="outline" className={selected.status === "Published" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-amber-300/30 bg-amber-300/10 text-amber-200"}>{selected.status === "Published" ? "● LIVE" : "DRAFT"}</Badge>
+          <Button variant="ghost" size="icon" className="size-8 text-blue-100 hover:bg-white/10 hover:text-white" aria-label="Appearance mode" title="Appearance mode" onClick={() => updateAppearance({ theme: selected.appearance.theme === "dark" ? "light" : "dark" })}><Moon className="size-4" /></Button>
+          <div className="flex items-center rounded-lg border border-white/20 bg-white/10 p-0.5">
+            <Button variant={previewMode === "desktop" ? "secondary" : "ghost"} size="icon" className="size-7" aria-label="Desktop preview" title="Desktop preview" onClick={() => setPreviewMode("desktop")}><Monitor className="size-3.5" /></Button>
+            <Button variant={previewMode === "mobile" ? "secondary" : "ghost"} size="icon" className="size-7" aria-label="Mobile preview" title="Mobile preview" onClick={() => setPreviewMode("mobile")}><Smartphone className="size-3.5" /></Button>
           </div>
-          <Button variant="outline" size="sm" onClick={duplicateSelected}><Copy className="size-3.5" /> <span className="hidden sm:inline">Duplicate</span></Button>
-          <Button size="sm" onClick={save}><Save className="size-3.5" /> Save changes</Button>
+          <Button variant="ghost" size="icon" className="size-8 text-blue-100 hover:bg-white/10 hover:text-white" aria-label="Undo" title="Undo (coming soon)" disabled><Undo2 className="size-4" /></Button>
+          <Button variant="ghost" size="icon" className="size-8 text-blue-100 hover:bg-white/10 hover:text-white" aria-label="Redo" title="Redo (coming soon)" disabled><Redo2 className="size-4" /></Button>
+          <Button variant="ghost" size="sm" onClick={duplicateSelected} className="text-blue-100 hover:bg-white/10 hover:text-white"><Copy className="size-3.5" /> <span className="hidden sm:inline">Duplicate</span></Button>
+          <Button size="sm" onClick={save} className="bg-blue-600 text-white hover:bg-blue-500"><Save className="size-3.5" /> Save</Button>
         </div>
       </header>
 
-      <div className="mx-auto grid min-h-[calc(100dvh-65px)] max-w-[1800px] grid-cols-1 xl:grid-cols-[minmax(0,1fr)_390px]">
-        <section className="min-w-0 p-3 sm:p-5 lg:p-7">
-          <div className="mx-auto flex max-w-[1100px] flex-col gap-4">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Canvas</p>
-                <h2 className="mt-1 text-xl font-semibold tracking-tight">Live checkout preview</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Select any block in the form to edit its label, placeholder or description.</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">{previewMode === "desktop" ? "Desktop viewport" : "Mobile viewport"}</Badge>
-                <Button variant="outline" size="sm" onClick={() => window.open(liveUrl + "?preview=1", "_blank", "noopener,noreferrer")}><Eye className="size-3.5" /> Open saved portal</Button>
-              </div>
-            </div>
-
-            <CheckoutPreview
-              form={selected}
-              previewMode={previewMode}
-              selectedBlock={selectedBlock}
-              onSelectBlock={setSelectedBlock}
-            />
-
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="rounded-xl border bg-background p-4">
-                <div className="flex items-center gap-2 text-sm font-semibold"><Globe2 className="size-4 text-muted-foreground" /> Public checkout URL</div>
-                <p className="mt-2 break-all text-xs text-muted-foreground">{liveUrl}</p>
-              </div>
-              <div className="rounded-xl border bg-background p-4">
-                <div className="flex items-center gap-2 text-sm font-semibold"><Copy className="size-4 text-muted-foreground" /> Embed snippet</div>
-                <pre className="mt-2 overflow-x-auto rounded-lg border bg-muted/30 p-2.5 text-[10px] leading-4 text-muted-foreground"><code>{embedCode}</code></pre>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <aside className="min-h-0 border-t bg-background xl:sticky xl:top-16 xl:h-[calc(100dvh-4rem)] xl:overflow-y-auto xl:border-l xl:border-t-0">
-          <div className="flex items-start justify-between gap-3 border-b px-4 py-4">
+      <div className="mx-auto grid min-h-[calc(100dvh-48px)] max-w-[1900px] grid-cols-1 xl:grid-cols-[330px_minmax(0,1fr)]">
+        <aside className="min-h-0 bg-[#f2f5fa] xl:sticky xl:top-12 xl:h-[calc(100dvh-3rem)] xl:overflow-y-auto xl:border-r xl:border-slate-200">
+          <div className="flex items-start justify-between gap-3 border-b border-slate-200 bg-white px-4 py-4">
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">{selectedBlock ? "Selected element" : "Theme settings"}</p>
               <h2 className="mt-1 text-base font-semibold">{selectedBlock ? (selectedCopy?.label || selectedBlock) : "Customize portal"}</h2>
@@ -529,7 +502,7 @@ export function ClientPortalBuilder({
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-3 border-b p-2">
+              <div className="grid grid-cols-3 border-b border-slate-200 bg-white p-2">
                 {([
                   ["appearance", "Appearance"],
                   ["features", "Features"],
@@ -539,7 +512,7 @@ export function ClientPortalBuilder({
                 ))}
               </div>
 
-              <div className="space-y-5 p-4">
+              <div className="space-y-5 p-3">
                 {section === "appearance" ? (
                   <>
                     <div className="space-y-3">
@@ -695,11 +668,48 @@ export function ClientPortalBuilder({
             </>
           )}
 
-          <div className="border-t px-4 py-3">
+          <div className="border-t border-slate-200 bg-white px-4 py-3">
             <p className="text-[11px] leading-5 text-muted-foreground">{notice || (selected.updated === "Unsaved changes" ? "Unsaved changes · Save to retain this configuration in the browser." : "Changes update the preview instantly. Save to retain them in this browser.")}</p>
           </div>
         </aside>
-      </div>
+        <section className="min-w-0 min-h-0 bg-[#eaf0f8] bg-[radial-gradient(#c5d6ef_0.8px,transparent_0.8px)] [background-size:20px_20px] p-3 sm:p-5 lg:p-6">
+          <div className="flex h-full min-h-[calc(100dvh-112px)] flex-col items-center">
+            <div className="mb-3 flex w-full max-w-[1220px] flex-wrap items-center justify-between gap-2 px-1">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Page canvas</p>
+                <h2 className="mt-0.5 text-sm font-semibold text-slate-800">{selected.name}</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="border-slate-300 bg-white/80 text-slate-600">{previewMode === "desktop" ? "Desktop" : "Mobile"}</Badge>
+                <Button variant="outline" size="sm" className="h-8 border-slate-300 bg-white text-slate-700" onClick={() => window.open(liveUrl + "?preview=1", "_blank", "noopener,noreferrer")}><Eye className="size-3.5" /> Open saved portal</Button>
+              </div>
+            </div>
+
+            <div
+              className="mx-auto flex min-h-[480px] flex-1 flex-col overflow-hidden rounded-xl border border-slate-300 bg-white shadow-[0_18px_60px_rgba(29,48,80,0.16)]"
+              style={{ width: previewMode === "mobile" ? "390px" : "100%", maxWidth: previewMode === "mobile" ? "100%" : "1220px" }}
+            >
+              <div className="z-10 flex h-10 shrink-0 items-center gap-2 border-b border-slate-200 bg-[#f7f8fa] px-3">
+                <span className="size-2.5 rounded-full bg-[#ff6259]" />
+                <span className="size-2.5 rounded-full bg-[#ffbd2f]" />
+                <span className="size-2.5 rounded-full bg-[#28c840]" />
+                <div className="mx-auto flex h-6 min-w-0 w-[min(480px,70%)] items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-3 text-[10px] text-slate-500">
+                  <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
+                  <span className="truncate">{liveUrl.replace(/^https?:\/\//, "")}</span>
+                </div>
+                <span className="w-4 shrink-0" />
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white">
+                <CustomerPortal
+                  formOverride={selected}
+                  preview
+                  builderEditMode
+                  onSelectBlock={setSelectedBlock}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
     </main>
   );
 }
