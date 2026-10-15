@@ -168,10 +168,12 @@ function normalizeForm(value: unknown, index: number): ClientPortalForm | null {
     appearance: {
       ...defaultAppearance,
       ...rawAppearance,
-      brandName: typeof rawAppearance.brandName === "string" ? rawAppearance.brandName : defaultAppearance.brandName,
+      brandName: typeof rawAppearance.brandName === "string" && rawAppearance.brandName.trim() && rawAppearance.brandName !== "iPayCash"
+        ? rawAppearance.brandName
+        : defaultAppearance.brandName,
       logoUrl: typeof rawAppearance.logoUrl === "string" ? rawAppearance.logoUrl : "",
       showLogo: rawAppearance.showLogo !== false,
-      showPlatformBranding: rawAppearance.showPlatformBranding !== false,
+      showPlatformBranding: rawAppearance.showPlatformBranding === true && rawAppearance.brandName !== "iPayCash",
       title: typeof rawAppearance.title === "string" ? rawAppearance.title : defaultAppearance.title,
       description: typeof rawAppearance.description === "string" ? rawAppearance.description : defaultAppearance.description,
       buttonLabel: typeof rawAppearance.buttonLabel === "string" ? rawAppearance.buttonLabel : defaultAppearance.buttonLabel,
