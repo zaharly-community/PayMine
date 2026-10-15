@@ -31,6 +31,7 @@ export type ClientPortalAppearance = {
   theme: ClientPortalTheme;
   width: ClientPortalWidth;
   radius: ClientPortalRadius;
+  fontFamily: "system" | "sans" | "serif";
   primaryColor: string;
   backgroundColor: string;
   surfaceColor: string;
@@ -62,6 +63,7 @@ const defaultAppearance: ClientPortalAppearance = {
   theme: "dark",
   width: "compact",
   radius: "medium",
+  fontFamily: "sans",
   primaryColor: "#34d399",
   backgroundColor: "#020617",
   surfaceColor: "#0f172a",
@@ -176,6 +178,7 @@ function normalizeForm(value: unknown, index: number): ClientPortalForm | null {
       theme: rawAppearance.theme === "light" ? "light" : "dark",
       width: rawAppearance.width === "wide" ? "wide" : "compact",
       radius: rawAppearance.radius === "small" || rawAppearance.radius === "large" ? rawAppearance.radius : "medium",
+      fontFamily: rawAppearance.fontFamily === "system" || rawAppearance.fontFamily === "serif" ? rawAppearance.fontFamily : "sans",
       primaryColor: /^#[0-9a-f]{6}$/i.test(rawAppearance.primaryColor ?? "") ? rawAppearance.primaryColor! : defaultAppearance.primaryColor,
       backgroundColor: /^#[0-9a-f]{6}$/i.test(rawAppearance.backgroundColor ?? "") ? rawAppearance.backgroundColor! : defaultAppearance.backgroundColor,
       surfaceColor: /^#[0-9a-f]{6}$/i.test(rawAppearance.surfaceColor ?? "") ? rawAppearance.surfaceColor! : defaultAppearance.surfaceColor,
