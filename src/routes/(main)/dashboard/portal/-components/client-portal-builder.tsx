@@ -105,7 +105,7 @@ function ThemeThumbnail({ id }: { id: TemplateId }) {
 }
 
 const fieldDefaults: Record<string, BlockCopy> = {
-  brandHeader: { label: "iPayCash", placeholder: "Secure checkout", description: "Protected payment" },
+  brandHeader: { label: "Your brand", placeholder: "Secure checkout", description: "Protected payment" },
   heading: {
     label: "Make a deposit",
     placeholder: "",
@@ -278,7 +278,11 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
   const defaults = makeDefaultSettings(form);
   const blocks: Record<string, BlockCopy> = { ...defaults.blocks };
   for (const [key, value] of Object.entries(raw?.blocks ?? {})) {
-    if (value) blocks[key] = { ...(blocks[key] ?? fieldDefaults.heading), ...value };
+    if (value) {
+      const merged = { ...(blocks[key] ?? fieldDefaults.heading), ...value };
+      if (key === "brandHeader" && merged.label === "iPayCash") merged.label = form.appearance.brandName || "Your brand";
+      blocks[key] = merged;
+    }
   }
   const allowedMethods = Array.isArray(raw?.configs?.paymentMethods)
     ? raw.configs.paymentMethods.filter((method): method is string => typeof method === "string" && clientPortalMethodOptions.includes(method as (typeof clientPortalMethodOptions)[number]))
