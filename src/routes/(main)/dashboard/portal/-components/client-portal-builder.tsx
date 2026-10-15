@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Check,
+  ChevronDown,
   Copy,
   ExternalLink,
   Eye,
@@ -12,7 +13,6 @@ import {
   Save,
   Smartphone,
   Sparkles,
-  Sun,
   Plus,
   X,
   AlertTriangle,
@@ -83,6 +83,20 @@ const templateOptions: { id: TemplateId; label: string; caption: string }[] = [
   { id: "classic", label: "Classic", caption: "Traditional form layout" },
   { id: "minimal", label: "Minimal", caption: "Compact and focused" },
 ];
+
+function ThemeThumbnail({ id }: { id: TemplateId }) {
+  return (
+    <div className={"flex h-12 w-[74px] shrink-0 flex-col gap-1 rounded-md border p-1.5 " + (id === "stripe" ? "bg-slate-50" : id === "classic" ? "bg-stone-50" : "bg-white")}>
+      {id === "stripe" ? (
+        <><span className="h-1.5 w-8 rounded-sm bg-indigo-500" /><span className="h-1 w-full rounded-sm bg-slate-200" /><span className="h-1 w-4/5 rounded-sm bg-slate-200" /><span className="mt-auto h-2 w-full rounded-sm bg-indigo-500" /></>
+      ) : id === "classic" ? (
+        <><span className="h-1.5 w-full rounded-sm bg-slate-300" /><span className="h-1 w-4/5 rounded-sm bg-slate-200" /><span className="mt-auto h-2 w-2/3 rounded-sm bg-slate-400" /></>
+      ) : (
+        <><span className="mx-auto h-1.5 w-8 rounded-sm bg-emerald-500" /><span className="mx-auto h-1 w-4/5 rounded-sm bg-slate-200" /><span className="mt-auto h-2 w-full rounded-full bg-emerald-500" /></>
+      )}
+    </div>
+  );
+}
 
 const fieldDefaults: Record<string, BlockCopy> = {
   heading: {
@@ -262,6 +276,7 @@ export function ClientPortalBuilder({
     return initial?.id ?? getClientPortalForms()[0]?.id ?? "";
   });
   const [section, setSection] = useState<EditorSection>("appearance");
+  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
@@ -407,6 +422,7 @@ export function ClientPortalBuilder({
   }
 
   const selectedCopy = selectedBlock ? selected.builder.blocks[selectedBlock] : null;
+  const selectedTemplate = templateOptions.find((option) => option.id === selected.builder.template) ?? templateOptions[0];
 
   return (
     <main className="min-h-dvh w-full bg-muted/30 text-foreground">
@@ -527,17 +543,24 @@ export function ClientPortalBuilder({
                 {section === "appearance" ? (
                   <>
                     <div className="space-y-3">
-                      <div><h3 className="text-sm font-semibold">Theme layout</h3><p className="mt-1 text-xs text-muted-foreground">Choose a ready-made checkout structure.</p></div>
-                      <div className="grid gap-2">
-                        {templateOptions.map((option) => (
-                          <button key={option.id} type="button" onClick={() => updateBuilder({ template: option.id })} className={"flex items-center gap-3 rounded-xl border p-3 text-left transition " + (selected.builder.template === option.id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "hover:bg-muted/40")}>
-                            <div className={"flex h-12 w-[74px] shrink-0 flex-col gap-1 rounded-md border p-1.5 " + (option.id === "stripe" ? "bg-slate-50" : option.id === "classic" ? "bg-stone-50" : "bg-white")}>
-                              {option.id === "stripe" ? <><span className="h-1.5 w-8 rounded-sm bg-indigo-500" /><span className="h-1 w-full rounded-sm bg-slate-200" /><span className="h-1 w-4/5 rounded-sm bg-slate-200" /><span className="mt-auto h-2 w-full rounded-sm bg-indigo-500" /></> : option.id === "classic" ? <><span className="h-1.5 w-full rounded-sm bg-slate-300" /><span className="h-1 w-4/5 rounded-sm bg-slate-200" /><span className="mt-auto h-2 w-2/3 rounded-sm bg-slate-400" /></> : <><span className="mx-auto h-1.5 w-8 rounded-sm bg-emerald-500" /><span className="mx-auto h-1 w-4/5 rounded-sm bg-slate-200" /><span className="mt-auto h-2 w-full rounded-full bg-emerald-500" /></>}
-                            </div>
-                            <span className="min-w-0 flex-1"><span className="block text-sm font-medium">{option.label}</span><span className="mt-0.5 block text-xs text-muted-foreground">{option.caption}</span></span>
-                            {selected.builder.template === option.id ? <Check className="size-4 text-primary" /> : <span className="size-4 rounded-full border" />}
-                          </button>
-                        ))}
+                      <div><h3 className="text-sm font-semibold">Theme</h3><p className="mt-1 text-xs text-muted-foreground">Choose a ready-made checkout layout.</p></div>
+                      <div className="relative">
+                        <button type="button" aria-haspopup="listbox" aria-expanded={themeDropdownOpen} onClick={() => setThemeDropdownOpen((open) => !open)} className="flex w-full items-center gap-3 rounded-lg border bg-background p-2.5 text-left transition hover:bg-muted/40">
+                          <ThemeThumbnail id={selected.builder.template} />
+                          <span className="min-w-0 flex-1"><span className="block text-sm font-medium">{selectedTemplate.label}</span><span className="mt-0.5 block text-xs text-muted-foreground">{selectedTemplate.caption}</span></span>
+                          <ChevronDown className={"size-4 shrink-0 text-muted-foreground transition-transform " + (themeDropdownOpen ? "rotate-180" : "")} />
+                        </button>
+                        {themeDropdownOpen ? (
+                          <div role="listbox" aria-label="Theme layout" className="absolute left-0 right-0 top-full z-30 mt-2 rounded-xl border bg-background p-2 shadow-xl">
+                            {templateOptions.map((option) => (
+                              <button key={option.id} type="button" role="option" aria-selected={selected.builder.template === option.id} onClick={() => { updateBuilder({ template: option.id }); setThemeDropdownOpen(false); }} className={"flex w-full items-center gap-3 rounded-lg p-2 text-left transition " + (selected.builder.template === option.id ? "bg-primary/5 text-foreground" : "hover:bg-muted/40")}>
+                                <ThemeThumbnail id={option.id} />
+                                <span className="min-w-0 flex-1"><span className="block text-sm font-medium">{option.label}</span><span className="mt-0.5 block text-xs text-muted-foreground">{option.caption}</span></span>
+                                {selected.builder.template === option.id ? <Check className="size-4 text-primary" /> : <span className="size-4 rounded-full border" />}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
 
