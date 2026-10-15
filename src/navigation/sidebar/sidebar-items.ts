@@ -190,9 +190,9 @@ export const sidebarItems: NavGroup[] = [
         icon: Settings2,
       },
       {
-        id: "portal",
-        title: "Portal",
-        url: "/dashboard/portal",
+        id: "client-portal",
+        title: "Client Portal",
+        url: "/dashboard/client-portal" as AppPath,
         icon: PanelsTopLeft,
       },
     ],
