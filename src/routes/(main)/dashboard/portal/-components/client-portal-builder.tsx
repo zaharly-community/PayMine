@@ -367,7 +367,7 @@ function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
       hidden: [],
       sections: Object.fromEntries(builderBlockCatalog.map((block) => [block.id, block.section])) as Record<string, BuilderSectionId>,
     },
-    fontFamily: form.appearance.fontFamily,
+    fontFamily: form.appearance.fontFamily === "sans" ? "Inter" : form.appearance.fontFamily === "serif" ? "Merriweather" : form.appearance.fontFamily === "system" ? "DM Sans" : form.appearance.fontFamily,
     buttonShape: form.appearance.radius === "small" ? "rectangle" : form.appearance.radius === "large" ? "pill" : "rounded",
     colors: {
       websiteBackground: form.appearance.backgroundColor || "#020617",
@@ -577,7 +577,12 @@ export function ClientPortalBuilder({
   const updateSelected = (patch: Partial<EditableBuilderForm>) => {
     if (!selected) return;
     setForms((current) => current.map((form) => form.id === selected.id
-      ? { ...form, ...patch, updated: "Unsaved changes" }
+      ? {
+          ...form,
+          ...patch,
+          ...(patch.appearance ? { builder: { ...form.builder, customized: true } } : {}),
+          updated: "Unsaved changes",
+        }
       : form));
     setNotice("");
   };
@@ -1003,7 +1008,7 @@ export function ClientPortalBuilder({
                       <div className="relative">
                         <button type="button" aria-haspopup="listbox" aria-expanded={themeDropdownOpen} onClick={() => setThemeDropdownOpen((open) => !open)} className="flex w-full items-center gap-3 rounded-lg border bg-background p-2.5 text-left transition hover:bg-muted/40">
                           <ThemeThumbnail id={selected.builder.template} />
-                          <span className="min-w-0 flex-1"><span className="block text-sm font-medium">{selected.builder.customized ? `Custom · ${selectedTemplate.label}` : selectedTemplate.label}</span><span className="mt-0.5 block text-xs text-muted-foreground">{selected.builder.customized ? `Customized from ${selectedTemplate.label}; saved per checkout` : selectedTemplate.caption}</span></span>
+                          <span className="min-w-0 flex-1"><span className="block text-sm font-medium">{selected.builder.customized ? `Custom · ${selectedTemplate.label}` : selectedTemplate.label}</span><span className="mt-0.5 block text-xs text-muted-foreground">{selected.builder.customized ? `Customized version of the ${selectedTemplate.label} layout` : selectedTemplate.caption}</span></span>
                           <ChevronDown className={"size-4 shrink-0 text-muted-foreground transition-transform " + (themeDropdownOpen ? "rotate-180" : "")} />
                         </button>
                         {themeDropdownOpen ? (
