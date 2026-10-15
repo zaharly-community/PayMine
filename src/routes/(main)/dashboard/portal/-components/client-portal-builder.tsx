@@ -53,6 +53,18 @@ type BlockStyleSettings = {
   spacing: "compact" | "normal" | "relaxed";
 };
 
+type BlockStyleControl = "width" | "alignment" | "spacing";
+type BlockEditorProfile = {
+  title: string;
+  labelLabel: string;
+  showPlaceholder?: boolean;
+  placeholderLabel?: string;
+  showDescription?: boolean;
+  descriptionLabel?: string;
+  controls: BlockStyleControl[];
+  special?: "brandHeader" | "paymentMethods";
+};
+
 type PortalBuilderSettings = {
   template: TemplateId;
   layout: {
@@ -249,6 +261,27 @@ const builderBlockCatalog: BuilderBlockDefinition[] = [
   { id: "verificationPreview", label: "AI / verification preview", description: "AI recognition and destination-verification outcomes", required: false, section: "tracking" },
   { id: "stepPreview", label: "Step preview controls", description: "Step 1, Step 2 and waiting timeline controls", required: false, section: "tracking" },
 ];
+
+const blockEditorProfiles: Record<string, BlockEditorProfile> = {
+  brandHeader: { title: "Brand header", labelLabel: "Brand name", showPlaceholder: true, placeholderLabel: "Header tagline", showDescription: true, descriptionLabel: "Security badge text", controls: ["spacing"], special: "brandHeader" },
+  heading: { title: "Page heading", labelLabel: "Heading text", showDescription: true, descriptionLabel: "Subtitle", controls: ["width", "alignment", "spacing"] },
+  paymentMethods: { title: "Payment method selector", labelLabel: "Section heading", showDescription: true, descriptionLabel: "Supporting text", controls: ["width", "alignment", "spacing"], special: "paymentMethods" },
+  playerId: { title: "Player ID field", labelLabel: "Field label", showPlaceholder: true, placeholderLabel: "Input placeholder", controls: ["width", "spacing"] },
+  email: { title: "Email field", labelLabel: "Field label", showPlaceholder: true, placeholderLabel: "Input placeholder", controls: ["width", "spacing"] },
+  amount: { title: "Amount field", labelLabel: "Field label", showPlaceholder: true, placeholderLabel: "Input placeholder", controls: ["width", "spacing"] },
+  cardDetails: { title: "Card details field", labelLabel: "Field label", showPlaceholder: true, placeholderLabel: "Input placeholder", showDescription: true, descriptionLabel: "Validation help text", controls: ["width", "spacing"] },
+  transferNumber: { title: "Transfer number field", labelLabel: "Field label", showPlaceholder: true, placeholderLabel: "Input placeholder", controls: ["width", "spacing"] },
+  transactionId: { title: "Transaction ID field", labelLabel: "Field label", showPlaceholder: true, placeholderLabel: "Input placeholder", controls: ["width", "spacing"] },
+  evidence: { title: "Payment evidence upload", labelLabel: "Upload label", showPlaceholder: true, placeholderLabel: "Upload prompt", controls: ["width", "spacing"] },
+  continue: { title: "Primary action button", labelLabel: "Button text", controls: ["width", "alignment", "spacing"] },
+  securityNotice: { title: "Security notice", labelLabel: "Notice title", showDescription: true, descriptionLabel: "Notice text", controls: ["width", "alignment", "spacing"] },
+  supportInfo: { title: "Support information", labelLabel: "Title", showDescription: true, descriptionLabel: "Support text", controls: ["width", "alignment", "spacing"] },
+  playerRating: { title: "Player feedback", labelLabel: "Rating title", showDescription: true, descriptionLabel: "Feedback description", controls: ["width", "alignment", "spacing"] },
+  supervisorRating: { title: "Supervisor review", labelLabel: "Review action text", controls: ["width", "spacing"] },
+  flowPreview: { title: "Flow test panel", labelLabel: "Panel title", showDescription: true, descriptionLabel: "Panel description", controls: ["width", "spacing"] },
+  verificationPreview: { title: "Verification preview", labelLabel: "Panel title", showDescription: true, descriptionLabel: "Panel description", controls: ["width", "spacing"] },
+  stepPreview: { title: "Step preview controls", labelLabel: "Panel title", showDescription: true, descriptionLabel: "Panel description", controls: ["width", "spacing"] },
+};
 
 function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
   return {
@@ -731,7 +764,7 @@ export function ClientPortalBuilder({
           <div className="flex items-start justify-between gap-3 border-b border-slate-200 bg-white px-4 py-4">
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">{selectedBlock ? "Selected element" : "Theme settings"}</p>
-              <h2 className="mt-1 text-base font-semibold">{selectedBlock ? (selectedCopy?.label || selectedBlock) : "Customize portal"}</h2>
+              <h2 className="mt-1 text-base font-semibold">{selectedBlock ? (selectedBlockProfile?.title || selectedCopy?.label || selectedBlock) : "Customize portal"}</h2>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">{selectedBlock ? "Edit only the text content for this block." : "Appearance, optional features and checkout behavior."}</p>
             </div>
             {selectedBlock ? <Button variant="ghost" size="sm" onClick={() => setSelectedBlock(null)}>Theme settings</Button> : null}
@@ -740,80 +773,120 @@ export function ClientPortalBuilder({
           {selectedBlock && selectedCopy ? (
             <div className="space-y-5 p-4">
               <div className="rounded-lg border bg-muted/20 p-3">
-                <p className="text-xs font-medium">Content block</p>
-                <p className="mt-1 text-xs text-muted-foreground">Edit text and move this block to another area. Required blocks remain visible but can be rearranged.</p>
+                <p className="text-xs font-semibold">{selectedBlockProfile?.title ?? "Block settings"}</p>
+                <p className="mt-1 text-xs text-muted-foreground">These options are tailored to the selected element. Unsupported settings are hidden instead of being shown for every block.</p>
               </div>
+
+              {selectedBlockProfile?.controls.length ? (
+                <div className="grid gap-3 rounded-xl border bg-background p-3">
+                  <p className="text-xs font-semibold">Layout</p>
+                  {selectedBlockProfile.controls.includes("width") ? (
+                    <div className="grid gap-1.5">
+                      <Label>Width</Label>
+                      <Select value={selected.builder.blockStyles[selectedBlock]?.width ?? "full"} onValueChange={(value) => updateBlockStyle(selectedBlock, { width: value as BlockStyleSettings["width"] })}>
+                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="full">Full width</SelectItem>
+                          <SelectItem value="wide">Wide</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="narrow">Narrow</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : null}
+                  {selectedBlockProfile.controls.includes("alignment") ? (
+                    <div className="grid gap-1.5">
+                      <Label>Alignment</Label>
+                      <Select value={selected.builder.blockStyles[selectedBlock]?.alignment ?? "left"} onValueChange={(value) => updateBlockStyle(selectedBlock, { alignment: value as BlockStyleSettings["alignment"] })}>
+                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="left">Left</SelectItem>
+                          <SelectItem value="center">Center</SelectItem>
+                          <SelectItem value="right">Right</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : null}
+                  {selectedBlockProfile.controls.includes("spacing") ? (
+                    <div className="grid gap-1.5">
+                      <Label>Spacing</Label>
+                      <Select value={selected.builder.blockStyles[selectedBlock]?.spacing ?? "normal"} onValueChange={(value) => updateBlockStyle(selectedBlock, { spacing: value as BlockStyleSettings["spacing"] })}>
+                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="compact">Compact</SelectItem>
+                          <SelectItem value="normal">Normal</SelectItem>
+                          <SelectItem value="relaxed">Relaxed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
               <div className="grid gap-2 rounded-xl border bg-background p-3">
-                <p className="text-xs font-semibold">Block layout</p>
-                <div className="grid gap-1.5">
-                  <Label>Width</Label>
-                  <Select value={selected.builder.blockStyles[selectedBlock]?.width ?? "full"} onValueChange={(value) => updateBlockStyle(selectedBlock, { width: value as BlockStyleSettings["width"] })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="full">Full width</SelectItem>
-                      <SelectItem value="wide">Wide</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="narrow">Narrow</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Alignment</Label>
-                  <Select value={selected.builder.blockStyles[selectedBlock]?.alignment ?? "left"} onValueChange={(value) => updateBlockStyle(selectedBlock, { alignment: value as BlockStyleSettings["alignment"] })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="left">Left</SelectItem>
-                      <SelectItem value="center">Center</SelectItem>
-                      <SelectItem value="right">Right</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Spacing</Label>
-                  <Select value={selected.builder.blockStyles[selectedBlock]?.spacing ?? "normal"} onValueChange={(value) => updateBlockStyle(selectedBlock, { spacing: value as BlockStyleSettings["spacing"] })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="compact">Compact</SelectItem>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="relaxed">Relaxed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label>Block area</Label>
+                <Label>Placement area</Label>
                 <Select
                   value={selected.builder.layout.sections[selectedBlock] ?? builderBlockCatalog.find((block) => block.id === selectedBlock)?.section ?? "checkout"}
                   onValueChange={(value) => updateBlockLayout({
                     sections: { ...selected.builder.layout.sections, [selectedBlock]: value as BuilderSectionId },
                   })}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {builderBlockSections.map((area) => <SelectItem key={area.id} value={area.id}>{area.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                <p className="text-[11px] leading-4 text-muted-foreground">Move the element between page areas.</p>
               </div>
+
               <div className="grid gap-2">
-                <Label htmlFor="block-label">Label / title</Label>
-                <Input id="block-label" value={selectedCopy.label} onChange={(event) => updateBlock(selectedBlock, { label: event.target.value })} placeholder="Enter label" />
+                <Label htmlFor="block-label">{selectedBlockProfile?.labelLabel ?? "Label"}</Label>
+                <Input id="block-label" value={selectedCopy.label} onChange={(event) => updateBlock(selectedBlock, { label: event.target.value })} placeholder={"Enter " + (selectedBlockProfile?.labelLabel.toLowerCase() ?? "label")} />
               </div>
-              {["brandHeader", "playerId", "email", "amount", "transferNumber", "transactionId", "cardDetails", "evidence"].includes(selectedBlock) ? (
+
+              {selectedBlockProfile?.showPlaceholder ? (
                 <div className="grid gap-2">
-                  <Label htmlFor="block-placeholder">Placeholder</Label>
-                  <Input id="block-placeholder" value={selectedCopy.placeholder} onChange={(event) => updateBlock(selectedBlock, { placeholder: event.target.value })} placeholder="Text shown inside the field" />
+                  <Label htmlFor="block-placeholder">{selectedBlockProfile.placeholderLabel ?? "Placeholder"}</Label>
+                  <Input id="block-placeholder" value={selectedCopy.placeholder} onChange={(event) => updateBlock(selectedBlock, { placeholder: event.target.value })} placeholder="Text shown to the player" />
                 </div>
               ) : null}
-              {selectedBlock !== "continue" ? (
+
+              {selectedBlockProfile?.showDescription ? (
                 <div className="grid gap-2">
-                  <Label htmlFor="block-description">Description below block</Label>
-                  <textarea id="block-description" rows={4} value={selectedCopy.description} onChange={(event) => updateBlock(selectedBlock, { description: event.target.value })} placeholder="Optional supporting text shown below this block" className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring/30" />
-                  <p className="text-[11px] text-muted-foreground">Leave it empty if you do not want to show a description.</p>
+                  <Label htmlFor="block-description">{selectedBlockProfile.descriptionLabel ?? "Description"}</Label>
+                  <textarea id="block-description" rows={3} value={selectedCopy.description} onChange={(event) => updateBlock(selectedBlock, { description: event.target.value })} placeholder="Supporting text shown in the preview" className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring/30" />
                 </div>
               ) : null}
+
+              {selectedBlockProfile?.special === "brandHeader" ? (
+                <div className="space-y-3 rounded-xl border bg-background p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div><Label>Show logo</Label><p className="mt-1 text-[11px] text-muted-foreground">Display the uploaded brand logo in the header.</p></div>
+                    <Switch checked={selected.appearance.showLogo} onCheckedChange={(checked) => updateSelected({ appearance: { ...selected.appearance, showLogo: checked } })} />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="brand-logo-url">Logo image URL</Label>
+                    <Input id="brand-logo-url" type="url" value={selected.appearance.logoUrl} onChange={(event) => updateSelected({ appearance: { ...selected.appearance, logoUrl: event.target.value } })} placeholder="https://example.com/logo.svg" />
+                  </div>
+                </div>
+              ) : null}
+
+              {selectedBlockProfile?.special === "paymentMethods" ? (
+                <div className="grid gap-2 rounded-xl border bg-background p-3">
+                  <Label>Payment method presentation</Label>
+                  <p className="text-[11px] leading-4 text-muted-foreground">Choose how the available payment methods appear on this selector.</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(["cards", "tabs"] as MethodDisplay[]).map((value) => (
+                      <button key={value} type="button" aria-pressed={selected.builder.configs.methodDisplay === value} onClick={() => updateConfig("methodDisplay", value)} className={"rounded-lg border px-3 py-2.5 text-xs font-medium transition " + (selected.builder.configs.methodDisplay === value ? "border-primary bg-primary/5 text-primary" : "hover:bg-muted/40")}>
+                        {value === "cards" ? "Grid cards" : "Horizontal tabs"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               <Button variant="outline" className="w-full" onClick={() => setSelectedBlock(null)}>Done editing block</Button>
-            </div>
-          ) : (
+            </div>          ) : (
             <>
               <div className="grid grid-cols-4 border-b border-slate-200 bg-white p-2">
                 {([
