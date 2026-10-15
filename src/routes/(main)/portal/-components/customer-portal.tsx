@@ -1938,9 +1938,9 @@ function FlouciStepOne({
               >
                 {(
                   [
+                    ["email", "Email", Mail],
                     ["playerId", "Player ID", Hash],
                     ["username", portalBuilderSettings?.blocks?.playerId?.usernameLabel || "Username", UserRound],
-                    ["email", "Email", Mail],
                   ] as const
                 ).filter(([type]) => (portalBuilderSettings?.blocks?.playerId?.enabledIdentifierTypes ?? ["playerId", "username", "email"]).includes(type)).map(([type, label, Icon]) => {
                   const active = playerLookupType === type;
@@ -3893,9 +3893,9 @@ function CardDepositStepOne({
             <div className="grid w-full grid-cols-3 gap-1.5" role="tablist" aria-label="Player identification type">
               {(
                 [
+                  ["email", "Email", Mail],
                   ["playerId", "Player ID", Hash],
                   ["username", portalBuilderSettings?.blocks?.playerId?.usernameLabel || "Username", UserRound],
-                  ["email", "Email", Mail],
                 ] as const
               ).filter(([type]) => (portalBuilderSettings?.blocks?.playerId?.enabledIdentifierTypes ?? ["playerId", "username", "email"]).includes(type)).map(([type, label, Icon]) => {
                 const active = playerLookupType === type;
@@ -4860,9 +4860,9 @@ function EDinarStepOne({
             >
               {(
                 [
+                  ["email", "Email", Mail],
                   ["playerId", "Player ID", Hash],
                   ["username", portalBuilderSettings?.blocks?.playerId?.usernameLabel || "Username", UserRound],
-                  ["email", "Email", Mail],
                 ] as const
               ).filter(([type]) => (portalBuilderSettings?.blocks?.playerId?.enabledIdentifierTypes ?? ["playerId", "username", "email"]).includes(type)).map(([type, label, Icon]) => {
                 const active = playerLookupType === type;
@@ -5812,9 +5812,9 @@ function BinancePayFlow({
                     >
                       {(
                         [
+                          ["email", "Email", Mail],
                           ["playerId", "Player ID", Hash],
                           ["username", portalBuilderSettings?.blocks?.playerId?.usernameLabel || "Username", UserRound],
-                          ["email", "Email", Mail],
                         ] as const
                       ).filter(([type]) => (portalBuilderSettings?.blocks?.playerId?.enabledIdentifierTypes ?? ["playerId", "username", "email"]).includes(type)).map(([type, label, Icon]) => {
                         const active = playerLookupType === type;
