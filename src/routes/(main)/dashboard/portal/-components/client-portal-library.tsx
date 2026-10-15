@@ -183,7 +183,6 @@ export function ClientPortalFormsLibrary({
                   </div>
                 </div>
               </div>
-              </div>
             </div>
             <CardContent className="flex flex-1 flex-col gap-3 p-3.5">
               <div className="flex min-w-0 flex-wrap items-center gap-1.5">
