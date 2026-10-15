@@ -106,7 +106,7 @@ export function ClientPortalFormsLibrary({
     setNewName("New Checkout Form");
     setNewSlug("new-checkout");
     setCreateOpen(false);
-    onCustomize(form.slug);
+    onCustomize(form.id);
   };
 
   const toggleStatus = (form: ClientPortalForm) => {
@@ -222,7 +222,7 @@ export function ClientPortalFormsLibrary({
 
               <div className="mt-auto flex flex-wrap gap-2">
                 <Button className="flex-1" variant="outline" size="sm" onClick={() => openPreview(form)}><Eye className="size-3.5" /> Preview</Button>
-                <Button className="flex-1" size="sm" onClick={() => onCustomize(form.slug)}><Pencil className="size-3.5" /> Customize</Button>
+                <Button className="flex-1" size="sm" onClick={() => onCustomize(form.id)}><Pencil className="size-3.5" /> Customize</Button>
               </div>
               <div className="flex items-center gap-2 border-t pt-3">
                 <Button className="flex-1" size="sm" variant={form.status === "Published" ? "outline" : "default"} onClick={() => toggleStatus(form)}><Power className="size-3.5" /> {form.status === "Published" ? "Deactivate" : "Activate"}</Button>
