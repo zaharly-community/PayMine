@@ -287,6 +287,7 @@ function PaymentMethodSelector({
   const [isDragging, setIsDragging] = React.useState(false);
 
   React.useEffect(() => {
+    if (methodDisplay !== "tabs") return;
     const viewport = sliderRef.current;
     if (!viewport) return;
     const selected = viewport.querySelector<HTMLElement>(
@@ -307,9 +308,10 @@ function PaymentMethodSelector({
         behavior: "smooth",
       });
     }
-  }, [method.id]);
+  }, [method.id, methodDisplay]);
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (methodDisplay !== "tabs") return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
     const viewport = sliderRef.current;
     if (!viewport) return;
@@ -324,6 +326,7 @@ function PaymentMethodSelector({
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (methodDisplay !== "tabs") return;
     const drag = dragRef.current;
     const viewport = sliderRef.current;
     if (!viewport || !drag.dragging || drag.pointerId !== event.pointerId) return;
@@ -372,7 +375,7 @@ function PaymentMethodSelector({
           {methodBlock.description ? <p className="mt-1 text-[11px] leading-4 text-slate-400">{methodBlock.description}</p> : null}
         </div>
       ) : null}
-      <div className="flex min-w-0 items-center gap-1.5">
+      <div className="min-w-0">
         <div
           ref={sliderRef}
           onPointerDown={onPointerDown}
@@ -380,12 +383,14 @@ function PaymentMethodSelector({
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel}
           className={cn(
-            "min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x select-none",
-            isDragging ? "cursor-grabbing" : "cursor-grab",
+            methodDisplay === "tabs"
+              ? "flex min-w-0 items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x select-none"
+              : "grid w-full min-w-0 grid-cols-2 gap-2 sm:grid-cols-3",
+            isDragging && methodDisplay === "tabs" ? "cursor-grabbing" : methodDisplay === "tabs" ? "cursor-grab" : "",
           )}
-          aria-label="Payment methods. Drag or swipe horizontally to browse."
+          aria-label="Payment methods"
         >
-          <div className={methodDisplay === "tabs" ? "flex min-w-max items-stretch gap-1 px-1 py-2" : "flex min-w-max items-stretch gap-2 px-1 py-2"}>
+          <div className={methodDisplay === "tabs" ? "flex min-w-max items-stretch gap-1 px-1 py-2" : "contents"}>
             {availableMethods.map((item) => {
               const selected = item.id === method.id;
 
@@ -408,10 +413,10 @@ function PaymentMethodSelector({
                   className={cn(
                     methodDisplay === "tabs"
                       ? "group relative mt-1 flex min-w-[104px] shrink-0 items-center gap-2 rounded-none border-b-2 px-3 py-2 transition-colors"
-                      : "group relative mt-1 flex min-w-[104px] shrink-0 flex-col items-center gap-1.5 rounded-lg border px-2.5 pb-2 pt-2.5 transition-colors",
+                      : "group relative flex min-h-[92px] min-w-0 flex-col items-center justify-center gap-2 rounded-xl border px-3 py-4 text-center transition-all hover:-translate-y-0.5",
                     selected
-                      ? (methodDisplay === "tabs" ? "border-emerald-300 bg-transparent" : "border-white/25 bg-slate-800/80")
-                      : (methodDisplay === "tabs" ? "border-transparent bg-transparent hover:border-white/20" : "border-white/8 bg-slate-900/60 hover:border-white/15 hover:bg-slate-800/60"),
+                      ? (methodDisplay === "tabs" ? "border-emerald-300 bg-transparent" : "border-emerald-300/60 bg-emerald-300/10 shadow-sm")
+                      : (methodDisplay === "tabs" ? "border-transparent bg-transparent hover:border-white/20" : "border-white/10 bg-slate-900/60 hover:border-white/25 hover:bg-slate-800/70"),
                   )}
                   aria-current={selected ? "page" : undefined}
                 >
@@ -421,7 +426,7 @@ function PaymentMethodSelector({
                     </span>
                   ) : null}
                   <PaymentMethodMark method={item} />
-                  <span className="max-w-full truncate text-[10px] font-medium text-slate-200">
+                  <span className={cn("max-w-full truncate text-[10px] font-medium text-slate-200", methodDisplay === "cards" && "text-center text-xs")}>
                     {item.name}
                   </span>
                 </Link>
@@ -430,18 +435,20 @@ function PaymentMethodSelector({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-label="Show all payment methods"
-          title="Show all payment methods"
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-slate-900/80 text-slate-400 transition-colors hover:bg-slate-800"
-        >
-          <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
-        </button>
+        {methodDisplay === "tabs" ? (
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label="Show all payment methods"
+            title="Show all payment methods"
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-slate-900/80 text-slate-400 transition-colors hover:bg-slate-800"
+          >
+            <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
+          </button>
+        ) : null}
       </div>
 
-      {open ? (
+      {methodDisplay === "tabs" && open ? (
         <div className="absolute inset-x-0 top-full z-20 mt-2 rounded-xl border border-white/10 bg-slate-900 p-2 shadow-2xl">
           <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
             {availableMethods.map((item) => (
