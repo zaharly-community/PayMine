@@ -808,6 +808,7 @@ export function DepositRequestTrackingPage({
 
   const [status, setStatus] = React.useState<TrackingStatus>("reviewing");
   const sourceForm = request.formSlug ? getClientPortalFormForSlug(request.formSlug, true) : null;
+  const headerForm = sourceForm ?? getPortalPageForm();
   const trackingBuilderSettings = (sourceForm as (ClientPortalForm & { builder?: PortalBuilderSettingsRuntime }) | null)?.builder ?? null;
   const method =
     paymentMethods.find((item) => item.id === request.methodId) ??
@@ -925,7 +926,8 @@ export function DepositRequestTrackingPage({
   return (
     <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
-        <div className="mb-4 flex items-center justify-between gap-3">
+        <PortalBrandHeader form={headerForm} />
+        <div className="mb-4 mt-4 flex items-center justify-between gap-3">
           <Button
             type="button"
             variant="ghost"
