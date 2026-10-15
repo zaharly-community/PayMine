@@ -254,11 +254,13 @@ function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
     },
     blocks: Object.fromEntries(Object.entries(fieldDefaults).map(([key, value]) => [
       key,
-      key === "heading"
-        ? { ...value, label: form.appearance.title || value.label, description: form.appearance.description || value.description }
-        : key === "continue"
-          ? { ...value, label: form.appearance.buttonLabel || value.label }
-          : { ...value },
+      key === "brandHeader"
+        ? { ...value, label: form.appearance.brandName || value.label }
+        : key === "heading"
+          ? { ...value, label: form.appearance.title || value.label, description: form.appearance.description || value.description }
+          : key === "continue"
+            ? { ...value, label: form.appearance.buttonLabel || value.label }
+            : { ...value },
     ])),
   };
 }
