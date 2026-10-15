@@ -352,7 +352,8 @@ export function ClientPortalBuilder({
         primaryColor: form.builder.colors.accent,
         surfaceColor: form.builder.colors.checkoutSurface,
         fontFamily: form.builder.fontFamily,
-        radius: form.builder.buttonShape === "rectangle" ? "small" : form.builder.buttonShape === "pill" ? "large" : "medium",
+        radius: form.appearance.radius,
+        theme: isLightColor(form.builder.colors.websiteBackground) ? "light" : "dark",
         title: form.builder.blocks.heading?.label ?? form.appearance.title,
         description: form.builder.blocks.heading?.description ?? form.appearance.description,
         buttonLabel: form.builder.blocks.continue?.label ?? form.appearance.buttonLabel,
@@ -758,8 +759,9 @@ function CheckoutPreview({
   const foreground = light ? "#0f172a" : "#f8fafc";
   const muted = light ? "#64748b" : "#94a3b8";
   const border = light ? "#e2e8f0" : "#334155";
-  const radius = builder.buttonShape === "pill" ? "999px" : builder.buttonShape === "rounded" ? "12px" : "4px";
-  const frameWidth = previewMode === "mobile" ? "390px" : appearance.width === "wide" ? "100%" : "760px";
+  const buttonRadius = builder.buttonShape === "pill" ? "999px" : builder.buttonShape === "rounded" ? "12px" : "4px";
+  const inputRadius = appearance.radius === "small" ? "8px" : appearance.radius === "large" ? "22px" : "14px";
+  const frameWidth = previewMode === "mobile" ? "390px" : builder.template === "minimal" ? "440px" : builder.template === "classic" ? "600px" : appearance.width === "wide" ? "100%" : "760px";
   const [amount, setAmount] = useState(configs.presetAmounts[0] ?? 50);
   const scheduled = !configs.scheduleEnabled || isWithinSchedule(configs.scheduleStart, configs.scheduleEnd);
   const timerMinutes = Math.floor(configs.timerSeconds / 60).toString().padStart(2, "0");
@@ -819,7 +821,7 @@ function CheckoutPreview({
               {configs.playerIdMode !== "email" ? (
                 <PreviewBlock blockId="playerId" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
                   <label className="mb-1.5 block text-[11px] font-medium">{blocks.playerId.label}</label>
-                  <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: radius, color: muted }}>{blocks.playerId.placeholder || "Enter your player ID"}</div>
+                  <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius, color: muted }}>{blocks.playerId.placeholder || "Enter your player ID"}</div>
                   {blocks.playerId.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.playerId.description}</p> : null}
                 </PreviewBlock>
               ) : null}
@@ -827,19 +829,19 @@ function CheckoutPreview({
               {configs.playerIdMode !== "userId" ? (
                 <PreviewBlock blockId="email" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
                   <label className="mb-1.5 block text-[11px] font-medium">{blocks.email.label}</label>
-                  <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: radius, color: muted }}>{blocks.email.placeholder || "name@example.com"}</div>
+                  <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius, color: muted }}>{blocks.email.placeholder || "name@example.com"}</div>
                   {blocks.email.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.email.description}</p> : null}
                 </PreviewBlock>
               ) : null}
 
               <PreviewBlock blockId="amount" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
                 <div className="flex items-center justify-between gap-2"><label className="text-[11px] font-medium">{blocks.amount.label}</label><Badge variant="outline">{form.currency}</Badge></div>
-                <div className="mt-2 border px-3 py-3" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: radius }}>
+                <div className="mt-2 border px-3 py-3" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius }}>
                   <p className="text-2xl font-semibold tabular-nums">{Number(amount).toFixed(2)} <span className="text-xs font-medium" style={{ color: muted }}>{form.currency}</span></p>
                   {blocks.amount.description ? <p className="mt-1 text-[10px] leading-4" style={{ color: muted }}>{blocks.amount.description}</p> : null}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {configs.presetAmounts.map((preset) => <button type="button" key={preset} onClick={(event) => { event.stopPropagation(); setAmount(preset); onSelectBlock("amount"); }} className="border px-3 py-1.5 text-[10px] font-semibold tabular-nums transition" style={{ borderColor: preset === amount ? colors.accent : border, backgroundColor: preset === amount ? colors.accent + "20" : baseSurface, borderRadius: radius }}>{preset} TND</button>)}
+                  {configs.presetAmounts.map((preset) => <button type="button" key={preset} onClick={(event) => { event.stopPropagation(); setAmount(preset); onSelectBlock("amount"); }} className="border px-3 py-1.5 text-[10px] font-semibold tabular-nums transition" style={{ borderColor: preset === amount ? colors.accent : border, backgroundColor: preset === amount ? colors.accent + "20" : baseSurface, borderRadius: buttonRadius }}>{preset} TND</button>)}
                 </div>
               </PreviewBlock>
 
@@ -851,7 +853,7 @@ function CheckoutPreview({
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
-                    {configs.paymentMethods.map((method, index) => <div key={method} className="flex min-w-0 items-center gap-2 border p-2.5 text-[10px]" style={{ borderColor: index === 0 ? colors.accent : border, backgroundColor: baseSurface, borderRadius: radius }}><span className="flex size-6 shrink-0 items-center justify-center rounded-md text-[8px] font-bold" style={{ backgroundColor: colors.accent, color: buttonText }}>{method.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</span><span className="truncate">{method}</span></div>)}
+                    {configs.paymentMethods.map((method, index) => <div key={method} className="flex min-w-0 items-center gap-2 border p-2.5 text-[10px]" style={{ borderColor: index === 0 ? colors.accent : border, backgroundColor: baseSurface, borderRadius: inputRadius }}><span className="flex size-6 shrink-0 items-center justify-center rounded-md text-[8px] font-bold" style={{ backgroundColor: colors.accent, color: buttonText }}>{method.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</span><span className="truncate">{method}</span></div>)}
                   </div>
                 )}
                 {blocks.paymentMethods.description ? <p className="mt-2 text-[10px] leading-4" style={{ color: muted }}>{blocks.paymentMethods.description}</p> : null}
@@ -859,19 +861,19 @@ function CheckoutPreview({
 
               <PreviewBlock blockId="transferNumber" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
                 <label className="mb-1.5 block text-[11px] font-medium">{blocks.transferNumber.label}</label>
-                <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: radius, color: muted }}>{blocks.transferNumber.placeholder}</div>
+                <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius, color: muted }}>{blocks.transferNumber.placeholder}</div>
                 {blocks.transferNumber.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.transferNumber.description}</p> : null}
               </PreviewBlock>
 
               <PreviewBlock blockId="transactionId" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
                 <label className="mb-1.5 block text-[11px] font-medium">{blocks.transactionId.label}</label>
-                <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: radius, color: muted }}>{blocks.transactionId.placeholder}</div>
+                <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius, color: muted }}>{blocks.transactionId.placeholder}</div>
                 {blocks.transactionId.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.transactionId.description}</p> : null}
               </PreviewBlock>
 
               <PreviewBlock blockId="evidence" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
                 <label className="mb-1.5 block text-[11px] font-medium">{blocks.evidence.label}</label>
-                <div className="flex items-center gap-3 border border-dashed px-3 py-4" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: radius }}>
+                <div className="flex items-center gap-3 border border-dashed px-3 py-4" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius }}>
                   <span className="flex size-8 items-center justify-center rounded-lg" style={{ backgroundColor: colors.accent + "20", color: colors.accent }}><Sparkles className="size-4" /></span>
                   <span className="text-[11px]" style={{ color: muted }}>{blocks.evidence.placeholder || "Upload transfer screenshot"}</span>
                 </div>
@@ -881,7 +883,7 @@ function CheckoutPreview({
               </PreviewBlock>
 
               <PreviewBlock blockId="continue" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
-                <div className="w-full px-4 py-3 text-center text-xs font-semibold" style={{ backgroundColor: colors.accent, color: buttonText, borderRadius: radius, opacity: scheduled ? 1 : 0.55 }}>{blocks.continue.label || "Continue securely"}</div>
+                <div className="w-full px-4 py-3 text-center text-xs font-semibold" style={{ backgroundColor: colors.accent, color: buttonText, borderRadius: buttonRadius, opacity: scheduled ? 1 : 0.55 }}>{blocks.continue.label || "Continue securely"}</div>
               </PreviewBlock>
 
               {features.supervisorRating ? <PreviewBlock blockId="supervisorRating" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="border-t p-3"><p className="text-[11px] font-medium">{blocks.supervisorRating.label}</p><p className="mt-1 text-[10px]" style={{ color: muted }}>{blocks.supervisorRating.description}</p><p className="mt-2 text-sm tracking-[0.18em]" style={{ color: colors.accent }}>★ ★ ★ ★ ★</p></PreviewBlock> : null}
