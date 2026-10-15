@@ -41,11 +41,25 @@ type FontId = string;
 type ButtonShape = "pill" | "rounded" | "rectangle";
 type PlayerIdMode = "userId" | "email" | "both";
 type MethodDisplay = "tabs" | "cards";
+type IdentifierType = "playerId" | "username" | "email";
+type InstructionStep = { title: string; icon: string; content: string };
 
 type BlockCopy = {
   label: string;
   placeholder: string;
   description: string;
+  visible?: boolean;
+  showLogo?: boolean;
+  showLimits?: boolean;
+  showProcessingTime?: boolean;
+  processingTime?: string;
+  showHistory?: boolean;
+  showDisagreements?: boolean;
+  showLanguageSwitcher?: boolean;
+  enabledIdentifierTypes?: IdentifierType[];
+  usernameLabel?: string;
+  usernamePlaceholder?: string;
+  steps?: InstructionStep[];
 };
 
 type BlockStyleSettings = {
@@ -63,7 +77,7 @@ type BlockEditorProfile = {
   showDescription?: boolean;
   descriptionLabel?: string;
   controls: BlockStyleControl[];
-  special?: "brandHeader" | "paymentMethods";
+  special?: "brandHeader" | "paymentMethods" | "playerIdentifier" | "amount" | "instructions";
 };
 
 type PortalBuilderSettings = {
@@ -103,6 +117,7 @@ type PortalBuilderSettings = {
     scheduleEnabled: boolean;
     scheduleStart: string;
     scheduleEnd: string;
+    scheduleDays: number[];
   };
   blocks: Record<string, BlockCopy>;
   blockStyles: Record<string, BlockStyleSettings>;
@@ -236,7 +251,7 @@ function ThemeThumbnail({ id }: { id: TemplateId }) {
 }
 
 const fieldDefaults: Record<string, BlockCopy> = {
-  brandHeader: { label: "Your brand", placeholder: "Secure checkout", description: "Protected payment" },
+  brandHeader: { label: "Your brand", placeholder: "Secure checkout", description: "Protected payment", visible: true, showHistory: true, showDisagreements: true, showLanguageSwitcher: false },
   heading: {
     label: "Make a deposit",
     placeholder: "",
@@ -246,6 +261,9 @@ const fieldDefaults: Record<string, BlockCopy> = {
     label: "Player ID",
     placeholder: "Enter your player ID",
     description: "",
+    enabledIdentifierTypes: ["playerId", "username", "email"],
+    usernameLabel: "Username",
+    usernamePlaceholder: "Enter your username",
   },
   email: {
     label: "Email address",
@@ -261,6 +279,10 @@ const fieldDefaults: Record<string, BlockCopy> = {
     label: "Payment method",
     placeholder: "",
     description: "Choose the payment method you want to use.",
+    showLogo: true,
+    showLimits: true,
+    showProcessingTime: false,
+    processingTime: "5–10 min",
   },
   transferNumber: {
     label: "Transfer number",
@@ -310,6 +332,16 @@ const fieldDefaults: Record<string, BlockCopy> = {
   flowPreview: { label: "Flow preview / test states", placeholder: "", description: "Controls for previewing supervisor and payment outcomes." },
   verificationPreview: { label: "AI / verification preview", placeholder: "", description: "Preview recognition and destination-verification outcomes." },
   stepPreview: { label: "Page-step preview", placeholder: "", description: "Switch between checkout steps and the waiting timeline for testing." },
+  instructions: {
+    label: "How to deposit",
+    placeholder: "",
+    description: "Follow these simple steps to complete your deposit.",
+    steps: [
+      { title: "Enter your details", icon: "UserRound", content: "Choose how to identify your player account and enter the amount." },
+      { title: "Make the payment", icon: "CircleDollarSign", content: "Follow the instructions for the selected payment method." },
+      { title: "Submit your proof", icon: "Upload", content: "Add the transaction reference and a clear payment screenshot." },
+    ],
+  },
 };
 
 type BuilderSectionId = "header" | "checkout" | "paymentDetails" | "support" | "tracking";
@@ -349,15 +381,16 @@ const builderBlockCatalog: BuilderBlockDefinition[] = [
   { id: "flowPreview", label: "Flow preview / test states", description: "Reviewing, approved, received, correction and expired states", required: false, section: "tracking" },
   { id: "verificationPreview", label: "AI / verification preview", description: "AI recognition and destination-verification outcomes", required: false, section: "tracking" },
   { id: "stepPreview", label: "Step preview controls", description: "Step 1, Step 2 and waiting timeline controls", required: false, section: "tracking" },
+  { id: "instructions", label: "Deposit instructions", description: "Scrollable step-by-step guidance with editable icons and content", required: false, section: "checkout" },
 ];
 
 const blockEditorProfiles: Record<string, BlockEditorProfile> = {
   brandHeader: { title: "Brand header", labelLabel: "Brand name", showPlaceholder: true, placeholderLabel: "Header tagline", showDescription: true, descriptionLabel: "Security badge text", controls: ["spacing"], special: "brandHeader" },
   heading: { title: "Page heading", labelLabel: "Heading text", showDescription: true, descriptionLabel: "Subtitle", controls: ["width", "alignment", "spacing"] },
   paymentMethods: { title: "Payment method selector", labelLabel: "Section heading", showDescription: true, descriptionLabel: "Supporting text", controls: ["width", "alignment", "spacing"], special: "paymentMethods" },
-  playerId: { title: "Player ID field", labelLabel: "Field label", showPlaceholder: true, placeholderLabel: "Input placeholder", controls: ["width", "spacing"] },
+  playerId: { title: "Player identifier selector", labelLabel: "Player ID label", showPlaceholder: true, placeholderLabel: "Player ID placeholder", controls: ["width", "spacing"], special: "playerIdentifier" },
   email: { title: "Email field", labelLabel: "Field label", showPlaceholder: true, placeholderLabel: "Input placeholder", controls: ["width", "spacing"] },
-  amount: { title: "Amount field", labelLabel: "Field label", showPlaceholder: true, placeholderLabel: "Input placeholder", controls: ["width", "spacing"] },
+  amount: { title: "Amount field", labelLabel: "Field label", showPlaceholder: true, placeholderLabel: "Input placeholder", controls: ["width", "spacing"], special: "amount" },
   cardDetails: { title: "Card details field", labelLabel: "Field label", showPlaceholder: true, placeholderLabel: "Input placeholder", showDescription: true, descriptionLabel: "Validation help text", controls: ["width", "spacing"] },
   transferNumber: { title: "Transfer number field", labelLabel: "Field label", showPlaceholder: true, placeholderLabel: "Input placeholder", controls: ["width", "spacing"] },
   transactionId: { title: "Transaction ID field", labelLabel: "Field label", showPlaceholder: true, placeholderLabel: "Input placeholder", controls: ["width", "spacing"] },
@@ -370,6 +403,7 @@ const blockEditorProfiles: Record<string, BlockEditorProfile> = {
   flowPreview: { title: "Flow test panel", labelLabel: "Panel title", showDescription: true, descriptionLabel: "Panel description", controls: ["width", "spacing"] },
   verificationPreview: { title: "Verification preview", labelLabel: "Panel title", showDescription: true, descriptionLabel: "Panel description", controls: ["width", "spacing"] },
   stepPreview: { title: "Step preview controls", labelLabel: "Panel title", showDescription: true, descriptionLabel: "Panel description", controls: ["width", "spacing"] },
+  instructions: { title: "Deposit instructions", labelLabel: "Section title", showDescription: true, descriptionLabel: "Introduction", controls: ["width", "alignment", "spacing"], special: "instructions" },
 };
 
 function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
@@ -378,7 +412,7 @@ function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
     customized: false,
     layout: {
       version: 2,
-      order: ["brandHeader", "heading", "paymentMethods", "playerId", "email", "amount", "cardDetails", "transferNumber", "transactionId", "evidence", "continue", "securityNotice", "supportInfo", "playerRating", "supervisorRating", "flowPreview", "verificationPreview", "stepPreview"],
+      order: ["brandHeader", "heading", "paymentMethods", "playerId", "email", "amount", "instructions", "cardDetails", "transferNumber", "transactionId", "evidence", "continue", "securityNotice", "supportInfo", "playerRating", "supervisorRating", "flowPreview", "verificationPreview", "stepPreview"],
       hidden: [],
       sections: Object.fromEntries(builderBlockCatalog.map((block) => [block.id, block.section])) as Record<string, BuilderSectionId>,
     },
@@ -410,6 +444,7 @@ function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
       scheduleEnabled: false,
       scheduleStart: "08:00",
       scheduleEnd: "23:00",
+      scheduleDays: [0, 1, 2, 3, 4, 5, 6],
     },
     blocks: Object.fromEntries(Object.entries(fieldDefaults).map(([key, value]) => [
       key,
@@ -514,6 +549,7 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
       scheduleEnabled: raw?.configs?.scheduleEnabled === true,
       scheduleStart: typeof raw?.configs?.scheduleStart === "string" ? raw.configs.scheduleStart : defaults.configs.scheduleStart,
       scheduleEnd: typeof raw?.configs?.scheduleEnd === "string" ? raw.configs.scheduleEnd : defaults.configs.scheduleEnd,
+      scheduleDays: Array.isArray(raw?.configs?.scheduleDays) ? [...new Set(raw.configs.scheduleDays.map(Number).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6))] : [...defaults.configs.scheduleDays],
     },
     blocks,
     blockStyles,
@@ -973,6 +1009,17 @@ export function ClientPortalBuilder({
                 </div>
               ) : null}
 
+              {(selectedBlock === "brandHeader" || selectedBlock === "heading") ? (
+                <div className="rounded-xl border bg-background p-3">
+                  <ToggleSetting
+                    title={selectedBlock === "brandHeader" ? "Show brand header" : "Show page heading"}
+                    description={selectedBlock === "brandHeader" ? "Display or hide the entire header without removing the block." : "Display or hide the page title and introduction."}
+                    checked={selectedCopy.visible !== false}
+                    onChange={(checked) => updateBlock(selectedBlock, { visible: checked })}
+                  />
+                </div>
+              ) : null}
+
               {selectedBlockProfile?.special === "brandHeader" ? (
                 <div className="space-y-3 rounded-xl border bg-background p-3">
                   <div className="flex items-center justify-between gap-3">
@@ -982,6 +1029,15 @@ export function ClientPortalBuilder({
                   <div className="grid gap-1.5">
                     <Label htmlFor="brand-logo-url">Logo image URL</Label>
                     <Input id="brand-logo-url" type="url" value={selected.appearance.logoUrl} onChange={(event) => updateSelected({ appearance: { ...selected.appearance, logoUrl: event.target.value } })} placeholder="https://example.com/logo.svg" />
+                  </div>
+                  <div className="border-t pt-3">
+                    <p className="text-xs font-semibold">Centered header navigation</p>
+                    <p className="mt-1 text-[11px] leading-4 text-muted-foreground">Show History and Disagreements as links in the center of the header.</p>
+                    <div className="mt-3 space-y-3">
+                      <ToggleSetting title="Show History" description="Display the History link in the header." checked={selectedCopy.showHistory !== false} onChange={(checked) => updateBlock(selectedBlock, { showHistory: checked })} />
+                      <ToggleSetting title="Show Disagreements" description="Display the Disagreements link in the header." checked={selectedCopy.showDisagreements !== false} onChange={(checked) => updateBlock(selectedBlock, { showDisagreements: checked })} />
+                      <ToggleSetting title="Language switcher" description="Display an EN / FR / AR language selector in the header." checked={selectedCopy.showLanguageSwitcher === true} onChange={(checked) => updateBlock(selectedBlock, { showLanguageSwitcher: checked })} />
+                    </div>
                   </div>
                 </div>
               ) : null}
@@ -997,6 +1053,81 @@ export function ClientPortalBuilder({
                       </button>
                     ))}
                   </div>
+                  <div className="space-y-3 rounded-xl border bg-background p-3">
+                    <ToggleSetting title="Show payment logos" description="Display each payment method's logo in the selector." checked={selectedCopy.showLogo !== false} onChange={(checked) => updateBlock(selectedBlock, { showLogo: checked })} />
+                    <ToggleSetting title="Show deposit limits" description="Show each method's minimum and maximum amount below the logo." checked={selectedCopy.showLimits !== false} onChange={(checked) => updateBlock(selectedBlock, { showLimits: checked })} />
+                    <ToggleSetting title="Show processing-time badge" description="Display a small processing-time badge for each method." checked={selectedCopy.showProcessingTime === true} onChange={(checked) => updateBlock(selectedBlock, { showProcessingTime: checked })} />
+                    {selectedCopy.showProcessingTime ? (
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="payment-processing-time">Processing-time badge text</Label>
+                        <Input id="payment-processing-time" value={selectedCopy.processingTime ?? "5–10 min"} onChange={(event) => updateBlock(selectedBlock, { processingTime: event.target.value })} placeholder="e.g. 5–10 min" />
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+
+              {selectedBlockProfile?.special === "playerIdentifier" ? (
+                <div className="space-y-3 rounded-xl border bg-background p-3">
+                  <div>
+                    <p className="text-xs font-semibold">Available player identifiers</p>
+                    <p className="mt-1 text-[11px] leading-4 text-muted-foreground">Choose which types players can switch between. At least one must remain enabled.</p>
+                  </div>
+                  {([
+                    ["email", "Email"],
+                    ["playerId", "Player ID"],
+                    ["username", "Username"],
+                  ] as [IdentifierType, string][]).map(([value, label]) => {
+                    const enabled = selectedCopy.enabledIdentifierTypes ?? ["playerId", "username", "email"];
+                    const checked = enabled.includes(value);
+                    return <div key={value} className="flex items-center justify-between gap-3"><Label>{label}</Label><Switch checked={checked} onCheckedChange={(next) => {
+                      const current = selectedCopy.enabledIdentifierTypes ?? ["playerId", "username", "email"];
+                      if (!next && current.length <= 1) { setNotice("Keep at least one player identifier enabled."); return; }
+                      const updated = next ? [...new Set([...current, value])] : current.filter((item) => item !== value);
+                      updateBlock(selectedBlock, { enabledIdentifierTypes: updated });
+                    }} /></div>;
+                  })}
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="username-label">Username label</Label>
+                    <Input id="username-label" value={selectedCopy.usernameLabel ?? "Username"} onChange={(event) => updateBlock(selectedBlock, { usernameLabel: event.target.value })} />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="username-placeholder">Username placeholder</Label>
+                    <Input id="username-placeholder" value={selectedCopy.usernamePlaceholder ?? "Enter your username"} onChange={(event) => updateBlock(selectedBlock, { usernamePlaceholder: event.target.value })} />
+                  </div>
+                </div>
+              ) : null}
+
+              {selectedBlockProfile?.special === "amount" ? (
+                <div className="space-y-3 rounded-xl border bg-background p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div><p className="text-xs font-semibold">Preset deposit amounts</p><p className="mt-1 text-[11px] text-muted-foreground">These amounts appear as quick-select buttons on this amount block.</p></div>
+                    <Button size="icon" variant="outline" className="size-8 shrink-0" aria-label="Add amount" onClick={() => updateConfig("presetAmounts", [...selected.builder.configs.presetAmounts, (selected.builder.configs.presetAmounts[selected.builder.configs.presetAmounts.length - 1] ?? 0) + 50].slice(0, 8))} disabled={selected.builder.configs.presetAmounts.length >= 8}><Plus className="size-3.5" /></Button>
+                  </div>
+                  <div className="space-y-2">
+                    {selected.builder.configs.presetAmounts.map((amount, index) => <div key={index} className="flex items-center gap-2"><Input aria-label={"Preset amount " + (index + 1)} type="number" min={1} value={amount} onChange={(event) => {
+                      const next = [...selected.builder.configs.presetAmounts];
+                      next[index] = Math.max(1, Number(event.target.value) || 1);
+                      updateConfig("presetAmounts", next);
+                    }} /><Button size="icon" variant="ghost" className="size-8 shrink-0" aria-label="Remove amount" disabled={selected.builder.configs.presetAmounts.length <= 1} onClick={() => updateConfig("presetAmounts", selected.builder.configs.presetAmounts.filter((_, itemIndex) => itemIndex !== index))}><X className="size-3.5" /></Button></div>)}
+                  </div>
+                </div>
+              ) : null}
+
+              {selectedBlockProfile?.special === "instructions" ? (
+                <div className="space-y-3 rounded-xl border bg-background p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div><p className="text-xs font-semibold">Instruction steps</p><p className="mt-1 text-[11px] leading-4 text-muted-foreground">Each step has an icon, title and content. Players can move through them on the checkout page.</p></div>
+                    <Button size="icon" variant="outline" className="size-8 shrink-0" aria-label="Add instruction step" disabled={(selectedCopy.steps?.length ?? 0) >= 8} onClick={() => updateBlock(selectedBlock, { steps: [...(selectedCopy.steps ?? []), { title: "New step", icon: "CheckCircle2", content: "Add instructions for this step." }] })}><Plus className="size-3.5" /></Button>
+                  </div>
+                  {(selectedCopy.steps ?? []).map((step, index) => (
+                    <div key={index} className="space-y-2 rounded-lg border p-3">
+                      <div className="flex items-center justify-between"><p className="text-xs font-semibold">Step {index + 1}</p><Button size="icon" variant="ghost" className="size-7" aria-label={"Remove step " + (index + 1)} disabled={(selectedCopy.steps?.length ?? 0) <= 1} onClick={() => updateBlock(selectedBlock, { steps: (selectedCopy.steps ?? []).filter((_, i) => i !== index) })}><X className="size-3.5" /></Button></div>
+                      <div className="grid gap-1.5"><Label>Step title</Label><Input value={step.title} onChange={(event) => updateBlock(selectedBlock, { steps: (selectedCopy.steps ?? []).map((item, i) => i === index ? { ...item, title: event.target.value } : item) })} /></div>
+                      <div className="grid gap-1.5"><Label>Step icon</Label><Select value={step.icon} onValueChange={(value) => updateBlock(selectedBlock, { steps: (selectedCopy.steps ?? []).map((item, i) => i === index ? { ...item, icon: value } : item) })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="UserRound">Player / user</SelectItem><SelectItem value="CircleDollarSign">Payment / amount</SelectItem><SelectItem value="Upload">Upload / receipt</SelectItem><SelectItem value="ShieldCheck">Security</SelectItem><SelectItem value="Clock3">Processing</SelectItem><SelectItem value="CheckCircle2">Confirmation</SelectItem></SelectContent></Select></div>
+                      <div className="grid gap-1.5"><Label>Step content</Label><textarea rows={3} value={step.content} onChange={(event) => updateBlock(selectedBlock, { steps: (selectedCopy.steps ?? []).map((item, i) => i === index ? { ...item, content: event.target.value } : item) })} className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/30" /></div>
+                    </div>
+                  ))}
                 </div>
               ) : null}
 
@@ -1278,18 +1409,7 @@ export function ClientPortalBuilder({
 
                 {section === "configs" ? (
                   <>
-                    <div><h3 className="text-sm font-semibold">Checkout configuration</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">Control available payment methods, player identification, preset amounts, timer and active hours.</p></div>
-
-                    <div className="space-y-2">
-                      <Label>Payment method presentation</Label>
-                      <p className="text-[11px] leading-4 text-muted-foreground">Tabs displays a horizontal selector. Cards displays a responsive grid. Selecting any method opens that method's own payment form.</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {([
-                          ["tabs", "Tabs"],
-                          ["cards", "Cards"],
-                        ] as [MethodDisplay, string][]).map(([value, label]) => <button key={value} type="button" onClick={() => updateConfig("methodDisplay", value)} className={"rounded-lg border px-3 py-3 text-sm font-medium transition " + (selected.builder.configs.methodDisplay === value ? "border-primary bg-primary/5 text-primary" : "hover:bg-muted/40")}>{label}<span className="mt-2 flex gap-1">{value === "tabs" ? <><span className="h-1.5 flex-1 rounded-full bg-muted-foreground/40" /><span className="h-1.5 flex-1 rounded-full bg-muted" /><span className="h-1.5 flex-1 rounded-full bg-muted" /></> : <span className="grid flex-1 grid-cols-2 gap-1"><span className="h-3 rounded border bg-muted/50" /><span className="h-3 rounded border bg-muted/50" /><span className="h-3 rounded border bg-muted/50" /><span className="h-3 rounded border bg-muted/50" /></span>}</span></button>)}
-                      </div>
-                    </div>
+                    <div><h3 className="text-sm font-semibold">Checkout configuration</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">Choose available payment methods, set the deposit session timer, and configure the days and hours when the form is active.</p></div>
 
                     <div className="space-y-2">
                       <Label>Payment methods shown</Label>
@@ -1312,33 +1432,35 @@ export function ClientPortalBuilder({
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Player identification</Label>
-                      <Select value={selected.builder.configs.playerIdMode} onValueChange={(value) => updateConfig("playerIdMode", value as PlayerIdMode)}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent><SelectItem value="userId">Player ID only</SelectItem><SelectItem value="email">Email only</SelectItem><SelectItem value="both">Player ID or email</SelectItem></SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between gap-2"><div><Label>Preset deposit amounts (TND)</Label><p className="mt-1 text-[11px] text-muted-foreground">These become the quick-select amount buttons.</p></div><Button size="icon" variant="outline" className="size-8 shrink-0" aria-label="Add amount" onClick={() => updateConfig("presetAmounts", [...selected.builder.configs.presetAmounts, (selected.builder.configs.presetAmounts[selected.builder.configs.presetAmounts.length - 1] ?? 0) + 50].slice(0, 8))} disabled={selected.builder.configs.presetAmounts.length >= 8}><Plus className="size-3.5" /></Button></div>
-                      <div className="space-y-2">
-                        {selected.builder.configs.presetAmounts.map((amount, index) => <div key={index} className="flex items-center gap-2"><Input aria-label={"Preset amount " + (index + 1)} type="number" min={1} value={amount} onChange={(event) => {
-                          const next = [...selected.builder.configs.presetAmounts];
-                          next[index] = Math.max(1, Number(event.target.value) || 1);
-                          updateConfig("presetAmounts", next);
-                        }} /><Button size="icon" variant="ghost" className="size-8 shrink-0" aria-label="Remove amount" disabled={selected.builder.configs.presetAmounts.length <= 1} onClick={() => updateConfig("presetAmounts", selected.builder.configs.presetAmounts.filter((_, itemIndex) => itemIndex !== index))}><X className="size-3.5" /></Button></div>)}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
                       <Label>Deposit session timer (seconds)</Label>
                       <Input type="number" min={30} max={3600} step={30} value={selected.builder.configs.timerSeconds} onChange={(event) => updateConfig("timerSeconds", Math.max(30, Math.min(3600, Number(event.target.value) || 30)))} />
                       <p className="text-[11px] text-muted-foreground">Allowed range: 30 seconds to 60 minutes.</p>
                     </div>
 
                     <div className="space-y-3 rounded-xl border p-3">
-                      <ToggleSetting title="Schedule form availability" description="Keep the deposit form active only during configured hours." checked={selected.builder.configs.scheduleEnabled} onChange={(checked) => updateConfig("scheduleEnabled", checked)} />
-                      {selected.builder.configs.scheduleEnabled ? <div className="grid grid-cols-2 gap-3"><div className="grid gap-1.5"><Label>Active from</Label><Input type="time" value={selected.builder.configs.scheduleStart} onChange={(event) => updateConfig("scheduleStart", event.target.value)} /></div><div className="grid gap-1.5"><Label>Active until</Label><Input type="time" value={selected.builder.configs.scheduleEnd} onChange={(event) => updateConfig("scheduleEnd", event.target.value)} /></div><p className="col-span-2 text-[11px] leading-5 text-muted-foreground">Uses the visitor's local browser time in this prototype. Use a server-defined timezone for production enforcement.</p></div> : null}
+                      <ToggleSetting title="Schedule form availability" description="Keep the deposit form active only on selected days and during configured hours." checked={selected.builder.configs.scheduleEnabled} onChange={(checked) => updateConfig("scheduleEnabled", checked)} />
+                      {selected.builder.configs.scheduleEnabled ? (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="grid gap-1.5"><Label>Active from</Label><Input type="time" value={selected.builder.configs.scheduleStart} onChange={(event) => updateConfig("scheduleStart", event.target.value)} /></div>
+                            <div className="grid gap-1.5"><Label>Active until</Label><Input type="time" value={selected.builder.configs.scheduleEnd} onChange={(event) => updateConfig("scheduleEnd", event.target.value)} /></div>
+                          </div>
+                          <div className="grid gap-2">
+                            <Label>Available days</Label>
+                            <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
+                              {(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const).map((day, index) => {
+                                const active = selected.builder.configs.scheduleDays.includes(index);
+                                return <button key={day} type="button" aria-pressed={active} onClick={() => {
+                                  const current = selected.builder.configs.scheduleDays;
+                                  if (active && current.length <= 1) { setNotice("Select at least one available day."); return; }
+                                  updateConfig("scheduleDays", active ? current.filter((value) => value !== index) : [...current, index].sort((a, b) => a - b));
+                                }} className={"rounded-lg border px-2 py-2 text-[11px] font-medium transition " + (active ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted/40")}>{day}</button>;
+                              })}
+                            </div>
+                          </div>
+                          <p className="text-[11px] leading-5 text-muted-foreground">Uses the visitor's local browser time and selected weekdays in this prototype. Use a server-defined timezone for production enforcement.</p>
+                        </div>
+                      ) : null}
                     </div>
                   </>
                 ) : null}
