@@ -4416,8 +4416,8 @@ function CardDepositFlow({
 
           {step === 2 ? (
             <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
+              <div data-builder-form="true" className="flex flex-col gap-4">
+                <div data-builder-block="amount" style={getPortalBuilderBlockStyle(portalBuilderSettings, "amount")} className="flex items-center justify-between gap-3 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
                   <div>
                     <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Total card amount</p>
                     <p className="mt-0.5 text-sm font-semibold tabular-nums text-white">
@@ -4429,7 +4429,7 @@ function CardDepositFlow({
                   </p>
                 </div>
 
-                <div>
+                <div data-builder-block="cardDetails" style={getPortalBuilderBlockStyle(portalBuilderSettings, "cardDetails")}>
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <FieldLabel>Card numbers</FieldLabel>
                     <span className="text-[10px] text-slate-500">16 digits · XXXX XXXX XXXX XXXX</span>
@@ -4491,7 +4491,7 @@ function CardDepositFlow({
                   </p>
                 </div>
 
-                <div>
+                <div data-builder-block="evidence" style={getPortalBuilderBlockStyle(portalBuilderSettings, "evidence")}>
                   <FieldLabel>Card photo / OCR</FieldLabel>
                   <label
                     title="Upload card photo for OCR"
