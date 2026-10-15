@@ -7,11 +7,13 @@ import {
   Globe2,
   LayoutTemplate,
   Monitor,
-  Moon,
   Save,
   Smartphone,
   Sparkles,
   Sun,
+  Plus,
+  X,
+  AlertTriangle,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -29,13 +31,196 @@ import {
   type ClientPortalForm,
 } from "@/lib/client-portal-config";
 
-type EditorSection = "general" | "methods" | "appearance";
+type EditorSection = "appearance" | "features" | "configs";
+type TemplateId = "stripe" | "classic" | "minimal";
+type FontId = "sans" | "system" | "serif";
+type ButtonShape = "pill" | "rounded" | "rectangle";
+type PlayerIdMode = "userId" | "email" | "both";
+type MethodDisplay = "tabs" | "cards";
 
-const portalColorOptions = [
-  { key: "primaryColor" as const, label: "Accent / action color" },
-  { key: "backgroundColor" as const, label: "Page background" },
-  { key: "surfaceColor" as const, label: "Checkout surface" },
+type BlockCopy = {
+  label: string;
+  placeholder: string;
+  description: string;
+};
+
+type PortalBuilderSettings = {
+  template: TemplateId;
+  fontFamily: FontId;
+  buttonShape: ButtonShape;
+  colors: {
+    websiteBackground: string;
+    accent: string;
+    brand: string;
+    checkoutSurface: string;
+  };
+  features: {
+    supervisorRating: boolean;
+    playerRating: boolean;
+    aiRecognition: boolean;
+    autoConfirm: boolean;
+  };
+  configs: {
+    paymentMethods: string[];
+    methodDisplay: MethodDisplay;
+    playerIdMode: PlayerIdMode;
+    presetAmounts: number[];
+    timerSeconds: number;
+    scheduleEnabled: boolean;
+    scheduleStart: string;
+    scheduleEnd: string;
+  };
+  blocks: Record<string, BlockCopy>;
+};
+
+type BuilderForm = ClientPortalForm & { builder?: PortalBuilderSettings };
+type EditableBuilderForm = ClientPortalForm & { builder: PortalBuilderSettings };
+
+const templateOptions: { id: TemplateId; label: string; caption: string }[] = [
+  { id: "stripe", label: "Stripe", caption: "Clean checkout layout" },
+  { id: "classic", label: "Classic", caption: "Traditional form layout" },
+  { id: "minimal", label: "Minimal", caption: "Compact and focused" },
 ];
+
+const fieldDefaults: Record<string, BlockCopy> = {
+  heading: {
+    label: "Make a deposit",
+    placeholder: "",
+    description: "Choose a payment method and follow the secure deposit instructions.",
+  },
+  playerId: {
+    label: "Player ID",
+    placeholder: "Enter your player ID",
+    description: "",
+  },
+  email: {
+    label: "Email address",
+    placeholder: "name@example.com",
+    description: "We may use this to send you a deposit update.",
+  },
+  amount: {
+    label: "Deposit amount",
+    placeholder: "Enter amount",
+    description: "Choose one of the suggested amounts or use a custom amount.",
+  },
+  paymentMethods: {
+    label: "Payment method",
+    placeholder: "",
+    description: "Choose the payment method you want to use.",
+  },
+  transferNumber: {
+    label: "Transfer number",
+    placeholder: "Enter the number used to send the transfer",
+    description: "Use the sender number from the payment account.",
+  },
+  transactionId: {
+    label: "Transaction ID",
+    placeholder: "Enter transaction ID",
+    description: "Copy the transaction reference from your payment receipt.",
+  },
+  evidence: {
+    label: "Payment evidence",
+    placeholder: "Upload transfer screenshot",
+    description: "A clear screenshot helps the supervisor verify your transfer.",
+  },
+  continue: {
+    label: "Continue securely",
+    placeholder: "",
+    description: "",
+  },
+  supervisorRating: {
+    label: "Rate the supervisor",
+    placeholder: "",
+    description: "Share your experience after the request is resolved.",
+  },
+  playerRating: {
+    label: "Rate your deposit experience",
+    placeholder: "",
+    description: "Tell us how the deposit flow worked for you.",
+  },
+};
+
+function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
+  return {
+    template: "stripe",
+    fontFamily: form.appearance.fontFamily,
+    buttonShape: form.appearance.radius === "small" ? "rectangle" : form.appearance.radius === "large" ? "pill" : "rounded",
+    colors: {
+      websiteBackground: form.appearance.backgroundColor || "#020617",
+      accent: form.appearance.primaryColor || "#34d399",
+      brand: "#e2e8f0",
+      checkoutSurface: form.appearance.surfaceColor || "#0f172a",
+    },
+    features: {
+      supervisorRating: true,
+      playerRating: true,
+      aiRecognition: false,
+      autoConfirm: false,
+    },
+    configs: {
+      paymentMethods: form.methods?.length ? [...form.methods] : ["Flouci", "D17"],
+      methodDisplay: "cards",
+      playerIdMode: "both",
+      presetAmounts: [50, 100, 200, 500],
+      timerSeconds: 300,
+      scheduleEnabled: false,
+      scheduleStart: "08:00",
+      scheduleEnd: "23:00",
+    },
+    blocks: Object.fromEntries(Object.entries(fieldDefaults).map(([key, value]) => [
+      key,
+      key === "heading"
+        ? { ...value, label: form.appearance.title || value.label, description: form.appearance.description || value.description }
+        : key === "continue"
+          ? { ...value, label: form.appearance.buttonLabel || value.label }
+          : { ...value },
+    ])),
+  };
+}
+
+function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
+  const raw = (form as BuilderForm).builder as
+    | (Partial<PortalBuilderSettings> & {
+        colors?: Partial<PortalBuilderSettings["colors"]>;
+        features?: Partial<PortalBuilderSettings["features"]>;
+        configs?: Partial<PortalBuilderSettings["configs"]>;
+        blocks?: Record<string, Partial<BlockCopy> | undefined>;
+      })
+    | undefined;
+  const defaults = makeDefaultSettings(form);
+  const blocks: Record<string, BlockCopy> = { ...defaults.blocks };
+  for (const [key, value] of Object.entries(raw?.blocks ?? {})) {
+    if (value) blocks[key] = { ...(blocks[key] ?? fieldDefaults.heading), ...value };
+  }
+  const allowedMethods = Array.isArray(raw?.configs?.paymentMethods)
+    ? raw.configs.paymentMethods.filter((method): method is string => typeof method === "string" && clientPortalMethodOptions.includes(method as (typeof clientPortalMethodOptions)[number]))
+    : defaults.configs.paymentMethods;
+  const settings: PortalBuilderSettings = {
+    ...defaults,
+    ...raw,
+    template: raw?.template === "classic" || raw?.template === "minimal" ? raw.template : "stripe",
+    fontFamily: raw?.fontFamily === "system" || raw?.fontFamily === "serif" ? raw.fontFamily : "sans",
+    buttonShape: raw?.buttonShape === "pill" || raw?.buttonShape === "rectangle" ? raw.buttonShape : "rounded",
+    colors: { ...defaults.colors, ...(raw?.colors ?? {}) },
+    features: { ...defaults.features, ...(raw?.features ?? {}) },
+    configs: {
+      ...defaults.configs,
+      ...(raw?.configs ?? {}),
+      paymentMethods: allowedMethods.length ? [...new Set(allowedMethods)] : [...defaults.configs.paymentMethods],
+      methodDisplay: raw?.configs?.methodDisplay === "tabs" ? "tabs" : "cards",
+      playerIdMode: raw?.configs?.playerIdMode === "userId" || raw?.configs?.playerIdMode === "email" ? raw.configs.playerIdMode : "both",
+      presetAmounts: Array.isArray(raw?.configs?.presetAmounts) && raw.configs.presetAmounts.length
+        ? raw.configs.presetAmounts.map(Number).filter((amount) => Number.isFinite(amount) && amount > 0).slice(0, 8)
+        : [...defaults.configs.presetAmounts],
+      timerSeconds: Number.isFinite(raw?.configs?.timerSeconds) ? Math.max(30, Math.min(3600, Number(raw?.configs?.timerSeconds))) : defaults.configs.timerSeconds,
+      scheduleEnabled: raw?.configs?.scheduleEnabled === true,
+      scheduleStart: typeof raw?.configs?.scheduleStart === "string" ? raw.configs.scheduleStart : defaults.configs.scheduleStart,
+      scheduleEnd: typeof raw?.configs?.scheduleEnd === "string" ? raw.configs.scheduleEnd : defaults.configs.scheduleEnd,
+    },
+    blocks,
+  };
+  return { ...form, builder: settings };
+}
 
 function makeId() {
   return "FORM-" + Date.now().toString(36).toUpperCase();
@@ -69,7 +254,7 @@ export function ClientPortalBuilder({
   initialSlug: string;
   onExit: () => void;
 }) {
-  const [forms, setForms] = useState<ClientPortalForm[]>(() => getClientPortalForms());
+  const [forms, setForms] = useState<EditableBuilderForm[]>(() => getClientPortalForms().map(hydrateBuilderForm));
   const [selectedId, setSelectedId] = useState(() => {
     const initial = getClientPortalForms().find((form) => form.id === initialSlug || form.slug === initialSlug);
     return initial?.id ?? getClientPortalForms()[0]?.id ?? "";
@@ -77,13 +262,11 @@ export function ClientPortalBuilder({
   const [section, setSection] = useState<EditorSection>("appearance");
   const [notice, setNotice] = useState("");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
-  const [showThemeSettings, setShowThemeSettings] = useState(true);
-  const [showTypography, setShowTypography] = useState(false);
-  const [showHeaderSettings, setShowHeaderSettings] = useState(false);
+  const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
 
   useEffect(() => {
     const refresh = () => {
-      const latest = getClientPortalForms();
+      const latest = getClientPortalForms().map(hydrateBuilderForm);
       setForms(latest);
       setSelectedId((current) => latest.some((form) => form.id === current)
         ? current
@@ -104,7 +287,7 @@ export function ClientPortalBuilder({
   }, [selected?.slug]);
   const embedCode = '<iframe src="' + liveUrl + '" title="' + (selected?.name ?? "iPayCash checkout") + '" width="100%" height="680" loading="lazy" style="border:0;border-radius:16px"></iframe>';
 
-  const updateSelected = (patch: Partial<ClientPortalForm>) => {
+  const updateSelected = (patch: Partial<EditableBuilderForm>) => {
     if (!selected) return;
     setForms((current) => current.map((form) => form.id === selected.id
       ? { ...form, ...patch, updated: "Unsaved changes" }
@@ -112,14 +295,49 @@ export function ClientPortalBuilder({
     setNotice("");
   };
 
-  const updateAppearance = (patch: Partial<ClientPortalAppearance>) => {
+  const updateBuilder = (patch: Partial<PortalBuilderSettings>) => {
     if (!selected) return;
-    updateSelected({ appearance: { ...selected.appearance, ...patch } });
+    const builder: PortalBuilderSettings = {
+      ...selected.builder,
+      ...patch,
+      colors: { ...selected.builder.colors, ...(patch.colors ?? {}) },
+      features: { ...selected.builder.features, ...(patch.features ?? {}) },
+      configs: { ...selected.builder.configs, ...(patch.configs ?? {}) },
+      blocks: { ...selected.builder.blocks, ...(patch.blocks ?? {}) },
+    };
+    updateSelected({ builder });
+  };
+
+  const updateBlock = (key: string, patch: Partial<BlockCopy>) => {
+    if (!selected) return;
+    updateBuilder({
+      blocks: {
+        ...selected.builder.blocks,
+        [key]: { ...selected.builder.blocks[key], ...patch },
+      },
+    });
+  };
+
+  const updateConfig = (key: keyof PortalBuilderSettings["configs"], value: PortalBuilderSettings["configs"][typeof key]) => {
+    if (!selected) return;
+    const configs = { ...selected.builder.configs, [key]: value };
+    const builder = { ...selected.builder, configs };
+    const patch: Partial<EditableBuilderForm> = { builder };
+    if (key === "paymentMethods") patch.methods = value as string[];
+    updateSelected(patch);
+  };
+
+  const updateFeatures = (patch: Partial<PortalBuilderSettings["features"]>) => {
+    if (!selected) return;
+    const features = { ...selected.builder.features, ...patch };
+    if (patch.aiRecognition === false) features.autoConfirm = false;
+    updateBuilder({ features });
   };
 
   const save = () => {
+    if (!selected) return;
     const usedSlugs = new Set<string>();
-    let normalized = forms.map((form) => {
+    const normalized = forms.map((form) => {
       const base = normalizeClientPortalSlug(form.slug) || "checkout";
       let slug = base;
       let suffix = 2;
@@ -128,35 +346,33 @@ export function ClientPortalBuilder({
         suffix += 1;
       }
       usedSlugs.add(slug);
-      return { ...form, slug, updated: formatUpdated() };
+      const appearance: ClientPortalAppearance = {
+        ...form.appearance,
+        backgroundColor: form.builder.colors.websiteBackground,
+        primaryColor: form.builder.colors.accent,
+        surfaceColor: form.builder.colors.checkoutSurface,
+        fontFamily: form.builder.fontFamily,
+        radius: form.builder.buttonShape === "rectangle" ? "small" : form.builder.buttonShape === "pill" ? "large" : "medium",
+        title: form.builder.blocks.heading?.label ?? form.appearance.title,
+        description: form.builder.blocks.heading?.description ?? form.appearance.description,
+        buttonLabel: form.builder.blocks.continue?.label ?? form.appearance.buttonLabel,
+      };
+      return {
+        ...form,
+        slug,
+        methods: [...form.builder.configs.paymentMethods],
+        appearance,
+        updated: formatUpdated(),
+      };
     });
-    const defaults = normalized.filter((form) => form.status === "Published" && form.isDefault);
-    if (defaults.length > 1) {
-      const keepId = defaults[0].id;
-      normalized = normalized.map((form) => ({ ...form, isDefault: form.id === keepId }));
-    }
-    if (!normalized.some((form) => form.status === "Published" && form.isDefault)) {
-      const firstPublished = normalized.find((form) => form.status === "Published");
-      if (firstPublished) normalized = normalized.map((form) => ({ ...form, isDefault: form.id === firstPublished.id }));
-    }
     saveClientPortalForms(normalized);
     setForms(normalized);
     setNotice("Saved in this browser. Connect backend persistence before using this configuration across devices.");
   };
 
-  const toggleMethod = (method: string) => {
-    if (!selected) return;
-    const hasMethod = selected.methods.includes(method);
-    if (hasMethod && selected.methods.length === 1) {
-      setNotice("Keep at least one payment method enabled.");
-      return;
-    }
-    updateSelected({ methods: hasMethod ? selected.methods.filter((item) => item !== method) : [...selected.methods, method] });
-  };
-
   const duplicateSelected = () => {
     if (!selected) return;
-    const copy: ClientPortalForm = {
+    const copy: EditableBuilderForm = {
       ...selected,
       id: makeId(),
       name: selected.name + " copy",
@@ -166,8 +382,15 @@ export function ClientPortalBuilder({
       sessions: 0,
       conversion: "—",
       updated: formatUpdated(),
-      methods: [...selected.methods],
+      methods: [...selected.builder.configs.paymentMethods],
       appearance: { ...selected.appearance },
+      builder: {
+        ...selected.builder,
+        colors: { ...selected.builder.colors },
+        features: { ...selected.builder.features },
+        configs: { ...selected.builder.configs, paymentMethods: [...selected.builder.configs.paymentMethods], presetAmounts: [...selected.builder.configs.presetAmounts] },
+        blocks: Object.fromEntries(Object.entries(selected.builder.blocks).map(([key, value]) => [key, { ...value }])),
+      },
     };
     const updated = [copy, ...forms];
     saveClientPortalForms(updated);
@@ -176,215 +399,505 @@ export function ClientPortalBuilder({
     setNotice("Duplicated as a new draft.");
   };
 
-  if (!selected) return null;
+  if (!selected) {
+    return <div className="flex min-h-dvh items-center justify-center text-sm text-muted-foreground">No checkout form exists yet.</div>;
+  }
+
+  const selectedCopy = selectedBlock ? selected.builder.blocks[selectedBlock] : null;
 
   return (
-    <section className="flex min-h-[calc(100dvh-3rem)] flex-col overflow-hidden rounded-xl border bg-background">
-      <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2 border-b bg-background/95 px-3 py-2.5 backdrop-blur sm:px-4">
+    <main className="min-h-dvh w-full bg-muted/30 text-foreground">
+      <header className="sticky top-0 z-40 flex min-h-16 flex-wrap items-center justify-between gap-3 border-b bg-background/95 px-4 py-3 shadow-sm backdrop-blur-md lg:px-7">
         <div className="flex min-w-0 items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onExit}><ExternalLink className="size-3.5 rotate-180" /> Exit</Button>
-          <span className="hidden h-6 w-px bg-border sm:block" />
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground">{(selected.appearance.brandName || "iP").slice(0, 2).toUpperCase()}</span>
-            <div className="min-w-0"><p className="max-w-44 truncate text-sm font-semibold">{selected.appearance.brandName || "Your brand"}</p><p className="max-w-44 truncate text-[10px] text-muted-foreground">{selected.name}</p></div>
-            <Badge variant={selected.status === "Published" ? "secondary" : "outline"} className="hidden sm:inline-flex">{selected.status === "Published" ? "LIVE" : "DRAFT"}</Badge>
+          <Button variant="ghost" size="sm" onClick={onExit} className="shrink-0">
+            <ExternalLink className="size-3.5 rotate-180" /> Exit
+          </Button>
+          <span className="hidden h-7 w-px bg-border sm:block" />
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <LayoutTemplate className="size-4" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="truncate text-sm font-semibold">Portal Builder</h1>
+            <p className="truncate text-[11px] text-muted-foreground">Build and preview a payment experience independently</p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Select value={section} onValueChange={(value) => setSection(value as EditorSection)}>
-            <SelectTrigger className="h-8 w-[130px]"><SelectValue /></SelectTrigger>
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={selectedId} onValueChange={setSelectedId}>
+            <SelectTrigger className="h-9 w-[190px] max-w-[42vw]"><SelectValue placeholder="Select checkout form" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="general">Form content</SelectItem>
-              <SelectItem value="methods">Payment methods</SelectItem>
-              <SelectItem value="appearance">Theme settings</SelectItem>
+              {forms.map((form) => <SelectItem key={form.id} value={form.id}>{form.name}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" className="size-8" aria-label="Toggle theme" title="Toggle theme" onClick={() => updateAppearance({ theme: selected.appearance.theme === "dark" ? "light" : "dark" })}>{selected.appearance.theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}</Button>
-          <Button variant={previewMode === "desktop" ? "secondary" : "ghost"} size="icon" className="size-8" aria-label="Desktop preview" title="Desktop preview" onClick={() => setPreviewMode("desktop")}><Monitor className="size-4" /></Button>
-          <Button variant={previewMode === "mobile" ? "secondary" : "ghost"} size="icon" className="size-8" aria-label="Mobile preview" title="Mobile preview" onClick={() => setPreviewMode("mobile")}><Smartphone className="size-4" /></Button>
-          <Button variant="outline" size="sm" onClick={duplicateSelected}><Copy className="size-3.5" /><span className="hidden md:inline">Duplicate</span></Button>
-          <Button size="sm" onClick={save}><Save className="size-3.5" /> Save</Button>
+          <Badge variant={selected.status === "Published" ? "secondary" : "outline"}>{selected.status === "Published" ? "LIVE" : "DRAFT"}</Badge>
+          <div className="flex items-center rounded-lg border bg-muted/30 p-0.5">
+            <Button variant={previewMode === "desktop" ? "secondary" : "ghost"} size="icon" className="size-8" aria-label="Desktop preview" title="Desktop preview" onClick={() => setPreviewMode("desktop")}><Monitor className="size-4" /></Button>
+            <Button variant={previewMode === "mobile" ? "secondary" : "ghost"} size="icon" className="size-8" aria-label="Mobile preview" title="Mobile preview" onClick={() => setPreviewMode("mobile")}><Smartphone className="size-4" /></Button>
+          </div>
+          <Button variant="outline" size="sm" onClick={duplicateSelected}><Copy className="size-3.5" /> <span className="hidden sm:inline">Duplicate</span></Button>
+          <Button size="sm" onClick={save}><Save className="size-3.5" /> Save changes</Button>
         </div>
-      </div>
+      </header>
 
-      <div className="grid min-h-0 flex-1 xl:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="min-h-0 border-b bg-muted/10 xl:max-h-[calc(100dvh-8rem)] xl:overflow-y-auto xl:border-b-0 xl:border-r">
-          <div className="border-b px-4 py-4">
-            <div className="flex items-center gap-2"><LayoutTemplate className="size-4 text-primary" /><h2 className="text-sm font-semibold">Theme settings</h2></div>
-            <p className="mt-1 text-xs text-muted-foreground">Customize this checkout without affecting other forms.</p>
+      <div className="mx-auto grid min-h-[calc(100dvh-65px)] max-w-[1800px] grid-cols-1 xl:grid-cols-[minmax(0,1fr)_390px]">
+        <section className="min-w-0 p-3 sm:p-5 lg:p-7">
+          <div className="mx-auto flex max-w-[1100px] flex-col gap-4">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Canvas</p>
+                <h2 className="mt-1 text-xl font-semibold tracking-tight">Live checkout preview</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Select any block in the form to edit its label, placeholder or description.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">{previewMode === "desktop" ? "Desktop viewport" : "Mobile viewport"}</Badge>
+                <Button variant="outline" size="sm" onClick={() => window.open(liveUrl + "?preview=1", "_blank", "noopener,noreferrer")}><Eye className="size-3.5" /> Open saved portal</Button>
+              </div>
+            </div>
+
+            <CheckoutPreview
+              form={selected}
+              previewMode={previewMode}
+              selectedBlock={selectedBlock}
+              onSelectBlock={setSelectedBlock}
+            />
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="rounded-xl border bg-background p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold"><Globe2 className="size-4 text-muted-foreground" /> Public checkout URL</div>
+                <p className="mt-2 break-all text-xs text-muted-foreground">{liveUrl}</p>
+              </div>
+              <div className="rounded-xl border bg-background p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold"><Copy className="size-4 text-muted-foreground" /> Embed snippet</div>
+                <pre className="mt-2 overflow-x-auto rounded-lg border bg-muted/30 p-2.5 text-[10px] leading-4 text-muted-foreground"><code>{embedCode}</code></pre>
+              </div>
+            </div>
           </div>
-          <div className="space-y-3 p-3">
-            <button type="button" onClick={() => setShowThemeSettings((value) => !value)} className="flex w-full items-center justify-between rounded-lg border bg-background px-3 py-2.5 text-left">
-              <span><span className="block text-sm font-medium">Theme & layout</span><span className="text-[10px] text-muted-foreground">Colours, width and corners</span></span>
-              <span className="text-muted-foreground">{showThemeSettings ? "−" : "+"}</span>
-            </button>
-            {showThemeSettings ? (
-              <div className="space-y-4 rounded-lg border bg-background p-3">
-                <div className="grid gap-2"><Label>Colours</Label>
-                  {portalColorOptions.map((option) => <label key={option.key} className="flex items-center justify-between gap-2 py-1"><span className="text-xs">{option.label}</span><span className="flex items-center gap-2"><code className="text-[10px] text-muted-foreground">{selected.appearance[option.key]}</code><input type="color" aria-label={option.label} value={selected.appearance[option.key]} onChange={(event) => updateAppearance({ [option.key]: event.target.value } as Partial<ClientPortalAppearance>)} className="size-8 cursor-pointer rounded-md border bg-transparent p-0.5" /></span></label>)}
+        </section>
+
+        <aside className="min-h-0 border-t bg-background xl:sticky xl:top-16 xl:h-[calc(100dvh-4rem)] xl:overflow-y-auto xl:border-l xl:border-t-0">
+          <div className="flex items-start justify-between gap-3 border-b px-4 py-4">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">{selectedBlock ? "Selected element" : "Theme settings"}</p>
+              <h2 className="mt-1 text-base font-semibold">{selectedBlock ? (selectedCopy?.label || selectedBlock) : "Customize portal"}</h2>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">{selectedBlock ? "Edit only the text content for this block." : "Appearance, optional features and checkout behavior."}</p>
+            </div>
+            {selectedBlock ? <Button variant="ghost" size="sm" onClick={() => setSelectedBlock(null)}>Theme settings</Button> : null}
+          </div>
+
+          {selectedBlock && selectedCopy ? (
+            <div className="space-y-5 p-4">
+              <div className="rounded-lg border bg-muted/20 p-3">
+                <p className="text-xs font-medium">Content block</p>
+                <p className="mt-1 text-xs text-muted-foreground">Text settings only. Layout and field behavior stay controlled by the global settings.</p>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="block-label">Label / title</Label>
+                <Input id="block-label" value={selectedCopy.label} onChange={(event) => updateBlock(selectedBlock, { label: event.target.value })} placeholder="Enter label" />
+              </div>
+              {selectedBlock !== "heading" && selectedBlock !== "continue" && selectedBlock !== "paymentMethods" && selectedBlock !== "supervisorRating" && selectedBlock !== "playerRating" ? (
+                <div className="grid gap-2">
+                  <Label htmlFor="block-placeholder">Placeholder</Label>
+                  <Input id="block-placeholder" value={selectedCopy.placeholder} onChange={(event) => updateBlock(selectedBlock, { placeholder: event.target.value })} placeholder="Text shown inside the field" />
                 </div>
-                <div className="grid gap-2"><Label>Theme</Label><Select value={selected.appearance.theme} onValueChange={(value) => updateAppearance({ theme: value as ClientPortalAppearance["theme"] })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="light">Light</SelectItem><SelectItem value="dark">Dark</SelectItem></SelectContent></Select></div>
-                <div className="grid gap-2"><Label>Layout width</Label><Select value={selected.appearance.width} onValueChange={(value) => updateAppearance({ width: value as ClientPortalAppearance["width"] })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="compact">Compact</SelectItem><SelectItem value="wide">Wide</SelectItem></SelectContent></Select></div>
-                <div className="grid gap-2"><Label>Corner style</Label><Select value={selected.appearance.radius} onValueChange={(value) => updateAppearance({ radius: value as ClientPortalAppearance["radius"] })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="small">Square / small</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="large">Rounded / large</SelectItem></SelectContent></Select></div>
+              ) : null}
+              {selectedBlock !== "continue" ? (
+                <div className="grid gap-2">
+                  <Label htmlFor="block-description">Description below block</Label>
+                  <textarea id="block-description" rows={4} value={selectedCopy.description} onChange={(event) => updateBlock(selectedBlock, { description: event.target.value })} placeholder="Optional supporting text shown below this block" className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring/30" />
+                  <p className="text-[11px] text-muted-foreground">Leave it empty if you do not want to show a description.</p>
+                </div>
+              ) : null}
+              <Button variant="outline" className="w-full" onClick={() => setSelectedBlock(null)}>Done editing block</Button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 border-b p-2">
+                {([
+                  ["appearance", "Appearance"],
+                  ["features", "Features"],
+                  ["configs", "Configs"],
+                ] as [EditorSection, string][]).map(([value, label]) => (
+                  <button key={value} type="button" onClick={() => setSection(value)} className={"rounded-md px-2 py-2 text-xs font-medium transition-colors " + (section === value ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>{label}</button>
+                ))}
               </div>
-            ) : null}
 
-            <button type="button" onClick={() => setShowTypography((value) => !value)} className="flex w-full items-center justify-between rounded-lg border bg-background px-3 py-2.5 text-left">
-              <span><span className="block text-sm font-medium">Typography</span><span className="text-[10px] text-muted-foreground">Font style for this checkout</span></span><span className="text-muted-foreground">{showTypography ? "−" : "+"}</span>
-            </button>
-            {showTypography ? (
-              <div className="grid gap-2 rounded-lg border bg-background p-3">
-                <Label>Font family</Label>
-                <Select value={selected.appearance.fontFamily} onValueChange={(value) => updateAppearance({ fontFamily: value as ClientPortalAppearance["fontFamily"] })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sans">Modern sans-serif</SelectItem>
-                    <SelectItem value="system">System default</SelectItem>
-                    <SelectItem value="serif">Editorial serif</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : null}
+              <div className="space-y-5 p-4">
+                {section === "appearance" ? (
+                  <>
+                    <div className="space-y-3">
+                      <div><h3 className="text-sm font-semibold">Theme layout</h3><p className="mt-1 text-xs text-muted-foreground">Choose a ready-made checkout structure.</p></div>
+                      <div className="grid gap-2">
+                        {templateOptions.map((option) => (
+                          <button key={option.id} type="button" onClick={() => updateBuilder({ template: option.id })} className={"flex items-center gap-3 rounded-xl border p-3 text-left transition " + (selected.builder.template === option.id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "hover:bg-muted/40")}>
+                            <div className={"flex h-12 w-[74px] shrink-0 flex-col gap-1 rounded-md border p-1.5 " + (option.id === "stripe" ? "bg-slate-50" : option.id === "classic" ? "bg-stone-50" : "bg-white")}>
+                              {option.id === "stripe" ? <><span className="h-1.5 w-8 rounded-sm bg-indigo-500" /><span className="h-1 w-full rounded-sm bg-slate-200" /><span className="h-1 w-4/5 rounded-sm bg-slate-200" /><span className="mt-auto h-2 w-full rounded-sm bg-indigo-500" /></> : option.id === "classic" ? <><span className="h-1.5 w-full rounded-sm bg-slate-300" /><span className="h-1 w-4/5 rounded-sm bg-slate-200" /><span className="mt-auto h-2 w-2/3 rounded-sm bg-slate-400" /></> : <><span className="mx-auto h-1.5 w-8 rounded-sm bg-emerald-500" /><span className="mx-auto h-1 w-4/5 rounded-sm bg-slate-200" /><span className="mt-auto h-2 w-full rounded-full bg-emerald-500" /></>}
+                            </div>
+                            <span className="min-w-0 flex-1"><span className="block text-sm font-medium">{option.label}</span><span className="mt-0.5 block text-xs text-muted-foreground">{option.caption}</span></span>
+                            {selected.builder.template === option.id ? <Check className="size-4 text-primary" /> : <span className="size-4 rounded-full border" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
-            <button type="button" onClick={() => setSection("general")} className={"flex w-full items-center justify-between rounded-lg border px-3 py-3 text-left " + (section === "general" ? "border-primary/40 bg-primary/5" : "bg-background hover:bg-muted/30")}>
-              <span><span className="block text-sm font-medium">Checkout content</span><span className="text-[10px] text-muted-foreground">Heading, URL and currency</span></span><span className="text-muted-foreground">›</span>
-            </button>
-            <button type="button" onClick={() => setSection("methods")} className={"flex w-full items-center justify-between rounded-lg border px-3 py-3 text-left " + (section === "methods" ? "border-primary/40 bg-primary/5" : "bg-background hover:bg-muted/30")}>
-              <span><span className="block text-sm font-medium">Payment methods</span><span className="text-[10px] text-muted-foreground">{selected.methods.length} selected methods</span></span><span className="text-muted-foreground">›</span>
-            </button>
-            <button type="button" onClick={() => setShowHeaderSettings((value) => !value)} className="flex w-full items-center justify-between rounded-lg border bg-background px-3 py-2.5 text-left">
-              <span><span className="block text-sm font-medium">Header & footer</span><span className="text-[10px] text-muted-foreground">Branding and attribution</span></span><span className="text-muted-foreground">{showHeaderSettings ? "−" : "+"}</span>
-            </button>
-            {showHeaderSettings ? <div className="space-y-3 rounded-lg border bg-background p-3"><div className="grid gap-2"><Label>Brand name</Label><Input value={selected.appearance.brandName} onChange={(event) => updateAppearance({ brandName: event.target.value })} /></div><div className="grid gap-2"><Label>Logo URL</Label><Input value={selected.appearance.logoUrl} onChange={(event) => updateAppearance({ logoUrl: event.target.value })} placeholder="https://example.com/logo.svg" /></div><ToggleSetting title="Show logo" description="Display your brand mark in the checkout header." checked={selected.appearance.showLogo} onChange={(checked) => updateAppearance({ showLogo: checked })} /><ToggleSetting title="Show iPayCash attribution" description="Show Powered by iPayCash in the footer." checked={selected.appearance.showPlatformBranding} onChange={(checked) => updateAppearance({ showPlatformBranding: checked })} /></div> : null}
-            {section === "appearance" ? (
-              <div className="space-y-4 rounded-lg border bg-background p-3">
-                <div className="grid gap-2"><Label>Brand / merchant name</Label><Input value={selected.appearance.brandName} onChange={(event) => updateAppearance({ brandName: event.target.value })} placeholder="Your brand name" /></div>
-                <div className="grid gap-2"><Label>Logo URL</Label><Input value={selected.appearance.logoUrl} onChange={(event) => updateAppearance({ logoUrl: event.target.value })} placeholder="https://example.com/logo.svg" /></div>
-                <div className="grid gap-2"><Label>Button text</Label><Input value={selected.appearance.buttonLabel} onChange={(event) => updateAppearance({ buttonLabel: event.target.value })} placeholder="Continue securely" /></div>
-                <ToggleSetting title="Show logo" description="Display your brand mark." checked={selected.appearance.showLogo} onChange={(checked) => updateAppearance({ showLogo: checked })} />
-                <ToggleSetting title="Show iPayCash attribution" description="Display platform branding." checked={selected.appearance.showPlatformBranding} onChange={(checked) => updateAppearance({ showPlatformBranding: checked })} />
+                    <div className="space-y-2">
+                      <Label>Typography</Label>
+                      <Select value={selected.builder.fontFamily} onValueChange={(value) => updateBuilder({ fontFamily: value as FontId })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent><SelectItem value="sans">Modern sans-serif</SelectItem><SelectItem value="system">System default</SelectItem><SelectItem value="serif">Serif</SelectItem></SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Button shape</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {([
+                          ["pill", "Pill"],
+                          ["rounded", "Rounded"],
+                          ["rectangle", "Rectangle"],
+                        ] as [ButtonShape, string][]).map(([value, label]) => (
+                          <button key={value} type="button" onClick={() => updateBuilder({ buttonShape: value })} className={"rounded-lg border px-2 py-2.5 text-xs font-medium transition " + (selected.builder.buttonShape === value ? "border-primary bg-primary/5 text-primary" : "hover:bg-muted/50")}>
+                            <span className={"mx-auto mb-2 block h-5 w-12 border " + (value === "pill" ? "rounded-full" : value === "rounded" ? "rounded-md" : "rounded-none") + (selected.builder.buttonShape === value ? " border-primary bg-primary/10" : " bg-muted/40")} />
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div><h3 className="text-sm font-semibold">Colors</h3><p className="mt-1 text-xs text-muted-foreground">Change each layer of the checkout independently.</p></div>
+                      {([
+                        ["websiteBackground", "Website background"],
+                        ["accent", "Accent / actions"],
+                        ["brand", "Brand"],
+                        ["checkoutSurface", "Checkout surface"],
+                      ] as [keyof PortalBuilderSettings["colors"], string][]).map(([key, label]) => (
+                        <label key={key} className="flex items-center justify-between gap-3 rounded-lg border p-2.5">
+                          <span className="text-xs font-medium">{label}</span>
+                          <span className="flex items-center gap-2">
+                            <code className="text-[10px] text-muted-foreground">{selected.builder.colors[key]}</code>
+                            <input aria-label={label} type="color" value={selected.builder.colors[key]} onChange={(event) => updateBuilder({ colors: { [key]: event.target.value } })} className="size-8 cursor-pointer rounded-md border bg-transparent p-0.5" />
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
+
+                {section === "features" ? (
+                  <>
+                    <div><h3 className="text-sm font-semibold">Optional features</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">Enable only the feedback and automation tools your payment flow needs.</p></div>
+                    <ToggleSetting title="Supervisor rating" description="Let players rate the supervisor after a request is resolved." checked={selected.builder.features.supervisorRating} onChange={(checked) => updateFeatures({ supervisorRating: checked })} />
+                    <ToggleSetting title="Player experience rating" description="Show a short feedback step after the player completes the flow." checked={selected.builder.features.playerRating} onChange={(checked) => updateFeatures({ playerRating: checked })} />
+                    <ToggleSetting title="AI transfer recognition" description="Recognize transaction details from uploaded transfer evidence." checked={selected.builder.features.aiRecognition} onChange={(checked) => updateFeatures({ aiRecognition: checked })} />
+                    {selected.builder.features.aiRecognition ? (
+                      <div className="space-y-3 rounded-xl border border-amber-500/40 bg-amber-500/5 p-3">
+                        <div className="flex items-start gap-2"><AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" /><div><p className="text-sm font-semibold">High-risk automation</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Automatic confirmation can approve incorrect, duplicated or manipulated evidence. Keep supervisor review enabled until this is tested against trusted provider data.</p></div></div>
+                        <ToggleSetting title="Automatic confirmation" description="Allow AI results to confirm a transfer without a supervisor review." checked={selected.builder.features.autoConfirm} onChange={(checked) => updateFeatures({ autoConfirm: checked })} />
+                      </div>
+                    ) : (
+                      <p className="rounded-lg border border-dashed p-3 text-xs leading-5 text-muted-foreground">Enable AI transfer recognition to configure the automatic-confirmation option.</p>
+                    )}
+                  </>
+                ) : null}
+
+                {section === "configs" ? (
+                  <>
+                    <div><h3 className="text-sm font-semibold">Checkout configuration</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">Control available payment methods, player identification, preset amounts, timer and active hours.</p></div>
+
+                    <div className="space-y-2">
+                      <Label>Payment method presentation</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {([
+                          ["tabs", "Tabs"],
+                          ["cards", "Cards"],
+                        ] as [MethodDisplay, string][]).map(([value, label]) => <button key={value} type="button" onClick={() => updateConfig("methodDisplay", value)} className={"rounded-lg border px-3 py-3 text-sm font-medium transition " + (selected.builder.configs.methodDisplay === value ? "border-primary bg-primary/5 text-primary" : "hover:bg-muted/40")}>{label}<span className="mt-2 flex gap-1">{value === "tabs" ? <><span className="h-1.5 flex-1 rounded-full bg-muted-foreground/40" /><span className="h-1.5 flex-1 rounded-full bg-muted" /><span className="h-1.5 flex-1 rounded-full bg-muted" /></> : <><span className="h-5 flex-1 rounded border bg-muted/50" /><span className="h-5 flex-1 rounded border bg-muted/50" /></>}</span></button>)}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Payment methods shown</Label>
+                      <div className="space-y-1.5">
+                        {clientPortalMethodOptions.map((method) => {
+                          const active = selected.builder.configs.paymentMethods.includes(method);
+                          return <button key={method} type="button" aria-pressed={active} onClick={() => {
+                            const current = selected.builder.configs.paymentMethods;
+                            if (active && current.length <= 1) {
+                              setNotice("Keep at least one payment method enabled.");
+                              return;
+                            }
+                            updateConfig("paymentMethods", active ? current.filter((item) => item !== method) : [...current, method]);
+                          }} className={"flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left transition " + (active ? "border-primary/40 bg-primary/5" : "hover:bg-muted/30")}>
+                            <span className="flex items-center gap-2"><span className="flex size-7 items-center justify-center rounded-md bg-muted text-[9px] font-bold">{method.split(/\s+/).map((part) => part[0]).join("").slice(0, 3)}</span><span className="text-xs font-medium">{method}</span></span>
+                            {active ? <Check className="size-4 text-primary" /> : <span className="size-4 rounded border" />}
+                          </button>;
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Player identification</Label>
+                      <Select value={selected.builder.configs.playerIdMode} onValueChange={(value) => updateConfig("playerIdMode", value as PlayerIdMode)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent><SelectItem value="userId">Player / User ID only</SelectItem><SelectItem value="email">Email only</SelectItem><SelectItem value="both">Player ID and email</SelectItem></SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2"><div><Label>Preset deposit amounts (TND)</Label><p className="mt-1 text-[11px] text-muted-foreground">These become the quick-select amount buttons.</p></div><Button size="icon" variant="outline" className="size-8 shrink-0" aria-label="Add amount" onClick={() => updateConfig("presetAmounts", [...selected.builder.configs.presetAmounts, (selected.builder.configs.presetAmounts[selected.builder.configs.presetAmounts.length - 1] ?? 0) + 50].slice(0, 8))} disabled={selected.builder.configs.presetAmounts.length >= 8}><Plus className="size-3.5" /></Button></div>
+                      <div className="space-y-2">
+                        {selected.builder.configs.presetAmounts.map((amount, index) => <div key={index} className="flex items-center gap-2"><Input aria-label={"Preset amount " + (index + 1)} type="number" min={1} value={amount} onChange={(event) => {
+                          const next = [...selected.builder.configs.presetAmounts];
+                          next[index] = Math.max(1, Number(event.target.value) || 1);
+                          updateConfig("presetAmounts", next);
+                        }} /><Button size="icon" variant="ghost" className="size-8 shrink-0" aria-label="Remove amount" disabled={selected.builder.configs.presetAmounts.length <= 1} onClick={() => updateConfig("presetAmounts", selected.builder.configs.presetAmounts.filter((_, itemIndex) => itemIndex !== index))}><X className="size-3.5" /></Button></div>)}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Deposit session timer (seconds)</Label>
+                      <Input type="number" min={30} max={3600} step={30} value={selected.builder.configs.timerSeconds} onChange={(event) => updateConfig("timerSeconds", Math.max(30, Math.min(3600, Number(event.target.value) || 30)))} />
+                      <p className="text-[11px] text-muted-foreground">Allowed range: 30 seconds to 60 minutes.</p>
+                    </div>
+
+                    <div className="space-y-3 rounded-xl border p-3">
+                      <ToggleSetting title="Schedule form availability" description="Keep the deposit form active only during configured hours." checked={selected.builder.configs.scheduleEnabled} onChange={(checked) => updateConfig("scheduleEnabled", checked)} />
+                      {selected.builder.configs.scheduleEnabled ? <div className="grid grid-cols-2 gap-3"><div className="grid gap-1.5"><Label>Active from</Label><Input type="time" value={selected.builder.configs.scheduleStart} onChange={(event) => updateConfig("scheduleStart", event.target.value)} /></div><div className="grid gap-1.5"><Label>Active until</Label><Input type="time" value={selected.builder.configs.scheduleEnd} onChange={(event) => updateConfig("scheduleEnd", event.target.value)} /></div><p className="col-span-2 text-[11px] leading-5 text-muted-foreground">Uses the visitor's local browser time in this prototype. Use a server-defined timezone for production enforcement.</p></div> : null}
+                    </div>
+                  </>
+                ) : null}
               </div>
-            ) : null}
-            {section === "general" ? (
-              <div className="space-y-4 rounded-lg border bg-background p-3">
-                <div><h3 className="text-sm font-semibold">Checkout content</h3><p className="mt-1 text-[10px] text-muted-foreground">The URL slug defines the public link.</p></div>
-                <div className="grid gap-2"><Label>Form name</Label><Input value={selected.name} onChange={(event) => updateSelected({ name: event.target.value, appearance: { ...selected.appearance, title: selected.appearance.title === selected.name ? event.target.value : selected.appearance.title } })} /></div>
-                <div className="grid gap-2"><Label>Checkout URL</Label><Input value={selected.slug} onChange={(event) => updateSelected({ slug: normalizeClientPortalSlug(event.target.value) })} /><p className="text-[10px] text-muted-foreground">/portal/{selected.slug || "your-form"}</p></div>
-                <div className="grid gap-2"><Label>Environment</Label><Select value={selected.environment} onValueChange={(value) => updateSelected({ environment: value as ClientPortalForm["environment"] })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Sandbox">Sandbox</SelectItem><SelectItem value="Production">Production</SelectItem></SelectContent></Select></div>
-                <div className="grid gap-2"><Label>Preview currency (visual only)</Label><Select value={selected.currency} onValueChange={(value) => updateSelected({ currency: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="TND">TND — Tunisian dinar</SelectItem><SelectItem value="USD">USD — US dollar</SelectItem><SelectItem value="EUR">EUR — Euro</SelectItem><SelectItem value="USDT">USDT — Tether</SelectItem></SelectContent></Select></div>
-                <div className="grid gap-2"><Label>Checkout heading</Label><Input value={selected.appearance.title} onChange={(event) => updateAppearance({ title: event.target.value })} /></div>
-                <div className="grid gap-2"><Label>Description</Label><textarea value={selected.appearance.description} onChange={(event) => updateAppearance({ description: event.target.value })} rows={4} className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/30" /></div>
-              </div>
-            ) : null}
-            {section === "methods" ? (
-              <div className="space-y-4 rounded-lg border bg-background p-3">
-                <div><h3 className="text-sm font-semibold">Payment methods</h3><p className="mt-1 text-[10px] leading-4 text-muted-foreground">Choose which options appear in this form.</p></div>
-                {clientPortalMethodOptions.map((method) => {
-                  const active = selected.methods.includes(method);
-                  return <button type="button" key={method} aria-pressed={active} onClick={() => toggleMethod(method)} className={"flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors " + (active ? "border-primary/40 bg-primary/5" : "hover:bg-muted/30")}><span className="flex min-w-0 items-center gap-2"><span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-[9px] font-bold">{method.split(/\s+/).map((part) => part[0]).join("").slice(0, 3)}</span><span className="truncate text-xs font-medium">{method}</span></span>{active ? <Check className="size-4 text-primary" /> : <span className="size-4 rounded border" />}</button>;
-                })}
-                <p className="text-[10px] leading-4 text-muted-foreground">Only payment methods configured and enabled for the brand and country can be offered in production.</p>
-              </div>
-            ) : null}
+            </>
+          )}
+
+          <div className="border-t px-4 py-3">
+            <p className="text-[11px] leading-5 text-muted-foreground">{notice || (selected.updated === "Unsaved changes" ? "Unsaved changes · Save to retain this configuration in the browser." : "Changes update the preview instantly. Save to retain them in this browser.")}</p>
           </div>
-          <div className="border-t px-4 py-3"><p className="text-[10px] leading-4 text-muted-foreground">{notice || (selected.updated === "Unsaved changes" ? "Unsaved changes" : "Changes apply to preview. Save to retain them in this browser.")}</p></div>
         </aside>
-
-        <main className="min-w-0 bg-muted/20 p-3 sm:p-5 xl:max-h-[calc(100dvh-8rem)] xl:overflow-y-auto">
-          <div className="mx-auto flex max-w-[1200px] flex-col gap-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div><h2 className="text-sm font-semibold">Live preview</h2><p className="mt-1 text-[11px] text-muted-foreground">Updates as you customize this checkout form.</p></div>
-              <div className="flex items-center gap-2"><Badge variant="outline">{previewMode === "desktop" ? "Desktop" : "Mobile"}</Badge><Badge variant="outline">{selected.environment}</Badge></div>
-            </div>
-            <CheckoutPreview form={selected} previewMode={previewMode} />
-            <div className="rounded-xl border bg-background p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-xs font-semibold">Public checkout URL</h3><p className="mt-1 break-all text-[11px] text-muted-foreground">{liveUrl}</p></div><Button size="sm" variant="outline" render={<a href={liveUrl + "?preview=1"} target="_blank" rel="noreferrer" />}><Eye className="size-3.5" /> Open preview</Button></div>
-              <div className="mt-3 grid gap-2"><Label>Embed snippet</Label><pre className="overflow-x-auto rounded-lg border bg-muted/20 p-2.5 text-[10px] leading-4 text-muted-foreground"><code>{embedCode}</code></pre></div>
-            </div>
-          </div>
-        </main>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-background px-4 py-3">
-        <div className="text-[10px] text-muted-foreground">Frontend prototype · settings are stored locally, not published to a shared backend.</div>
-        <div className="flex gap-2"><Button variant="outline" onClick={onExit}>Exit builder</Button><Button onClick={save}><Save className="size-3.5" /> Save changes</Button></div>
-      </div>
-    </section>
+    </main>
   );
 }
 
 function ToggleSetting({ title, description, checked, onChange }: { title: string; description: string; checked: boolean; onChange: (checked: boolean) => void }) {
-  return <div className="flex items-center justify-between gap-3 rounded-xl border p-3"><div><p className="text-sm font-medium">{title}</p><p className="mt-1 text-xs text-muted-foreground">{description}</p></div><Switch checked={checked} onCheckedChange={onChange} /></div>;
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border p-3">
+      <div className="min-w-0"><p className="text-sm font-medium">{title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p></div>
+      <Switch checked={checked} onCheckedChange={onChange} />
+    </div>
+  );
+}
+
+function PreviewBlock({
+  blockId,
+  selectedBlock,
+  onSelectBlock,
+  children,
+  className = "",
+}: {
+  blockId: string;
+  selectedBlock: string | null;
+  onSelectBlock: (blockId: string) => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const selected = selectedBlock === blockId;
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={"Edit " + (fieldDefaults[blockId]?.label ?? blockId) + " block"}
+      onClick={() => onSelectBlock(blockId)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelectBlock(blockId);
+        }
+      }}
+      className={"group relative cursor-pointer rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary " + (selected ? "ring-2 ring-primary ring-offset-2 ring-offset-transparent" : "hover:ring-1 hover:ring-primary/50 ") + className}
+    >
+      {children}
+      <span className={"pointer-events-none absolute right-2 top-2 rounded-md bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground opacity-0 transition group-hover:opacity-100 " + (selected ? "opacity-100" : "")}>Edit</span>
+    </div>
+  );
+}
+
+function isLightColor(color: string) {
+  const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+  if (!match) return false;
+  const r = Number.parseInt(match[1], 16);
+  const g = Number.parseInt(match[2], 16);
+  const b = Number.parseInt(match[3], 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 155;
+}
+
+function isWithinSchedule(start: string, end: string) {
+  const now = new Date();
+  const current = now.getHours() * 60 + now.getMinutes();
+  const [startHour, startMinute] = start.split(":").map(Number);
+  const [endHour, endMinute] = end.split(":").map(Number);
+  const startValue = startHour * 60 + startMinute;
+  const endValue = endHour * 60 + endMinute;
+  return startValue <= endValue
+    ? current >= startValue && current <= endValue
+    : current >= startValue || current <= endValue;
 }
 
 function CheckoutPreview({
   form,
   previewMode = "desktop",
+  selectedBlock,
+  onSelectBlock,
 }: {
-  form: ClientPortalForm;
+  form: EditableBuilderForm;
   previewMode?: "desktop" | "mobile";
+  selectedBlock: string | null;
+  onSelectBlock: (blockId: string) => void;
 }) {
-  const { appearance } = form;
-  const dark = appearance.theme === "dark";
-  const background = appearance.backgroundColor;
-  const surface = appearance.surfaceColor;
-  const foreground = dark ? "#f8fafc" : "#0f172a";
-  const muted = dark ? "#94a3b8" : "#64748b";
-  const border = dark ? "#334155" : "#e2e8f0";
-  const radius = appearance.radius === "small" ? "8px" : appearance.radius === "large" ? "22px" : "14px";
-  const frameWidth = previewMode === "mobile" ? "390px" : appearance.width === "wide" ? "100%" : "600px";
+  const { appearance, builder } = form;
+  const { colors, configs, features, blocks } = builder;
+  const light = isLightColor(colors.websiteBackground);
+  const foreground = light ? "#0f172a" : "#f8fafc";
+  const muted = light ? "#64748b" : "#94a3b8";
+  const border = light ? "#e2e8f0" : "#334155";
+  const radius = builder.buttonShape === "pill" ? "999px" : builder.buttonShape === "rounded" ? "12px" : "4px";
+  const frameWidth = previewMode === "mobile" ? "390px" : appearance.width === "wide" ? "100%" : "760px";
+  const [amount, setAmount] = useState(configs.presetAmounts[0] ?? 50);
+  const scheduled = !configs.scheduleEnabled || isWithinSchedule(configs.scheduleStart, configs.scheduleEnd);
+  const timerMinutes = Math.floor(configs.timerSeconds / 60).toString().padStart(2, "0");
+  const timerRemainder = (configs.timerSeconds % 60).toString().padStart(2, "0");
+
+  useEffect(() => {
+    setAmount(configs.presetAmounts[0] ?? 50);
+  }, [configs.presetAmounts.join(",")]);
+
+  const fontFamily = builder.fontFamily === "serif"
+    ? 'Georgia, "Times New Roman", serif'
+    : builder.fontFamily === "system"
+      ? "system-ui, sans-serif"
+      : "Inter, ui-sans-serif, system-ui, sans-serif";
+  const baseSurface = colors.checkoutSurface;
+  const buttonText = isLightColor(colors.accent) ? "#0f172a" : "#ffffff";
 
   return (
-    <div className="mx-auto w-full transition-all duration-200" style={{ maxWidth: frameWidth, fontFamily: appearance.fontFamily === "serif" ? 'Georgia, "Times New Roman", serif' : appearance.fontFamily === "system" ? "system-ui, sans-serif" : "Inter, ui-sans-serif, system-ui, sans-serif" }}>
-      <div className="overflow-hidden border bg-background shadow-lg" style={{ borderRadius: "14px", borderColor: border }}>
-        <div className="flex items-center gap-1.5 border-b bg-muted/30 px-3 py-2.5" style={{ borderColor: border }}>
+    <div className="mx-auto w-full transition-all duration-200" style={{ maxWidth: frameWidth, fontFamily }}>
+      <div className="overflow-hidden border shadow-xl" style={{ borderRadius: builder.template === "minimal" ? "8px" : builder.template === "classic" ? "4px" : "14px", borderColor: border, backgroundColor: colors.websiteBackground }}>
+        <div className="flex items-center gap-1.5 border-b px-3 py-2.5" style={{ borderColor: border, backgroundColor: light ? "#f8fafc" : "#0b1220" }}>
           <span className="size-2.5 rounded-full bg-rose-400" />
           <span className="size-2.5 rounded-full bg-amber-300" />
           <span className="size-2.5 rounded-full bg-emerald-400" />
           <div className="mx-auto flex h-6 min-w-0 max-w-[520px] flex-1 items-center justify-center gap-1.5 rounded-md border bg-background px-2 text-[10px] text-muted-foreground" style={{ borderColor: border }}>
-            <Globe2 className="size-3 shrink-0" /><span className="truncate">{typeof window === "undefined" ? "checkout.local" : window.location.host}/portal/{form.slug}</span>
+            <Globe2 className="size-3 shrink-0" /><span className="truncate">checkout.local/portal/{form.slug}</span>
           </div>
           <span className="w-7" />
         </div>
-        <div style={{ backgroundColor: background, color: foreground }}>
-          <div className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-6" style={{ backgroundColor: surface, borderColor: border }}>
+
+        <div style={{ backgroundColor: colors.websiteBackground, color: foreground }}>
+          <div className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-6" style={{ backgroundColor: baseSurface, borderColor: border }}>
             <div className="flex min-w-0 items-center gap-2.5">
-              {appearance.showLogo ? (appearance.logoUrl ? <img src={appearance.logoUrl} alt="" className="size-8 shrink-0 rounded-lg object-contain" /> : <span className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold" style={{ backgroundColor: appearance.primaryColor, color: dark ? "#052e22" : "#fff" }}>{(appearance.brandName || "iP").slice(0, 2).toUpperCase()}</span>) : null}
+              {appearance.showLogo ? (
+                appearance.logoUrl
+                  ? <img src={appearance.logoUrl} alt="" className="size-8 shrink-0 rounded-lg object-contain" />
+                  : <span className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold" style={{ backgroundColor: colors.brand, color: isLightColor(colors.brand) ? "#0f172a" : "#fff" }}>{(appearance.brandName || "iP").slice(0, 2).toUpperCase()}</span>
+              ) : null}
               <div className="min-w-0"><p className="truncate text-xs font-semibold">{appearance.brandName || "Your brand"}</p><p className="mt-0.5 text-[9px]" style={{ color: muted }}>Secure checkout</p></div>
             </div>
-            <div className="flex items-center gap-1 text-[9px]" style={{ color: appearance.primaryColor }}><Check className="size-3" /> Secure</div>
+            <div className="flex items-center gap-1 text-[9px]" style={{ color: colors.accent }}><Check className="size-3" /> Secure</div>
           </div>
-          <div className="p-4 sm:p-6">
-            <div className="mx-auto space-y-4" style={{ maxWidth: "450px" }}>
-              <div><p className="text-base font-semibold">{appearance.title || form.name}</p><p className="mt-1 text-xs leading-5" style={{ color: muted }}>{appearance.description}</p></div>
-              <div className="border p-4" style={{ backgroundColor: surface, borderColor: border, borderRadius: radius }}>
-                <div className="flex items-center justify-between gap-2"><span className="text-[11px]" style={{ color: muted }}>Deposit amount</span><Badge variant="outline">{form.currency}</Badge></div>
-                <p className="mt-2 text-2xl font-semibold tabular-nums">250.00 <span className="text-xs font-medium" style={{ color: muted }}>{form.currency}</span></p>
-              </div>
-              <div><p className="mb-2 text-xs font-medium">Choose payment method</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {form.methods.slice(0, previewMode === "mobile" ? 4 : 6).map((method) => <div key={method} className="flex min-w-0 items-center gap-2 border p-2.5 text-[10px]" style={{ borderColor: border, backgroundColor: surface, borderRadius: radius }}><span className="flex size-6 shrink-0 items-center justify-center rounded-md text-[8px] font-bold" style={{ backgroundColor: appearance.primaryColor, color: dark ? "#052e22" : "#fff" }}>{method.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</span><span className="truncate">{method}</span></div>)}
+
+          <div className={"p-4 sm:p-6 " + (builder.template === "minimal" ? "sm:px-10" : "")}>
+            <div className="mx-auto space-y-4" style={{ maxWidth: builder.template === "minimal" ? "390px" : "490px" }}>
+              <PreviewBlock blockId="heading" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
+                <p className="text-base font-semibold">{blocks.heading.label || form.name}</p>
+                <p className="mt-1 text-xs leading-5" style={{ color: muted }}>{blocks.heading.description}</p>
+              </PreviewBlock>
+
+              {configs.scheduleEnabled && !scheduled ? (
+                <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs leading-5 text-amber-700">
+                  This form is outside its active hours ({configs.scheduleStart}–{configs.scheduleEnd}). It will be available during the configured schedule.
                 </div>
+              ) : null}
+
+              {configs.playerIdMode !== "email" ? (
+                <PreviewBlock blockId="playerId" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
+                  <label className="mb-1.5 block text-[11px] font-medium">{blocks.playerId.label}</label>
+                  <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: radius, color: muted }}>{blocks.playerId.placeholder || "Enter your player ID"}</div>
+                  {blocks.playerId.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.playerId.description}</p> : null}
+                </PreviewBlock>
+              ) : null}
+
+              {configs.playerIdMode !== "userId" ? (
+                <PreviewBlock blockId="email" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
+                  <label className="mb-1.5 block text-[11px] font-medium">{blocks.email.label}</label>
+                  <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: radius, color: muted }}>{blocks.email.placeholder || "name@example.com"}</div>
+                  {blocks.email.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.email.description}</p> : null}
+                </PreviewBlock>
+              ) : null}
+
+              <PreviewBlock blockId="amount" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
+                <div className="flex items-center justify-between gap-2"><label className="text-[11px] font-medium">{blocks.amount.label}</label><Badge variant="outline">{form.currency}</Badge></div>
+                <div className="mt-2 border px-3 py-3" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: radius }}>
+                  <p className="text-2xl font-semibold tabular-nums">{Number(amount).toFixed(2)} <span className="text-xs font-medium" style={{ color: muted }}>{form.currency}</span></p>
+                  {blocks.amount.description ? <p className="mt-1 text-[10px] leading-4" style={{ color: muted }}>{blocks.amount.description}</p> : null}
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {configs.presetAmounts.map((preset) => <button type="button" key={preset} onClick={(event) => { event.stopPropagation(); setAmount(preset); onSelectBlock("amount"); }} className="border px-3 py-1.5 text-[10px] font-semibold tabular-nums transition" style={{ borderColor: preset === amount ? colors.accent : border, backgroundColor: preset === amount ? colors.accent + "20" : baseSurface, borderRadius: radius }}>{preset} TND</button>)}
+                </div>
+              </PreviewBlock>
+
+              <PreviewBlock blockId="paymentMethods" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
+                <p className="mb-2 text-xs font-medium">{blocks.paymentMethods.label}</p>
+                {configs.methodDisplay === "tabs" ? (
+                  <div className="flex flex-wrap gap-1 border-b pb-2" style={{ borderColor: border }}>
+                    {configs.paymentMethods.map((method, index) => <span key={method} className="border-b-2 px-2 py-1.5 text-[10px] font-medium" style={{ borderBottomColor: index === 0 ? colors.accent : "transparent", color: index === 0 ? colors.accent : muted }}>{method}</span>)}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {configs.paymentMethods.map((method, index) => <div key={method} className="flex min-w-0 items-center gap-2 border p-2.5 text-[10px]" style={{ borderColor: index === 0 ? colors.accent : border, backgroundColor: baseSurface, borderRadius: radius }}><span className="flex size-6 shrink-0 items-center justify-center rounded-md text-[8px] font-bold" style={{ backgroundColor: colors.accent, color: buttonText }}>{method.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</span><span className="truncate">{method}</span></div>)}
+                  </div>
+                )}
+                {blocks.paymentMethods.description ? <p className="mt-2 text-[10px] leading-4" style={{ color: muted }}>{blocks.paymentMethods.description}</p> : null}
+              </PreviewBlock>
+
+              <PreviewBlock blockId="transferNumber" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
+                <label className="mb-1.5 block text-[11px] font-medium">{blocks.transferNumber.label}</label>
+                <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: radius, color: muted }}>{blocks.transferNumber.placeholder}</div>
+                {blocks.transferNumber.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.transferNumber.description}</p> : null}
+              </PreviewBlock>
+
+              <PreviewBlock blockId="transactionId" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
+                <label className="mb-1.5 block text-[11px] font-medium">{blocks.transactionId.label}</label>
+                <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: radius, color: muted }}>{blocks.transactionId.placeholder}</div>
+                {blocks.transactionId.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.transactionId.description}</p> : null}
+              </PreviewBlock>
+
+              <PreviewBlock blockId="evidence" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
+                <label className="mb-1.5 block text-[11px] font-medium">{blocks.evidence.label}</label>
+                <div className="flex items-center gap-3 border border-dashed px-3 py-4" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: radius }}>
+                  <span className="flex size-8 items-center justify-center rounded-lg" style={{ backgroundColor: colors.accent + "20", color: colors.accent }}><Sparkles className="size-4" /></span>
+                  <span className="text-[11px]" style={{ color: muted }}>{blocks.evidence.placeholder || "Upload transfer screenshot"}</span>
+                </div>
+                {blocks.evidence.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.evidence.description}</p> : null}
+                {features.aiRecognition ? <div className="mt-2 flex items-center gap-2 rounded-lg border border-sky-500/30 bg-sky-500/5 px-2.5 py-2 text-[10px]" style={{ color: muted }}><Sparkles className="size-3.5 text-sky-500" /> AI receipt recognition is enabled.</div> : null}
+                {features.autoConfirm && features.aiRecognition ? <div className="mt-2 flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-[10px] text-amber-700"><AlertTriangle className="size-3.5" /> Automatic confirmation is enabled — high risk.</div> : null}
+              </PreviewBlock>
+
+              <PreviewBlock blockId="continue" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
+                <div className="w-full px-4 py-3 text-center text-xs font-semibold" style={{ backgroundColor: colors.accent, color: buttonText, borderRadius: radius, opacity: scheduled ? 1 : 0.55 }}>{blocks.continue.label || "Continue securely"}</div>
+              </PreviewBlock>
+
+              {features.supervisorRating ? <PreviewBlock blockId="supervisorRating" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="border-t p-3"><p className="text-[11px] font-medium">{blocks.supervisorRating.label}</p><p className="mt-1 text-[10px]" style={{ color: muted }}>{blocks.supervisorRating.description}</p><p className="mt-2 text-sm tracking-[0.18em]" style={{ color: colors.accent }}>★ ★ ★ ★ ★</p></PreviewBlock> : null}
+              {features.playerRating ? <PreviewBlock blockId="playerRating" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="border-t p-3"><p className="text-[11px] font-medium">{blocks.playerRating.label}</p><p className="mt-1 text-[10px]" style={{ color: muted }}>{blocks.playerRating.description}</p><p className="mt-2 text-sm tracking-[0.18em]" style={{ color: colors.accent }}>★ ★ ★ ★ ★</p></PreviewBlock> : null}
+
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-[9px]" style={{ borderColor: border, color: muted }}>
+                <span className="flex items-center gap-1"><Check className="size-3" /> Protected checkout</span>
+                <span>Session timer {timerMinutes}:{timerRemainder}</span>
+                {appearance.showPlatformBranding ? <span>Powered by iPayCash</span> : null}
               </div>
-              <div className="space-y-3">
-                <div className="grid gap-1.5"><span className="text-[10px]" style={{ color: muted }}>Player ID</span><div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: surface, borderRadius: radius }}>Enter your player ID</div></div>
-                <div className="grid gap-1.5"><span className="text-[10px]" style={{ color: muted }}>Email (optional)</span><div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: surface, borderRadius: radius }}>you@example.com</div></div>
-              </div>
-              <Button className="w-full" style={{ backgroundColor: appearance.primaryColor, color: dark ? "#052e22" : "#fff", borderRadius: radius }}>{appearance.buttonLabel || "Continue securely"}</Button>
-              {appearance.showPlatformBranding ? <p className="text-center text-[9px]" style={{ color: muted }}>Powered by iPayCash</p> : null}
-              <div className="flex items-center justify-center gap-1.5 text-[9px]" style={{ color: muted }}><ShieldCheckIcon /> Protected checkout · {form.slug}</div>
             </div>
           </div>
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[10px] text-muted-foreground">
-        <span className="flex items-center gap-1 rounded-full border bg-background px-2.5 py-1"><Monitor className="size-3" /> Desktop responsive</span>
-        <span className="flex items-center gap-1 rounded-full border bg-background px-2.5 py-1"><Smartphone className="size-3" /> Mobile responsive</span>
-      </div>
-      <div className="mt-3 flex items-start gap-2 rounded-lg border bg-background p-3 text-[10px] leading-4 text-muted-foreground"><Sparkles className="mt-0.5 size-3.5 shrink-0" /> This is a visual preview. Production checkout must use backend-published settings and verified payment-provider sessions.</div>
+
+      <div className="mt-3 flex flex-wrap items-start gap-2 rounded-lg border bg-background p-3 text-[10px] leading-4 text-muted-foreground"><Sparkles className="mt-0.5 size-3.5 shrink-0" /> Click a visible block to edit its text in the inspector. Preview and browser-stored settings do not activate or verify real payment-provider transactions.</div>
     </div>
   );
-}
-
-function ShieldCheckIcon() {
-  return <Globe2 className="size-3.5" />;
 }
