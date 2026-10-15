@@ -216,16 +216,38 @@ export function saveClientPortalForms(forms: ClientPortalForm[]) {
   }
 }
 
+const CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY = "ipaycash-client-portal-active-form-v1";
+
 export function getClientPortalFormForSlug(slug?: string): ClientPortalForm {
   const forms = getClientPortalForms();
   if (slug) {
     const bySlug = forms.find((form) => form.slug === slug && form.status === "Published");
-    if (bySlug) return cloneForm(bySlug);
+    if (bySlug) {
+      try {
+        if (typeof window !== "undefined") window.sessionStorage.setItem(CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY, bySlug.slug);
+      } catch {
+        // Session storage may be unavailable in restricted browser contexts.
+      }
+      return cloneForm(bySlug);
+    }
+
+    try {
+      const activeSlug = typeof window !== "undefined" ? window.sessionStorage.getItem(CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY) : null;
+      const activeForm = activeSlug ? forms.find((form) => form.slug === activeSlug && form.status === "Published") : null;
+      if (activeForm) return cloneForm(activeForm);
+    } catch {
+      // Fall back to the configured default if session storage is unavailable.
+    }
   }
 
   const fallback = forms.find((form) => form.status === "Published" && form.isDefault)
     ?? forms.find((form) => form.status === "Published")
     ?? defaultForms[0];
+  try {
+    if (typeof window !== "undefined") window.sessionStorage.setItem(CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY, fallback.slug);
+  } catch {
+    // Session storage may be unavailable in restricted browser contexts.
+  }
   return cloneForm(fallback);
 }
 
