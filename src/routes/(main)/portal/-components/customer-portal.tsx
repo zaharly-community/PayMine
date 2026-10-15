@@ -19,6 +19,8 @@ import {
   ScanText,
   Sparkles,
   ShieldAlert,
+  History as HistoryIcon,
+  FileWarning,
   Hash,
   UserRound,
   Mail,
@@ -32,7 +34,12 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Input } from "@/components/ui/input";
 import { cn } from "cn";
-import { createDistributorReport } from "@/lib/distributor-reports";
+import {
+  createDistributorReport,
+  readDistributorReports,
+  subscribeToDistributorReports,
+  type DistributorReport,
+} from "@/lib/distributor-reports";
 import {
   CLIENT_PORTAL_FORMS_CHANGE_EVENT,
   getClientPortalFormForSlug,
@@ -210,6 +217,8 @@ function PortalBrandHeader({ form }: { form: ClientPortalForm }) {
   const { appearance } = form;
   const builderSettings = React.useContext(PortalBuilderSettingsContext);
   const headerCopy = builderSettings?.blocks?.brandHeader;
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const formQuery = "?form=" + encodeURIComponent(form.slug);
   return (
     <div data-builder-block="brandHeader" style={{ ...getPortalBuilderBlockStyle(builderSettings, "brandHeader"), maxWidth: appearance.width === "wide" ? "72rem" : "48rem", color: appearance.theme === "dark" ? "#f8fafc" : "#0f172a", borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0" }} className="mx-auto flex w-full items-center justify-between gap-3 border-b px-4 py-3 sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
@@ -225,8 +234,25 @@ function PortalBrandHeader({ form }: { form: ClientPortalForm }) {
           <p className="text-[10px]" style={{ color: appearance.theme === "dark" ? "#94a3b8" : "#64748b" }}>{headerCopy?.placeholder || "Secure checkout"}</p>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px]" style={{ borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0", color: appearance.primaryColor }}>
-        <ShieldCheck className="size-3.5" /> {headerCopy?.description || "Protected payment"}
+      <div className="flex shrink-0 items-center gap-2">
+        <div className="hidden items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] sm:flex" style={{ borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0", color: appearance.primaryColor }}>
+          <ShieldCheck className="size-3.5" /> {headerCopy?.description || "Protected payment"}
+        </div>
+        <div className="relative">
+          <button type="button" aria-label="Player menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)} className="flex h-9 items-center gap-2 rounded-lg border px-3 text-xs font-medium transition-colors hover:bg-slate-500/10" style={{ borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0", color: appearance.theme === "dark" ? "#e2e8f0" : "#334155" }}>
+            <span>Menu</span><ChevronDown className={cn("size-3.5 transition-transform", menuOpen && "rotate-180")} />
+          </button>
+          {menuOpen ? (
+            <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-slate-700 bg-slate-900 p-1.5 shadow-xl">
+              <a href={"/portal/history" + formQuery} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-slate-200 transition-colors hover:bg-slate-800">
+                <HistoryIcon className="size-4 text-slate-400" /> History
+              </a>
+              <a href={"/portal/disagreements" + formQuery} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-slate-200 transition-colors hover:bg-slate-800">
+                <FileWarning className="size-4 text-slate-400" /> Disagreements
+              </a>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -546,7 +572,7 @@ function normalizeRequestPlayerValue(value: string) {
   return value.trim().toLowerCase();
 }
 
-function readOpenDepositRequests(): DepositRequest[] {
+export function readOpenDepositRequests(): DepositRequest[] {
   if (typeof window === "undefined") return [];
 
   try {
