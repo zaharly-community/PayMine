@@ -217,7 +217,7 @@ function preloadGoogleFont(fontName: string) {
     link.dataset.ipaycashGoogleFont = "true";
     document.head.appendChild(link);
   }
-  const family = fontName.trim().split(/\\s+/).map(encodeURIComponent).join("+");
+  const family = fontName.trim().split(/\s+/).map(encodeURIComponent).join("+");
   link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700&display=swap`;
 }
 
