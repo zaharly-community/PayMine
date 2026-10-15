@@ -3300,6 +3300,8 @@ function FlouciDepositFlow({
   setAmount: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const builderPreviewStep = React.useContext(PortalBuilderPreviewStepContext);
+
   const [demoStatus, setDemoStatus] = React.useState<FlouciDemoStatus>("reviewing");
   const [error, setError] = React.useState("");
   const [transactionId, setTransactionId] = React.useState("");
@@ -3335,6 +3337,10 @@ function FlouciDepositFlow({
     setCorrectedAmount(String(method.min));
     setSecondsLeft(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
   }, [method.id, portalBuilderSettings?.configs?.timerSeconds]);
+
+  React.useEffect(() => {
+    if (builderPreviewStep) setStep(builderPreviewStep === "payment" ? 2 : 1);
+  }, [builderPreviewStep, method.id]);
 
   React.useEffect(() => {
     if (!proofFile || portalBuilderSettings?.features?.aiRecognition === false) {
@@ -4246,6 +4252,8 @@ function CardDepositFlow({
   setAmount: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const builderPreviewStep = React.useContext(PortalBuilderPreviewStepContext);
+
   const [error, setError] = React.useState("");
   const [cardNumbers, setCardNumbers] = React.useState<string[]>([""]);
   const [proofFile, setProofFile] = React.useState<File | null>(null);
@@ -4292,6 +4300,10 @@ function CardDepositFlow({
       Object.values(recognitionTimers.current).forEach((timer) => window.clearTimeout(timer));
     };
   }, [method.id, portalBuilderSettings?.configs?.timerSeconds]);
+
+  React.useEffect(() => {
+    if (builderPreviewStep) setStep(builderPreviewStep === "payment" ? 2 : 1);
+  }, [builderPreviewStep, method.id]);
 
   React.useEffect(() => {
     if (!proofFile || portalBuilderSettings?.features?.aiRecognition === false) {
@@ -5411,6 +5423,8 @@ function EDinarDepositFlow({
   setAmount: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const builderPreviewStep = React.useContext(PortalBuilderPreviewStepContext);
+
   const [error, setError] = React.useState("");
   const [transactionId, setTransactionId] = React.useState("");
   const [proofFile, setProofFile] = React.useState<File | null>(null);
@@ -5432,6 +5446,10 @@ function EDinarDepositFlow({
     setDetectedTransactionId("");
     setSecondsLeft(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
   }, [method.id, portalBuilderSettings?.configs?.timerSeconds]);
+
+  React.useEffect(() => {
+    if (builderPreviewStep) setStep(builderPreviewStep === "payment" ? 2 : 1);
+  }, [builderPreviewStep, method.id]);
 
   React.useEffect(() => {
     if (!proofFile || portalBuilderSettings?.features?.aiRecognition === false) {
@@ -5684,6 +5702,8 @@ function BinancePayFlow({
   setAmount: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const [step, setStep] = React.useState<1 | 2>(1);
+  const builderPreviewStep = React.useContext(PortalBuilderPreviewStepContext);
+
   const [error, setError] = React.useState("");
   const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
   const presets = portalBuilderSettings?.configs?.presetAmounts?.length ? portalBuilderSettings.configs.presetAmounts : [10, 20, 50, 100, 200, 500];
@@ -5692,6 +5712,10 @@ function BinancePayFlow({
     setStep(1);
     setError("");
   }, [method.id]);
+
+  React.useEffect(() => {
+    if (builderPreviewStep) setStep(builderPreviewStep === "payment" ? 2 : 1);
+  }, [builderPreviewStep, method.id]);
 
   const continueToCheckout = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -6612,6 +6636,7 @@ function CustomerPortalExperience({
 
   if (method.id === "binance-pay") {
     return (
+      <PortalBuilderSettingsContext.Provider value={methodSpecificSettings}>
       <BinancePayFlow
         method={method}
         playerRequestStatus={playerRequestStatus}
@@ -6626,11 +6651,13 @@ function CustomerPortalExperience({
         amount={amount}
         setAmount={setAmount}
       />
+      </PortalBuilderSettingsContext.Provider>
     );
   }
 
   if (isEDinarMethod(method)) {
     return (
+      <PortalBuilderSettingsContext.Provider value={methodSpecificSettings}>
       <EDinarDepositFlow
         method={method}
         playerRequestStatus={playerRequestStatus}
@@ -6648,11 +6675,13 @@ function CustomerPortalExperience({
         amount={amount}
         setAmount={setAmount}
       />
+      </PortalBuilderSettingsContext.Provider>
     );
   }
 
   if (isCardDepositMethod(method)) {
     return (
+      <PortalBuilderSettingsContext.Provider value={methodSpecificSettings}>
       <CardDepositFlow
         method={method}
         playerRequestStatus={playerRequestStatus}
@@ -6670,11 +6699,13 @@ function CustomerPortalExperience({
         amount={amount}
         setAmount={setAmount}
       />
+      </PortalBuilderSettingsContext.Provider>
     );
   }
 
   if (isManualTransferMethod(method)) {
     return (
+      <PortalBuilderSettingsContext.Provider value={methodSpecificSettings}>
       <FlouciDepositFlow
         method={method}
         playerRequestStatus={playerRequestStatus}
@@ -6692,6 +6723,7 @@ function CustomerPortalExperience({
         amount={amount}
         setAmount={setAmount}
       />
+      </PortalBuilderSettingsContext.Provider>
     );
   }
 
