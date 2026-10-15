@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Check,
   Copy,
@@ -12,7 +12,6 @@ import {
   Smartphone,
   Sparkles,
   Sun,
-  WalletCards,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
