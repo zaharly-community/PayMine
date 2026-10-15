@@ -6164,7 +6164,6 @@ export function CustomerPortal({
                 <PortalExperienceRating />
               </div>
             ) : null}
-          </div>
           {clientForm.appearance.showPlatformBranding ? <p className="px-4 py-3 text-center text-[10px]" style={{ color: clientForm.appearance.theme === "dark" ? "#64748b" : "#94a3b8" }}>Powered by iPayCash</p> : null}
         </div>
       </div>
