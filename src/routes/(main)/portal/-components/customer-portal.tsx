@@ -1903,6 +1903,7 @@ function FlouciStepOne({
             type="submit"
             disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
             data-builder-block="continue"
+            style={getPortalBuilderBlockStyle(portalBuilderSettings, "continue")}
             title={"Continue to " + method.name + " payment"}
             className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
           >
@@ -2108,6 +2109,7 @@ function FlouciStepTwo({
   const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
   const expired = secondsLeft <= 0;
+  const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
 
   const previewUrl = React.useMemo(
     () => (proofFile ? URL.createObjectURL(proofFile) : ""),
@@ -2135,8 +2137,8 @@ function FlouciStepTwo({
   return (
     <>
       <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
-        <div className="space-y-4">
-          <div>
+        <div data-builder-form="true" className="flex flex-col gap-4">
+          <div data-builder-block="transferNumber" style={getPortalBuilderBlockStyle(portalBuilderSettings, "transferNumber")}>
           <FieldLabel>{method.name} transfer number</FieldLabel>
           <div className="flex items-stretch gap-2">
             <div className="flex min-w-0 flex-1 overflow-hidden rounded-lg bg-slate-700/90">
@@ -2237,7 +2239,7 @@ function FlouciStepTwo({
             </div>
           </div>
 
-          <div>
+          <div data-builder-block="transactionId" style={getPortalBuilderBlockStyle(portalBuilderSettings, "transactionId")}>
             <FieldLabel>Transaction ID</FieldLabel>
             <div className="flex items-stretch gap-2">
               <div className="min-w-0 flex-1">
@@ -2285,7 +2287,7 @@ function FlouciStepTwo({
             ) : null}
           </div>
 
-          <div>
+          <div data-builder-block="evidence" style={getPortalBuilderBlockStyle(portalBuilderSettings, "evidence")}>
             <FieldLabel>Payment photo</FieldLabel>
             <label
               title="Upload payment photo"
@@ -2364,6 +2366,8 @@ function FlouciStepTwo({
 
           <Button
             type="button"
+            data-builder-block="continue"
+            style={getPortalBuilderBlockStyle(portalBuilderSettings, "continue")}
             onClick={onConfirm}
             disabled={expired}
             title={`Confirm ${method.name} transfer`}
@@ -3836,6 +3840,7 @@ function CardDepositStepOne({
             type="submit"
             disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
             data-builder-block="continue"
+            style={getPortalBuilderBlockStyle(portalBuilderSettings, "continue")}
             title={"Continue to " + method.name + " payment"}
             className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
           >
@@ -4814,6 +4819,7 @@ function EDinarStepOne({
             type="submit"
             disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
             data-builder-block="continue"
+            style={getPortalBuilderBlockStyle(portalBuilderSettings, "continue")}
             title={"Continue to " + method.name + " payment"}
             className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
           >
@@ -4922,6 +4928,7 @@ function EDinarStepTwo({
   const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
   const expired = secondsLeft <= 0;
+  const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
 
   const previewUrl = React.useMemo(
     () => (proofFile ? URL.createObjectURL(proofFile) : ""),
@@ -4941,12 +4948,12 @@ function EDinarStepTwo({
   return (
     <>
       <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
-        <div className="space-y-4">
+        <div data-builder-form="true" className="flex flex-col gap-4">
           <div className="flex justify-center">
             <EDinarCardPreview />
           </div>
 
-          <div>
+          <div data-builder-block="transactionId" style={getPortalBuilderBlockStyle(portalBuilderSettings, "transactionId")}>
             <FieldLabel>Transaction ID</FieldLabel>
             <div className="flex items-stretch gap-2">
               <Input
@@ -4989,7 +4996,7 @@ function EDinarStepTwo({
             ) : null}
           </div>
 
-          <div>
+          <div data-builder-block="evidence" style={getPortalBuilderBlockStyle(portalBuilderSettings, "evidence")}>
             <FieldLabel>Payment photo</FieldLabel>
             <label
               title="Upload payment photo"
@@ -5066,6 +5073,8 @@ function EDinarStepTwo({
 
           <Button
             type="button"
+            data-builder-block="continue"
+            style={getPortalBuilderBlockStyle(portalBuilderSettings, "continue")}
             onClick={onConfirm}
             disabled={expired}
             title="Confirm E-Dinar payment"
