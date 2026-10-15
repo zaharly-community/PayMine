@@ -47,6 +47,12 @@ type BlockCopy = {
   description: string;
 };
 
+type BlockStyleSettings = {
+  alignment: "left" | "center" | "right";
+  width: "full" | "wide" | "medium" | "narrow";
+  spacing: "compact" | "normal" | "relaxed";
+};
+
 type PortalBuilderSettings = {
   template: TemplateId;
   layout: {
@@ -80,6 +86,7 @@ type PortalBuilderSettings = {
     scheduleEnd: string;
   };
   blocks: Record<string, BlockCopy>;
+  blockStyles: Record<string, BlockStyleSettings>;
 };
 
 type BuilderForm = ClientPortalForm & { builder?: PortalBuilderSettings };
@@ -286,6 +293,11 @@ function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
             ? { ...value, label: form.appearance.buttonLabel || value.label }
             : { ...value },
     ])),
+    blockStyles: Object.fromEntries(builderBlockCatalog.map((block) => [block.id, {
+      alignment: "left" as const,
+      width: block.id === "heading" ? "wide" as const : "full" as const,
+      spacing: "normal" as const,
+    }])) as Record<string, BlockStyleSettings>,
   };
 }
 
@@ -296,6 +308,7 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
         features?: Partial<PortalBuilderSettings["features"]>;
         configs?: Partial<PortalBuilderSettings["configs"]>;
         blocks?: Record<string, Partial<BlockCopy> | undefined>;
+        blockStyles?: Record<string, Partial<BlockStyleSettings> | undefined>;
         layout?: { version?: number; order?: string[]; hidden?: string[]; sections?: Record<string, string> };
       })
     | undefined;
@@ -334,6 +347,15 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
         : block.section];
     }),
   ) as Record<string, BuilderSectionId>;
+  const blockStyles: Record<string, BlockStyleSettings> = { ...defaults.blockStyles };
+  for (const [id, rawStyle] of Object.entries(raw?.blockStyles ?? {})) {
+    if (!rawStyle || !blockStyles[id]) continue;
+    blockStyles[id] = {
+      alignment: rawStyle.alignment === "center" || rawStyle.alignment === "right" ? rawStyle.alignment : "left",
+      width: rawStyle.width === "wide" || rawStyle.width === "medium" || rawStyle.width === "narrow" ? rawStyle.width : "full",
+      spacing: rawStyle.spacing === "compact" || rawStyle.spacing === "relaxed" ? rawStyle.spacing : "normal",
+    };
+  }
   const settings: PortalBuilderSettings = {
     ...defaults,
     ...raw,
@@ -365,6 +387,7 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
       scheduleEnd: typeof raw?.configs?.scheduleEnd === "string" ? raw.configs.scheduleEnd : defaults.configs.scheduleEnd,
     },
     blocks,
+    blockStyles,
   };
   return { ...form, builder: settings };
 }
@@ -453,6 +476,7 @@ export function ClientPortalBuilder({
       features: { ...selected.builder.features, ...(patch.features ?? {}) },
       configs: { ...selected.builder.configs, ...(patch.configs ?? {}) },
       blocks: { ...selected.builder.blocks, ...(patch.blocks ?? {}) },
+      blockStyles: { ...selected.builder.blockStyles, ...(patch.blockStyles ?? {}) },
       layout: {
         version: 2,
         order: patch.layout?.order ?? selected.builder.layout.order,
@@ -545,6 +569,16 @@ export function ClientPortalBuilder({
     });
   };
 
+  const updateBlockStyle = (key: string, patch: Partial<BlockStyleSettings>) => {
+    if (!selected) return;
+    updateBuilder({
+      blockStyles: {
+        ...selected.builder.blockStyles,
+        [key]: { ...selected.builder.blockStyles[key], ...patch },
+      },
+    });
+  };
+
   const updateConfig = (key: keyof PortalBuilderSettings["configs"], value: PortalBuilderSettings["configs"][typeof key]) => {
     if (!selected) return;
     const configs = { ...selected.builder.configs, [key]: value };
@@ -618,6 +652,7 @@ export function ClientPortalBuilder({
         features: { ...selected.builder.features },
         configs: { ...selected.builder.configs, paymentMethods: [...selected.builder.configs.paymentMethods], presetAmounts: [...selected.builder.configs.presetAmounts] },
         blocks: Object.fromEntries(Object.entries(selected.builder.blocks).map(([key, value]) => [key, { ...value }])),
+        blockStyles: Object.fromEntries(Object.entries(selected.builder.blockStyles).map(([key, value]) => [key, { ...value }])),
         layout: {
           version: 2,
           order: [...selected.builder.layout.order],
@@ -707,6 +742,43 @@ export function ClientPortalBuilder({
               <div className="rounded-lg border bg-muted/20 p-3">
                 <p className="text-xs font-medium">Content block</p>
                 <p className="mt-1 text-xs text-muted-foreground">Edit text and move this block to another area. Required blocks remain visible but can be rearranged.</p>
+              </div>
+              <div className="grid gap-2 rounded-xl border bg-background p-3">
+                <p className="text-xs font-semibold">Block layout</p>
+                <div className="grid gap-1.5">
+                  <Label>Width</Label>
+                  <Select value={selected.builder.blockStyles[selectedBlock]?.width ?? "full"} onValueChange={(value) => updateBlockStyle(selectedBlock, { width: value as BlockStyleSettings["width"] })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="full">Full width</SelectItem>
+                      <SelectItem value="wide">Wide</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="narrow">Narrow</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Alignment</Label>
+                  <Select value={selected.builder.blockStyles[selectedBlock]?.alignment ?? "left"} onValueChange={(value) => updateBlockStyle(selectedBlock, { alignment: value as BlockStyleSettings["alignment"] })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                      <SelectItem value="right">Right</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label>Spacing</Label>
+                  <Select value={selected.builder.blockStyles[selectedBlock]?.spacing ?? "normal"} onValueChange={(value) => updateBlockStyle(selectedBlock, { spacing: value as BlockStyleSettings["spacing"] })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="compact">Compact</SelectItem>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="relaxed">Relaxed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label>Block area</Label>
