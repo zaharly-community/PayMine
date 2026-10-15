@@ -139,6 +139,9 @@ const paymentMethods: PaymentMethod[] = [
 ];
 
 const PortalPaymentMethodsContext = React.createContext<PaymentMethod[]>(paymentMethods);
+const PortalButtonLabelContext = React.createContext<string>("Do Deposit");
+const PortalFormSlugContext = React.createContext<string | undefined>(undefined);
+const PortalPreviewContext = React.createContext(false);
 
 function normalizePortalMethodName(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -215,6 +218,9 @@ function PaymentMethodSelector({
   onSelect: (method: PaymentMethod) => void;
 }) {
   const availableMethods = React.useContext(PortalPaymentMethodsContext);
+  const formSlug = React.useContext(PortalFormSlugContext);
+  const portalPreview = React.useContext(PortalPreviewContext);
+  const selectorSearch = formSlug ? { form: formSlug, preview: portalPreview } : { preview: portalPreview };
   const sliderRef = React.useRef<HTMLDivElement>(null);
   const dragRef = React.useRef({
     pointerId: -1,
@@ -328,6 +334,7 @@ function PaymentMethodSelector({
                   data-payment-method-id={item.id}
                   to="/portal/$method"
                   params={{ method: item.id }}
+                  search={selectorSearch}
                   onClickCapture={(event) => {
                     if (dragRef.current.moved) {
                       event.preventDefault();
@@ -379,6 +386,7 @@ function PaymentMethodSelector({
                 key={item.id + "-menu"}
                 to="/portal/$method"
                 params={{ method: item.id }}
+                  search={selectorSearch}
                 onClick={() => {
                   onSelect(item);
                   onToggle();
@@ -1652,6 +1660,7 @@ function FlouciStepOne({
   error: string;
   onContinue: () => void;
 }) {
+  const portalButtonLabel = React.useContext(PortalButtonLabelContext);
   const presets = [20, 50, 100, 200, 500, 1000];
 
   return (
@@ -1814,7 +1823,7 @@ function FlouciStepOne({
           >
             <CircleDollarSign className="size-4" />
             <span>
-              Do Deposit
+              {portalButtonLabel}
               <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
                 Net Amount: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} TND
               </span>
@@ -3607,6 +3616,7 @@ function CardDepositStepOne({
   error: string;
   onContinue: () => void;
 }) {
+  const portalButtonLabel = React.useContext(PortalButtonLabelContext);
   const presets = [10, 20, 50, 100, 200, 500];
 
   return (
@@ -3743,7 +3753,7 @@ function CardDepositStepOne({
           >
             <CircleDollarSign className="size-4" />
             <span>
-              Do Deposit
+              {portalButtonLabel}
               <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
                 Total Cards Value: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} {method.currency}
               </span>
@@ -4549,6 +4559,7 @@ function EDinarStepOne({
   error: string;
   onContinue: () => void;
 }) {
+  const portalButtonLabel = React.useContext(PortalButtonLabelContext);
   const presets = [20, 50, 100, 200, 500, 1000];
 
   return (
@@ -4716,7 +4727,7 @@ function EDinarStepOne({
           >
             <CircleDollarSign className="size-4" />
             <span>
-              Do Deposit
+              {portalButtonLabel}
               <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
                 Net Amount: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} TND
               </span>
@@ -5884,19 +5895,42 @@ function GenericDepositSummary({
   );
 }
 
-export function CustomerPortal({ initialMethodId }: { initialMethodId?: string } = {}) {
-  const [clientForm, setClientForm] = React.useState<ClientPortalForm>(() => getClientPortalFormForSlug(initialMethodId));
-  const availableMethods = React.useMemo(() => getMethodsForClientForm(clientForm), [clientForm.methods]);
+export function CustomerPortal({
+  initialMethodId,
+  formSlug,
+  preview = false,
+}: {
+  initialMethodId?: string;
+  formSlug?: string;
+  preview?: boolean;
+} = {}) {
+  const [clientForm, setClientForm] = React.useState<ClientPortalForm | null>(() => getClientPortalFormForSlug(formSlug ?? initialMethodId, preview));
+  const availableMethods = React.useMemo(
+    () => clientForm ? getMethodsForClientForm(clientForm) : [],
+    [clientForm?.methods],
+  );
 
   React.useEffect(() => {
-    const refresh = () => setClientForm(getClientPortalFormForSlug(initialMethodId));
+    const refresh = () => setClientForm(getClientPortalFormForSlug(formSlug ?? initialMethodId, preview));
     window.addEventListener(CLIENT_PORTAL_FORMS_CHANGE_EVENT, refresh);
     window.addEventListener("storage", refresh);
     return () => {
       window.removeEventListener(CLIENT_PORTAL_FORMS_CHANGE_EVENT, refresh);
       window.removeEventListener("storage", refresh);
     };
-  }, [initialMethodId]);
+  }, [initialMethodId, formSlug, preview]);
+
+  if (!clientForm) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center bg-slate-950 px-5 py-10 text-slate-100">
+        <section className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 text-center">
+          <ShieldAlert className="mx-auto size-8 text-slate-400" />
+          <h1 className="mt-4 text-lg font-semibold">Checkout unavailable</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-400">This checkout form is not published or the link is no longer active. Please contact the merchant for a valid payment link.</p>
+        </section>
+      </main>
+    );
+  }
 
   const style = {
     "--portal-page-background": clientForm.appearance.backgroundColor,
@@ -5905,10 +5939,14 @@ export function CustomerPortal({ initialMethodId }: { initialMethodId?: string }
     "--portal-border": clientForm.appearance.theme === "dark" ? "#334155" : "#e2e8f0",
     "--portal-radius": clientForm.appearance.radius === "small" ? "8px" : clientForm.appearance.radius === "large" ? "22px" : "14px",
     "--portal-content-width": clientForm.appearance.width === "wide" ? "72rem" : "48rem",
+    fontFamily: clientForm.appearance.fontFamily === "serif" ? 'Georgia, "Times New Roman", serif' : clientForm.appearance.fontFamily === "system" ? "system-ui, sans-serif" : "Inter, ui-sans-serif, system-ui, sans-serif",
   } as React.CSSProperties;
 
   return (
     <PortalPaymentMethodsContext.Provider value={availableMethods}>
+      <PortalButtonLabelContext.Provider value={clientForm.appearance.buttonLabel || "Do Deposit"}>
+      <PortalFormSlugContext.Provider value={clientForm.slug}>
+      <PortalPreviewContext.Provider value={preview}>
       <div id="ipaycash-client-portal" data-theme={clientForm.appearance.theme} data-width={clientForm.appearance.width} data-radius={clientForm.appearance.radius} style={style}>
         <style>{'#ipaycash-client-portal [class~="bg-slate-950"]{background-color:var(--portal-page-background)!important;}' +
           '#ipaycash-client-portal [class~="bg-slate-900"],#ipaycash-client-portal [class~="bg-slate-900/80"],#ipaycash-client-portal [class~="bg-slate-900/90"],#ipaycash-client-portal [class~="bg-slate-800"],#ipaycash-client-portal [class~="bg-slate-800/80"],#ipaycash-client-portal [class~="bg-slate-800/60"],#ipaycash-client-portal [class~="bg-slate-700/90"]{background-color:var(--portal-surface)!important;}' +
@@ -5920,7 +5958,7 @@ export function CustomerPortal({ initialMethodId }: { initialMethodId?: string }
           '#ipaycash-client-portal [class~="min-h-dvh"]{min-height:max(560px,calc(100dvh - 4.5rem))!important;}' +
           '#ipaycash-client-portal[data-theme="light"] [class~="text-slate-100"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-200"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-300"]{color:#0f172a!important;}' +
           '#ipaycash-client-portal[data-theme="light"] [class~="text-slate-400"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-500"]{color:#64748b!important;}'}</style>
-        <div style={{ backgroundColor: clientForm.appearance.backgroundColor }}>
+        <div style={{ backgroundColor: clientForm.appearance.backgroundColor, fontFamily: style.fontFamily }}>
           <PortalBrandHeader form={clientForm} />
           <div className="mx-auto w-full" style={{ maxWidth: clientForm.appearance.width === "wide" ? "80rem" : "64rem" }}>
             <div className="px-4 pb-2 pt-4 sm:px-6">
@@ -5932,6 +5970,9 @@ export function CustomerPortal({ initialMethodId }: { initialMethodId?: string }
           {clientForm.appearance.showPlatformBranding ? <p className="px-4 py-3 text-center text-[10px]" style={{ color: clientForm.appearance.theme === "dark" ? "#64748b" : "#94a3b8" }}>Powered by iPayCash</p> : null}
         </div>
       </div>
+      </PortalPreviewContext.Provider>
+      </PortalFormSlugContext.Provider>
+      </PortalButtonLabelContext.Provider>
     </PortalPaymentMethodsContext.Provider>
   );
 }
