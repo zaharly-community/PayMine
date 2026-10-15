@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Activity, ArrowUpRight, Check, ExternalLink, Eye, Globe2, LayoutTemplate, Pencil, Plus, Power, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, ExternalLink, Eye, Globe2, LayoutTemplate, Pencil, Plus, Power, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,6 @@ import {
 
 function currentTimestamp() {
   return new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-}
-
-function conversionNumber(value: string) {
-  const number = Number.parseFloat(value);
-  return Number.isFinite(number) ? number : null;
 }
 
 function safeSlug(value: string, forms: ClientPortalForm[]) {
@@ -55,13 +50,6 @@ export function ClientPortalFormsLibrary({
       window.removeEventListener(CLIENT_PORTAL_FORMS_CHANGE_EVENT, refresh);
     };
   }, []);
-
-  const published = forms.filter((form) => form.status === "Published").length;
-  const totalSessions = forms.reduce((sum, form) => sum + form.sessions, 0);
-  const averageConversion = useMemo(() => {
-    const values = forms.map((form) => conversionNumber(form.conversion)).filter((value): value is number => value !== null);
-    return values.length ? (values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1) + "%" : "—";
-  }, [forms]);
 
   const persist = (next: ClientPortalForm[], message: string) => {
     const normalized = next.map((form) => ({ ...form, updated: currentTimestamp() }));
@@ -161,13 +149,6 @@ export function ClientPortalFormsLibrary({
         <Button onClick={() => setCreateOpen(true)}><Plus className="size-4" /> Create form</Button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric icon={<LayoutTemplate className="size-4" />} label="Total forms" value={String(forms.length)} detail="Checkout layouts" />
-        <Metric icon={<Power className="size-4" />} label="Published" value={String(published)} detail={forms.length ? Math.round(published / forms.length * 100) + "% of forms" : "No forms"} />
-        <Metric icon={<Activity className="size-4" />} label="Checkout sessions" value={totalSessions.toLocaleString()} detail="Demo analytics" />
-        <Metric icon={<ArrowUpRight className="size-4" />} label="Average conversion" value={averageConversion} detail="Across forms with data" />
-      </div>
-
       {notice ? <div className="rounded-lg border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">{notice}</div> : null}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -175,16 +156,16 @@ export function ClientPortalFormsLibrary({
         <Badge variant="outline">{forms.length} forms</Badge>
       </div>
 
-      <div className="grid items-stretch gap-4 md:grid-cols-2 2xl:grid-cols-3">
+      <div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         {forms.map((form) => (
-          <Card key={form.id} className="group flex h-full flex-col overflow-hidden rounded-xl py-0 shadow-none transition-all hover:-translate-y-0.5 hover:shadow-md">
-            <div className="relative border-b p-2" style={{ background: form.appearance.backgroundColor }}>
-              <div className="overflow-hidden border shadow-sm" style={{ backgroundColor: form.appearance.surfaceColor, borderColor: form.appearance.theme === "dark" ? "#334155" : "#e2e8f0", borderRadius: form.appearance.radius === "small" ? "6px" : form.appearance.radius === "large" ? "20px" : "12px" }}>
+          <Card key={form.id} className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border-slate-200 bg-card py-0 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg">
+            <div className="relative border-b border-slate-200 p-2.5" style={{ background: form.appearance.theme === "dark" ? "linear-gradient(145deg, #0f172a, #1e293b)" : "linear-gradient(145deg, #f1f5f9, #ffffff)" }}>
+              <div className="overflow-hidden border shadow-md transition-transform duration-200 group-hover:shadow-lg" style={{ backgroundColor: form.appearance.surfaceColor, borderColor: form.appearance.theme === "dark" ? "#334155" : "#e2e8f0", borderRadius: form.appearance.radius === "small" ? "6px" : form.appearance.radius === "large" ? "20px" : "12px" }}>
                 <div className="flex h-7 items-center gap-1.5 border-b px-2.5" style={{ borderColor: form.appearance.theme === "dark" ? "#334155" : "#e2e8f0" }}>
                   <span className="size-1.5 rounded-full bg-rose-400" /><span className="size-1.5 rounded-full bg-amber-300" /><span className="size-1.5 rounded-full bg-emerald-400" />
                   <span className="ml-2 flex h-4 min-w-0 flex-1 items-center truncate rounded-full border px-2 text-[8px]" style={{ color: form.appearance.theme === "dark" ? "#94a3b8" : "#64748b", borderColor: form.appearance.theme === "dark" ? "#334155" : "#e2e8f0" }}>checkout.ipaycash.test/{form.slug}</span>
                 </div>
-                <div className="min-h-[180px] p-4 sm:p-5" style={{ color: form.appearance.theme === "dark" ? "#f8fafc" : "#0f172a" }}>
+                <div className="min-h-[172px] p-3.5" style={{ color: form.appearance.theme === "dark" ? "#f8fafc" : "#0f172a" }}>
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2">
                       {form.appearance.showLogo ? <span className="flex size-7 shrink-0 items-center justify-center rounded-md text-[9px] font-bold" style={{ backgroundColor: form.appearance.primaryColor, color: "#fff" }}>{(form.appearance.brandName || "IP").slice(0, 2).toUpperCase()}</span> : null}
@@ -202,32 +183,32 @@ export function ClientPortalFormsLibrary({
                   </div>
                 </div>
               </div>
-              <div className="absolute left-4 top-4 flex gap-1.5">
-                <Badge variant={form.status === "Published" ? "secondary" : "outline"}>{form.status === "Published" ? <><Check className="mr-1 size-3" /> Active</> : "Draft / Inactive"}</Badge>
-                {form.isDefault ? <Badge variant="outline">Default</Badge> : null}
               </div>
             </div>
-            <CardContent className="flex flex-1 flex-col gap-4 p-4">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <Badge variant="outline">{form.environment}</Badge>
-                <Badge variant="secondary">{form.currency}</Badge>
-                <span className="ml-auto text-[10px] text-muted-foreground">Updated {form.updated}</span>
+            <CardContent className="flex flex-1 flex-col gap-3 p-3.5">
+              <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                <Badge variant={form.status === "Published" ? "secondary" : "outline"} className={form.status === "Published" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700" : "border-slate-300 bg-slate-100 text-slate-600"}>{form.status === "Published" ? <><Check className="mr-1 size-3" /> Published</> : "Draft"}</Badge>
+                {form.isDefault ? <Badge variant="outline" className="border-blue-500/20 bg-blue-500/5 text-blue-700">Default</Badge> : null}
+                <span className="ml-auto text-[10px] text-muted-foreground">{form.currency}</span>
               </div>
-              <div><h3 className="text-base font-semibold">{form.name}</h3><p className="mt-1 text-xs text-muted-foreground">/portal/{form.slug}</p></div>
-
-              <div className="grid grid-cols-3 divide-x rounded-lg border bg-muted/20 py-3">
-                <div className="px-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">Sessions</p><p className="mt-1 text-sm font-semibold tabular-nums">{form.sessions.toLocaleString()}</p></div>
-                <div className="px-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">Conversion</p><p className="mt-1 text-sm font-semibold tabular-nums">{form.conversion}</p></div>
-                <div className="px-2"><p className="text-[9px] uppercase tracking-wide text-muted-foreground">Methods</p><p className="mt-1 text-sm font-semibold tabular-nums">{form.methods.length}</p></div>
+              <div className="min-w-0">
+                <h3 className="truncate text-sm font-semibold tracking-tight" title={form.name}>{form.name}</h3>
+                <p className="mt-1 truncate text-[11px] text-muted-foreground" title={"/portal/" + form.slug}>/portal/{form.slug}</p>
               </div>
 
-              <div className="mt-auto flex flex-wrap gap-2">
-                <Button className="flex-1" variant="outline" size="sm" onClick={() => openPreview(form)}><Eye className="size-3.5" /> Preview</Button>
-                <Button className="flex-1" size="sm" onClick={() => onCustomize(form.id)}><Pencil className="size-3.5" /> Customize</Button>
+              <div className="grid grid-cols-3 divide-x rounded-lg border border-slate-200/80 bg-muted/30 py-2.5">
+                <div className="min-w-0 px-2"><p className="truncate text-[9px] uppercase tracking-wide text-muted-foreground">Sessions</p><p className="mt-1 text-xs font-semibold tabular-nums">{form.sessions.toLocaleString()}</p></div>
+                <div className="min-w-0 px-2"><p className="truncate text-[9px] uppercase tracking-wide text-muted-foreground">Conversion</p><p className="mt-1 text-xs font-semibold tabular-nums">{form.conversion}</p></div>
+                <div className="min-w-0 px-2"><p className="truncate text-[9px] uppercase tracking-wide text-muted-foreground">Methods</p><p className="mt-1 text-xs font-semibold tabular-nums">{form.methods.length}</p></div>
               </div>
-              <div className="flex items-center gap-2 border-t pt-3">
-                <Button className="flex-1" size="sm" variant={form.status === "Published" ? "outline" : "default"} onClick={() => toggleStatus(form)}><Power className="size-3.5" /> {form.status === "Published" ? "Deactivate" : "Activate"}</Button>
-                <Button size="icon" variant="ghost" aria-label={"Delete " + form.name} title="Delete form" disabled={forms.length <= 1} onClick={() => deleteForm(form)}><Trash2 className="size-4 text-destructive" /></Button>
+
+              <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
+                <Button className="min-w-0 px-2" variant="outline" size="sm" onClick={() => openPreview(form)}><Eye className="size-3.5 shrink-0" /> Preview</Button>
+                <Button className="min-w-0 px-2" size="sm" onClick={() => onCustomize(form.id)}><Pencil className="size-3.5 shrink-0" /> Customize</Button>
+              </div>
+              <div className="flex items-center gap-2 border-t border-slate-200 pt-3">
+                <Button className="flex-1" size="sm" variant={form.status === "Published" ? "outline" : "default"} onClick={() => toggleStatus(form)}><Power className="size-3.5 shrink-0" /> {form.status === "Published" ? "Deactivate" : "Activate"}</Button>
+                <Button className="size-9 shrink-0" size="icon" variant="ghost" aria-label={"Delete " + form.name} title="Delete form" disabled={forms.length <= 1} onClick={() => deleteForm(form)}><Trash2 className="size-4 text-destructive" /></Button>
               </div>
             </CardContent>
           </Card>
@@ -256,6 +237,3 @@ export function ClientPortalFormsLibrary({
   );
 }
 
-function Metric({ icon, label, value, detail }: { icon: ReactNode; label: string; value: string; detail: string }) {
-  return <Card className="shadow-none"><CardContent className="flex items-center gap-3 p-4"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">{icon}</span><div className="min-w-0"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-xl font-semibold tabular-nums">{value}</p><p className="mt-1 text-[10px] text-muted-foreground">{detail}</p></div></CardContent></Card>;
-}
