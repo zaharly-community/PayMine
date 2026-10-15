@@ -1893,6 +1893,7 @@ function FlouciStepOne({
           <Button
             type="submit"
             disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
+            data-builder-block="continue"
             title={"Continue to " + method.name + " payment"}
             className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
           >
@@ -3825,6 +3826,7 @@ function CardDepositStepOne({
           <Button
             type="submit"
             disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
+            data-builder-block="continue"
             title={"Continue to " + method.name + " payment"}
             className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
           >
@@ -4801,6 +4803,7 @@ function EDinarStepOne({
           <Button
             type="submit"
             disabled={playerRequestStatus === "idle" || playerRequestStatus === "checking"}
+            data-builder-block="continue"
             title={"Continue to " + method.name + " payment"}
             className="h-10 w-full rounded-md bg-emerald-400 text-sm font-medium text-slate-950 hover:bg-emerald-300"
           >
