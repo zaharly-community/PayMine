@@ -2945,6 +2945,7 @@ function FlouciDemoControls({
   setAiStatus: React.Dispatch<React.SetStateAction<FlouciAiStatus>>;
   setSupervisorVerified: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+  const builderSettings = React.useContext(PortalBuilderSettingsContext);
   const setDemo = (next: FlouciDemoStatus) => {
     setStatus(next);
     setStep(3);
@@ -3040,11 +3041,11 @@ function FlouciDemoControls({
       </div>
 
 
-      <div data-builder-block="verificationPreview" style={getPortalBuilderBlockStyle(trackingBuilderSettings, "verificationPreview")} className="mt-3 border-t border-slate-700 pt-3">
+      <div data-builder-block="verificationPreview" style={getPortalBuilderBlockStyle(builderSettings, "verificationPreview")} className="mt-3 border-t border-slate-700 pt-3">
         <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-          {trackingBuilderSettings?.blocks?.verificationPreview?.label || "AI / verification preview"}
+          {builderSettings?.blocks?.verificationPreview?.label || "AI / verification preview"}
         </p>
-        {trackingBuilderSettings?.blocks?.verificationPreview?.description ? <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{trackingBuilderSettings.blocks.verificationPreview.description}</p> : null}
+        {builderSettings?.blocks?.verificationPreview?.description ? <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{builderSettings.blocks.verificationPreview.description}</p> : null}
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Button
             type="button"
@@ -3085,9 +3086,9 @@ function FlouciDemoControls({
         </div>
       </div>
 
-      <div data-builder-block="stepPreview" style={getPortalBuilderBlockStyle(trackingBuilderSettings, "stepPreview")} className="mt-2">
-        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">{trackingBuilderSettings?.blocks?.stepPreview?.label || "Page-step preview"}</p>
-        {trackingBuilderSettings?.blocks?.stepPreview?.description ? <p className="mb-2 text-[11px] leading-relaxed text-slate-500">{trackingBuilderSettings.blocks.stepPreview.description}</p> : null}
+      <div data-builder-block="stepPreview" style={getPortalBuilderBlockStyle(builderSettings, "stepPreview")} className="mt-2">
+        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">{builderSettings?.blocks?.stepPreview?.label || "Page-step preview"}</p>
+        {builderSettings?.blocks?.stepPreview?.description ? <p className="mb-2 text-[11px] leading-relaxed text-slate-500">{builderSettings.blocks.stepPreview.description}</p> : null}
         <div className="grid grid-cols-3 gap-2">
         <Button
           type="button"
