@@ -50,6 +50,7 @@ type BlockCopy = {
 type PortalBuilderSettings = {
   template: TemplateId;
   layout: {
+    version: number;
     order: string[];
     hidden: string[];
   };
@@ -223,6 +224,7 @@ function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
   return {
     template: "stripe",
     layout: {
+      version: 2,
       order: ["brandHeader", "heading", "paymentMethods", "playerId", "email", "amount", "cardDetails", "transferNumber", "transactionId", "evidence", "continue", "securityNotice", "supportInfo", "playerRating", "supervisorRating", "flowPreview", "verificationPreview", "stepPreview"],
       hidden: [],
     },
@@ -268,7 +270,7 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
         features?: Partial<PortalBuilderSettings["features"]>;
         configs?: Partial<PortalBuilderSettings["configs"]>;
         blocks?: Record<string, Partial<BlockCopy> | undefined>;
-        layout?: { order?: string[]; hidden?: string[] };
+        layout?: { version?: number; order?: string[]; hidden?: string[] };
       })
     | undefined;
   const defaults = makeDefaultSettings(form);
@@ -282,6 +284,14 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
   const normalizedBlockOrder = Array.isArray(raw?.layout?.order)
     ? [...new Set(raw.layout.order.filter((id): id is string => typeof id === "string" && id in fieldDefaults && builderBlockCatalog.some((block) => block.id === id)))]
     : [...defaults.layout.order];
+  if (Array.isArray(raw?.layout?.order) && raw.layout.version !== 2) {
+    for (const id of defaults.layout.order) {
+      if (normalizedBlockOrder.includes(id)) continue;
+      const defaultIndex = defaults.layout.order.indexOf(id);
+      const nextDefault = defaults.layout.order.slice(defaultIndex + 1).find((candidate) => normalizedBlockOrder.includes(candidate));
+      normalizedBlockOrder.splice(nextDefault ? normalizedBlockOrder.indexOf(nextDefault) : normalizedBlockOrder.length, 0, id);
+    }
+  }
   for (const block of builderBlockCatalog) {
     if (block.required && !normalizedBlockOrder.includes(block.id)) normalizedBlockOrder.push(block.id);
   }
@@ -294,6 +304,7 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
     colors: { ...defaults.colors, ...(raw?.colors ?? {}) },
     features: { ...defaults.features, ...(raw?.features ?? {}) },
     layout: {
+      version: 2,
       order: normalizedBlockOrder,
       hidden: Array.isArray(raw?.layout?.hidden)
         ? [...new Set(raw.layout.hidden.filter((id): id is string => typeof id === "string" && builderBlockCatalog.some((block) => block.id === id) && !builderBlockCatalog.find((block) => block.id === id)?.required))]
@@ -403,6 +414,7 @@ export function ClientPortalBuilder({
       configs: { ...selected.builder.configs, ...(patch.configs ?? {}) },
       blocks: { ...selected.builder.blocks, ...(patch.blocks ?? {}) },
       layout: {
+        version: 2,
         order: patch.layout?.order ?? selected.builder.layout.order,
         hidden: patch.layout?.hidden ?? selected.builder.layout.hidden,
       },
@@ -414,6 +426,7 @@ export function ClientPortalBuilder({
     if (!selected) return;
     updateBuilder({
       layout: {
+        version: 2,
         order: patch.order ?? selected.builder.layout.order,
         hidden: patch.hidden ?? selected.builder.layout.hidden,
       },
@@ -552,7 +565,7 @@ export function ClientPortalBuilder({
         features: { ...selected.builder.features },
         configs: { ...selected.builder.configs, paymentMethods: [...selected.builder.configs.paymentMethods], presetAmounts: [...selected.builder.configs.presetAmounts] },
         blocks: Object.fromEntries(Object.entries(selected.builder.blocks).map(([key, value]) => [key, { ...value }])),
-        layout: { order: [...selected.builder.layout.order], hidden: [...selected.builder.layout.hidden] },
+        layout: { version: 2, order: [...selected.builder.layout.order], hidden: [...selected.builder.layout.hidden] },
       },
     };
     const updated = [copy, ...forms];
@@ -641,7 +654,7 @@ export function ClientPortalBuilder({
                 <Label htmlFor="block-label">Label / title</Label>
                 <Input id="block-label" value={selectedCopy.label} onChange={(event) => updateBlock(selectedBlock, { label: event.target.value })} placeholder="Enter label" />
               </div>
-              {selectedBlock !== "heading" && selectedBlock !== "continue" && selectedBlock !== "paymentMethods" && selectedBlock !== "supervisorRating" && selectedBlock !== "playerRating" ? (
+              {["brandHeader", "playerId", "email", "amount", "transferNumber", "transactionId", "cardDetails", "evidence"].includes(selectedBlock) ? (
                 <div className="grid gap-2">
                   <Label htmlFor="block-placeholder">Placeholder</Label>
                   <Input id="block-placeholder" value={selectedCopy.placeholder} onChange={(event) => updateBlock(selectedBlock, { placeholder: event.target.value })} placeholder="Text shown inside the field" />
