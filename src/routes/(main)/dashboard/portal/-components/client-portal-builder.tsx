@@ -145,6 +145,11 @@ const fieldDefaults: Record<string, BlockCopy> = {
     placeholder: "Upload transfer screenshot",
     description: "A clear screenshot helps the supervisor verify your transfer.",
   },
+  cardDetails: {
+    label: "Card numbers",
+    placeholder: "0000 0000 0000 0000",
+    description: "Enter the card numbers to be deposited.",
+  },
   continue: {
     label: "Continue securely",
     placeholder: "",
@@ -187,6 +192,7 @@ const builderBlockCatalog: BuilderBlockDefinition[] = [
   { id: "amount", label: "Deposit amount", description: "Custom amount and preset buttons", required: true, category: "Form fields" },
   { id: "transferNumber", label: "Transfer number", description: "Recipient / transfer account details", required: true, category: "Form fields" },
   { id: "transactionId", label: "Transaction ID", description: "Payment reference field", required: true, category: "Form fields" },
+  { id: "cardDetails", label: "Card details", description: "Card numbers for card-based deposits", required: true, category: "Form fields" },
   { id: "evidence", label: "Payment evidence", description: "Upload a transfer or payment image", required: true, category: "Form fields" },
   { id: "continue", label: "Continue button", description: "Primary checkout action", required: true, category: "Form fields" },
   { id: "playerRating", label: "Player experience rating", description: "Collect feedback about checkout", required: false, category: "After checkout" },
@@ -199,7 +205,7 @@ function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
   return {
     template: "stripe",
     layout: {
-      order: ["heading", "paymentMethods", "playerId", "amount", "transferNumber", "transactionId", "evidence", "continue", "supervisorRating", "playerRating"],
+      order: ["heading", "paymentMethods", "playerId", "amount", "cardDetails", "transferNumber", "transactionId", "evidence", "continue", "supervisorRating", "playerRating"],
       hidden: [],
     },
     fontFamily: form.appearance.fontFamily,
