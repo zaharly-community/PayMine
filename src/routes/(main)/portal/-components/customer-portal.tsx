@@ -351,7 +351,7 @@ function PaymentMethodSelector({
   };
 
   return (
-    <div className="relative">
+    <div data-builder-block="paymentMethods" className="relative">
       {methodBlock?.label || methodBlock?.description ? (
         <div className="mb-2 px-1">
           {methodBlock.label ? <p className="text-xs font-medium text-slate-200">{methodBlock.label}</p> : null}
@@ -486,7 +486,7 @@ function FieldLabel({
 
   return (
     <>
-      <label className="mb-1.5 block text-xs font-medium text-slate-200">
+      <label data-builder-block={blockKey ?? undefined} className="mb-1.5 block text-xs font-medium text-slate-200">
         {displayChildren}
         {required ? <span className="ml-1 text-slate-500">*</span> : null}
       </label>
@@ -1195,7 +1195,7 @@ export function DepositRequestTrackingPage({
 
                   <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                     {trackingBuilderSettings?.features?.supervisorRating !== false ? (
-                      <Button
+                      <Button data-builder-block="supervisorRating"
                         type="button"
                         variant="outline"
                         title="Review supervisor"
@@ -1898,7 +1898,7 @@ function FlouciStepOne({
           >
             <CircleDollarSign className="size-4" />
             <span>
-              {portalButtonLabel}
+              <span data-builder-block="continue">{portalButtonLabel}</span>
               <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
                 Net Amount: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} TND
               </span>
@@ -5981,26 +5981,34 @@ export function CustomerPortal({
   initialMethodId,
   formSlug,
   preview = false,
+  formOverride,
+  builderEditMode = false,
+  onSelectBlock,
 }: {
   initialMethodId?: string;
   formSlug?: string;
   preview?: boolean;
+  formOverride?: ClientPortalForm & { builder?: PortalBuilderSettingsRuntime };
+  builderEditMode?: boolean;
+  onSelectBlock?: (blockId: string) => void;
 } = {}) {
-  const [clientForm, setClientForm] = React.useState<ClientPortalForm | null>(() => getClientPortalFormForSlug(formSlug ?? initialMethodId, preview));
+  const [storedForm, setStoredForm] = React.useState<ClientPortalForm | null>(() => getClientPortalFormForSlug(formSlug ?? initialMethodId, preview));
+  const clientForm = formOverride ?? storedForm;
   const availableMethods = React.useMemo(
     () => clientForm ? getMethodsForClientForm(clientForm) : [],
     [clientForm?.methods],
   );
 
   React.useEffect(() => {
-    const refresh = () => setClientForm(getClientPortalFormForSlug(formSlug ?? initialMethodId, preview));
+    if (formOverride) return;
+    const refresh = () => setStoredForm(getClientPortalFormForSlug(formSlug ?? initialMethodId, preview));
     window.addEventListener(CLIENT_PORTAL_FORMS_CHANGE_EVENT, refresh);
     window.addEventListener("storage", refresh);
     return () => {
       window.removeEventListener(CLIENT_PORTAL_FORMS_CHANGE_EVENT, refresh);
       window.removeEventListener("storage", refresh);
     };
-  }, [initialMethodId, formSlug, preview]);
+  }, [initialMethodId, formSlug, preview, formOverride]);
 
   if (!clientForm) {
     return (
@@ -6027,6 +6035,17 @@ export function CustomerPortal({
     );
   }
 
+  const handleBuilderClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!builderEditMode || !onSelectBlock) return;
+    const target = event.target as HTMLElement;
+    const block = target.closest<HTMLElement>("[data-builder-block]");
+    if (block?.dataset.builderBlock) {
+      event.preventDefault();
+      event.stopPropagation();
+      onSelectBlock(block.dataset.builderBlock);
+    }
+  };
+
   const style = {
     "--portal-page-background": clientForm.appearance.backgroundColor,
     "--portal-surface": clientForm.appearance.surfaceColor,
@@ -6043,7 +6062,7 @@ export function CustomerPortal({
       <PortalButtonLabelContext.Provider value={clientForm.appearance.buttonLabel || "Do Deposit"}>
       <PortalFormSlugContext.Provider value={clientForm.slug}>
       <PortalPreviewContext.Provider value={preview}>
-      <div id="ipaycash-client-portal" data-theme={clientForm.appearance.theme} data-width={clientForm.appearance.width} data-radius={clientForm.appearance.radius} data-template={builderSettings?.template ?? "stripe"} data-button-shape={builderSettings?.buttonShape ?? "rounded"} data-supervisor-rating={builderSettings?.features?.supervisorRating === false ? "false" : "true"} data-ai-recognition={builderSettings?.features?.aiRecognition === false ? "false" : "true"} data-player-rating={builderSettings?.features?.playerRating === false ? "false" : "true"} data-player-id-mode={builderSettings?.configs?.playerIdMode ?? "both"} data-method-display={builderSettings?.configs?.methodDisplay ?? "cards"} style={style}>
+      <div id="ipaycash-client-portal" onClickCapture={handleBuilderClick} data-builder-edit-mode={builderEditMode ? "true" : "false"} data-theme={clientForm.appearance.theme} data-width={clientForm.appearance.width} data-radius={clientForm.appearance.radius} data-template={builderSettings?.template ?? "stripe"} data-button-shape={builderSettings?.buttonShape ?? "rounded"} data-supervisor-rating={builderSettings?.features?.supervisorRating === false ? "false" : "true"} data-ai-recognition={builderSettings?.features?.aiRecognition === false ? "false" : "true"} data-player-rating={builderSettings?.features?.playerRating === false ? "false" : "true"} data-player-id-mode={builderSettings?.configs?.playerIdMode ?? "both"} data-method-display={builderSettings?.configs?.methodDisplay ?? "cards"} style={style}>
         <style>{'#ipaycash-client-portal [class~="bg-slate-950"]{background-color:var(--portal-page-background)!important;}' +
           '#ipaycash-client-portal [class~="bg-slate-900"],#ipaycash-client-portal [class~="bg-slate-900/80"],#ipaycash-client-portal [class~="bg-slate-900/90"],#ipaycash-client-portal [class~="bg-slate-800"],#ipaycash-client-portal [class~="bg-slate-800/80"],#ipaycash-client-portal [class~="bg-slate-800/60"],#ipaycash-client-portal [class~="bg-slate-700/90"]{background-color:var(--portal-surface)!important;}' +
           '#ipaycash-client-portal [class~="bg-emerald-400"],#ipaycash-client-portal [class~="bg-emerald-300"]{background-color:var(--portal-accent)!important;}' +
@@ -6061,11 +6080,13 @@ export function CustomerPortal({
           '#ipaycash-client-portal[data-button-shape="rounded"] button{border-radius:12px!important;}' +
           '#ipaycash-client-portal[data-button-shape="rectangle"] button{border-radius:4px!important;}' +
           '#ipaycash-client-portal[data-template="minimal"] [class~="shadow-2xl"]{box-shadow:none!important;}' +
-          '#ipaycash-client-portal[data-template="classic"] section{border-radius:4px!important;}'}</style>
+          '#ipaycash-client-portal[data-template="classic"] section{border-radius:4px!important;}' +
+          '#ipaycash-client-portal[data-builder-edit-mode="true"] [data-builder-block]{cursor:pointer!important;outline:1px dashed transparent;outline-offset:2px;}' +
+          '#ipaycash-client-portal[data-builder-edit-mode="true"] [data-builder-block]:hover{outline-color:#3b82f6!important;background-color:rgba(59,130,246,.06)!important;}'}</style>
         <div style={{ backgroundColor: clientForm.appearance.backgroundColor, fontFamily: style.fontFamily }}>
           <PortalBrandHeader form={clientForm} />
           <div className="mx-auto w-full" style={{ maxWidth: clientForm.appearance.width === "wide" ? "80rem" : "64rem" }}>
-            <div className="px-4 pb-2 pt-4 sm:px-6">
+            <div data-builder-block="heading" className="px-4 pb-2 pt-4 sm:px-6">
               <h1 className="text-lg font-semibold" style={{ color: clientForm.appearance.theme === "dark" ? "#f8fafc" : "#0f172a" }}>{clientForm.appearance.title || clientForm.name}</h1>
               <p className="mt-1 text-xs leading-5" style={{ color: clientForm.appearance.theme === "dark" ? "#94a3b8" : "#64748b" }}>{clientForm.appearance.description}</p>
             </div>
@@ -6092,7 +6113,7 @@ function PortalExperienceRating() {
   const description = builderSettings?.blocks?.playerRating?.description || "Share quick feedback about this checkout.";
 
   return (
-    <section data-player-rating-ui="true" className="mx-auto mt-3 w-full rounded-xl border border-slate-700 bg-slate-900/60 p-3 text-slate-200 sm:p-4">
+    <section data-player-rating-ui="true" data-builder-block="playerRating" className="mx-auto mt-3 w-full rounded-xl border border-slate-700 bg-slate-900/60 p-3 text-slate-200 sm:p-4">
       {submitted ? (
         <div className="py-1">
           <p className="text-sm font-medium">Thanks for your feedback.</p>
