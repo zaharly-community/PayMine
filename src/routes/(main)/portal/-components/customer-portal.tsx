@@ -3165,7 +3165,7 @@ function FlouciDepositFlow({
     setCorrectedTransferNumber(walletRecipientNumbers[0]);
     setCorrectedAmount(String(method.min));
     setSecondsLeft(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
-  }, [method.id]);
+  }, [method.id, portalBuilderSettings?.configs?.timerSeconds]);
 
   React.useEffect(() => {
     if (!proofFile || portalBuilderSettings?.features?.aiRecognition === false) {
@@ -4116,7 +4116,7 @@ function CardDepositFlow({
     return () => {
       Object.values(recognitionTimers.current).forEach((timer) => window.clearTimeout(timer));
     };
-  }, [method.id]);
+  }, [method.id, portalBuilderSettings?.configs?.timerSeconds]);
 
   React.useEffect(() => {
     if (!proofFile || portalBuilderSettings?.features?.aiRecognition === false) {
@@ -5254,7 +5254,7 @@ function EDinarDepositFlow({
     setAiStatus("idle");
     setDetectedTransactionId("");
     setSecondsLeft(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
-  }, [method.id]);
+  }, [method.id, portalBuilderSettings?.configs?.timerSeconds]);
 
   React.useEffect(() => {
     if (!proofFile || portalBuilderSettings?.features?.aiRecognition === false) {
@@ -6152,7 +6152,7 @@ function CustomerPortalExperience({
     const mode = portalBuilderSettings?.configs?.playerIdMode;
     if (mode === "email" && playerLookupType !== "email") setPlayerLookupType("email");
     else if (mode === "userId" && playerLookupType !== "playerId") setPlayerLookupType("playerId");
-  }, [portalBuilderSettings?.configs?.playerIdMode]);
+  }, [portalBuilderSettings?.configs?.playerIdMode, playerLookupType]);
   const { status: playerRequestStatus, openRequest } = usePlayerRequestLookup(
     playerId,
     playerLookupType,
