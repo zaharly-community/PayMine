@@ -5664,7 +5664,7 @@ function BinancePayFlow({
   return (
     <main data-payment-flow="true" className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
-        {portalBuilderSettings?.configs?.methodDisplay === "cards" ? <PortalCheckoutStepper currentStep={step === 1 ? 2 : step === 2 ? 4 : 5} /> : null}
+        {portalBuilderSettings?.configs?.methodDisplay === "cards" ? <PortalCheckoutStepper currentStep={step === 1 ? 2 : 4} /> : null}
         {step === 1 ? (
           <>
             <div data-builder-block="paymentMethods" style={getPortalBuilderBlockStyle(portalBuilderSettings, "paymentMethods")} className="mb-4">
