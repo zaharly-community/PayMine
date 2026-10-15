@@ -5926,6 +5926,7 @@ export function CustomerPortal({
     "--portal-border": clientForm.appearance.theme === "dark" ? "#334155" : "#e2e8f0",
     "--portal-radius": clientForm.appearance.radius === "small" ? "8px" : clientForm.appearance.radius === "large" ? "22px" : "14px",
     "--portal-content-width": clientForm.appearance.width === "wide" ? "72rem" : "48rem",
+    fontFamily: clientForm.appearance.fontFamily === "serif" ? 'Georgia, "Times New Roman", serif' : clientForm.appearance.fontFamily === "system" ? "system-ui, sans-serif" : "Inter, ui-sans-serif, system-ui, sans-serif",
   } as React.CSSProperties;
 
   return (
@@ -5941,7 +5942,7 @@ export function CustomerPortal({
           '#ipaycash-client-portal [class~="min-h-dvh"]{min-height:max(560px,calc(100dvh - 4.5rem))!important;}' +
           '#ipaycash-client-portal[data-theme="light"] [class~="text-slate-100"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-200"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-300"]{color:#0f172a!important;}' +
           '#ipaycash-client-portal[data-theme="light"] [class~="text-slate-400"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-500"]{color:#64748b!important;}'}</style>
-        <div style={{ backgroundColor: clientForm.appearance.backgroundColor }}>
+        <div style={{ backgroundColor: clientForm.appearance.backgroundColor, fontFamily: style.fontFamily }}>
           <PortalBrandHeader form={clientForm} />
           <div className="mx-auto w-full" style={{ maxWidth: clientForm.appearance.width === "wide" ? "80rem" : "64rem" }}>
             <div className="px-4 pb-2 pt-4 sm:px-6">
