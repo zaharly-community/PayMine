@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Activity, ArrowUpRight, Check, ExternalLink, Eye, Globe2, LayoutTemplate, Pencil, Plus, Power, Trash2, WalletCards } from "lucide-react";
+import { Activity, ArrowUpRight, Check, ExternalLink, Eye, Globe2, LayoutTemplate, Pencil, Plus, Power, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
