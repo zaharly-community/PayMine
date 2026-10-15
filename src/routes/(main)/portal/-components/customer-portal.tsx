@@ -1958,7 +1958,7 @@ function FlouciStepOne({
                         setPlayerId("");
                       }}
                       className={cn(
-                        "group flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg bg-slate-700/90 px-3 text-slate-400 transition-all",
+                        "group flex h-11 w-full min-w-0 items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-slate-600/70 bg-slate-700/60 px-1.5 text-slate-400 transition-all",
                         active
                           ? "border-emerald-300/50 bg-emerald-300/10 text-slate-100 shadow-sm"
                           : "hover:bg-slate-800 hover:text-slate-100",
@@ -3913,7 +3913,7 @@ function CardDepositStepOne({
                       setPlayerId("");
                     }}
                     className={cn(
-                      "group flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg bg-slate-700/90 px-3 text-slate-400 transition-all",
+                      "group flex h-11 w-full min-w-0 items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-slate-600/70 bg-slate-700/60 px-1.5 text-slate-400 transition-all",
                       active ? "border-emerald-300/50 bg-emerald-300/10 text-slate-100 shadow-sm" : "hover:bg-slate-800 hover:text-slate-100",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
                     )}
@@ -4880,7 +4880,7 @@ function EDinarStepOne({
                       setPlayerId("");
                     }}
                     className={cn(
-                      "group flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg bg-slate-700/90 px-3 text-slate-400 transition-all",
+                      "group flex h-11 w-full min-w-0 items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-slate-600/70 bg-slate-700/60 px-1.5 text-slate-400 transition-all",
                       active
                         ? "border-emerald-300/50 bg-emerald-300/10 text-slate-100 shadow-sm"
                         : "hover:bg-slate-800 hover:text-slate-100",
@@ -5833,7 +5833,7 @@ function BinancePayFlow({
                               setError("");
                             }}
                             className={cn(
-                              "group flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg bg-slate-700/90 px-3 text-slate-400 transition-all",
+                              "group flex h-11 w-full min-w-0 items-center justify-center gap-1.5 overflow-hidden rounded-lg border border-slate-600/70 bg-slate-700/60 px-1.5 text-slate-400 transition-all",
                               active
                                 ? "border-emerald-300/50 bg-emerald-300/10 text-slate-100 shadow-sm"
                                 : "hover:bg-slate-800 hover:text-slate-100",
