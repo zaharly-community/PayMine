@@ -32,7 +32,7 @@ import {
   type ClientPortalForm,
 } from "@/lib/client-portal-config";
 
-type EditorSection = "appearance" | "features" | "configs";
+type EditorSection = "appearance" | "features" | "configs" | "blocks";
 type TemplateId = "stripe" | "classic" | "minimal";
 type FontId = "sans" | "system" | "serif";
 type ButtonShape = "pill" | "rounded" | "rectangle";
@@ -47,6 +47,10 @@ type BlockCopy = {
 
 type PortalBuilderSettings = {
   template: TemplateId;
+  layout: {
+    order: string[];
+    hidden: string[];
+  };
   fontFamily: FontId;
   buttonShape: ButtonShape;
   colors: {
@@ -153,11 +157,48 @@ const fieldDefaults: Record<string, BlockCopy> = {
     placeholder: "",
     description: "Tell us how the deposit flow worked for you.",
   },
+  securityNotice: {
+    label: "Secure payment",
+    placeholder: "",
+    description: "Your payment details are handled through the selected payment method.",
+  },
+  supportInfo: {
+    label: "Need help?",
+    placeholder: "",
+    description: "Contact support if you need help completing this deposit.",
+  },
 };
+
+type BuilderBlockDefinition = {
+  id: string;
+  label: string;
+  description: string;
+  required: boolean;
+  category: "Structure" | "Form fields" | "After checkout";
+};
+
+const builderBlockCatalog: BuilderBlockDefinition[] = [
+  { id: "heading", label: "Form heading", description: "Title and introduction", required: true, category: "Structure" },
+  { id: "paymentMethods", label: "Payment methods", description: "Available ways to pay", required: true, category: "Form fields" },
+  { id: "playerId", label: "Player ID", description: "Player identification field", required: true, category: "Form fields" },
+  { id: "amount", label: "Deposit amount", description: "Custom amount and preset buttons", required: true, category: "Form fields" },
+  { id: "transferNumber", label: "Transfer number", description: "Recipient / transfer account details", required: true, category: "Form fields" },
+  { id: "transactionId", label: "Transaction ID", description: "Payment reference field", required: true, category: "Form fields" },
+  { id: "evidence", label: "Payment evidence", description: "Upload a transfer or payment image", required: true, category: "Form fields" },
+  { id: "continue", label: "Continue button", description: "Primary checkout action", required: true, category: "Form fields" },
+  { id: "playerRating", label: "Player experience rating", description: "Collect feedback about checkout", required: false, category: "After checkout" },
+  { id: "supervisorRating", label: "Supervisor rating", description: "Rating on the request tracking page", required: false, category: "After checkout" },
+  { id: "securityNotice", label: "Secure payment notice", description: "Reassurance text below checkout details", required: false, category: "Structure" },
+  { id: "supportInfo", label: "Support note", description: "Help text for players", required: false, category: "Structure" },
+];
 
 function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
   return {
     template: "stripe",
+    layout: {
+      order: ["heading", "paymentMethods", "playerId", "amount", "transferNumber", "transactionId", "evidence", "continue", "supervisorRating", "playerRating"],
+      hidden: [],
+    },
     fontFamily: form.appearance.fontFamily,
     buttonShape: form.appearance.radius === "small" ? "rectangle" : form.appearance.radius === "large" ? "pill" : "rounded",
     colors: {
@@ -200,6 +241,7 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
         features?: Partial<PortalBuilderSettings["features"]>;
         configs?: Partial<PortalBuilderSettings["configs"]>;
         blocks?: Record<string, Partial<BlockCopy> | undefined>;
+        layout?: { order?: string[]; hidden?: string[] };
       })
     | undefined;
   const defaults = makeDefaultSettings(form);
@@ -218,6 +260,14 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
     buttonShape: raw?.buttonShape === "pill" || raw?.buttonShape === "rectangle" ? raw.buttonShape : "rounded",
     colors: { ...defaults.colors, ...(raw?.colors ?? {}) },
     features: { ...defaults.features, ...(raw?.features ?? {}) },
+    layout: {
+      order: Array.isArray(raw?.layout?.order)
+        ? [...new Set(raw.layout.order.filter((id): id is string => typeof id === "string" && id in fieldDefaults && builderBlockCatalog.some((block) => block.id === id)))]
+        : [...defaults.layout.order],
+      hidden: Array.isArray(raw?.layout?.hidden)
+        ? [...new Set(raw.layout.hidden.filter((id): id is string => typeof id === "string" && builderBlockCatalog.some((block) => block.id === id) && !builderBlockCatalog.find((block) => block.id === id)?.required))]
+        : [],
+    },
     configs: {
       ...defaults.configs,
       ...(raw?.configs ?? {}),
@@ -276,6 +326,8 @@ export function ClientPortalBuilder({
   });
   const [section, setSection] = useState<EditorSection>("appearance");
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
+  const [draggingBlock, setDraggingBlock] = useState<string | null>(null);
+  const [blockSearch, setBlockSearch] = useState("");
   const [notice, setNotice] = useState("");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
@@ -318,8 +370,68 @@ export function ClientPortalBuilder({
       features: { ...selected.builder.features, ...(patch.features ?? {}) },
       configs: { ...selected.builder.configs, ...(patch.configs ?? {}) },
       blocks: { ...selected.builder.blocks, ...(patch.blocks ?? {}) },
+      layout: {
+        order: patch.layout?.order ?? selected.builder.layout.order,
+        hidden: patch.layout?.hidden ?? selected.builder.layout.hidden,
+      },
     };
     updateSelected({ builder });
+  };
+
+  const updateBlockLayout = (patch: Partial<PortalBuilderSettings["layout"]>) => {
+    if (!selected) return;
+    updateBuilder({
+      layout: {
+        order: patch.order ?? selected.builder.layout.order,
+        hidden: patch.hidden ?? selected.builder.layout.hidden,
+      },
+    });
+  };
+
+  const moveBlock = (fromId: string, toId: string) => {
+    if (!selected || fromId === toId) return;
+    const current = selected.builder.layout.order;
+    const fromIndex = current.indexOf(fromId);
+    const toIndex = current.indexOf(toId);
+    if (fromIndex < 0 || toIndex < 0) return;
+    const next = [...current];
+    const [item] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, item);
+    updateBlockLayout({ order: next });
+  };
+
+  const toggleBlockHidden = (id: string) => {
+    if (!selected) return;
+    const definition = builderBlockCatalog.find((block) => block.id === id);
+    if (!definition || definition.required) return;
+    const hidden = selected.builder.layout.hidden.includes(id)
+      ? selected.builder.layout.hidden.filter((item) => item !== id)
+      : [...selected.builder.layout.hidden, id];
+    updateBlockLayout({ hidden });
+  };
+
+  const removeBlock = (id: string) => {
+    if (!selected) return;
+    const definition = builderBlockCatalog.find((block) => block.id === id);
+    if (!definition || definition.required) return;
+    updateBlockLayout({
+      order: selected.builder.layout.order.filter((item) => item !== id),
+      hidden: selected.builder.layout.hidden.filter((item) => item !== id),
+    });
+    if (selectedBlock === id) setSelectedBlock(null);
+  };
+
+  const addBlock = (id: string) => {
+    if (!selected || !builderBlockCatalog.some((block) => block.id === id)) return;
+    const order = selected.builder.layout.order.includes(id)
+      ? selected.builder.layout.order
+      : [...selected.builder.layout.order, id];
+    updateBlockLayout({
+      order,
+      hidden: selected.builder.layout.hidden.filter((item) => item !== id),
+    });
+    setSelectedBlock(id);
+    setSection("blocks");
   };
 
   const updateBlock = (key: string, patch: Partial<BlockCopy>) => {
@@ -405,6 +517,7 @@ export function ClientPortalBuilder({
         features: { ...selected.builder.features },
         configs: { ...selected.builder.configs, paymentMethods: [...selected.builder.configs.paymentMethods], presetAmounts: [...selected.builder.configs.presetAmounts] },
         blocks: Object.fromEntries(Object.entries(selected.builder.blocks).map(([key, value]) => [key, { ...value }])),
+        layout: { order: [...selected.builder.layout.order], hidden: [...selected.builder.layout.hidden] },
       },
     };
     const updated = [copy, ...forms];
@@ -510,11 +623,12 @@ export function ClientPortalBuilder({
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-3 border-b border-slate-200 bg-white p-2">
+              <div className="grid grid-cols-4 border-b border-slate-200 bg-white p-2">
                 {([
                   ["appearance", "Appearance"],
                   ["features", "Features"],
                   ["configs", "Configs"],
+                  ["blocks", "Blocks"],
                 ] as [EditorSection, string][]).map(([value, label]) => (
                   <button key={value} type="button" onClick={() => setSection(value)} className={"rounded-md px-2 py-2 text-xs font-medium transition-colors " + (section === value ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>{label}</button>
                 ))}
@@ -605,6 +719,87 @@ export function ClientPortalBuilder({
                       <p className="rounded-lg border border-dashed p-3 text-xs leading-5 text-muted-foreground">Enable AI transfer recognition to configure the automatic-confirmation option.</p>
                     )}
                   </>
+                ) : null}
+
+                {section === "blocks" ? (
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-sm font-semibold">Page blocks</h3>
+                        <Badge variant="outline">{selected.builder.layout.order.length} active</Badge>
+                      </div>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">Drag blocks to reorder the checkout flow. Select a block to edit its content. Required fields can move, but cannot be hidden or removed.</p>
+                    </div>
+
+                    <div className="rounded-xl border bg-white p-2">
+                      <p className="px-2 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Body</p>
+                      <div className="space-y-1.5">
+                        {selected.builder.layout.order.map((id) => {
+                          const definition = builderBlockCatalog.find((block) => block.id === id);
+                          if (!definition) return null;
+                          const hidden = selected.builder.layout.hidden.includes(id);
+                          const active = selectedBlock === id;
+                          return (
+                            <div
+                              key={id}
+                              draggable
+                              onDragStart={(event) => {
+                                setDraggingBlock(id);
+                                event.dataTransfer.effectAllowed = "move";
+                                event.dataTransfer.setData("text/plain", id);
+                              }}
+                              onDragEnd={() => setDraggingBlock(null)}
+                              onDragOver={(event) => event.preventDefault()}
+                              onDrop={(event) => {
+                                event.preventDefault();
+                                const sourceId = event.dataTransfer.getData("text/plain") || draggingBlock;
+                                if (sourceId) moveBlock(sourceId, id);
+                                setDraggingBlock(null);
+                              }}
+                              className={"flex items-center gap-2 rounded-lg border p-2 transition " + (active ? "border-blue-400 bg-blue-50 ring-1 ring-blue-100" : hidden ? "border-dashed border-slate-200 bg-slate-50 opacity-70" : "border-slate-200 bg-white hover:border-slate-300") + (draggingBlock === id ? " opacity-40" : "")}
+                            >
+                              <span className="cursor-grab text-slate-400" title="Drag to reorder" aria-hidden="true">⋮⋮</span>
+                              <button type="button" onClick={() => { setSelectedBlock(id); setSection("blocks"); }} className="min-w-0 flex-1 text-left">
+                                <span className="flex items-center gap-1.5">
+                                  <span className="truncate text-xs font-medium text-slate-800">{definition.label}</span>
+                                  {definition.required ? <span className="rounded bg-slate-100 px-1 py-0.5 text-[9px] text-slate-500">Required</span> : null}
+                                </span>
+                                <span className="mt-0.5 block truncate text-[10px] text-slate-500">{hidden ? "Hidden" : definition.description}</span>
+                              </button>
+                              {definition.required ? (
+                                <span title="Required block" className="flex size-7 shrink-0 items-center justify-center rounded-md text-slate-400"><icon name="lock-keyhole" size="xs" /></span>
+                              ) : (
+                                <>
+                                  <button type="button" title={hidden ? "Show block" : "Hide block"} aria-label={hidden ? "Show block" : "Hide block"} onClick={() => toggleBlockHidden(id)} className="flex size-7 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100"><icon name={hidden ? "eye-off" : "eye"} size="xs" /></button>
+                                  <button type="button" title="Remove block" aria-label="Remove block" onClick={() => removeBlock(id)} className="flex size-7 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-600"><icon name="x" size="xs" /></button>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 rounded-xl border border-dashed border-slate-300 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-semibold">Add a block</p>
+                          <p className="mt-0.5 text-[10px] text-muted-foreground">Restore a removed block or add extra content.</p>
+                        </div>
+                        <Badge variant="outline">{builderBlockCatalog.filter((block) => !selected.builder.layout.order.includes(block.id)).length} available</Badge>
+                      </div>
+                      <Input value={blockSearch} onChange={(event) => setBlockSearch(event.target.value)} placeholder="Search blocks…" className="h-9" />
+                      <div className="space-y-1.5">
+                        {builderBlockCatalog.filter((block) => !selected.builder.layout.order.includes(block.id) && (block.label + " " + block.description).toLowerCase().includes(blockSearch.toLowerCase())).map((block) => (
+                          <button key={block.id} type="button" onClick={() => addBlock(block.id)} className="flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-blue-300 hover:bg-blue-50">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500"><icon name="plus" size="xs" /></span>
+                            <span className="min-w-0 flex-1"><span className="block text-xs font-medium text-slate-800">{block.label}</span><span className="block text-[10px] text-slate-500">{block.description}</span></span>
+                          </button>
+                        ))}
+                        {builderBlockCatalog.every((block) => selected.builder.layout.order.includes(block.id)) ? <p className="py-2 text-center text-[11px] text-muted-foreground">All blocks are already on this page.</p> : null}
+                      </div>
+                    </div>
+                  </div>
                 ) : null}
 
                 {section === "configs" ? (
