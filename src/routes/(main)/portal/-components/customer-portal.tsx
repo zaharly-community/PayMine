@@ -6473,13 +6473,13 @@ function CustomerPortalExperience({
   const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
   const methodDisplay = portalBuilderSettings?.configs?.methodDisplay ?? "cards";
   const initialMethod = availableMethods.find((item) => item.id === initialMethodId) ?? availableMethods[0] ?? paymentMethods[0];
-  const methodBlockOverrides = portalBuilderSettings?.methodBlocks?.[normalizePortalMethodName(initialMethod.name)] ?? {};
-  const methodSpecificSettings = portalBuilderSettings
-    ? { ...portalBuilderSettings, blocks: { ...(portalBuilderSettings.blocks ?? {}), ...methodBlockOverrides } }
-    : null;
   const builderPreviewStep = React.useContext(PortalBuilderPreviewStepContext);
   const portalFormSlug = React.useContext(PortalFormSlugContext);
   const [method, setMethod] = React.useState<PaymentMethod>(initialMethod);
+  const methodBlockOverrides = portalBuilderSettings?.methodBlocks?.[normalizePortalMethodName(method.name)] ?? {};
+  const methodSpecificSettings = portalBuilderSettings
+    ? { ...portalBuilderSettings, blocks: { ...(portalBuilderSettings.blocks ?? {}), ...methodBlockOverrides } }
+    : null;
   const [amount, setAmount] = React.useState(() => String(initialMethod.min));
   const navigate = useNavigate();
   const [playerId, setPlayerId] = React.useState("");
