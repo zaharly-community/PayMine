@@ -260,6 +260,7 @@ function PaymentMethodSelector({
   const portalPreview = React.useContext(PortalPreviewContext);
   const builderSettings = React.useContext(PortalBuilderSettingsContext);
   const methodDisplay = builderSettings?.configs?.methodDisplay ?? "cards";
+  const methodBlock = builderSettings?.blocks?.paymentMethods;
   const selectorSearch = formSlug ? { form: formSlug, preview: portalPreview } : { preview: portalPreview };
   const sliderRef = React.useRef<HTMLDivElement>(null);
   const dragRef = React.useRef({
@@ -351,6 +352,12 @@ function PaymentMethodSelector({
 
   return (
     <div className="relative">
+      {methodBlock?.label || methodBlock?.description ? (
+        <div className="mb-2 px-1">
+          {methodBlock.label ? <p className="text-xs font-medium text-slate-200">{methodBlock.label}</p> : null}
+          {methodBlock.description ? <p className="mt-1 text-[11px] leading-4 text-slate-400">{methodBlock.description}</p> : null}
+        </div>
+      ) : null}
       <div className="flex min-w-0 items-center gap-1.5">
         <div
           ref={sliderRef}
@@ -6046,7 +6053,7 @@ export function CustomerPortal({
           '#ipaycash-client-portal[data-button-shape="rounded"] button{border-radius:12px!important;}' +
           '#ipaycash-client-portal[data-button-shape="rectangle"] button{border-radius:4px!important;}' +
           '#ipaycash-client-portal[data-template="minimal"] [class~="shadow-2xl"]{box-shadow:none!important;}' +
-          '#ipaycash-client-portal[data-template="classic"] [class~="rounded-xl"]{border-radius:4px!important;}'}</style>
+          '#ipaycash-client-portal[data-template="classic"] section{border-radius:4px!important;}'}</style>
         <div style={{ backgroundColor: clientForm.appearance.backgroundColor, fontFamily: style.fontFamily }}>
           <PortalBrandHeader form={clientForm} />
           <div className="mx-auto w-full" style={{ maxWidth: clientForm.appearance.width === "wide" ? "80rem" : "64rem" }}>
