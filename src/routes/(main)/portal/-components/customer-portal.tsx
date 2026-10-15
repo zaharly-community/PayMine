@@ -486,7 +486,7 @@ function FieldLabel({
     text === "Player ID" || text === "Username" ? "playerId"
       : text === "Email" || text === "Email address" ? "email"
       : text === "Deposit amount" || text === "Payment amount" ? "amount"
-      : text === "Payment evidence" || text === "Upload transfer screenshot" ? "evidence"
+      : text === "Payment evidence" || text === "Payment photo" || text === "Upload transfer screenshot" ? "evidence"
       : text.toLowerCase().includes("transaction id") ? "transactionId"
       : text.toLowerCase().includes("transfer number") ? "transferNumber"
       : null;
@@ -1203,7 +1203,7 @@ export function DepositRequestTrackingPage({
                   </div>
 
                   <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    {trackingBuilderSettings?.features?.supervisorRating !== false ? (
+                    {trackingBuilderSettings?.features?.supervisorRating !== false && trackingBuilderSettings?.layout?.order?.includes("supervisorRating") && !trackingBuilderSettings?.layout?.hidden?.includes("supervisorRating") ? (
                       <Button data-builder-block="supervisorRating"
                         type="button"
                         variant="outline"
@@ -3372,7 +3372,7 @@ function FlouciDepositFlow({
             />
           </div>
         ) : (
-          <div className="mb-4">
+          <div data-builder-block="paymentMethods" style={getPortalBuilderBlockStyle(portalBuilderSettings, "paymentMethods")} className="mb-4">
             <PaymentMethodSelector
               method={method}
               open={openMethods}
@@ -3382,7 +3382,7 @@ function FlouciDepositFlow({
           </div>
         )}
 
-        <div className="flex-1">
+        <div className="flex-1" style={{ order: (portalBuilderSettings?.layout?.order?.indexOf("playerId") ?? 2) + 1 }}>
           {step === 1 ? (
             <FlouciStepOne
               method={method}
@@ -4343,7 +4343,7 @@ function CardDepositFlow({
             <PaymentMethodMark method={method} />
           </div>
         ) : (
-          <div className="mb-4">
+          <div data-builder-block="paymentMethods" style={getPortalBuilderBlockStyle(portalBuilderSettings, "paymentMethods")} className="mb-4">
             <PaymentMethodSelector
               method={method}
               open={openMethods}
@@ -4391,7 +4391,7 @@ function CardDepositFlow({
           </div>
         ) : null}
 
-        <div className="flex-1">
+        <div className="flex-1" style={{ order: (portalBuilderSettings?.layout?.order?.indexOf("playerId") ?? 2) + 1 }}>
           {step === 1 ? (
             <CardDepositStepOne
               method={method}
@@ -5425,7 +5425,7 @@ function EDinarDepositFlow({
             <PaymentMethodMark method={method} />
           </div>
         ) : (
-          <div className="mb-4">
+          <div data-builder-block="paymentMethods" style={getPortalBuilderBlockStyle(portalBuilderSettings, "paymentMethods")} className="mb-4">
             <PaymentMethodSelector
               method={method}
               open={openMethods}
@@ -5435,7 +5435,7 @@ function EDinarDepositFlow({
           </div>
         )}
 
-        <div className="flex-1">
+        <div className="flex-1" style={{ order: (portalBuilderSettings?.layout?.order?.indexOf("playerId") ?? 2) + 1 }}>
           {step === 1 ? (
             <EDinarStepOne
               method={method}
@@ -5585,7 +5585,7 @@ function BinancePayFlow({
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
         {step === 1 ? (
           <>
-            <div className="mb-4">
+            <div data-builder-block="paymentMethods" style={getPortalBuilderBlockStyle(portalBuilderSettings, "paymentMethods")} className="mb-4">
               <PaymentMethodSelector
                 method={method}
                 open={openMethods}
@@ -5594,7 +5594,7 @@ function BinancePayFlow({
               />
             </div>
 
-            <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
+            <section data-builder-block="playerId" style={{ order: (portalBuilderSettings?.layout?.order?.indexOf("playerId") ?? 2) + 1 }} className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
               <div className="mb-4 flex items-center gap-3 border-b border-slate-700/80 pb-4">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#F0B90B] text-slate-950">
                   <span className="text-sm font-black">B</span>
@@ -6110,6 +6110,8 @@ export function CustomerPortal({
           '#ipaycash-client-portal[data-button-shape="rectangle"] button{border-radius:4px!important;}' +
           '#ipaycash-client-portal[data-template="minimal"] [class~="shadow-2xl"]{box-shadow:none!important;}' +
           '#ipaycash-client-portal[data-template="classic"] section{border-radius:4px!important;}' +
+          '#ipaycash-client-portal [data-builder-form="true"]{display:flex!important;flex-direction:column!important;gap:1rem!important;}' +
+          '#ipaycash-client-portal [data-builder-form="true"]>*:not([data-builder-block]){order:500!important;}' +
           '#ipaycash-client-portal[data-builder-edit-mode="true"] [data-builder-block]{cursor:pointer!important;outline:1px dashed transparent;outline-offset:2px;}' +
           '#ipaycash-client-portal [data-builder-block="playerRating"][style*="display: none"]{display:none!important;}' +
           '#ipaycash-client-portal[data-builder-edit-mode="true"] [data-builder-block]{cursor:pointer!important;outline:1px dashed transparent;outline-offset:2px;}' +
@@ -6414,13 +6416,15 @@ function CustomerPortalExperience({
     <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-3xl items-center justify-center">
         <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
-          <div className="space-y-4">
-            <PaymentMethodSelector
+          <div className="flex flex-col gap-4">
+            <div data-builder-block="paymentMethods" style={getPortalBuilderBlockStyle(portalBuilderSettings, "paymentMethods")}>
+              <PaymentMethodSelector
               method={method}
               open={openMethods}
               onToggle={() => setOpenMethods((current) => !current)}
               onSelect={selectMethod}
-            />
+              />
+            </div>
 
             <form
               data-builder-form="true"
