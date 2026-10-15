@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { ClientPortalFormsLibrary } from "./portal/-components/client-portal-library";
 import { ClientPortalBuilder } from "./portal/-components/client-portal-builder";
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/(main)/dashboard/client-portal")({
 
 function ClientPortalPage() {
   const { form } = Route.useSearch();
-  const navigate = Route.useNavigate();
+  const navigate = useNavigate({ from: "/dashboard/client-portal" });
 
   if (form) {
     return (
