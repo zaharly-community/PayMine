@@ -96,6 +96,7 @@ export function ClientPortalFormsLibrary({
         theme: "dark",
         width: "compact",
         radius: "medium",
+        fontFamily: "sans",
         primaryColor: "#34d399",
         backgroundColor: "#020617",
         surfaceColor: "#0f172a",
