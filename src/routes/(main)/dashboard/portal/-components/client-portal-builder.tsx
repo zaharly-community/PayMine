@@ -120,6 +120,7 @@ type PortalBuilderSettings = {
     scheduleDays: number[];
   };
   blocks: Record<string, BlockCopy>;
+  methodBlocks: Record<string, Record<string, BlockCopy>>;
   blockStyles: Record<string, BlockStyleSettings>;
 };
 
@@ -354,6 +355,12 @@ type BuilderBlockDefinition = {
   section: BuilderSectionId;
 };
 
+const methodScopedBlockIds = ["transferNumber", "transactionId", "evidence", "cardDetails", "continue", "securityNotice", "supportInfo"];
+
+function portalStepMethodKey(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
 const builderBlockSections: { id: BuilderSectionId; label: string; description: string }[] = [
   { id: "header", label: "Header", description: "Brand header and page introduction" },
   { id: "checkout", label: "Checkout", description: "Payment method selection and player details" },
@@ -456,6 +463,7 @@ function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
             ? { ...value, label: form.appearance.buttonLabel || value.label }
             : { ...value },
     ])),
+    methodBlocks: {},
     blockStyles: Object.fromEntries(builderBlockCatalog.map((block) => [block.id, {
       alignment: "left" as const,
       width: block.id === "heading" ? "wide" as const : "full" as const,
@@ -471,6 +479,7 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
         features?: Partial<PortalBuilderSettings["features"]>;
         configs?: Partial<PortalBuilderSettings["configs"]>;
         blocks?: Record<string, Partial<BlockCopy> | undefined>;
+        methodBlocks?: Record<string, Record<string, Partial<BlockCopy> | undefined> | undefined>;
         blockStyles?: Record<string, Partial<BlockStyleSettings> | undefined>;
         layout?: { version?: number; order?: string[]; hidden?: string[]; sections?: Record<string, string> };
       })
@@ -510,6 +519,16 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
         : block.section];
     }),
   ) as Record<string, BuilderSectionId>;
+  const methodBlocks: Record<string, Record<string, BlockCopy>> = {};
+  for (const [methodKey, rawBlocks] of Object.entries(raw?.methodBlocks ?? {})) {
+    if (!rawBlocks) continue;
+    const normalizedKey = portalStepMethodKey(methodKey);
+    methodBlocks[normalizedKey] = {};
+    for (const [blockId, rawCopy] of Object.entries(rawBlocks)) {
+      if (!rawCopy || !methodScopedBlockIds.includes(blockId) || !defaults.blocks[blockId]) continue;
+      methodBlocks[normalizedKey][blockId] = { ...defaults.blocks[blockId], ...rawCopy };
+    }
+  }
   const blockStyles: Record<string, BlockStyleSettings> = { ...defaults.blockStyles };
   for (const [id, rawStyle] of Object.entries(raw?.blockStyles ?? {})) {
     if (!rawStyle || !blockStyles[id]) continue;
@@ -552,6 +571,7 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
       scheduleDays: Array.isArray(raw?.configs?.scheduleDays) ? [...new Set(raw.configs.scheduleDays.map(Number).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6))] : [...defaults.configs.scheduleDays],
     },
     blocks,
+    methodBlocks,
     blockStyles,
   };
   return { ...form, builder: settings };
@@ -603,6 +623,7 @@ export function ClientPortalBuilder({
   const [notice, setNotice] = useState("");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
+  const [activeBuilderStep, setActiveBuilderStep] = useState("shared");
 
   useEffect(() => {
     const refresh = () => {
@@ -648,6 +669,7 @@ export function ClientPortalBuilder({
       features: { ...selected.builder.features, ...(patch.features ?? {}) },
       configs: { ...selected.builder.configs, ...(patch.configs ?? {}) },
       blocks: { ...selected.builder.blocks, ...(patch.blocks ?? {}) },
+      methodBlocks: { ...selected.builder.methodBlocks, ...(patch.methodBlocks ?? {}) },
       blockStyles: { ...selected.builder.blockStyles, ...(patch.blockStyles ?? {}) },
       layout: {
         version: 2,
@@ -825,6 +847,7 @@ export function ClientPortalBuilder({
         features: { ...selected.builder.features },
         configs: { ...selected.builder.configs, paymentMethods: [...selected.builder.configs.paymentMethods], presetAmounts: [...selected.builder.configs.presetAmounts] },
         blocks: Object.fromEntries(Object.entries(selected.builder.blocks).map(([key, value]) => [key, { ...value }])),
+        methodBlocks: Object.fromEntries(Object.entries(selected.builder.methodBlocks).map(([methodKey, methodBlocks]) => [methodKey, Object.fromEntries(Object.entries(methodBlocks).map(([key, value]) => [key, { ...value }]))])),
         blockStyles: Object.fromEntries(Object.entries(selected.builder.blockStyles).map(([key, value]) => [key, { ...value }])),
         layout: {
           version: 2,
