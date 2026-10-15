@@ -5,6 +5,8 @@ import {
   ExternalLink,
   Eye,
   Globe2,
+  Hash,
+  Mail,
   LayoutTemplate,
   Monitor,
   Save,
@@ -638,7 +640,7 @@ export function ClientPortalBuilder({
                       <Label>Player identification</Label>
                       <Select value={selected.builder.configs.playerIdMode} onValueChange={(value) => updateConfig("playerIdMode", value as PlayerIdMode)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent><SelectItem value="userId">Player / User ID only</SelectItem><SelectItem value="email">Email only</SelectItem><SelectItem value="both">Player ID and email</SelectItem></SelectContent>
+                        <SelectContent><SelectItem value="userId">Player ID only</SelectItem><SelectItem value="email">Email only</SelectItem><SelectItem value="both">Player ID or email</SelectItem></SelectContent>
                       </Select>
                     </div>
 
@@ -763,6 +765,9 @@ function CheckoutPreview({
   const inputRadius = appearance.radius === "small" ? "8px" : appearance.radius === "large" ? "22px" : "14px";
   const frameWidth = previewMode === "mobile" ? "390px" : builder.template === "minimal" ? "440px" : builder.template === "classic" ? "600px" : appearance.width === "wide" ? "100%" : "760px";
   const [amount, setAmount] = useState(configs.presetAmounts[0] ?? 50);
+  const [identifierMode, setIdentifierMode] = useState<"userId" | "email">(configs.playerIdMode === "email" ? "email" : "userId");
+  const identifierBlockId = configs.playerIdMode === "email" || (configs.playerIdMode === "both" && identifierMode === "email") ? "email" : "playerId";
+  const identifierCopy = blocks[identifierBlockId];
   const scheduled = !configs.scheduleEnabled || isWithinSchedule(configs.scheduleStart, configs.scheduleEnd);
   const timerMinutes = Math.floor(configs.timerSeconds / 60).toString().padStart(2, "0");
   const timerRemainder = (configs.timerSeconds % 60).toString().padStart(2, "0");
@@ -770,6 +775,11 @@ function CheckoutPreview({
   useEffect(() => {
     setAmount(configs.presetAmounts[0] ?? 50);
   }, [configs.presetAmounts.join(",")]);
+
+  useEffect(() => {
+    if (configs.playerIdMode === "email") setIdentifierMode("email");
+    else if (configs.playerIdMode === "userId") setIdentifierMode("userId");
+  }, [configs.playerIdMode]);
 
   const fontFamily = builder.fontFamily === "serif"
     ? 'Georgia, "Times New Roman", serif'
@@ -818,21 +828,19 @@ function CheckoutPreview({
                 </div>
               ) : null}
 
-              {configs.playerIdMode !== "email" ? (
-                <PreviewBlock blockId="playerId" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
-                  <label className="mb-1.5 block text-[11px] font-medium">{blocks.playerId.label}</label>
-                  <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius, color: muted }}>{blocks.playerId.placeholder || "Enter your player ID"}</div>
-                  {blocks.playerId.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.playerId.description}</p> : null}
-                </PreviewBlock>
-              ) : null}
-
-              {configs.playerIdMode !== "userId" ? (
-                <PreviewBlock blockId="email" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
-                  <label className="mb-1.5 block text-[11px] font-medium">{blocks.email.label}</label>
-                  <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius, color: muted }}>{blocks.email.placeholder || "name@example.com"}</div>
-                  {blocks.email.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.email.description}</p> : null}
-                </PreviewBlock>
-              ) : null}
+              <PreviewBlock blockId={identifierBlockId} selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
+                <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+                  <label className="block text-[11px] font-medium">{identifierCopy.label}</label>
+                  {configs.playerIdMode === "both" ? (
+                    <div className="flex items-center gap-1">
+                      <button type="button" title="Player ID" aria-label="Preview Player ID input" onClick={(event) => { event.stopPropagation(); setIdentifierMode("userId"); onSelectBlock("playerId"); }} className={"flex size-7 items-center justify-center rounded-md border " + (identifierMode === "userId" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}><Hash className="size-3.5" /></button>
+                      <button type="button" title="Email" aria-label="Preview email input" onClick={(event) => { event.stopPropagation(); setIdentifierMode("email"); onSelectBlock("email"); }} className={"flex size-7 items-center justify-center rounded-md border " + (identifierMode === "email" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}><Mail className="size-3.5" /></button>
+                    </div>
+                  ) : null}
+                </div>
+                <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius, color: muted }}>{identifierCopy.placeholder || (identifierBlockId === "email" ? "name@example.com" : "Enter your player ID")}</div>
+                {identifierCopy.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{identifierCopy.description}</p> : null}
+              </PreviewBlock>
 
               <PreviewBlock blockId="amount" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
                 <div className="flex items-center justify-between gap-2"><label className="text-[11px] font-medium">{blocks.amount.label}</label><Badge variant="outline">{form.currency}</Badge></div>
