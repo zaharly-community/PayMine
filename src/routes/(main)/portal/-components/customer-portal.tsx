@@ -144,6 +144,8 @@ const PortalFormSlugContext = React.createContext<string | undefined>(undefined)
 const PortalPreviewContext = React.createContext(false);
 
 type PortalBuilderSettingsRuntime = {
+  template?: "stripe" | "classic" | "minimal";
+  buttonShape?: "pill" | "rounded" | "rectangle";
   colors?: { brand?: string; accent?: string };
   features?: {
     supervisorRating?: boolean;
@@ -6026,7 +6028,7 @@ export function CustomerPortal({
       <PortalButtonLabelContext.Provider value={clientForm.appearance.buttonLabel || "Do Deposit"}>
       <PortalFormSlugContext.Provider value={clientForm.slug}>
       <PortalPreviewContext.Provider value={preview}>
-      <div id="ipaycash-client-portal" data-theme={clientForm.appearance.theme} data-width={clientForm.appearance.width} data-radius={clientForm.appearance.radius} data-supervisor-rating={builderSettings?.features?.supervisorRating === false ? "false" : "true"} data-ai-recognition={builderSettings?.features?.aiRecognition === false ? "false" : "true"} data-player-rating={builderSettings?.features?.playerRating === false ? "false" : "true"} data-player-id-mode={builderSettings?.configs?.playerIdMode ?? "both"} data-method-display={builderSettings?.configs?.methodDisplay ?? "cards"} style={style}>
+      <div id="ipaycash-client-portal" data-theme={clientForm.appearance.theme} data-width={clientForm.appearance.width} data-radius={clientForm.appearance.radius} data-template={builderSettings?.template ?? "stripe"} data-button-shape={builderSettings?.buttonShape ?? "rounded"} data-supervisor-rating={builderSettings?.features?.supervisorRating === false ? "false" : "true"} data-ai-recognition={builderSettings?.features?.aiRecognition === false ? "false" : "true"} data-player-rating={builderSettings?.features?.playerRating === false ? "false" : "true"} data-player-id-mode={builderSettings?.configs?.playerIdMode ?? "both"} data-method-display={builderSettings?.configs?.methodDisplay ?? "cards"} style={style}>
         <style>{'#ipaycash-client-portal [class~="bg-slate-950"]{background-color:var(--portal-page-background)!important;}' +
           '#ipaycash-client-portal [class~="bg-slate-900"],#ipaycash-client-portal [class~="bg-slate-900/80"],#ipaycash-client-portal [class~="bg-slate-900/90"],#ipaycash-client-portal [class~="bg-slate-800"],#ipaycash-client-portal [class~="bg-slate-800/80"],#ipaycash-client-portal [class~="bg-slate-800/60"],#ipaycash-client-portal [class~="bg-slate-700/90"]{background-color:var(--portal-surface)!important;}' +
           '#ipaycash-client-portal [class~="bg-emerald-400"],#ipaycash-client-portal [class~="bg-emerald-300"]{background-color:var(--portal-accent)!important;}' +
@@ -6039,7 +6041,12 @@ export function CustomerPortal({
           '#ipaycash-client-portal[data-theme="light"] [class~="text-slate-400"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-500"]{color:#64748b!important;}' +
           '#ipaycash-client-portal[data-supervisor-rating="false"] button[title="Review supervisor"]{display:none!important;}' +
           '#ipaycash-client-portal[data-ai-recognition="false"] [data-ai-recognition-ui="true"]{display:none!important;}' +
-          '#ipaycash-client-portal[data-player-id-mode="userId"] button[aria-label="Email"],#ipaycash-client-portal[data-player-id-mode="userId"] button[aria-label="Username"],#ipaycash-client-portal[data-player-id-mode="email"] button[aria-label="Player ID"],#ipaycash-client-portal[data-player-id-mode="email"] button[aria-label="Username"],#ipaycash-client-portal[data-player-id-mode="both"] button[aria-label="Username"]{display:none!important;}'}</style>
+          '#ipaycash-client-portal[data-player-id-mode="userId"] button[aria-label="Email"],#ipaycash-client-portal[data-player-id-mode="userId"] button[aria-label="Username"],#ipaycash-client-portal[data-player-id-mode="email"] button[aria-label="Player ID"],#ipaycash-client-portal[data-player-id-mode="email"] button[aria-label="Username"],#ipaycash-client-portal[data-player-id-mode="both"] button[aria-label="Username"]{display:none!important;}' +
+          '#ipaycash-client-portal[data-button-shape="pill"] button{border-radius:999px!important;}' +
+          '#ipaycash-client-portal[data-button-shape="rounded"] button{border-radius:12px!important;}' +
+          '#ipaycash-client-portal[data-button-shape="rectangle"] button{border-radius:4px!important;}' +
+          '#ipaycash-client-portal[data-template="minimal"] [class~="shadow-2xl"]{box-shadow:none!important;}' +
+          '#ipaycash-client-portal[data-template="classic"] [class~="rounded-xl"]{border-radius:4px!important;}'}</style>
         <div style={{ backgroundColor: clientForm.appearance.backgroundColor, fontFamily: style.fontFamily }}>
           <PortalBrandHeader form={clientForm} />
           <div className="mx-auto w-full" style={{ maxWidth: clientForm.appearance.width === "wide" ? "80rem" : "64rem" }}>
