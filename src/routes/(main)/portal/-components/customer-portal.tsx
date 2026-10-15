@@ -420,7 +420,7 @@ function PaymentMethodSelector({
 
   return (
     <div data-builder-block="paymentMethods" style={getPortalBuilderBlockStyle(builderSettings, "paymentMethods")} className="relative">
-      {methodBlock?.label || methodBlock?.description ? (
+      {!selectionMode && (methodBlock?.label || methodBlock?.description) ? (
         <div className="mb-2 px-1">
           {methodBlock.label ? <p className="text-xs font-medium text-slate-200">{methodBlock.label}</p> : null}
           {methodBlock.description ? <p className="mt-1 text-[11px] leading-4 text-slate-400">{methodBlock.description}</p> : null}
@@ -6440,8 +6440,8 @@ function CustomerPortalExperience({
           <section className="rounded-2xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-6">
             <div className="mb-5 text-center">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-300">Step 1 of 5</p>
-              <h2 className="mt-2 text-lg font-semibold text-white sm:text-xl">Select Payment Method</h2>
-              <p className="mt-1 text-xs leading-5 text-slate-400">Choose how you would like to make your deposit.</p>
+              <h2 className="mt-2 text-lg font-semibold text-white sm:text-xl">{portalBuilderSettings?.blocks?.paymentMethods?.label && portalBuilderSettings.blocks.paymentMethods.label !== "Payment method" ? portalBuilderSettings.blocks.paymentMethods.label : "Select Payment Method"}</h2>
+              <p className="mt-1 text-xs leading-5 text-slate-400">{portalBuilderSettings?.blocks?.paymentMethods?.description || "Choose how you would like to make your deposit."}</p>
             </div>
             <PaymentMethodSelector
               method={method}
