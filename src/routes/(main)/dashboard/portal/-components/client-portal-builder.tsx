@@ -1409,7 +1409,7 @@ export function ClientPortalBuilder({
 
                 {section === "configs" ? (
                   <>
-                    <div><h3 className="text-sm font-semibold">Checkout configuration</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">Control available payment methods, player identification, preset amounts, timer and active hours.</p></div>
+                    <div><h3 className="text-sm font-semibold">Checkout configuration</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">Choose available payment methods, set the deposit session timer, and configure the days and hours when the form is active.</p></div>
 
                     <div className="space-y-2">
                       <Label>Payment methods shown</Label>
@@ -1438,7 +1438,7 @@ export function ClientPortalBuilder({
                     </div>
 
                     <div className="space-y-3 rounded-xl border p-3">
-                      <ToggleSetting title="Schedule form availability" description="Keep the deposit form active only during configured hours." checked={selected.builder.configs.scheduleEnabled} onChange={(checked) => updateConfig("scheduleEnabled", checked)} />
+                      <ToggleSetting title="Schedule form availability" description="Keep the deposit form active only on selected days and during configured hours." checked={selected.builder.configs.scheduleEnabled} onChange={(checked) => updateConfig("scheduleEnabled", checked)} />
                       {selected.builder.configs.scheduleEnabled ? (
                         <div className="space-y-3">
                           <div className="grid grid-cols-2 gap-3">
