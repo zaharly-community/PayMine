@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Check,
   Copy,
@@ -7,18 +7,16 @@ import {
   Globe2,
   LayoutTemplate,
   Monitor,
-  Plus,
+  Moon,
   Save,
   Smartphone,
   Sparkles,
-  Trash2,
+  Sun,
   WalletCards,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -307,42 +305,71 @@ function ToggleSetting({ title, description, checked, onChange }: { title: strin
   return <div className="flex items-center justify-between gap-3 rounded-xl border p-3"><div><p className="text-sm font-medium">{title}</p><p className="mt-1 text-xs text-muted-foreground">{description}</p></div><Switch checked={checked} onCheckedChange={onChange} /></div>;
 }
 
-function CheckoutPreview({ form }: { form: ClientPortalForm }) {
+function CheckoutPreview({
+  form,
+  previewMode = "desktop",
+}: {
+  form: ClientPortalForm;
+  previewMode?: "desktop" | "mobile";
+}) {
   const { appearance } = form;
-  const bg = appearance.backgroundColor;
+  const dark = appearance.theme === "dark";
+  const background = appearance.backgroundColor;
   const surface = appearance.surfaceColor;
-  const foreground = appearance.theme === "dark" ? "#f8fafc" : "#0f172a";
-  const muted = appearance.theme === "dark" ? "#94a3b8" : "#64748b";
+  const foreground = dark ? "#f8fafc" : "#0f172a";
+  const muted = dark ? "#94a3b8" : "#64748b";
+  const border = dark ? "#334155" : "#e2e8f0";
   const radius = appearance.radius === "small" ? "8px" : appearance.radius === "large" ? "22px" : "14px";
-  const width = appearance.width === "wide" ? "100%" : "100%";
+  const frameWidth = previewMode === "mobile" ? "390px" : appearance.width === "wide" ? "100%" : "600px";
 
   return (
-    <div className="xl:sticky xl:top-4 xl:self-start">
-      <div className="mb-3 flex items-center justify-between gap-3"><div><h2 className="text-sm font-semibold">Live checkout preview</h2><p className="text-xs text-muted-foreground">Updates as you customize the selected form.</p></div><Badge variant="outline"><Eye className="mr-1 size-3.5" /> Preview</Badge></div>
-      <div className="overflow-hidden border shadow-sm" style={{ backgroundColor: bg, color: foreground, borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0", borderRadius: radius }}>
-        <div className="flex items-center justify-between gap-3 border-b px-4 py-3" style={{ backgroundColor: surface, borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0" }}>
-          <div className="flex min-w-0 items-center gap-2.5">
-            {appearance.showLogo ? (appearance.logoUrl ? <img src={appearance.logoUrl} alt="" className="size-9 shrink-0 rounded-lg object-contain" /> : <div className="flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold" style={{ backgroundColor: appearance.primaryColor, color: appearance.theme === "dark" ? "#052e22" : "#ffffff" }}>{appearance.brandName.slice(0, 2).toUpperCase()}</div>) : null}
-            <div className="min-w-0"><p className="truncate text-sm font-semibold">{appearance.brandName || "Your brand"}</p><p className="text-[10px]" style={{ color: muted }}>Secure checkout</p></div>
+    <div className="mx-auto w-full transition-all duration-200" style={{ maxWidth: frameWidth }}>
+      <div className="overflow-hidden border bg-background shadow-lg" style={{ borderRadius: "14px", borderColor: border }}>
+        <div className="flex items-center gap-1.5 border-b bg-muted/30 px-3 py-2.5" style={{ borderColor: border }}>
+          <span className="size-2.5 rounded-full bg-rose-400" />
+          <span className="size-2.5 rounded-full bg-amber-300" />
+          <span className="size-2.5 rounded-full bg-emerald-400" />
+          <div className="mx-auto flex h-6 min-w-0 max-w-[520px] flex-1 items-center justify-center gap-1.5 rounded-md border bg-background px-2 text-[10px] text-muted-foreground" style={{ borderColor: border }}>
+            <Globe2 className="size-3 shrink-0" /><span className="truncate">{typeof window === "undefined" ? "checkout.local" : window.location.host}/portal/{form.slug}</span>
           </div>
-          {form.environment === "Sandbox" ? <Badge variant="outline">Test mode</Badge> : <span className="flex items-center gap-1 text-[10px]" style={{ color: appearance.primaryColor }}><Check className="size-3.5" /> Secure</span>}
+          <span className="w-7" />
         </div>
-        <div className="p-4 sm:p-5">
-          <div className="mx-auto space-y-4" style={{ maxWidth: width }}>
-            <div><p className="text-lg font-semibold">{appearance.title || form.name}</p><p className="mt-1 text-xs leading-5" style={{ color: muted }}>{appearance.description}</p></div>
-            <div className="rounded-xl border p-3" style={{ borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0", backgroundColor: surface, borderRadius: radius }}>
-              <div className="flex items-center justify-between gap-2"><span className="text-xs" style={{ color: muted }}>Amount</span><Badge variant="outline">{form.currency}</Badge></div>
-              <p className="mt-2 text-2xl font-semibold">250.00 <span className="text-sm font-medium">{form.currency}</span></p>
+        <div style={{ backgroundColor: background, color: foreground }}>
+          <div className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-6" style={{ backgroundColor: surface, borderColor: border }}>
+            <div className="flex min-w-0 items-center gap-2.5">
+              {appearance.showLogo ? (appearance.logoUrl ? <img src={appearance.logoUrl} alt="" className="size-8 shrink-0 rounded-lg object-contain" /> : <span className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold" style={{ backgroundColor: appearance.primaryColor, color: dark ? "#052e22" : "#fff" }}>{(appearance.brandName || "iP").slice(0, 2).toUpperCase()}</span>) : null}
+              <div className="min-w-0"><p className="truncate text-xs font-semibold">{appearance.brandName || "Your brand"}</p><p className="mt-0.5 text-[9px]" style={{ color: muted }}>Secure checkout</p></div>
             </div>
-            <div><p className="mb-2 text-xs font-medium">Choose payment method</p><div className="grid grid-cols-2 gap-2">{form.methods.slice(0, 4).map((method) => <div key={method} className="flex items-center gap-2 rounded-lg border p-2.5 text-xs" style={{ borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0", backgroundColor: surface, borderRadius: radius }}><span className="flex size-6 items-center justify-center rounded-md text-[9px] font-bold" style={{ backgroundColor: appearance.primaryColor, color: appearance.theme === "dark" ? "#052e22" : "#fff" }}>{method.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</span><span className="truncate">{method}</span></div>)}</div></div>
-            <Button className="w-full" style={{ backgroundColor: appearance.primaryColor, color: appearance.theme === "dark" ? "#052e22" : "#ffffff", borderRadius: radius }}>{appearance.buttonLabel || "Continue securely"}</Button>
-            {appearance.showPlatformBranding ? <p className="text-center text-[10px]" style={{ color: muted }}>Powered by iPayCash</p> : null}
-            <div className="flex items-center justify-center gap-1.5 text-[10px]" style={{ color: muted }}><ShieldCheckIcon /> Encrypted checkout · {form.slug}</div>
+            <div className="flex items-center gap-1 text-[9px]" style={{ color: appearance.primaryColor }}><Check className="size-3" /> Secure</div>
+          </div>
+          <div className="p-4 sm:p-6">
+            <div className="mx-auto space-y-4" style={{ maxWidth: "450px" }}>
+              <div><p className="text-base font-semibold">{appearance.title || form.name}</p><p className="mt-1 text-xs leading-5" style={{ color: muted }}>{appearance.description}</p></div>
+              <div className="border p-4" style={{ backgroundColor: surface, borderColor: border, borderRadius: radius }}>
+                <div className="flex items-center justify-between gap-2"><span className="text-[11px]" style={{ color: muted }}>Deposit amount</span><Badge variant="outline">{form.currency}</Badge></div>
+                <p className="mt-2 text-2xl font-semibold tabular-nums">250.00 <span className="text-xs font-medium" style={{ color: muted }}>{form.currency}</span></p>
+              </div>
+              <div><p className="mb-2 text-xs font-medium">Choose payment method</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {form.methods.slice(0, previewMode === "mobile" ? 4 : 6).map((method) => <div key={method} className="flex min-w-0 items-center gap-2 border p-2.5 text-[10px]" style={{ borderColor: border, backgroundColor: surface, borderRadius: radius }}><span className="flex size-6 shrink-0 items-center justify-center rounded-md text-[8px] font-bold" style={{ backgroundColor: appearance.primaryColor, color: dark ? "#052e22" : "#fff" }}>{method.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</span><span className="truncate">{method}</span></div>)}
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="grid gap-1.5"><span className="text-[10px]" style={{ color: muted }}>Player ID</span><div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: surface, borderRadius: radius }}>Enter your player ID</div></div>
+                <div className="grid gap-1.5"><span className="text-[10px]" style={{ color: muted }}>Email (optional)</span><div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: surface, borderRadius: radius }}>you@example.com</div></div>
+              </div>
+              <Button className="w-full" style={{ backgroundColor: appearance.primaryColor, color: dark ? "#052e22" : "#fff", borderRadius: radius }}>{appearance.buttonLabel || "Continue securely"}</Button>
+              {appearance.showPlatformBranding ? <p className="text-center text-[9px]" style={{ color: muted }}>Powered by iPayCash</p> : null}
+              <div className="flex items-center justify-center gap-1.5 text-[9px]" style={{ color: muted }}><ShieldCheckIcon /> Protected checkout · {form.slug}</div>
+            </div>
           </div>
         </div>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2"><div className="flex items-center gap-2 rounded-lg border p-2.5 text-xs text-muted-foreground"><Monitor className="size-3.5" /> Desktop responsive</div><div className="flex items-center gap-2 rounded-lg border p-2.5 text-xs text-muted-foreground"><Smartphone className="size-3.5" /> Mobile responsive</div></div>
-      <div className="mt-2 flex items-center gap-2 rounded-lg bg-muted/30 p-3 text-[11px] leading-5 text-muted-foreground"><Sparkles className="size-4 shrink-0" /> Preview changes are local. Production checkout must use server-validated settings and provider sessions.</div>
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[10px] text-muted-foreground">
+        <span className="flex items-center gap-1 rounded-full border bg-background px-2.5 py-1"><Monitor className="size-3" /> Desktop responsive</span>
+        <span className="flex items-center gap-1 rounded-full border bg-background px-2.5 py-1"><Smartphone className="size-3" /> Mobile responsive</span>
+      </div>
+      <div className="mt-3 flex items-start gap-2 rounded-lg border bg-background p-3 text-[10px] leading-4 text-muted-foreground"><Sparkles className="mt-0.5 size-3.5 shrink-0" /> This is a visual preview. Production checkout must use backend-published settings and verified payment-provider sessions.</div>
     </div>
   );
 }
