@@ -6138,9 +6138,8 @@ export function CustomerPortal({
           '#ipaycash-client-portal [data-builder-block="playerRating"][style*="display: none"]{display:none!important;}' +
           '#ipaycash-client-portal[data-builder-edit-mode="true"] [data-builder-block]{cursor:pointer!important;outline:1px dashed transparent;outline-offset:2px;}' +
           '#ipaycash-client-portal[data-builder-edit-mode="true"] [data-builder-block]:hover{outline-color:#3b82f6!important;background-color:rgba(59,130,246,.06)!important;}'}</style>
-        <div style={{ backgroundColor: clientForm.appearance.backgroundColor, fontFamily: style.fontFamily }}>
+        <div className="mx-auto flex w-full flex-col" style={{ backgroundColor: clientForm.appearance.backgroundColor, fontFamily: style.fontFamily, maxWidth: clientForm.appearance.width === "wide" ? "80rem" : "64rem" }}>
           <PortalBrandHeader form={clientForm} />
-          <div className="mx-auto flex w-full flex-col" style={{ maxWidth: clientForm.appearance.width === "wide" ? "80rem" : "64rem" }}>
             <div data-builder-block="heading" style={getPortalBuilderBlockStyle(builderSettings, "heading")} className="px-4 pb-2 pt-4 sm:px-6">
               <h1 className="text-lg font-semibold" style={{ color: clientForm.appearance.theme === "dark" ? "#f8fafc" : "#0f172a" }}>{clientForm.appearance.title || clientForm.name}</h1>
               <p className="mt-1 text-xs leading-5" style={{ color: clientForm.appearance.theme === "dark" ? "#94a3b8" : "#64748b" }}>{clientForm.appearance.description}</p>
