@@ -32,12 +32,6 @@ import {
 
 type EditorSection = "general" | "methods" | "appearance";
 
-const sectionOptions: Array<{ id: EditorSection; title: string; description: string }> = [
-  { id: "general", title: "General", description: "Name, URL and checkout content" },
-  { id: "methods", title: "Payment methods", description: "Choose the options shown to players" },
-  { id: "appearance", title: "Appearance", description: "Branding, colors and layout" },
-];
-
 const portalColorOptions = [
   { key: "primaryColor" as const, label: "Accent / action color" },
   { key: "backgroundColor" as const, label: "Page background" },
