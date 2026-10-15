@@ -6133,7 +6133,19 @@ export function CustomerPortal({
     );
   }
 
-  const builderSettings = (clientForm as ClientPortalForm & { builder?: PortalBuilderSettingsRuntime }).builder ?? null;
+  const rawBuilderSettings = (clientForm as ClientPortalForm & { builder?: PortalBuilderSettingsRuntime }).builder ?? null;
+  const rawBrandHeader = rawBuilderSettings?.blocks?.brandHeader;
+  const builderSettings = rawBuilderSettings
+    ? {
+        ...rawBuilderSettings,
+        blocks: {
+          ...rawBuilderSettings.blocks,
+          brandHeader: rawBrandHeader?.label === "iPayCash"
+            ? { ...rawBrandHeader, label: clientForm.appearance.brandName || "Your brand" }
+            : rawBrandHeader,
+        },
+      }
+    : null;
   if (!builderEditMode && builderSettings?.configs?.scheduleEnabled && !isPortalWithinSchedule(builderSettings.configs.scheduleStart, builderSettings.configs.scheduleEnd)) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-slate-950 px-5 py-10 text-slate-100">
