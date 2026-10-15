@@ -15,6 +15,54 @@ import {
   type ClientPortalForm,
 } from "@/lib/client-portal-config";
 
+type TemplateId = "stripe" | "classic" | "minimal";
+
+const layoutPresets: Record<TemplateId, {
+  label: string;
+  description: string;
+  theme: "dark" | "light";
+  width: "compact" | "wide";
+  radius: "small" | "medium" | "large";
+  fontFamily: "system" | "sans" | "serif";
+  primaryColor: string;
+  backgroundColor: string;
+  surfaceColor: string;
+}> = {
+  stripe: {
+    label: "Stripe",
+    description: "Modern dark checkout with green actions",
+    theme: "dark",
+    width: "compact",
+    radius: "medium",
+    fontFamily: "sans",
+    primaryColor: "#34d399",
+    backgroundColor: "#020617",
+    surfaceColor: "#0f172a",
+  },
+  classic: {
+    label: "Classic",
+    description: "Warm light canvas and traditional typography",
+    theme: "light",
+    width: "wide",
+    radius: "small",
+    fontFamily: "serif",
+    primaryColor: "#315b8a",
+    backgroundColor: "#f7f3eb",
+    surfaceColor: "#fffdf7",
+  },
+  minimal: {
+    label: "Minimal",
+    description: "Bright, spacious and teal-accented",
+    theme: "light",
+    width: "compact",
+    radius: "large",
+    fontFamily: "system",
+    primaryColor: "#0f766e",
+    backgroundColor: "#ffffff",
+    surfaceColor: "#f8fafc",
+  },
+};
+
 function currentTimestamp() {
   return new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
@@ -39,6 +87,7 @@ export function ClientPortalFormsLibrary({
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState("New Checkout Form");
   const [newSlug, setNewSlug] = useState("new-checkout");
+  const [newTemplate, setNewTemplate] = useState<TemplateId>("stripe");
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
@@ -61,7 +110,8 @@ export function ClientPortalFormsLibrary({
   const createForm = () => {
     const name = newName.trim() || "Untitled checkout";
     const slug = safeSlug(newSlug || name, forms);
-    const form: ClientPortalForm = {
+    const layout = layoutPresets[newTemplate];
+    const form: ClientPortalForm & { builder: { template: TemplateId } } = {
       id: "FORM-" + Date.now().toString(36).toUpperCase(),
       name,
       slug,
@@ -81,19 +131,21 @@ export function ClientPortalFormsLibrary({
         title: name,
         description: "Choose your preferred payment method and complete your checkout securely.",
         buttonLabel: "Continue securely",
-        theme: "dark",
-        width: "compact",
-        radius: "medium",
-        fontFamily: "sans",
-        primaryColor: "#34d399",
-        backgroundColor: "#020617",
-        surfaceColor: "#0f172a",
+        theme: layout.theme,
+        width: layout.width,
+        radius: layout.radius,
+        fontFamily: layout.fontFamily,
+        primaryColor: layout.primaryColor,
+        backgroundColor: layout.backgroundColor,
+        surfaceColor: layout.surfaceColor,
       },
+      builder: { template: newTemplate },
     };
     const next = [form, ...forms];
     persist(next, "Draft created. Customize it before publishing.");
     setNewName("New Checkout Form");
     setNewSlug("new-checkout");
+    setNewTemplate("stripe");
     setCreateOpen(false);
     onCustomize(form.id);
   };
@@ -228,6 +280,33 @@ export function ClientPortalFormsLibrary({
           <div className="grid gap-4 py-2">
             <div className="grid gap-2"><Label>Form name</Label><Input value={newName} onChange={(event) => { setNewName(event.target.value); if (!newSlug || newSlug === normalizeClientPortalSlug(newName)) setNewSlug(normalizeClientPortalSlug(event.target.value)); }} placeholder="VIP Deposit Checkout" /></div>
             <div className="grid gap-2"><Label>URL slug</Label><Input value={newSlug} onChange={(event) => setNewSlug(normalizeClientPortalSlug(event.target.value))} placeholder="vip-deposit" /><p className="text-[11px] text-muted-foreground">/portal/{newSlug || "your-form"}</p></div>
+            <div className="grid gap-2">
+              <div><Label>Choose a starting layout</Label><p className="mt-1 text-xs text-muted-foreground">You can change colors, fonts, layout and blocks later in the Builder.</p></div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {(Object.entries(layoutPresets) as [TemplateId, (typeof layoutPresets)[TemplateId]][]).map(([id, layout]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={newTemplate === id}
+                    onClick={() => setNewTemplate(id)}
+                    className={"rounded-xl border p-2.5 text-left transition " + (newTemplate === id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border hover:border-primary/40 hover:bg-muted/30")}
+                  >
+                    <div className="mb-3 rounded-lg border p-2.5" style={{ backgroundColor: layout.backgroundColor, borderColor: layout.primaryColor, borderRadius: layout.radius === "small" ? 4 : layout.radius === "large" ? 14 : 8 }}>
+                      <div className="mb-2 flex items-center gap-1.5">
+                        <span className="size-3 shrink-0 rounded-sm" style={{ backgroundColor: layout.primaryColor }} />
+                        <span className="h-1.5 w-12 rounded-full" style={{ backgroundColor: layout.theme === "dark" ? "#64748b" : "#cbd5e1" }} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="h-4 rounded border" style={{ backgroundColor: layout.surfaceColor, borderColor: layout.theme === "dark" ? "#334155" : "#e2e8f0" }} />
+                        <div className="h-3 rounded" style={{ backgroundColor: layout.primaryColor, borderRadius: layout.radius === "large" ? 999 : layout.radius === "small" ? 2 : 6 }} />
+                      </div>
+                    </div>
+                    <span className="flex items-center justify-between gap-1 text-xs font-semibold">{layout.label}{newTemplate === id ? <Check className="size-3.5 text-primary" /> : null}</span>
+                    <span className="mt-1 block text-[10px] leading-4 text-muted-foreground">{layout.description}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button><Button onClick={createForm}><Plus className="size-4" /> Create & customize</Button></DialogFooter>
         </DialogContent>
