@@ -6190,6 +6190,7 @@ export function CustomerPortal({
           '#ipaycash-client-portal[data-button-shape="rectangle"] button{border-radius:4px!important;}' +
           '#ipaycash-client-portal[data-template="minimal"] [class~="shadow-2xl"]{box-shadow:none!important;}' +
           '#ipaycash-client-portal[data-template="classic"] section{border-radius:4px!important;}' +
+          '#ipaycash-client-portal[data-method-display="cards"] [data-payment-flow="true"] [data-builder-block="paymentMethods"]{display:none!important;}' +
           '#ipaycash-client-portal [data-builder-form="true"]{display:flex!important;flex-direction:column!important;gap:1rem!important;}' +
           '#ipaycash-client-portal [data-builder-form="true"]>*:not([data-builder-block]){order:500!important;}' +
           '#ipaycash-client-portal [data-builder-block="playerRating"][style*="display: none"]{display:none!important;}' +
@@ -6286,6 +6287,7 @@ function CustomerPortalExperience({
   availableMethods: PaymentMethod[];
 }) {
   const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
+  const methodDisplay = portalBuilderSettings?.configs?.methodDisplay ?? "cards";
   const initialMethod = availableMethods.find((item) => item.id === initialMethodId) ?? availableMethods[0] ?? paymentMethods[0];
   const portalFormSlug = React.useContext(PortalFormSlugContext);
   const [method, setMethod] = React.useState<PaymentMethod>(initialMethod);
@@ -6393,6 +6395,31 @@ function CustomerPortalExperience({
     setError("");
     setDepositStarted(true);
   };
+
+  if (methodDisplay === "cards" && !initialMethodId) {
+    return (
+      <main className="min-h-dvh bg-slate-950 px-4 py-6 text-slate-100 sm:px-6">
+        <div className="mx-auto w-full max-w-xl">
+          <PortalCheckoutStepper currentStep={1} />
+          <section className="rounded-2xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-6">
+            <div className="mb-5 text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-300">Step 1 of 5</p>
+              <h2 className="mt-2 text-lg font-semibold text-white sm:text-xl">Select Payment Method</h2>
+              <p className="mt-1 text-xs leading-5 text-slate-400">Choose how you would like to make your deposit.</p>
+            </div>
+            <PaymentMethodSelector
+              method={method}
+              open={false}
+              onToggle={() => undefined}
+              onSelect={selectMethod}
+              selectionMode
+            />
+            <p className="mt-4 text-center text-[10px] leading-4 text-slate-500">Select a payment method to continue to Player ID and amount.</p>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   if (method.id === "binance-pay") {
     return (
