@@ -206,6 +206,21 @@ const googleFontOptions: GoogleFontOption[] = [
   { name: "IBM Plex Mono", category: "Monospace" },
 ];
 
+function preloadGoogleFont(fontName: string) {
+  if (typeof document === "undefined") return;
+  const id = "ipaycash-google-font-" + fontName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  let link = document.getElementById(id) as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.dataset.ipaycashGoogleFont = "true";
+    document.head.appendChild(link);
+  }
+  const family = fontName.trim().split(/\\s+/).map(encodeURIComponent).join("+");
+  link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700&display=swap`;
+}
+
 function ThemeThumbnail({ id }: { id: TemplateId }) {
   return (
     <div className={"flex h-12 w-[74px] shrink-0 flex-col gap-1 rounded-md border p-1.5 " + (id === "stripe" ? "bg-slate-50" : id === "classic" ? "bg-stone-50" : "bg-white")}>
@@ -1041,7 +1056,7 @@ export function ClientPortalBuilder({
                             <p className="sticky top-0 z-10 bg-background px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{group.label}</p>
                             <div className="grid gap-1">
                               {group.fonts.map((font) => (
-                                <button key={font.name} type="button" onClick={() => updateBuilder({ fontFamily: font.name })} aria-pressed={selected.builder.fontFamily === font.name} className={"flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left transition " + (selected.builder.fontFamily === font.name ? "border-primary bg-primary/5 text-primary" : "border-transparent hover:border-border hover:bg-muted/50")}>
+                                <button key={font.name} type="button" onClick={() => updateBuilder({ fontFamily: font.name })} onMouseEnter={() => preloadGoogleFont(font.name)} onFocus={() => preloadGoogleFont(font.name)} aria-pressed={selected.builder.fontFamily === font.name} className={"flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left transition " + (selected.builder.fontFamily === font.name ? "border-primary bg-primary/5 text-primary" : "border-transparent hover:border-border hover:bg-muted/50")}>
                                   <span className="min-w-0">
                                     <span className="block text-sm" style={{ fontFamily: `"${font.name}", ui-sans-serif, sans-serif` }}>{font.name}</span>
                                     <span className="mt-0.5 block text-[10px] text-muted-foreground">{font.trending ? "Popular in current UI design" : font.category}</span>
