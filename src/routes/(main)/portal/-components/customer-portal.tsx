@@ -182,8 +182,25 @@ type PortalBuilderSettingsRuntime = {
     scheduleEnabled?: boolean;
     scheduleStart?: string;
     scheduleEnd?: string;
+    scheduleDays?: number[];
   };
-  blocks?: Record<string, { label?: string; placeholder?: string; description?: string }>;
+  blocks?: Record<string, {
+    label?: string;
+    placeholder?: string;
+    description?: string;
+    visible?: boolean;
+    showLogo?: boolean;
+    showLimits?: boolean;
+    showProcessingTime?: boolean;
+    processingTime?: string;
+    showHistory?: boolean;
+    showDisagreements?: boolean;
+    showLanguageSwitcher?: boolean;
+    enabledIdentifierTypes?: PlayerLookupType[];
+    usernameLabel?: string;
+    usernamePlaceholder?: string;
+    steps?: { title?: string; icon?: string; content?: string }[];
+  }>;
   blockStyles?: Record<string, {
     alignment?: "left" | "center" | "right";
     width?: "full" | "wide" | "medium" | "narrow";
@@ -222,7 +239,7 @@ function getPortalBuilderBlockStyle(settings: PortalBuilderSettingsRuntime | nul
   const spacing = blockStyle?.spacing === "compact" ? "0.25rem" : blockStyle?.spacing === "relaxed" ? "1.5rem" : "0.75rem";
   return {
     order: index >= 0 ? index + 1 : undefined,
-    display: settings?.layout?.hidden?.includes(blockId) || notPlaced ? "none" : undefined,
+    display: (blockId !== "paymentMethods" && settings?.blocks?.[blockId]?.visible === false) || settings?.layout?.hidden?.includes(blockId) || notPlaced ? "none" : undefined,
     width: "100%",
     maxWidth,
     marginLeft: blockStyle?.alignment === "center" || blockStyle?.alignment === "right" ? "auto" : undefined,
@@ -243,12 +260,13 @@ function getPortalBuilderBlockLabel(
   return configured && configured !== defaultLabel ? configured : fallback;
 }
 
-function isPortalWithinSchedule(start?: string, end?: string) {
+function isPortalWithinSchedule(start?: string, end?: string, days?: number[]) {
+  const now = new Date();
+  if (Array.isArray(days) && !days.includes(now.getDay())) return false;
   if (!start || !end) return true;
   const [startHour, startMinute] = start.split(":").map(Number);
   const [endHour, endMinute] = end.split(":").map(Number);
   if (![startHour, startMinute, endHour, endMinute].every(Number.isFinite)) return true;
-  const now = new Date();
   const current = now.getHours() * 60 + now.getMinutes();
   const first = startHour * 60 + startMinute;
   const last = endHour * 60 + endMinute;
@@ -273,10 +291,22 @@ function PortalBrandHeader({ form }: { form: ClientPortalForm }) {
   const { appearance } = form;
   const builderSettings = React.useContext(PortalBuilderSettingsContext);
   const headerCopy = builderSettings?.blocks?.brandHeader;
-  const [menuOpen, setMenuOpen] = React.useState(false);
+  const [language, setLanguage] = React.useState<"en" | "fr" | "ar">("en");
   const formQuery = "?form=" + encodeURIComponent(form.slug);
+  const labels = {
+    en: { history: "History", disagreements: "Disagreements", language: "Language" },
+    fr: { history: "Historique", disagreements: "Litiges", language: "Langue" },
+    ar: { history: "السجل", disagreements: "النزاعات", language: "اللغة" },
+  }[language];
+  const muted = appearance.theme === "dark" ? "#94a3b8" : "#64748b";
+  const foreground = appearance.theme === "dark" ? "#e2e8f0" : "#334155";
+  const linkClass = "rounded-md px-2 py-1.5 text-xs font-medium transition-colors hover:bg-slate-500/10";
   return (
-    <div data-builder-block="brandHeader" style={{ ...getPortalBuilderBlockStyle(builderSettings, "brandHeader"), maxWidth: appearance.width === "wide" ? "72rem" : "48rem", color: appearance.theme === "dark" ? "#f8fafc" : "#0f172a", borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0" }} className="mx-auto flex w-full items-center justify-between gap-3 border-b px-4 py-3 sm:px-6">
+    <div
+      data-builder-block="brandHeader"
+      style={{ ...getPortalBuilderBlockStyle(builderSettings, "brandHeader"), maxWidth: appearance.width === "wide" ? "72rem" : "48rem", color: appearance.theme === "dark" ? "#f8fafc" : "#0f172a", borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0" }}
+      className="mx-auto grid w-full grid-cols-1 items-center gap-3 border-b px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:px-6"
+    >
       <div className="flex min-w-0 items-center gap-3">
         {appearance.showLogo ? (
           appearance.logoUrl ? (
@@ -287,33 +317,32 @@ function PortalBrandHeader({ form }: { form: ClientPortalForm }) {
         ) : null}
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{headerCopy?.label || appearance.brandName || "Your brand"}</p>
-          <p className="text-[10px]" style={{ color: appearance.theme === "dark" ? "#94a3b8" : "#64748b" }}>{headerCopy?.placeholder || "Secure checkout"}</p>
+          {headerCopy?.placeholder ? <p className="text-[10px]" style={{ color: muted }}>{headerCopy.placeholder}</p> : null}
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <div className="hidden items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] sm:flex" style={{ borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0", color: appearance.primaryColor }}>
-          <ShieldCheck className="size-3.5" /> {headerCopy?.description || "Protected payment"}
-        </div>
-        <div className="relative">
-          <button type="button" aria-label="Player menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)} className="flex h-9 items-center gap-2 rounded-lg border px-3 text-xs font-medium transition-colors hover:bg-slate-500/10" style={{ borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0", color: appearance.theme === "dark" ? "#e2e8f0" : "#334155" }}>
-            <span>Menu</span><ChevronDown className={cn("size-3.5 transition-transform", menuOpen && "rotate-180")} />
-          </button>
-          {menuOpen ? (
-            <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-slate-700 bg-slate-900 p-1.5 shadow-xl">
-              <a href={"/portal/history" + formQuery} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-slate-200 transition-colors hover:bg-slate-800">
-                <HistoryIcon className="size-4 text-slate-400" /> History
-              </a>
-              <a href={"/portal/disagreements" + formQuery} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-slate-200 transition-colors hover:bg-slate-800">
-                <FileWarning className="size-4 text-slate-400" /> Disagreements
-              </a>
-            </div>
-          ) : null}
-        </div>
+      <nav dir={language === "ar" ? "rtl" : "ltr"} aria-label="Player navigation" className="flex items-center justify-center gap-1.5">
+        {headerCopy?.showHistory !== false ? <a href={"/portal/history" + formQuery} className={linkClass} style={{ color: foreground }}>{labels.history}</a> : null}
+        {headerCopy?.showHistory !== false && headerCopy?.showDisagreements !== false ? <span aria-hidden="true" className="text-xs" style={{ color: muted }}>·</span> : null}
+        {headerCopy?.showDisagreements !== false ? <a href={"/portal/disagreements" + formQuery} className={linkClass} style={{ color: foreground }}>{labels.disagreements}</a> : null}
+      </nav>
+      <div className="flex items-center justify-center gap-2 sm:justify-end">
+        {headerCopy?.description ? (
+          <div className="hidden items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] md:flex" style={{ borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0", color: appearance.primaryColor }}>
+            <ShieldCheck className="size-3.5" /> {headerCopy.description}
+          </div>
+        ) : null}
+        {headerCopy?.showLanguageSwitcher === true ? (
+          <label className="flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[10px]" style={{ borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0", color: foreground }}>
+            <span className="sr-only">{labels.language}</span>
+            <select aria-label={labels.language} value={language} onChange={(event) => setLanguage(event.target.value as "en" | "fr" | "ar")} className="max-w-16 bg-transparent text-[10px] outline-none">
+              <option value="en">EN</option><option value="fr">FR</option><option value="ar">AR</option>
+            </select>
+          </label>
+        ) : null}
       </div>
     </div>
   );
 }
-
 function PaymentMethodMark({ method }: { method: PaymentMethod }) {
   return (
     <span
@@ -468,7 +497,7 @@ function PaymentMethodSelector({
           className={cn(
             methodDisplay === "tabs"
               ? "flex min-w-0 items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x select-none"
-              : "grid w-full min-w-0 grid-cols-2 gap-2 sm:grid-cols-3",
+              : "grid w-full min-w-0 grid-cols-2 gap-2 sm:grid-cols-4",
             isDragging && methodDisplay === "tabs" ? "cursor-grabbing" : methodDisplay === "tabs" ? "cursor-grab" : "",
           )}
           aria-label="Payment methods"
@@ -495,11 +524,11 @@ function PaymentMethodSelector({
                   onClick={() => onSelect(item)}
                   className={cn(
                     methodDisplay === "tabs"
-                      ? "group relative mt-1 flex min-w-[104px] shrink-0 items-center gap-2 rounded-none border-b-2 px-3 py-2 transition-colors"
-                      : "group relative flex min-h-[92px] min-w-0 flex-col items-center justify-center gap-2 rounded-xl border px-3 py-4 text-center transition-all hover:-translate-y-0.5",
+                      ? "group relative flex w-[78px] min-w-[78px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-center transition-colors"
+                      : "group relative flex min-h-[100px] min-w-0 flex-col items-center justify-center gap-2 rounded-xl border px-3 py-4 text-center transition-all hover:-translate-y-0.5",
                     selected
-                      ? (methodDisplay === "tabs" ? "border-emerald-300 bg-transparent" : "border-emerald-300/60 bg-emerald-300/10 shadow-sm")
-                      : (methodDisplay === "tabs" ? "border-transparent bg-transparent hover:border-white/20" : "border-white/10 bg-slate-900/60 hover:border-white/25 hover:bg-slate-800/70"),
+                      ? "border-emerald-300/70 bg-emerald-300/10 shadow-sm"
+                      : "border-white/10 bg-slate-900/60 hover:border-white/25 hover:bg-slate-800/70",
                   )}
                   aria-current={selected ? "page" : undefined}
                 >
@@ -508,14 +537,11 @@ function PaymentMethodSelector({
                       Automatique
                     </span>
                   ) : null}
-                  <PaymentMethodMark method={item} />
-                  <span className={cn("max-w-full truncate text-[10px] font-medium text-slate-200", methodDisplay === "cards" && "text-center text-xs")}>
-                    {item.name}
-                  </span>
-                  {methodDisplay === "cards" ? (
-                    <span className="text-[9px] tabular-nums text-slate-500">
-                      {item.min.toLocaleString("en-US")}-{item.max.toLocaleString("en-US")} {item.currency}
-                    </span>
+                  {methodBlock?.showLogo !== false ? <PaymentMethodMark method={item} /> : null}
+                  <span className={cn("max-w-full truncate font-medium text-slate-200", methodDisplay === "cards" ? "text-xs" : "text-[10px]")}>{item.name}</span>
+                  {methodBlock?.showLimits !== false ? <span className="text-[9px] tabular-nums text-slate-500">{item.min.toLocaleString("en-US")}-{item.max.toLocaleString("en-US")} {item.currency}</span> : null}
+                  {methodBlock?.showProcessingTime === true ? (
+                    <span className="inline-flex max-w-full items-center justify-center gap-1 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-1.5 py-0.5 text-[8px] font-medium leading-tight text-emerald-200"><Clock3 className="size-2.5 shrink-0" /><span className="truncate">{methodBlock.processingTime || "5–10 min"}</span></span>
                   ) : null}
                 </Link>
               );
@@ -1876,11 +1902,11 @@ function FlouciStepOne({
             {playerLookupType === "playerId"
               ? getPortalBuilderBlockLabel(portalBuilderSettings, "playerId", "Player ID", "Player ID")
               : playerLookupType === "username"
-                ? "Username"
+                ? (portalBuilderSettings?.blocks?.playerId?.usernameLabel || "Username")
                 : getPortalBuilderBlockLabel(portalBuilderSettings, "email", "Email", "Email address")}
           </FieldLabel>
 
-            <div className="flex items-stretch gap-2">
+            <div className="flex flex-col gap-2">
               <div className="min-w-0 flex-1">
                 <Input
                   type={playerLookupType === "email" ? "email" : "text"}
@@ -1890,7 +1916,7 @@ function FlouciStepOne({
                     playerLookupType === "playerId"
                       ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your player ID")
                       : playerLookupType === "username"
-                        ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your username")
+                        ? (portalBuilderSettings?.blocks?.playerId?.usernamePlaceholder || "Enter your username")
                         : (portalBuilderSettings?.blocks?.email?.placeholder || "Enter your email address")
                   }
                   title={
@@ -1906,17 +1932,17 @@ function FlouciStepOne({
               </div>
 
               <div
-                className="flex h-12 shrink-0 items-center gap-1.5"
+                className="grid w-full grid-cols-3 gap-1.5"
                 role="tablist"
                 aria-label="Player identification type"
               >
                 {(
                   [
                     ["playerId", "Player ID", Hash],
-                    ["username", "Username", UserRound],
+                    ["username", portalBuilderSettings?.blocks?.playerId?.usernameLabel || "Username", UserRound],
                     ["email", "Email", Mail],
                   ] as const
-                ).map(([type, label, Icon]) => {
+                ).filter(([type]) => (portalBuilderSettings?.blocks?.playerId?.enabledIdentifierTypes ?? ["playerId", "username", "email"]).includes(type)).map(([type, label, Icon]) => {
                   const active = playerLookupType === type;
 
                   return (
@@ -1934,8 +1960,8 @@ function FlouciStepOne({
                       className={cn(
                         "group flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg bg-slate-700/90 px-3 text-slate-400 transition-all",
                         active
-                          ? "min-w-[92px] text-slate-100 shadow-[0_0_16px_rgba(255,255,255,0.04)]"
-                          : "w-12 hover:bg-slate-800 hover:text-slate-100",
+                          ? "border-emerald-300/50 bg-emerald-300/10 text-slate-100 shadow-sm"
+                          : "hover:bg-slate-800 hover:text-slate-100",
                         "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
                       )}
                     >
@@ -1947,9 +1973,7 @@ function FlouciStepOne({
                             : "text-slate-400 group-hover:text-slate-200",
                         )}
                       />
-                      {active ? (
-                        <span className="truncate text-xs font-medium">{label}</span>
-                      ) : null}
+                      {<span className="truncate text-[10px] font-medium">{label}</span>}
                     </button>
                   );
                 })}
@@ -3843,11 +3867,11 @@ function CardDepositStepOne({
             {playerLookupType === "playerId"
               ? getPortalBuilderBlockLabel(portalBuilderSettings, "playerId", "Player ID", "Player ID")
               : playerLookupType === "username"
-                ? "Username"
+                ? (portalBuilderSettings?.blocks?.playerId?.usernameLabel || "Username")
                 : getPortalBuilderBlockLabel(portalBuilderSettings, "email", "Email", "Email address")}
           </FieldLabel>
 
-          <div className="flex items-stretch gap-2">
+          <div className="flex flex-col gap-2">
             <div className="min-w-0 flex-1">
               <Input
                 type={playerLookupType === "email" ? "email" : "text"}
@@ -3857,7 +3881,7 @@ function CardDepositStepOne({
                   playerLookupType === "playerId"
                     ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your player ID")
                     : playerLookupType === "username"
-                      ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your username")
+                      ? (portalBuilderSettings?.blocks?.playerId?.usernamePlaceholder || "Enter your username")
                       : (portalBuilderSettings?.blocks?.email?.placeholder || "Enter your email address")
                 }
                 title={playerLookupType === "playerId" ? "Player ID" : playerLookupType === "username" ? "Username" : "Email"}
@@ -3866,14 +3890,14 @@ function CardDepositStepOne({
               />
             </div>
 
-            <div className="flex h-12 shrink-0 items-center gap-1.5" role="tablist" aria-label="Player identification type">
+            <div className="grid w-full grid-cols-3 gap-1.5" role="tablist" aria-label="Player identification type">
               {(
                 [
                   ["playerId", "Player ID", Hash],
-                  ["username", "Username", UserRound],
+                  ["username", portalBuilderSettings?.blocks?.playerId?.usernameLabel || "Username", UserRound],
                   ["email", "Email", Mail],
                 ] as const
-              ).map(([type, label, Icon]) => {
+              ).filter(([type]) => (portalBuilderSettings?.blocks?.playerId?.enabledIdentifierTypes ?? ["playerId", "username", "email"]).includes(type)).map(([type, label, Icon]) => {
                 const active = playerLookupType === type;
 
                 return (
@@ -3890,12 +3914,12 @@ function CardDepositStepOne({
                     }}
                     className={cn(
                       "group flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg bg-slate-700/90 px-3 text-slate-400 transition-all",
-                      active ? "min-w-[92px] text-slate-100 shadow-[0_0_16px_rgba(255,255,255,0.04)]" : "w-12 hover:bg-slate-800 hover:text-slate-100",
+                      active ? "border-emerald-300/50 bg-emerald-300/10 text-slate-100 shadow-sm" : "hover:bg-slate-800 hover:text-slate-100",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
                     )}
                   >
                     <Icon className={cn("size-4 shrink-0 transition-colors", active ? "text-emerald-300" : "text-slate-400 group-hover:text-slate-200")} />
-                    {active ? <span className="truncate text-xs font-medium">{label}</span> : null}
+                    {<span className="truncate text-[10px] font-medium">{label}</span>}
                   </button>
                 );
               })}
@@ -4800,11 +4824,11 @@ function EDinarStepOne({
             {playerLookupType === "playerId"
               ? getPortalBuilderBlockLabel(portalBuilderSettings, "playerId", "Player ID", "Player ID")
               : playerLookupType === "username"
-                ? "Username"
+                ? (portalBuilderSettings?.blocks?.playerId?.usernameLabel || "Username")
                 : getPortalBuilderBlockLabel(portalBuilderSettings, "email", "Email", "Email address")}
           </FieldLabel>
 
-          <div className="flex items-stretch gap-2">
+          <div className="flex flex-col gap-2">
             <div className="min-w-0 flex-1">
               <Input
                 type={playerLookupType === "email" ? "email" : "text"}
@@ -4814,7 +4838,7 @@ function EDinarStepOne({
                   playerLookupType === "playerId"
                     ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your player ID")
                     : playerLookupType === "username"
-                      ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your username")
+                      ? (portalBuilderSettings?.blocks?.playerId?.usernamePlaceholder || "Enter your username")
                       : (portalBuilderSettings?.blocks?.email?.placeholder || "Enter your email address")
                 }
                 title={
@@ -4830,17 +4854,17 @@ function EDinarStepOne({
             </div>
 
             <div
-              className="flex h-12 shrink-0 items-center gap-1.5"
+              className="grid w-full grid-cols-3 gap-1.5"
               role="tablist"
               aria-label="Player identification type"
             >
               {(
                 [
                   ["playerId", "Player ID", Hash],
-                  ["username", "Username", UserRound],
+                  ["username", portalBuilderSettings?.blocks?.playerId?.usernameLabel || "Username", UserRound],
                   ["email", "Email", Mail],
                 ] as const
-              ).map(([type, label, Icon]) => {
+              ).filter(([type]) => (portalBuilderSettings?.blocks?.playerId?.enabledIdentifierTypes ?? ["playerId", "username", "email"]).includes(type)).map(([type, label, Icon]) => {
                 const active = playerLookupType === type;
 
                 return (
@@ -4858,8 +4882,8 @@ function EDinarStepOne({
                     className={cn(
                       "group flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg bg-slate-700/90 px-3 text-slate-400 transition-all",
                       active
-                        ? "min-w-[92px] text-slate-100 shadow-[0_0_16px_rgba(255,255,255,0.04)]"
-                        : "w-12 hover:bg-slate-800 hover:text-slate-100",
+                        ? "border-emerald-300/50 bg-emerald-300/10 text-slate-100 shadow-sm"
+                        : "hover:bg-slate-800 hover:text-slate-100",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
                     )}
                   >
@@ -4871,9 +4895,7 @@ function EDinarStepOne({
                           : "text-slate-400 group-hover:text-slate-200",
                       )}
                     />
-                    {active ? (
-                      <span className="truncate text-xs font-medium">{label}</span>
-                    ) : null}
+                    {<span className="truncate text-[10px] font-medium">{label}</span>}
                   </button>
                 );
               })}
@@ -5751,11 +5773,11 @@ function BinancePayFlow({
             {playerLookupType === "playerId"
               ? getPortalBuilderBlockLabel(portalBuilderSettings, "playerId", "Player ID", "Player ID")
               : playerLookupType === "username"
-                ? "Username"
+                ? (portalBuilderSettings?.blocks?.playerId?.usernameLabel || "Username")
                 : getPortalBuilderBlockLabel(portalBuilderSettings, "email", "Email", "Email address")}
           </FieldLabel>
 
-                  <div className="flex items-stretch gap-2">
+                  <div className="flex flex-col gap-2">
                     <div className="min-w-0 flex-1">
                       <Input
                         type={playerLookupType === "email" ? "email" : "text"}
@@ -5768,7 +5790,7 @@ function BinancePayFlow({
                           playerLookupType === "playerId"
                             ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your player ID")
                             : playerLookupType === "username"
-                              ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your username")
+                              ? (portalBuilderSettings?.blocks?.playerId?.usernamePlaceholder || "Enter your username")
                               : (portalBuilderSettings?.blocks?.email?.placeholder || "Enter your email address")
                         }
                         title={
@@ -5784,17 +5806,17 @@ function BinancePayFlow({
                     </div>
 
                     <div
-                      className="flex h-12 shrink-0 items-center gap-1.5"
+                      className="grid w-full grid-cols-3 gap-1.5"
                       role="tablist"
                       aria-label="Player identification type"
                     >
                       {(
                         [
                           ["playerId", "Player ID", Hash],
-                          ["username", "Username", UserRound],
+                          ["username", portalBuilderSettings?.blocks?.playerId?.usernameLabel || "Username", UserRound],
                           ["email", "Email", Mail],
                         ] as const
-                      ).map(([type, label, Icon]) => {
+                      ).filter(([type]) => (portalBuilderSettings?.blocks?.playerId?.enabledIdentifierTypes ?? ["playerId", "username", "email"]).includes(type)).map(([type, label, Icon]) => {
                         const active = playerLookupType === type;
 
                         return (
@@ -5813,8 +5835,8 @@ function BinancePayFlow({
                             className={cn(
                               "group flex h-12 items-center justify-center gap-2 overflow-hidden rounded-lg bg-slate-700/90 px-3 text-slate-400 transition-all",
                               active
-                                ? "min-w-[92px] text-slate-100 shadow-[0_0_16px_rgba(255,255,255,0.04)]"
-                                : "w-12 hover:bg-slate-800 hover:text-slate-100",
+                                ? "border-emerald-300/50 bg-emerald-300/10 text-slate-100 shadow-sm"
+                                : "hover:bg-slate-800 hover:text-slate-100",
                               "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/30",
                             )}
                           >
@@ -5826,9 +5848,7 @@ function BinancePayFlow({
                                   : "text-slate-400 group-hover:text-slate-200",
                               )}
                             />
-                            {active ? (
-                              <span className="truncate text-xs font-medium">{label}</span>
-                            ) : null}
+                            {<span className="truncate text-[10px] font-medium">{label}</span>}
                           </button>
                         );
                       })}
@@ -6203,7 +6223,7 @@ export function CustomerPortal({
         },
       }
     : null;
-  if (!builderEditMode && builderSettings?.configs?.scheduleEnabled && !isPortalWithinSchedule(builderSettings.configs.scheduleStart, builderSettings.configs.scheduleEnd)) {
+  if (!builderEditMode && builderSettings?.configs?.scheduleEnabled && !isPortalWithinSchedule(builderSettings.configs.scheduleStart, builderSettings.configs.scheduleEnd, builderSettings.configs.scheduleDays)) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-slate-950 px-5 py-10 text-slate-100">
         <section className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 text-center">
@@ -6278,10 +6298,10 @@ export function CustomerPortal({
           '#ipaycash-client-portal[data-theme="light"] [class~="text-slate-400"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-500"]{color:#64748b!important;}' +
           '#ipaycash-client-portal[data-supervisor-rating="false"] button[title="Review supervisor"]{display:none!important;}' +
           '#ipaycash-client-portal[data-ai-recognition="false"] [data-ai-recognition-ui="true"]{display:none!important;}' +
-          '#ipaycash-client-portal[data-player-id-mode="userId"] button[aria-label="Email"],#ipaycash-client-portal[data-player-id-mode="userId"] button[aria-label="Username"],#ipaycash-client-portal[data-player-id-mode="email"] button[aria-label="Player ID"],#ipaycash-client-portal[data-player-id-mode="email"] button[aria-label="Username"],#ipaycash-client-portal[data-player-id-mode="both"] button[aria-label="Username"]{display:none!important;}' +
-          '#ipaycash-client-portal[data-button-shape="pill"] button{border-radius:999px!important;}' +
-          '#ipaycash-client-portal[data-button-shape="rounded"] button{border-radius:12px!important;}' +
-          '#ipaycash-client-portal[data-button-shape="rectangle"] button{border-radius:4px!important;}' +
+
+          '#ipaycash-client-portal[data-button-shape="pill"] button,#ipaycash-client-portal[data-button-shape="pill"] input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="range"]),#ipaycash-client-portal[data-button-shape="pill"] textarea,#ipaycash-client-portal[data-button-shape="pill"] select{border-radius:999px!important;}' +
+          '#ipaycash-client-portal[data-button-shape="rounded"] button,#ipaycash-client-portal[data-button-shape="rounded"] input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="range"]),#ipaycash-client-portal[data-button-shape="rounded"] textarea,#ipaycash-client-portal[data-button-shape="rounded"] select{border-radius:12px!important;}' +
+          '#ipaycash-client-portal[data-button-shape="rectangle"] button,#ipaycash-client-portal[data-button-shape="rectangle"] input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="range"]),#ipaycash-client-portal[data-button-shape="rectangle"] textarea,#ipaycash-client-portal[data-button-shape="rectangle"] select{border-radius:4px!important;}' +
           '#ipaycash-client-portal [data-builder-block="heading"] h1,#ipaycash-client-portal [data-builder-block="brandHeader"]{color:var(--portal-brand)!important;}' +
           '#ipaycash-client-portal[data-template="minimal"] [class~="shadow-2xl"]{box-shadow:none!important;}' +
           '#ipaycash-client-portal[data-template="minimal"] [data-payment-method-id]{border-color:transparent!important;background-color:var(--portal-surface)!important;border-radius:999px!important;}' +
@@ -6302,6 +6322,7 @@ export function CustomerPortal({
               <h1 className="text-lg font-semibold" style={{ color: clientForm.appearance.theme === "dark" ? "#f8fafc" : "#0f172a" }}>{clientForm.appearance.title || clientForm.name}</h1>
               <p className="mt-1 text-xs leading-5" style={{ color: clientForm.appearance.theme === "dark" ? "#94a3b8" : "#64748b" }}>{clientForm.appearance.description}</p>
             </div>
+            {builderSettings?.layout?.order?.includes("instructions") && !builderSettings.layout.hidden?.includes("instructions") ? <PortalInstructions /> : null}
             {builderSettings?.layout?.order?.includes("securityNotice") && !builderSettings.layout.hidden?.includes("securityNotice") ? (
               <section data-builder-block="securityNotice" style={getPortalBuilderBlockStyle(builderSettings, "securityNotice")} className="mx-4 my-2 rounded-lg border border-slate-700/70 bg-slate-900/70 p-3 sm:mx-6">
                 <p className="text-xs font-semibold text-slate-100">{builderSettings.blocks?.securityNotice?.label || "Secure payment"}</p>
@@ -6330,6 +6351,50 @@ export function CustomerPortal({
       </PortalButtonLabelContext.Provider>
     </PortalPaymentMethodsContext.Provider>
     </PortalBuilderSettingsContext.Provider>
+  );
+}
+
+
+function PortalInstructions() {
+  const builderSettings = React.useContext(PortalBuilderSettingsContext);
+  const block = builderSettings?.blocks?.instructions;
+  const steps = block?.steps?.length ? block.steps : [
+    { title: "Enter your details", icon: "UserRound", content: "Enter your player identification and amount." },
+    { title: "Make the payment", icon: "CircleDollarSign", content: "Follow the payment method instructions." },
+    { title: "Submit your proof", icon: "Upload", content: "Attach the transaction reference and payment evidence." },
+  ];
+  const [activeIndex, setActiveIndex] = React.useState(0);
+  React.useEffect(() => setActiveIndex((current) => Math.min(current, steps.length - 1)), [steps.length]);
+  const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+    UserRound, CircleDollarSign, Upload, ShieldCheck, Clock3, CheckCircle2, Hash,
+  };
+  const activeStep = steps[activeIndex] ?? steps[0];
+  const StepIcon = iconMap[activeStep?.icon ?? "CheckCircle2"] ?? CheckCircle2;
+
+  return (
+    <section data-builder-block="instructions" style={getPortalBuilderBlockStyle(builderSettings, "instructions")} className="mx-4 my-3 rounded-xl border border-slate-700/70 bg-slate-900/60 p-3 sm:mx-6 sm:p-4">
+      <div className="mb-3">
+        {block?.label ? <h2 className="text-sm font-semibold text-slate-100">{block.label}</h2> : null}
+        {block?.description ? <p className="mt-1 text-[11px] leading-5 text-slate-400">{block.description}</p> : null}
+      </div>
+      <div className="mb-3 flex gap-1.5" aria-label="Instruction progress">
+        {steps.map((step, index) => <span key={index} className={cn("h-1.5 flex-1 rounded-full transition-colors", index === activeIndex ? "bg-emerald-300" : index < activeIndex ? "bg-emerald-300/40" : "bg-slate-700")} />)}
+      </div>
+      <div className="flex min-h-[100px] items-start gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-emerald-300/20 bg-emerald-300/10 text-emerald-200"><StepIcon className="size-5" /></span>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold text-slate-100">{activeStep?.title}</p>
+          <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-slate-400">{activeStep?.content}</p>
+          <p className="mt-2 text-[10px] font-medium text-slate-500">Step {activeIndex + 1} of {steps.length}</p>
+        </div>
+      </div>
+      {steps.length > 1 ? (
+        <div className="mt-3 flex items-center justify-between border-t border-slate-700/70 pt-3">
+          <Button type="button" variant="outline" size="sm" disabled={activeIndex === 0} onClick={() => setActiveIndex((index) => Math.max(0, index - 1))} className="h-8 border-slate-700 bg-transparent text-xs text-slate-200"><ArrowLeft className="mr-1.5 size-3.5" /> Previous</Button>
+          <Button type="button" size="sm" onClick={() => setActiveIndex((index) => (index + 1) % steps.length)} className="h-8 bg-emerald-300 text-xs text-slate-950 hover:bg-emerald-200">{activeIndex === steps.length - 1 ? "Start again" : "Next step"}<ArrowRight className="ml-1.5 size-3.5" /></Button>
+        </div>
+      ) : null}
+    </section>
   );
 }
 
@@ -6394,16 +6459,18 @@ function CustomerPortalExperience({
   const [amount, setAmount] = React.useState(() => String(initialMethod.min));
   const navigate = useNavigate();
   const [playerId, setPlayerId] = React.useState("");
-  const [playerLookupType, setPlayerLookupType] = React.useState<PlayerLookupType>(() => portalBuilderSettings?.configs?.playerIdMode === "email" ? "email" : "playerId");
+  const [playerLookupType, setPlayerLookupType] = React.useState<PlayerLookupType>(() => {
+    const enabled = portalBuilderSettings?.blocks?.playerId?.enabledIdentifierTypes ?? ["playerId", "username", "email"];
+    return enabled.includes("playerId") ? "playerId" : enabled[0] ?? "playerId";
+  });
   const [openMethods, setOpenMethods] = React.useState(false);
   const [depositStarted, setDepositStarted] = React.useState(false);
   const [error, setError] = React.useState("");
   const [requestLookupRefresh, setRequestLookupRefresh] = React.useState(0);
   React.useEffect(() => {
-    const mode = portalBuilderSettings?.configs?.playerIdMode;
-    if (mode === "email" && playerLookupType !== "email") setPlayerLookupType("email");
-    else if (mode === "userId" && playerLookupType !== "playerId") setPlayerLookupType("playerId");
-  }, [portalBuilderSettings?.configs?.playerIdMode, playerLookupType]);
+    const enabled = portalBuilderSettings?.blocks?.playerId?.enabledIdentifierTypes ?? ["playerId", "username", "email"];
+    if (!enabled.includes(playerLookupType)) setPlayerLookupType(enabled[0] ?? "playerId");
+  }, [portalBuilderSettings?.blocks?.playerId?.enabledIdentifierTypes, playerLookupType]);
   const { status: playerRequestStatus, openRequest } = usePlayerRequestLookup(
     playerId,
     playerLookupType,
