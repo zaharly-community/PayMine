@@ -948,7 +948,8 @@ export function DepositRequestTrackingPage({
     <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
         <PortalBrandHeader form={headerForm} />
-        <div className="mb-4 mt-4 flex items-center justify-between gap-3">
+        <div className="mt-4"><PortalCheckoutStepper currentStep={5} /></div>
+        <div className="mb-4 flex items-center justify-between gap-3">
           <Button
             type="button"
             variant="ghost"
