@@ -3365,8 +3365,9 @@ function FlouciDepositFlow({
 
 
   return (
-    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+    <main data-payment-flow="true" className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
+        {portalBuilderSettings?.configs?.methodDisplay === "cards" ? <PortalCheckoutStepper currentStep={step === 1 ? 2 : step === 2 ? 4 : 5} /> : null}
         {step === 2 ? (
           <div
             className={cn(
@@ -4410,8 +4411,9 @@ function CardDepositFlow({
   };
 
   return (
-    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+    <main data-payment-flow="true" className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
+        {portalBuilderSettings?.configs?.methodDisplay === "cards" ? <PortalCheckoutStepper currentStep={step === 1 ? 2 : step === 2 ? 4 : 5} /> : null}
         {step === 2 ? (
           <div className="mb-4 flex items-center justify-center">
             <PaymentMethodMark method={method} />
@@ -5438,8 +5440,9 @@ function EDinarDepositFlow({
   };
 
   return (
-    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+    <main data-payment-flow="true" className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
+        {portalBuilderSettings?.configs?.methodDisplay === "cards" ? <PortalCheckoutStepper currentStep={step === 1 ? 2 : step === 2 ? 4 : 5} /> : null}
         {step === 2 ? (
           <div
             className={cn(
@@ -5657,8 +5660,9 @@ function BinancePayFlow({
     }) : "0.00";
 
   return (
-    <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
+    <main data-payment-flow="true" className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
+        {portalBuilderSettings?.configs?.methodDisplay === "cards" ? <PortalCheckoutStepper currentStep={step === 1 ? 2 : step === 2 ? 4 : 5} /> : null}
         {step === 1 ? (
           <>
             <div data-builder-block="paymentMethods" style={getPortalBuilderBlockStyle(portalBuilderSettings, "paymentMethods")} className="mb-4">
