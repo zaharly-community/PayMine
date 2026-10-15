@@ -116,7 +116,7 @@ export function ClientPortalBuilder() {
 
   const save = (nextForms = forms) => {
     const usedSlugs = new Set<string>();
-    const normalized = nextForms.map((form) => {
+    let normalized = nextForms.map((form) => {
       const base = normalizeClientPortalSlug(form.slug) || "checkout";
       let slug = base;
       let suffix = 2;
@@ -127,6 +127,19 @@ export function ClientPortalBuilder() {
       usedSlugs.add(slug);
       return { ...form, slug, updated: formatUpdated() };
     });
+
+    const defaultForms = normalized.filter((form) => form.status === "Published" && form.isDefault);
+    if (defaultForms.length > 1) {
+      const keepId = defaultForms[0].id;
+      normalized = normalized.map((form) => ({ ...form, isDefault: form.id === keepId }));
+    }
+    if (!normalized.some((form) => form.status === "Published" && form.isDefault)) {
+      const firstPublished = normalized.find((form) => form.status === "Published");
+      if (firstPublished) {
+        normalized = normalized.map((form) => ({ ...form, isDefault: form.id === firstPublished.id }));
+      }
+    }
+
     saveClientPortalForms(normalized);
     setForms(normalized);
     setNotice("Saved in this browser. Connect backend persistence before using this configuration across devices.");
