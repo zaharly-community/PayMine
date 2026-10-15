@@ -139,6 +139,7 @@ const paymentMethods: PaymentMethod[] = [
 ];
 
 const PortalPaymentMethodsContext = React.createContext<PaymentMethod[]>(paymentMethods);
+const PortalButtonLabelContext = React.createContext<string>("Do Deposit");
 
 function normalizePortalMethodName(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -1652,6 +1653,7 @@ function FlouciStepOne({
   error: string;
   onContinue: () => void;
 }) {
+  const portalButtonLabel = React.useContext(PortalButtonLabelContext);
   const presets = [20, 50, 100, 200, 500, 1000];
 
   return (
@@ -1814,7 +1816,7 @@ function FlouciStepOne({
           >
             <CircleDollarSign className="size-4" />
             <span>
-              Do Deposit
+              {portalButtonLabel}
               <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
                 Net Amount: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} TND
               </span>
@@ -3607,6 +3609,7 @@ function CardDepositStepOne({
   error: string;
   onContinue: () => void;
 }) {
+  const portalButtonLabel = React.useContext(PortalButtonLabelContext);
   const presets = [10, 20, 50, 100, 200, 500];
 
   return (
@@ -3743,7 +3746,7 @@ function CardDepositStepOne({
           >
             <CircleDollarSign className="size-4" />
             <span>
-              Do Deposit
+              {portalButtonLabel}
               <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
                 Total Cards Value: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} {method.currency}
               </span>
@@ -4549,6 +4552,7 @@ function EDinarStepOne({
   error: string;
   onContinue: () => void;
 }) {
+  const portalButtonLabel = React.useContext(PortalButtonLabelContext);
   const presets = [20, 50, 100, 200, 500, 1000];
 
   return (
@@ -4716,7 +4720,7 @@ function EDinarStepOne({
           >
             <CircleDollarSign className="size-4" />
             <span>
-              Do Deposit
+              {portalButtonLabel}
               <span className="ml-2 block text-[11px] font-normal text-slate-900/80">
                 Net Amount: {Number(amount) > 0 ? Number(amount).toFixed(2) : "0.00"} TND
               </span>
@@ -5931,6 +5935,7 @@ export function CustomerPortal({
 
   return (
     <PortalPaymentMethodsContext.Provider value={availableMethods}>
+      <PortalButtonLabelContext.Provider value={clientForm.appearance.buttonLabel || "Do Deposit"}>
       <div id="ipaycash-client-portal" data-theme={clientForm.appearance.theme} data-width={clientForm.appearance.width} data-radius={clientForm.appearance.radius} style={style}>
         <style>{'#ipaycash-client-portal [class~="bg-slate-950"]{background-color:var(--portal-page-background)!important;}' +
           '#ipaycash-client-portal [class~="bg-slate-900"],#ipaycash-client-portal [class~="bg-slate-900/80"],#ipaycash-client-portal [class~="bg-slate-900/90"],#ipaycash-client-portal [class~="bg-slate-800"],#ipaycash-client-portal [class~="bg-slate-800/80"],#ipaycash-client-portal [class~="bg-slate-800/60"],#ipaycash-client-portal [class~="bg-slate-700/90"]{background-color:var(--portal-surface)!important;}' +
@@ -5954,6 +5959,7 @@ export function CustomerPortal({
           {clientForm.appearance.showPlatformBranding ? <p className="px-4 py-3 text-center text-[10px]" style={{ color: clientForm.appearance.theme === "dark" ? "#64748b" : "#94a3b8" }}>Powered by iPayCash</p> : null}
         </div>
       </div>
+      </PortalButtonLabelContext.Provider>
     </PortalPaymentMethodsContext.Provider>
   );
 }
