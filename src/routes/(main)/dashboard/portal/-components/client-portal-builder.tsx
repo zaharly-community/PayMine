@@ -706,6 +706,7 @@ export function ClientPortalBuilder({
   }
 
   const selectedCopy = selectedBlock ? selected.builder.blocks[selectedBlock] : null;
+  const selectedBlockProfile = selectedBlock ? blockEditorProfiles[selectedBlock] : undefined;
   const selectedTemplate = templateOptions.find((option) => option.id === selected.builder.template) ?? templateOptions[0];
   const previewForm: EditableBuilderForm = {
     ...selected,
