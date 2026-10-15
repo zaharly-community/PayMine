@@ -766,7 +766,7 @@ export function ClientPortalBuilder({
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">{selectedBlock ? "Selected element" : "Theme settings"}</p>
               <h2 className="mt-1 text-base font-semibold">{selectedBlock ? (selectedBlockProfile?.title || selectedCopy?.label || selectedBlock) : "Customize portal"}</h2>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">{selectedBlock ? "Edit only the text content for this block." : "Appearance, optional features and checkout behavior."}</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">{selectedBlock ? "Edit the settings that apply to this element type." : "Appearance, optional features and checkout behavior."}</p>
             </div>
             {selectedBlock ? <Button variant="ghost" size="sm" onClick={() => setSelectedBlock(null)}>Theme settings</Button> : null}
           </div>
