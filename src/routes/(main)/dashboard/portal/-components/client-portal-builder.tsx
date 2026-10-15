@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Check,
   Copy,
@@ -696,7 +696,7 @@ function PreviewBlock({
   blockId: string;
   selectedBlock: string | null;
   onSelectBlock: (blockId: string) => void;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }) {
   const selected = selectedBlock === blockId;
