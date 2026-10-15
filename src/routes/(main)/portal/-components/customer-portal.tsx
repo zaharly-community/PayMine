@@ -145,6 +145,7 @@ const PortalPreviewContext = React.createContext(false);
 
 type PortalBuilderSettingsRuntime = {
   template?: "stripe" | "classic" | "minimal";
+  layout?: { order?: string[]; hidden?: string[] };
   buttonShape?: "pill" | "rounded" | "rectangle";
   colors?: { brand?: string; accent?: string };
   features?: {
@@ -167,6 +168,14 @@ type PortalBuilderSettingsRuntime = {
 };
 
 const PortalBuilderSettingsContext = React.createContext<PortalBuilderSettingsRuntime | null>(null);
+
+function getPortalBuilderBlockStyle(settings: PortalBuilderSettingsRuntime | null | undefined, blockId: string): React.CSSProperties {
+  const index = settings?.layout?.order?.indexOf(blockId) ?? -1;
+  return {
+    order: index >= 0 ? index + 1 : undefined,
+    display: settings?.layout?.hidden?.includes(blockId) ? "none" : undefined,
+  };
+}
 
 function isPortalWithinSchedule(start?: string, end?: string) {
   if (!start || !end) return true;
@@ -351,7 +360,7 @@ function PaymentMethodSelector({
   };
 
   return (
-    <div data-builder-block="paymentMethods" className="relative">
+    <div data-builder-block="paymentMethods" style={getPortalBuilderBlockStyle(builderSettings, "paymentMethods")} className="relative">
       {methodBlock?.label || methodBlock?.description ? (
         <div className="mb-2 px-1">
           {methodBlock.label ? <p className="text-xs font-medium text-slate-200">{methodBlock.label}</p> : null}
@@ -6101,16 +6110,36 @@ export function CustomerPortal({
           '#ipaycash-client-portal[data-template="minimal"] [class~="shadow-2xl"]{box-shadow:none!important;}' +
           '#ipaycash-client-portal[data-template="classic"] section{border-radius:4px!important;}' +
           '#ipaycash-client-portal[data-builder-edit-mode="true"] [data-builder-block]{cursor:pointer!important;outline:1px dashed transparent;outline-offset:2px;}' +
+          '#ipaycash-client-portal [data-builder-block="playerRating"][style*="display: none"]{display:none!important;}' +
+          '#ipaycash-client-portal[data-builder-edit-mode="true"] [data-builder-block]{cursor:pointer!important;outline:1px dashed transparent;outline-offset:2px;}' +
           '#ipaycash-client-portal[data-builder-edit-mode="true"] [data-builder-block]:hover{outline-color:#3b82f6!important;background-color:rgba(59,130,246,.06)!important;}'}</style>
         <div style={{ backgroundColor: clientForm.appearance.backgroundColor, fontFamily: style.fontFamily }}>
           <PortalBrandHeader form={clientForm} />
-          <div className="mx-auto w-full" style={{ maxWidth: clientForm.appearance.width === "wide" ? "80rem" : "64rem" }}>
-            <div data-builder-block="heading" className="px-4 pb-2 pt-4 sm:px-6">
+          <div className="mx-auto flex w-full flex-col" style={{ maxWidth: clientForm.appearance.width === "wide" ? "80rem" : "64rem" }}>
+            <div data-builder-block="heading" style={getPortalBuilderBlockStyle(builderSettings, "heading")} className="px-4 pb-2 pt-4 sm:px-6">
               <h1 className="text-lg font-semibold" style={{ color: clientForm.appearance.theme === "dark" ? "#f8fafc" : "#0f172a" }}>{clientForm.appearance.title || clientForm.name}</h1>
               <p className="mt-1 text-xs leading-5" style={{ color: clientForm.appearance.theme === "dark" ? "#94a3b8" : "#64748b" }}>{clientForm.appearance.description}</p>
             </div>
-            <CustomerPortalExperience initialMethodId={initialMethodId} clientForm={clientForm} availableMethods={availableMethods} />
-            {builderSettings?.features?.playerRating ? <PortalExperienceRating /> : null}
+            {builderSettings?.layout?.order?.includes("securityNotice") && !builderSettings.layout.hidden?.includes("securityNotice") ? (
+              <section data-builder-block="securityNotice" style={getPortalBuilderBlockStyle(builderSettings, "securityNotice")} className="mx-4 my-2 rounded-lg border border-slate-700/70 bg-slate-900/70 p-3 sm:mx-6">
+                <p className="text-xs font-semibold text-slate-100">{builderSettings.blocks?.securityNotice?.label || "Secure payment"}</p>
+                {builderSettings.blocks?.securityNotice?.description ? <p className="mt-1 text-[11px] leading-5 text-slate-400">{builderSettings.blocks.securityNotice.description}</p> : null}
+              </section>
+            ) : null}
+            {builderSettings?.layout?.order?.includes("supportInfo") && !builderSettings.layout.hidden?.includes("supportInfo") ? (
+              <section data-builder-block="supportInfo" style={getPortalBuilderBlockStyle(builderSettings, "supportInfo")} className="mx-4 my-2 rounded-lg border border-slate-700/60 bg-slate-900/40 p-3 sm:mx-6">
+                <p className="text-xs font-semibold text-slate-100">{builderSettings.blocks?.supportInfo?.label || "Need help?"}</p>
+                {builderSettings.blocks?.supportInfo?.description ? <p className="mt-1 text-[11px] leading-5 text-slate-400">{builderSettings.blocks.supportInfo.description}</p> : null}
+              </section>
+            ) : null}
+            <div style={{ order: (builderSettings?.layout?.order?.indexOf("paymentMethods") ?? 1) + 1 }}>
+              <CustomerPortalExperience initialMethodId={initialMethodId} clientForm={clientForm} availableMethods={availableMethods} />
+            </div>
+            {builderSettings?.features?.playerRating && builderSettings.layout?.order?.includes("playerRating") && !builderSettings.layout.hidden?.includes("playerRating") ? (
+              <div data-builder-block="playerRating" style={getPortalBuilderBlockStyle(builderSettings, "playerRating")}>
+                <PortalExperienceRating />
+              </div>
+            ) : null}
           </div>
           {clientForm.appearance.showPlatformBranding ? <p className="px-4 py-3 text-center text-[10px]" style={{ color: clientForm.appearance.theme === "dark" ? "#64748b" : "#94a3b8" }}>Powered by iPayCash</p> : null}
         </div>
@@ -6132,7 +6161,7 @@ function PortalExperienceRating() {
   const description = builderSettings?.blocks?.playerRating?.description || "Share quick feedback about this checkout.";
 
   return (
-    <section data-player-rating-ui="true" data-builder-block="playerRating" className="mx-auto mt-3 w-full rounded-xl border border-slate-700 bg-slate-900/60 p-3 text-slate-200 sm:p-4">
+    <section data-player-rating-ui="true" className="mx-auto mt-3 w-full rounded-xl border border-slate-700 bg-slate-900/60 p-3 text-slate-200 sm:p-4">
       {submitted ? (
         <div className="py-1">
           <p className="text-sm font-medium">Thanks for your feedback.</p>
