@@ -473,12 +473,16 @@ function FieldLabel({
       : text === "Transfer number" ? "transferNumber"
       : null;
   const displayChildren = blockKey && overrides[blockKey]?.label ? overrides[blockKey]?.label : children;
+  const description = blockKey ? overrides[blockKey]?.description?.trim() : "";
 
   return (
-    <label className="mb-1.5 block text-xs font-medium text-slate-200">
-      {displayChildren}
-      {required ? <span className="ml-1 text-slate-500">*</span> : null}
-    </label>
+    <>
+      <label className="mb-1.5 block text-xs font-medium text-slate-200">
+        {displayChildren}
+        {required ? <span className="ml-1 text-slate-500">*</span> : null}
+      </label>
+      {description ? <p className="mb-2 text-[11px] leading-4 text-slate-400">{description}</p> : null}
+    </>
   );
 }
 
@@ -1738,10 +1742,10 @@ function FlouciStepOne({
                   onChange={(event) => setPlayerId(event.target.value)}
                   placeholder={
                     playerLookupType === "playerId"
-                      ? "Enter your player ID"
+                      ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your player ID")
                       : playerLookupType === "username"
-                        ? "Enter your username"
-                        : "Enter your email address"
+                        ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your username")
+                        : (portalBuilderSettings?.blocks?.email?.placeholder || "Enter your email address")
                   }
                   title={
                     playerLookupType === "playerId"
@@ -3143,11 +3147,11 @@ function FlouciDepositFlow({
     setRecipientNumber(walletRecipientNumbers[0]);
     setCorrectedTransferNumber(walletRecipientNumbers[0]);
     setCorrectedAmount(String(method.min));
-    setSecondsLeft(15 * 60);
+    setSecondsLeft(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
   }, [method.id]);
 
   React.useEffect(() => {
-    if (!proofFile) {
+    if (!proofFile || portalBuilderSettings?.features?.aiRecognition === false) {
       setAiStatus("idle");
       setDetectedTransactionId("");
       return;
@@ -3163,7 +3167,7 @@ function FlouciDepositFlow({
     }, 3200);
 
     return () => window.clearTimeout(timer);
-  }, [proofFile, method.id]);
+  }, [proofFile, method.id, portalBuilderSettings?.features?.aiRecognition]);
 
   React.useEffect(() => {
     if (step !== 2) return;
@@ -4097,7 +4101,7 @@ function CardDepositFlow({
   }, [method.id]);
 
   React.useEffect(() => {
-    if (!proofFile) {
+    if (!proofFile || portalBuilderSettings?.features?.aiRecognition === false) {
       setOcrStatus("idle");
       setDetectedCards([]);
       return;
@@ -4115,7 +4119,7 @@ function CardDepositFlow({
     }, 3200);
 
     return () => window.clearTimeout(timer);
-  }, [proofFile]);
+  }, [proofFile, portalBuilderSettings?.features?.aiRecognition]);
 
   React.useEffect(() => {
     if (step !== 2) return;
@@ -5233,7 +5237,7 @@ function EDinarDepositFlow({
   }, [method.id]);
 
   React.useEffect(() => {
-    if (!proofFile) {
+    if (!proofFile || portalBuilderSettings?.features?.aiRecognition === false) {
       setAiStatus("idle");
       setDetectedTransactionId("");
       return;
@@ -5248,7 +5252,7 @@ function EDinarDepositFlow({
     }, 3200);
 
     return () => window.clearTimeout(timer);
-  }, [proofFile]);
+  }, [proofFile, portalBuilderSettings?.features?.aiRecognition]);
 
   React.useEffect(() => {
     if (step !== 2) return;
