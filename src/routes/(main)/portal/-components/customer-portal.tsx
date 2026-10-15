@@ -145,7 +145,7 @@ const PortalPreviewContext = React.createContext(false);
 
 type PortalBuilderSettingsRuntime = {
   template?: "stripe" | "classic" | "minimal";
-  layout?: { order?: string[]; hidden?: string[] };
+  layout?: { version?: number; order?: string[]; hidden?: string[] };
   buttonShape?: "pill" | "rounded" | "rectangle";
   colors?: { brand?: string; accent?: string };
   features?: {
@@ -173,7 +173,7 @@ function getPortalBuilderBlockStyle(settings: PortalBuilderSettingsRuntime | nul
   const order = settings?.layout?.order;
   const explicitIndex = order?.indexOf(blockId) ?? -1;
   const index = explicitIndex >= 0 ? explicitIndex : blockId === "email" ? (order?.indexOf("playerId") ?? -1) : -1;
-  const notPlaced = Array.isArray(order) && !order.includes(blockId) && !(blockId === "email" && order.includes("playerId"));
+  const notPlaced = settings?.layout?.version === 2 && Array.isArray(order) && !order.includes(blockId) && !(blockId === "email" && order.includes("playerId"));
   return {
     order: index >= 0 ? index + 1 : undefined,
     display: settings?.layout?.hidden?.includes(blockId) || notPlaced ? "none" : undefined,
