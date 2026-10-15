@@ -6062,6 +6062,7 @@ export function CustomerPortal({
               <p className="mt-1 text-xs leading-5" style={{ color: clientForm.appearance.theme === "dark" ? "#94a3b8" : "#64748b" }}>{clientForm.appearance.description}</p>
             </div>
             <CustomerPortalExperience initialMethodId={initialMethodId} clientForm={clientForm} availableMethods={availableMethods} />
+            {builderSettings?.features?.playerRating ? <PortalExperienceRating /> : null}
           </div>
           {clientForm.appearance.showPlatformBranding ? <p className="px-4 py-3 text-center text-[10px]" style={{ color: clientForm.appearance.theme === "dark" ? "#64748b" : "#94a3b8" }}>Powered by iPayCash</p> : null}
         </div>
@@ -6071,6 +6072,50 @@ export function CustomerPortal({
       </PortalButtonLabelContext.Provider>
     </PortalPaymentMethodsContext.Provider>
     </PortalBuilderSettingsContext.Provider>
+  );
+}
+
+function PortalExperienceRating() {
+  const builderSettings = React.useContext(PortalBuilderSettingsContext);
+  const [expanded, setExpanded] = React.useState(false);
+  const [rating, setRating] = React.useState(0);
+  const [submitted, setSubmitted] = React.useState(false);
+  const label = builderSettings?.blocks?.playerRating?.label || "Rate your deposit experience";
+  const description = builderSettings?.blocks?.playerRating?.description || "Share quick feedback about this checkout.";
+
+  return (
+    <section data-player-rating-ui="true" className="mx-auto mt-3 w-full rounded-xl border border-slate-700 bg-slate-900/60 p-3 text-slate-200 sm:p-4">
+      {submitted ? (
+        <div className="py-1">
+          <p className="text-sm font-medium">Thanks for your feedback.</p>
+          <p className="mt-1 text-[11px] leading-4 text-slate-400">This prototype does not send ratings to a backend yet.</p>
+        </div>
+      ) : (
+        <>
+          <button type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} className="flex w-full items-center justify-between gap-3 text-left">
+            <span>
+              <span className="block text-xs font-medium">{label}</span>
+              <span className="mt-1 block text-[11px] leading-4 text-slate-400">{description}</span>
+            </span>
+            <ChevronDown className={cn("size-4 shrink-0 text-slate-400 transition-transform", expanded && "rotate-180")} />
+          </button>
+          {expanded ? (
+            <div className="mt-3 border-t border-slate-700 pt-3">
+              <div className="flex items-center gap-1.5" role="group" aria-label="Rate your deposit experience">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <button key={value} type="button" onClick={() => setRating(value)} aria-label={value + " star" + (value === 1 ? "" : "s")} aria-pressed={rating === value} className="flex size-9 items-center justify-center rounded-md text-amber-300 transition hover:bg-slate-800">
+                    <Star className={cn("size-5", rating >= value ? "fill-current" : "fill-none")} />
+                  </button>
+                ))}
+                <span className="ml-2 text-[11px] text-slate-400">{rating ? rating + " / 5" : "Choose a rating"}</span>
+              </div>
+              <Button type="button" size="sm" disabled={rating === 0} onClick={() => setSubmitted(true)} className="mt-3 h-9">Submit feedback</Button>
+              <p className="mt-2 text-[10px] leading-4 text-slate-500">Demo only · the rating is not sent to a server.</p>
+            </div>
+          ) : null}
+        </>
+      )}
+    </section>
   );
 }
 
