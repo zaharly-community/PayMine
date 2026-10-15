@@ -7,12 +7,10 @@ import {
   Globe2,
   LayoutTemplate,
   Monitor,
-  Moon,
   Plus,
   Save,
   Smartphone,
   Sparkles,
-  Sun,
   Trash2,
   WalletCards,
 } from "lucide-react";
@@ -117,7 +115,18 @@ export function ClientPortalBuilder() {
   };
 
   const save = (nextForms = forms) => {
-    const normalized = nextForms.map((form) => ({ ...form, slug: uniqueSlug(form.slug, nextForms, form.id), updated: formatUpdated() }));
+    const usedSlugs = new Set<string>();
+    const normalized = nextForms.map((form) => {
+      const base = normalizeClientPortalSlug(form.slug) || "checkout";
+      let slug = base;
+      let suffix = 2;
+      while (usedSlugs.has(slug)) {
+        slug = base + "-" + suffix;
+        suffix += 1;
+      }
+      usedSlugs.add(slug);
+      return { ...form, slug, updated: formatUpdated() };
+    });
     saveClientPortalForms(normalized);
     setForms(normalized);
     setNotice("Saved in this browser. Connect backend persistence before using this configuration across devices.");
@@ -325,7 +334,7 @@ export function ClientPortalBuilder() {
                     <div className="grid gap-2"><Label>Internal form name</Label><Input value={selected.name} onChange={(event) => updateSelected({ name: event.target.value, appearance: { ...selected.appearance, title: selected.appearance.title === selected.name ? event.target.value : selected.appearance.title } })} /></div>
                     <div className="grid gap-2"><Label>Checkout URL slug</Label><Input value={selected.slug} onChange={(event) => updateSelected({ slug: normalizeClientPortalSlug(event.target.value) })} /><p className="text-[11px] text-muted-foreground">/portal/{selected.slug || "your-form"}</p></div>
                     <div className="grid gap-2"><Label>Environment</Label><Select value={selected.environment} onValueChange={(value) => updateSelected({ environment: value as ClientPortalForm["environment"] })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Sandbox">Sandbox</SelectItem><SelectItem value="Production">Production</SelectItem></SelectContent></Select></div>
-                    <div className="grid gap-2"><Label>Display currency</Label><Select value={selected.currency} onValueChange={(value) => updateSelected({ currency: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="TND">TND — Tunisian dinar</SelectItem><SelectItem value="USD">USD — US dollar</SelectItem><SelectItem value="EUR">EUR — Euro</SelectItem><SelectItem value="USDT">USDT — Tether</SelectItem></SelectContent></Select></div>
+                    <div className="grid gap-2"><Label>Preview currency (visual only)</Label><Select value={selected.currency} onValueChange={(value) => updateSelected({ currency: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="TND">TND — Tunisian dinar</SelectItem><SelectItem value="USD">USD — US dollar</SelectItem><SelectItem value="EUR">EUR — Euro</SelectItem><SelectItem value="USDT">USDT — Tether</SelectItem></SelectContent></Select><p className="text-[11px] text-muted-foreground">Actual currency and limits are determined by the selected payment provider. This field only changes the mock preview.</p></div>
                   </div>
                   <div className="grid gap-2"><Label>Checkout heading</Label><Input value={selected.appearance.title} onChange={(event) => updateAppearance({ title: event.target.value })} placeholder="Make a deposit" /></div>
                   <div className="grid gap-2"><Label>Checkout description</Label><textarea value={selected.appearance.description} onChange={(event) => updateAppearance({ description: event.target.value })} rows={3} className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/30" /></div>
@@ -378,7 +387,7 @@ export function ClientPortalBuilder() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-xs text-muted-foreground">{notice || "Changes are not saved until you click Save changes."}</div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={setAsDefault} disabled={selected.status !== "Published" && !selected.isDefault}>Set as default</Button>
+              <Button variant="outline" onClick={setAsDefault}>Set as default</Button>
               <Button variant="outline" onClick={publishSelected}>{selected.status === "Published" ? "Move to draft" : "Publish form"}</Button>
               <Button onClick={() => save()}><Save className="size-4" /> Save changes</Button>
             </div>
