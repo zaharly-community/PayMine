@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Activity, ArrowUpRight, Check, ExternalLink, Eye, Globe2, LayoutTemplate, Pencil, Plus, Power, Trash2, WalletCards } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -255,6 +255,6 @@ export function ClientPortalFormsLibrary({
   );
 }
 
-function Metric({ icon, label, value, detail }: { icon: React.ReactNode; label: string; value: string; detail: string }) {
+function Metric({ icon, label, value, detail }: { icon: ReactNode; label: string; value: string; detail: string }) {
   return <Card className="shadow-none"><CardContent className="flex items-center gap-3 p-4"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">{icon}</span><div className="min-w-0"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-xl font-semibold tabular-nums">{value}</p><p className="mt-1 text-[10px] text-muted-foreground">{detail}</p></div></CardContent></Card>;
 }
