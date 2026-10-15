@@ -258,6 +258,30 @@ function PortalBrandHeader({ form }: { form: ClientPortalForm }) {
   );
 }
 
+function PortalCheckoutStepper({ currentStep }: { currentStep: 1 | 2 | 3 | 4 | 5 }) {
+  const labels = ["Method", "Amount", "Payment", "Upload", "Done"] as const;
+  return (
+    <div className="mb-5 rounded-xl border border-slate-700/70 bg-slate-900/65 px-3 py-4 sm:px-5">
+      <div className="grid grid-cols-5 gap-1">
+        {labels.map((label, index) => {
+          const step = index + 1;
+          const complete = step < currentStep;
+          const active = step === currentStep;
+          return (
+            <div key={label} className="relative flex min-w-0 flex-col items-center gap-2 text-center">
+              {index < labels.length - 1 ? <span className={"absolute left-[58%] top-3.5 h-px w-[84%] " + (step < currentStep ? "bg-emerald-400" : "bg-slate-700")} /> : null}
+              <span className={"relative z-10 flex size-7 items-center justify-center rounded-full border text-[10px] font-semibold " + (complete ? "border-emerald-400 bg-emerald-400 text-slate-950" : active ? "border-emerald-300 bg-emerald-300/10 text-emerald-200 ring-2 ring-emerald-400/10" : "border-slate-700 bg-slate-950 text-slate-500")}>
+                {complete ? <Check className="size-3.5" /> : step}
+              </span>
+              <span className={"truncate text-[9px] font-medium sm:text-[10px] " + (active || complete ? "text-slate-100" : "text-slate-500")}>{label}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function PaymentMethodMark({ method }: { method: PaymentMethod }) {
   return (
     <span
@@ -288,11 +312,13 @@ function PaymentMethodSelector({
   open,
   onToggle,
   onSelect,
+  selectionMode = false,
 }: {
   method: PaymentMethod;
   open: boolean;
   onToggle: () => void;
   onSelect: (method: PaymentMethod) => void;
+  selectionMode?: boolean;
 }) {
   const availableMethods = React.useContext(PortalPaymentMethodsContext);
   const formSlug = React.useContext(PortalFormSlugContext);
@@ -417,7 +443,7 @@ function PaymentMethodSelector({
         >
           <div className={methodDisplay === "tabs" ? "flex min-w-max items-stretch gap-1 px-1 py-2" : "contents"}>
             {availableMethods.map((item) => {
-              const selected = item.id === method.id;
+              const selected = !selectionMode && item.id === method.id;
 
               return (
                 <Link
