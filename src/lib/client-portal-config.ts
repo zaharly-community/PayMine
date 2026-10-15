@@ -31,6 +31,7 @@ export type ClientPortalAppearance = {
   theme: ClientPortalTheme;
   width: ClientPortalWidth;
   radius: ClientPortalRadius;
+  fontFamily: "system" | "sans" | "serif";
   primaryColor: string;
   backgroundColor: string;
   surfaceColor: string;
@@ -62,6 +63,7 @@ const defaultAppearance: ClientPortalAppearance = {
   theme: "dark",
   width: "compact",
   radius: "medium",
+  fontFamily: "sans",
   primaryColor: "#34d399",
   backgroundColor: "#020617",
   surfaceColor: "#0f172a",
@@ -176,6 +178,7 @@ function normalizeForm(value: unknown, index: number): ClientPortalForm | null {
       theme: rawAppearance.theme === "light" ? "light" : "dark",
       width: rawAppearance.width === "wide" ? "wide" : "compact",
       radius: rawAppearance.radius === "small" || rawAppearance.radius === "large" ? rawAppearance.radius : "medium",
+      fontFamily: rawAppearance.fontFamily === "system" || rawAppearance.fontFamily === "serif" ? rawAppearance.fontFamily : "sans",
       primaryColor: /^#[0-9a-f]{6}$/i.test(rawAppearance.primaryColor ?? "") ? rawAppearance.primaryColor! : defaultAppearance.primaryColor,
       backgroundColor: /^#[0-9a-f]{6}$/i.test(rawAppearance.backgroundColor ?? "") ? rawAppearance.backgroundColor! : defaultAppearance.backgroundColor,
       surfaceColor: /^#[0-9a-f]{6}$/i.test(rawAppearance.surfaceColor ?? "") ? rawAppearance.surfaceColor! : defaultAppearance.surfaceColor,
@@ -218,31 +221,40 @@ export function saveClientPortalForms(forms: ClientPortalForm[]) {
 
 const CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY = "ipaycash-client-portal-active-form-v1";
 
-export function getClientPortalFormForSlug(slug?: string): ClientPortalForm {
+export function getClientPortalFormForSlug(slug?: string, allowDraft = false): ClientPortalForm | null {
   const forms = getClientPortalForms();
-  if (slug) {
-    const bySlug = forms.find((form) => form.slug === slug && form.status === "Published");
-    if (bySlug) {
-      try {
-        if (typeof window !== "undefined") window.sessionStorage.setItem(CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY, bySlug.slug);
-      } catch {
-        // Session storage may be unavailable in restricted browser contexts.
-      }
-      return cloneForm(bySlug);
-    }
+  const knownMethodSlugs = ["flouci", "binance-pay", "d17", "kashy", "e-dinar", "ooredoo", "orange", "tunisie-telecom"];
 
-    try {
-      const activeSlug = typeof window !== "undefined" ? window.sessionStorage.getItem(CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY) : null;
-      const activeForm = activeSlug ? forms.find((form) => form.slug === activeSlug && form.status === "Published") : null;
-      if (activeForm) return cloneForm(activeForm);
-    } catch {
-      // Fall back to the configured default if session storage is unavailable.
+  if (slug) {
+    const bySlug = forms.find((form) => form.slug === slug);
+    if (bySlug) {
+      if (bySlug.status === "Published" || allowDraft) {
+        try {
+          if (typeof window !== "undefined") window.sessionStorage.setItem(CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY, bySlug.slug);
+        } catch {
+          // Session storage may be unavailable in restricted browser contexts.
+        }
+        return cloneForm(bySlug);
+      }
+      return null;
     }
+    if (!knownMethodSlugs.includes(slug)) return null;
   }
 
+  const activeSlug = (() => {
+    try {
+      return typeof window !== "undefined" ? window.sessionStorage.getItem(CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY) : null;
+    } catch {
+      return null;
+    }
+  })();
   const fallback = forms.find((form) => form.status === "Published" && form.isDefault)
+    ?? forms.find((form) => form.status === "Published" && form.slug === activeSlug)
     ?? forms.find((form) => form.status === "Published")
-    ?? defaultForms[0];
+    ?? (allowDraft ? forms[0] : null)
+    ?? (!forms.length ? defaultForms[0] : null);
+  if (!fallback) return null;
+
   try {
     if (typeof window !== "undefined") window.sessionStorage.setItem(CLIENT_PORTAL_ACTIVE_FORM_SESSION_KEY, fallback.slug);
   } catch {
@@ -250,7 +262,6 @@ export function getClientPortalFormForSlug(slug?: string): ClientPortalForm {
   }
   return cloneForm(fallback);
 }
-
 export function normalizeClientPortalSlug(value: string) {
   return value
     .trim()
