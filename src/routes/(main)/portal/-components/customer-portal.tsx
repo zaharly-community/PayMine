@@ -172,6 +172,11 @@ type PortalBuilderSettingsRuntime = {
     scheduleEnd?: string;
   };
   blocks?: Record<string, { label?: string; placeholder?: string; description?: string }>;
+  blockStyles?: Record<string, {
+    alignment?: "left" | "center" | "right";
+    width?: "full" | "wide" | "medium" | "narrow";
+    spacing?: "compact" | "normal" | "relaxed";
+  }>;
 };
 
 const PortalBuilderSettingsContext = React.createContext<PortalBuilderSettingsRuntime | null>(null);
@@ -181,9 +186,25 @@ function getPortalBuilderBlockStyle(settings: PortalBuilderSettingsRuntime | nul
   const explicitIndex = order?.indexOf(blockId) ?? -1;
   const index = explicitIndex >= 0 ? explicitIndex : blockId === "email" ? (order?.indexOf("playerId") ?? -1) : -1;
   const notPlaced = settings?.layout?.version === 2 && Array.isArray(order) && !order.includes(blockId) && !(blockId === "email" && order.includes("playerId"));
+  const blockStyle = settings?.blockStyles?.[blockId];
+  const maxWidth = blockStyle?.width === "wide"
+    ? "min(100%, 72rem)"
+    : blockStyle?.width === "medium"
+      ? "min(100%, 48rem)"
+      : blockStyle?.width === "narrow"
+        ? "min(100%, 32rem)"
+        : undefined;
+  const spacing = blockStyle?.spacing === "compact" ? "0.25rem" : blockStyle?.spacing === "relaxed" ? "1.5rem" : "0.75rem";
   return {
     order: index >= 0 ? index + 1 : undefined,
     display: settings?.layout?.hidden?.includes(blockId) || notPlaced ? "none" : undefined,
+    width: "100%",
+    maxWidth,
+    marginLeft: blockStyle?.alignment === "center" || blockStyle?.alignment === "right" ? "auto" : undefined,
+    marginRight: blockStyle?.alignment === "center" ? "auto" : blockStyle?.alignment === "right" ? "0" : undefined,
+    textAlign: blockStyle?.alignment ?? "left",
+    marginTop: spacing,
+    marginBottom: spacing,
   };
 }
 
@@ -253,30 +274,6 @@ function PortalBrandHeader({ form }: { form: ClientPortalForm }) {
             </div>
           ) : null}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function PortalCheckoutStepper({ currentStep }: { currentStep: 1 | 2 | 3 | 4 | 5 }) {
-  const labels = ["Method", "Amount", "Payment", "Upload", "Done"] as const;
-  return (
-    <div className="mb-5 rounded-xl border border-slate-700/70 bg-slate-900/65 px-3 py-4 sm:px-5">
-      <div className="grid grid-cols-5 gap-1">
-        {labels.map((label, index) => {
-          const step = index + 1;
-          const complete = step < currentStep;
-          const active = step === currentStep;
-          return (
-            <div key={label} className="relative flex min-w-0 flex-col items-center gap-2 text-center">
-              {index < labels.length - 1 ? <span className={"absolute left-[58%] top-3.5 h-px w-[84%] " + (step < currentStep ? "bg-emerald-400" : "bg-slate-700")} /> : null}
-              <span className={"relative z-10 flex size-7 items-center justify-center rounded-full border text-[10px] font-semibold " + (complete ? "border-emerald-400 bg-emerald-400 text-slate-950" : active ? "border-emerald-300 bg-emerald-300/10 text-emerald-200 ring-2 ring-emerald-400/10" : "border-slate-700 bg-slate-950 text-slate-500")}>
-                {complete ? <Check className="size-3.5" /> : step}
-              </span>
-              <span className={"truncate text-[9px] font-medium sm:text-[10px] " + (active || complete ? "text-slate-100" : "text-slate-500")}>{label}</span>
-            </div>
-          );
-        })}
       </div>
     </div>
   );
@@ -948,7 +945,6 @@ export function DepositRequestTrackingPage({
     <main className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
         <PortalBrandHeader form={headerForm} />
-        <div className="mt-4"><PortalCheckoutStepper currentStep={5} /></div>
         <div className="mb-4 flex items-center justify-between gap-3">
           <Button
             type="button"
@@ -3391,7 +3387,6 @@ function FlouciDepositFlow({
   return (
     <main data-payment-flow="true" className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
-        {portalBuilderSettings?.configs?.methodDisplay === "cards" ? <PortalCheckoutStepper currentStep={step === 1 ? 2 : step === 2 ? (proofFile ? 4 : 3) : 5} /> : null}
         {step === 2 ? (
           <div
             className={cn(
@@ -4437,7 +4432,6 @@ function CardDepositFlow({
   return (
     <main data-payment-flow="true" className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
-        {portalBuilderSettings?.configs?.methodDisplay === "cards" ? <PortalCheckoutStepper currentStep={step === 1 ? 2 : step === 2 ? (proofFile ? 4 : 3) : 5} /> : null}
         {step === 2 ? (
           <div className="mb-4 flex items-center justify-center">
             <PaymentMethodMark method={method} />
@@ -5466,7 +5460,6 @@ function EDinarDepositFlow({
   return (
     <main data-payment-flow="true" className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
-        {portalBuilderSettings?.configs?.methodDisplay === "cards" ? <PortalCheckoutStepper currentStep={step === 1 ? 2 : step === 2 ? (proofFile ? 4 : 3) : 5} /> : null}
         {step === 2 ? (
           <div
             className={cn(
@@ -5686,7 +5679,6 @@ function BinancePayFlow({
   return (
     <main data-payment-flow="true" className="min-h-dvh bg-slate-950 px-4 py-5 text-slate-100 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-xl flex-col">
-        {portalBuilderSettings?.configs?.methodDisplay === "cards" ? <PortalCheckoutStepper currentStep={step === 1 ? 2 : 3} /> : null}
         {step === 1 ? (
           <>
             <div data-builder-block="paymentMethods" style={getPortalBuilderBlockStyle(portalBuilderSettings, "paymentMethods")} className="mb-4">
@@ -6194,7 +6186,8 @@ export function CustomerPortal({
   const style = {
     "--portal-page-background": clientForm.appearance.backgroundColor,
     "--portal-surface": clientForm.appearance.surfaceColor,
-    "--portal-accent": clientForm.appearance.primaryColor,
+    "--portal-accent": builderSettings?.colors?.accent ?? clientForm.appearance.primaryColor,
+    "--portal-brand": builderSettings?.colors?.brand ?? (clientForm.appearance.theme === "dark" ? "#e2e8f0" : "#0f172a"),
     "--portal-border": clientForm.appearance.theme === "dark" ? "#334155" : "#e2e8f0",
     "--portal-radius": clientForm.appearance.radius === "small" ? "8px" : clientForm.appearance.radius === "large" ? "22px" : "14px",
     "--portal-content-width": clientForm.appearance.width === "wide" ? "72rem" : "48rem",
@@ -6224,8 +6217,14 @@ export function CustomerPortal({
           '#ipaycash-client-portal[data-button-shape="pill"] button{border-radius:999px!important;}' +
           '#ipaycash-client-portal[data-button-shape="rounded"] button{border-radius:12px!important;}' +
           '#ipaycash-client-portal[data-button-shape="rectangle"] button{border-radius:4px!important;}' +
+          '#ipaycash-client-portal [data-builder-block="heading"] h1,#ipaycash-client-portal [data-builder-block="brandHeader"]{color:var(--portal-brand)!important;}' +
           '#ipaycash-client-portal[data-template="minimal"] [class~="shadow-2xl"]{box-shadow:none!important;}' +
-          '#ipaycash-client-portal[data-template="classic"] section{border-radius:4px!important;}' +
+          '#ipaycash-client-portal[data-template="minimal"] [data-payment-method-id]{border-color:transparent!important;background-color:var(--portal-surface)!important;border-radius:999px!important;}' +
+          '#ipaycash-client-portal[data-template="minimal"] [data-builder-block="heading"]{padding-top:1.5rem!important;padding-bottom:1rem!important;}' +
+          '#ipaycash-client-portal[data-template="classic"] section{border-radius:4px!important;box-shadow:0 1px 2px rgba(15,23,42,.06)!important;}' +
+          '#ipaycash-client-portal[data-template="classic"] [data-payment-method-id]{border-radius:4px!important;}' +
+          '#ipaycash-client-portal[data-template="classic"] [data-builder-block="heading"] h1{font-family:Georgia,"Times New Roman",serif!important;letter-spacing:-.02em;}' +
+          '#ipaycash-client-portal[data-template="stripe"] [data-payment-method-id]{border-radius:var(--portal-radius)!important;}' +
           '#ipaycash-client-portal[data-method-display="cards"] [data-payment-flow="true"] [data-builder-block="paymentMethods"]{display:none!important;}' +
           '#ipaycash-client-portal [data-builder-form="true"]{display:flex!important;flex-direction:column!important;gap:1rem!important;}' +
           '#ipaycash-client-portal [data-builder-form="true"]>*:not([data-builder-block]){order:500!important;}' +
@@ -6436,10 +6435,8 @@ function CustomerPortalExperience({
     return (
       <main className="min-h-dvh bg-slate-950 px-4 py-6 text-slate-100 sm:px-6">
         <div className="mx-auto w-full max-w-xl">
-          <PortalCheckoutStepper currentStep={1} />
           <section className="rounded-2xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-6">
             <div className="mb-5 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-300">Step 1 of 5</p>
               <h2 className="mt-2 text-lg font-semibold text-white sm:text-xl">{portalBuilderSettings?.blocks?.paymentMethods?.label && portalBuilderSettings.blocks.paymentMethods.label !== "Payment method" ? portalBuilderSettings.blocks.paymentMethods.label : "Select Payment Method"}</h2>
               <p className="mt-1 text-xs leading-5 text-slate-400">{portalBuilderSettings?.blocks?.paymentMethods?.description || "Choose how you would like to make your deposit."}</p>
             </div>
