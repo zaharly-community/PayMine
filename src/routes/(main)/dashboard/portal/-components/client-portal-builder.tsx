@@ -718,6 +718,7 @@ export function ClientPortalBuilder({
             </div>
           </div>
         </section>
+      </div>
     </main>
   );
 }
