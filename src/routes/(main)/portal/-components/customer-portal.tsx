@@ -143,6 +143,41 @@ const PortalButtonLabelContext = React.createContext<string>("Do Deposit");
 const PortalFormSlugContext = React.createContext<string | undefined>(undefined);
 const PortalPreviewContext = React.createContext(false);
 
+type PortalBuilderSettingsRuntime = {
+  colors?: { brand?: string; accent?: string };
+  features?: {
+    supervisorRating?: boolean;
+    playerRating?: boolean;
+    aiRecognition?: boolean;
+    autoConfirm?: boolean;
+  };
+  configs?: {
+    paymentMethods?: string[];
+    methodDisplay?: "tabs" | "cards";
+    playerIdMode?: "userId" | "email" | "both";
+    presetAmounts?: number[];
+    timerSeconds?: number;
+    scheduleEnabled?: boolean;
+    scheduleStart?: string;
+    scheduleEnd?: string;
+  };
+  blocks?: Record<string, { label?: string; placeholder?: string; description?: string }>;
+};
+
+const PortalBuilderSettingsContext = React.createContext<PortalBuilderSettingsRuntime | null>(null);
+
+function isPortalWithinSchedule(start?: string, end?: string) {
+  if (!start || !end) return true;
+  const [startHour, startMinute] = start.split(":").map(Number);
+  const [endHour, endMinute] = end.split(":").map(Number);
+  if (![startHour, startMinute, endHour, endMinute].every(Number.isFinite)) return true;
+  const now = new Date();
+  const current = now.getHours() * 60 + now.getMinutes();
+  const first = startHour * 60 + startMinute;
+  const last = endHour * 60 + endMinute;
+  return first <= last ? current >= first && current <= last : current >= first || current <= last;
+}
+
 function normalizePortalMethodName(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
@@ -159,6 +194,7 @@ function getMethodsForClientForm(form: ClientPortalForm) {
 
 function PortalBrandHeader({ form }: { form: ClientPortalForm }) {
   const { appearance } = form;
+  const builderSettings = React.useContext(PortalBuilderSettingsContext);
   return (
     <div className="mx-auto flex w-full items-center justify-between gap-3 border-b px-4 py-3 sm:px-6" style={{ maxWidth: appearance.width === "wide" ? "72rem" : "48rem", color: appearance.theme === "dark" ? "#f8fafc" : "#0f172a", borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0" }}>
       <div className="flex min-w-0 items-center gap-3">
@@ -166,7 +202,7 @@ function PortalBrandHeader({ form }: { form: ClientPortalForm }) {
           appearance.logoUrl ? (
             <img src={appearance.logoUrl} alt={appearance.brandName + " logo"} className="size-9 shrink-0 rounded-lg object-contain" />
           ) : (
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold" style={{ backgroundColor: appearance.primaryColor, color: appearance.theme === "dark" ? "#052e22" : "#ffffff" }}>{(appearance.brandName || "iP").slice(0, 2).toUpperCase()}</span>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold" style={{ backgroundColor: builderSettings?.colors?.brand || appearance.primaryColor, color: appearance.theme === "dark" ? "#052e22" : "#ffffff" }}>{(appearance.brandName || "iP").slice(0, 2).toUpperCase()}</span>
           )
         ) : null}
         <div className="min-w-0">
@@ -220,6 +256,8 @@ function PaymentMethodSelector({
   const availableMethods = React.useContext(PortalPaymentMethodsContext);
   const formSlug = React.useContext(PortalFormSlugContext);
   const portalPreview = React.useContext(PortalPreviewContext);
+  const builderSettings = React.useContext(PortalBuilderSettingsContext);
+  const methodDisplay = builderSettings?.configs?.methodDisplay ?? "cards";
   const selectorSearch = formSlug ? { form: formSlug, preview: portalPreview } : { preview: portalPreview };
   const sliderRef = React.useRef<HTMLDivElement>(null);
   const dragRef = React.useRef({
@@ -324,7 +362,7 @@ function PaymentMethodSelector({
           )}
           aria-label="Payment methods. Drag or swipe horizontally to browse."
         >
-          <div className="flex min-w-max items-stretch gap-2 px-1 py-2">
+          <div className={methodDisplay === "tabs" ? "flex min-w-max items-stretch gap-1 px-1 py-2" : "flex min-w-max items-stretch gap-2 px-1 py-2"}>
             {availableMethods.map((item) => {
               const selected = item.id === method.id;
 
@@ -345,10 +383,12 @@ function PaymentMethodSelector({
                   onDragStart={(event) => event.preventDefault()}
                   onClick={() => onSelect(item)}
                   className={cn(
-                    "group relative mt-1 flex min-w-[104px] shrink-0 flex-col items-center gap-1.5 rounded-lg border px-2.5 pb-2 pt-2.5 transition-colors",
+                    methodDisplay === "tabs"
+                      ? "group relative mt-1 flex min-w-[104px] shrink-0 items-center gap-2 rounded-none border-b-2 px-3 py-2 transition-colors"
+                      : "group relative mt-1 flex min-w-[104px] shrink-0 flex-col items-center gap-1.5 rounded-lg border px-2.5 pb-2 pt-2.5 transition-colors",
                     selected
-                      ? "border-white/25 bg-slate-800/80"
-                      : "border-white/8 bg-slate-900/60 hover:border-white/15 hover:bg-slate-800/60",
+                      ? (methodDisplay === "tabs" ? "border-emerald-300 bg-transparent" : "border-white/25 bg-slate-800/80")
+                      : (methodDisplay === "tabs" ? "border-transparent bg-transparent hover:border-white/20" : "border-white/8 bg-slate-900/60 hover:border-white/15 hover:bg-slate-800/60"),
                   )}
                   aria-current={selected ? "page" : undefined}
                 >
@@ -421,9 +461,22 @@ function FieldLabel({
   children: React.ReactNode;
   required?: boolean;
 }) {
+  const builderSettings = React.useContext(PortalBuilderSettingsContext);
+  const overrides = builderSettings?.blocks ?? {};
+  const text = typeof children === "string" ? children.trim() : "";
+  const blockKey =
+    text === "Player ID" || text === "Username" ? "playerId"
+      : text === "Email" || text === "Email address" ? "email"
+      : text === "Deposit amount" ? "amount"
+      : text === "Payment evidence" || text === "Upload transfer screenshot" ? "evidence"
+      : text === "Transaction ID" ? "transactionId"
+      : text === "Transfer number" ? "transferNumber"
+      : null;
+  const displayChildren = blockKey && overrides[blockKey]?.label ? overrides[blockKey]?.label : children;
+
   return (
     <label className="mb-1.5 block text-xs font-medium text-slate-200">
-      {children}
+      {displayChildren}
       {required ? <span className="ml-1 text-slate-500">*</span> : null}
     </label>
   );
@@ -1661,7 +1714,8 @@ function FlouciStepOne({
   onContinue: () => void;
 }) {
   const portalButtonLabel = React.useContext(PortalButtonLabelContext);
-  const presets = [20, 50, 100, 200, 500, 1000];
+  const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
+  const presets = portalBuilderSettings?.configs?.presetAmounts?.length ? portalBuilderSettings.configs.presetAmounts : [20, 50, 100, 200, 500, 1000];
 
   return (
     <>
@@ -3071,7 +3125,8 @@ function FlouciDepositFlow({
   const [supervisorNote] = React.useState(
     "The transfer number and amount do not match the submitted payment. Please correct both fields and submit again.",
   );
-  const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+  const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
+  const [secondsLeft, setSecondsLeft] = React.useState(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
   const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
   const expired = secondsLeft <= 0;
@@ -3617,7 +3672,8 @@ function CardDepositStepOne({
   onContinue: () => void;
 }) {
   const portalButtonLabel = React.useContext(PortalButtonLabelContext);
-  const presets = [10, 20, 50, 100, 200, 500];
+  const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
+  const presets = portalBuilderSettings?.configs?.presetAmounts?.length ? portalBuilderSettings.configs.presetAmounts : [10, 20, 50, 100, 200, 500];
 
   return (
     <>
@@ -5932,6 +5988,19 @@ export function CustomerPortal({
     );
   }
 
+  const builderSettings = (clientForm as ClientPortalForm & { builder?: PortalBuilderSettingsRuntime }).builder ?? null;
+  if (builderSettings?.configs?.scheduleEnabled && !isPortalWithinSchedule(builderSettings.configs.scheduleStart, builderSettings.configs.scheduleEnd)) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center bg-slate-950 px-5 py-10 text-slate-100">
+        <section className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 text-center">
+          <Clock3 className="mx-auto size-8 text-slate-400" />
+          <h1 className="mt-4 text-lg font-semibold">Deposits are currently unavailable</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-400">This checkout is active from {builderSettings.configs.scheduleStart} to {builderSettings.configs.scheduleEnd} in your current local time.</p>
+        </section>
+      </main>
+    );
+  }
+
   const style = {
     "--portal-page-background": clientForm.appearance.backgroundColor,
     "--portal-surface": clientForm.appearance.surfaceColor,
@@ -5943,11 +6012,12 @@ export function CustomerPortal({
   } as React.CSSProperties;
 
   return (
+    <PortalBuilderSettingsContext.Provider value={builderSettings}>
     <PortalPaymentMethodsContext.Provider value={availableMethods}>
       <PortalButtonLabelContext.Provider value={clientForm.appearance.buttonLabel || "Do Deposit"}>
       <PortalFormSlugContext.Provider value={clientForm.slug}>
       <PortalPreviewContext.Provider value={preview}>
-      <div id="ipaycash-client-portal" data-theme={clientForm.appearance.theme} data-width={clientForm.appearance.width} data-radius={clientForm.appearance.radius} style={style}>
+      <div id="ipaycash-client-portal" data-theme={clientForm.appearance.theme} data-width={clientForm.appearance.width} data-radius={clientForm.appearance.radius} data-supervisor-rating={builderSettings?.features?.supervisorRating === false ? "false" : "true"} data-ai-recognition={builderSettings?.features?.aiRecognition === false ? "false" : "true"} data-player-rating={builderSettings?.features?.playerRating === false ? "false" : "true"} data-player-id-mode={builderSettings?.configs?.playerIdMode ?? "both"} data-method-display={builderSettings?.configs?.methodDisplay ?? "cards"} style={style}>
         <style>{'#ipaycash-client-portal [class~="bg-slate-950"]{background-color:var(--portal-page-background)!important;}' +
           '#ipaycash-client-portal [class~="bg-slate-900"],#ipaycash-client-portal [class~="bg-slate-900/80"],#ipaycash-client-portal [class~="bg-slate-900/90"],#ipaycash-client-portal [class~="bg-slate-800"],#ipaycash-client-portal [class~="bg-slate-800/80"],#ipaycash-client-portal [class~="bg-slate-800/60"],#ipaycash-client-portal [class~="bg-slate-700/90"]{background-color:var(--portal-surface)!important;}' +
           '#ipaycash-client-portal [class~="bg-emerald-400"],#ipaycash-client-portal [class~="bg-emerald-300"]{background-color:var(--portal-accent)!important;}' +
@@ -5957,7 +6027,10 @@ export function CustomerPortal({
           '#ipaycash-client-portal [class~="rounded-xl"],#ipaycash-client-portal [class~="rounded-2xl"]{border-radius:var(--portal-radius)!important;}' +
           '#ipaycash-client-portal [class~="min-h-dvh"]{min-height:max(560px,calc(100dvh - 4.5rem))!important;}' +
           '#ipaycash-client-portal[data-theme="light"] [class~="text-slate-100"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-200"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-300"]{color:#0f172a!important;}' +
-          '#ipaycash-client-portal[data-theme="light"] [class~="text-slate-400"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-500"]{color:#64748b!important;}'}</style>
+          '#ipaycash-client-portal[data-theme="light"] [class~="text-slate-400"],#ipaycash-client-portal[data-theme="light"] [class~="text-slate-500"]{color:#64748b!important;}' +
+          '#ipaycash-client-portal[data-supervisor-rating="false"] button[title="Review supervisor"]{display:none!important;}' +
+          '#ipaycash-client-portal[data-ai-recognition="false"] [data-ai-recognition-ui="true"]{display:none!important;}' +
+          '#ipaycash-client-portal[data-player-id-mode="userId"] button[aria-label="Email"],#ipaycash-client-portal[data-player-id-mode="userId"] button[aria-label="Username"],#ipaycash-client-portal[data-player-id-mode="email"] button[aria-label="Player ID"],#ipaycash-client-portal[data-player-id-mode="email"] button[aria-label="Username"],#ipaycash-client-portal[data-player-id-mode="both"] button[aria-label="Username"]{display:none!important;}'}</style>
         <div style={{ backgroundColor: clientForm.appearance.backgroundColor, fontFamily: style.fontFamily }}>
           <PortalBrandHeader form={clientForm} />
           <div className="mx-auto w-full" style={{ maxWidth: clientForm.appearance.width === "wide" ? "80rem" : "64rem" }}>
@@ -5974,6 +6047,7 @@ export function CustomerPortal({
       </PortalFormSlugContext.Provider>
       </PortalButtonLabelContext.Provider>
     </PortalPaymentMethodsContext.Provider>
+    </PortalBuilderSettingsContext.Provider>
   );
 }
 
@@ -5986,16 +6060,22 @@ function CustomerPortalExperience({
   clientForm: ClientPortalForm;
   availableMethods: PaymentMethod[];
 }) {
+  const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
   const initialMethod = availableMethods.find((item) => item.id === initialMethodId) ?? availableMethods[0] ?? paymentMethods[0];
   const [method, setMethod] = React.useState<PaymentMethod>(initialMethod);
   const [amount, setAmount] = React.useState(() => String(initialMethod.min));
   const navigate = useNavigate();
   const [playerId, setPlayerId] = React.useState("");
-  const [playerLookupType, setPlayerLookupType] = React.useState<PlayerLookupType>("playerId");
+  const [playerLookupType, setPlayerLookupType] = React.useState<PlayerLookupType>(() => portalBuilderSettings?.configs?.playerIdMode === "email" ? "email" : "playerId");
   const [openMethods, setOpenMethods] = React.useState(false);
   const [depositStarted, setDepositStarted] = React.useState(false);
   const [error, setError] = React.useState("");
   const [requestLookupRefresh, setRequestLookupRefresh] = React.useState(0);
+  React.useEffect(() => {
+    const mode = portalBuilderSettings?.configs?.playerIdMode;
+    if (mode === "email" && playerLookupType !== "email") setPlayerLookupType("email");
+    else if (mode === "userId" && playerLookupType !== "playerId") setPlayerLookupType("playerId");
+  }, [portalBuilderSettings?.configs?.playerIdMode]);
   const { status: playerRequestStatus, openRequest } = usePlayerRequestLookup(
     playerId,
     playerLookupType,
