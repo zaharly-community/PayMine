@@ -170,15 +170,13 @@ type PortalBuilderSettingsRuntime = {
 const PortalBuilderSettingsContext = React.createContext<PortalBuilderSettingsRuntime | null>(null);
 
 function getPortalBuilderBlockStyle(settings: PortalBuilderSettingsRuntime | null | undefined, blockId: string): React.CSSProperties {
-  const explicitIndex = settings?.layout?.order?.indexOf(blockId) ?? -1;
-  const index = explicitIndex >= 0
-    ? explicitIndex
-    : blockId === "email"
-      ? (settings?.layout?.order?.indexOf("playerId") ?? -1)
-      : -1;
+  const order = settings?.layout?.order;
+  const explicitIndex = order?.indexOf(blockId) ?? -1;
+  const index = explicitIndex >= 0 ? explicitIndex : blockId === "email" ? (order?.indexOf("playerId") ?? -1) : -1;
+  const notPlaced = Array.isArray(order) && !order.includes(blockId) && !(blockId === "email" && order.includes("playerId"));
   return {
     order: index >= 0 ? index + 1 : undefined,
-    display: settings?.layout?.hidden?.includes(blockId) ? "none" : undefined,
+    display: settings?.layout?.hidden?.includes(blockId) || notPlaced ? "none" : undefined,
   };
 }
 
@@ -211,8 +209,9 @@ function getMethodsForClientForm(form: ClientPortalForm) {
 function PortalBrandHeader({ form }: { form: ClientPortalForm }) {
   const { appearance } = form;
   const builderSettings = React.useContext(PortalBuilderSettingsContext);
+  const headerCopy = builderSettings?.blocks?.brandHeader;
   return (
-    <div className="mx-auto flex w-full items-center justify-between gap-3 border-b px-4 py-3 sm:px-6" style={{ maxWidth: appearance.width === "wide" ? "72rem" : "48rem", color: appearance.theme === "dark" ? "#f8fafc" : "#0f172a", borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0" }}>
+    <div data-builder-block="brandHeader" style={{ ...getPortalBuilderBlockStyle(builderSettings, "brandHeader"), maxWidth: appearance.width === "wide" ? "72rem" : "48rem", color: appearance.theme === "dark" ? "#f8fafc" : "#0f172a", borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0" }} className="mx-auto flex w-full items-center justify-between gap-3 border-b px-4 py-3 sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
         {appearance.showLogo ? (
           appearance.logoUrl ? (
@@ -222,12 +221,12 @@ function PortalBrandHeader({ form }: { form: ClientPortalForm }) {
           )
         ) : null}
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{appearance.brandName || "Your brand"}</p>
-          <p className="text-[10px]" style={{ color: appearance.theme === "dark" ? "#94a3b8" : "#64748b" }}>Secure checkout</p>
+          <p className="truncate text-sm font-semibold">{headerCopy?.label || appearance.brandName || "Your brand"}</p>
+          <p className="text-[10px]" style={{ color: appearance.theme === "dark" ? "#94a3b8" : "#64748b" }}>{headerCopy?.placeholder || "Secure checkout"}</p>
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px]" style={{ borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0", color: appearance.primaryColor }}>
-        <ShieldCheck className="size-3.5" /> Protected payment
+        <ShieldCheck className="size-3.5" /> {headerCopy?.description || "Protected payment"}
       </div>
     </div>
   );
@@ -1404,10 +1403,11 @@ export function DepositRequestTrackingPage({
             </div>
           ) : null}
 
-          <details className="mt-5 rounded-lg border border-dashed border-slate-700 bg-slate-900/50 p-3">
+          <details data-builder-block="flowPreview" style={getPortalBuilderBlockStyle(trackingBuilderSettings, "flowPreview")} className="mt-5 rounded-lg border border-dashed border-slate-700 bg-slate-900/50 p-3">
             <summary className="cursor-pointer text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-              Flow preview / test states
+              {trackingBuilderSettings?.blocks?.flowPreview?.label || "Flow preview / test states"}
             </summary>
+            {trackingBuilderSettings?.blocks?.flowPreview?.description ? <p className="mt-2 text-[11px] leading-relaxed text-slate-500">{trackingBuilderSettings.blocks.flowPreview.description}</p> : null}
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-6">
               {([
                 ["reviewing", "Reviewing"],
@@ -3040,10 +3040,11 @@ function FlouciDemoControls({
       </div>
 
 
-      <div className="mt-3 border-t border-slate-700 pt-3">
+      <div data-builder-block="verificationPreview" style={getPortalBuilderBlockStyle(trackingBuilderSettings, "verificationPreview")} className="mt-3 border-t border-slate-700 pt-3">
         <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-          AI / verification preview
+          {trackingBuilderSettings?.blocks?.verificationPreview?.label || "AI / verification preview"}
         </p>
+        {trackingBuilderSettings?.blocks?.verificationPreview?.description ? <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{trackingBuilderSettings.blocks.verificationPreview.description}</p> : null}
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Button
             type="button"
@@ -3084,7 +3085,10 @@ function FlouciDemoControls({
         </div>
       </div>
 
-      <div className="mt-2 grid grid-cols-3 gap-2">
+      <div data-builder-block="stepPreview" style={getPortalBuilderBlockStyle(trackingBuilderSettings, "stepPreview")} className="mt-2">
+        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">{trackingBuilderSettings?.blocks?.stepPreview?.label || "Page-step preview"}</p>
+        {trackingBuilderSettings?.blocks?.stepPreview?.description ? <p className="mb-2 text-[11px] leading-relaxed text-slate-500">{trackingBuilderSettings.blocks.stepPreview.description}</p> : null}
+        <div className="grid grid-cols-3 gap-2">
         <Button
           type="button"
           variant="ghost"
@@ -3117,6 +3121,7 @@ function FlouciDemoControls({
         >
           Waiting
         </Button>
+        </div>
       </div>
     </div>
   );
