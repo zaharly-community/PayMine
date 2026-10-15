@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CustomerPortal } from "../../../portal/-components/customer-portal";
 import {
   Check,
@@ -6,14 +6,9 @@ import {
   Copy,
   ExternalLink,
   Eye,
-  Globe2,
-  Hash,
-  Mail,
-  LayoutTemplate,
   Monitor,
   Save,
   Smartphone,
-  Sparkles,
   Undo2,
   Redo2,
   Moon,
@@ -306,8 +301,6 @@ export function ClientPortalBuilder({
     const origin = typeof window === "undefined" ? "http://localhost:3000" : window.location.origin;
     return origin + "/portal/" + (selected?.slug ?? "main-deposit");
   }, [selected?.slug]);
-  const embedCode = '<iframe src="' + liveUrl + '" title="' + (selected?.name ?? "iPayCash checkout") + '" width="100%" height="680" loading="lazy" style="border:0;border-radius:16px"></iframe>';
-
   const updateSelected = (patch: Partial<EditableBuilderForm>) => {
     if (!selected) return;
     setForms((current) => current.map((form) => form.id === selected.id
@@ -723,40 +716,6 @@ function ToggleSetting({ title, description, checked, onChange }: { title: strin
   );
 }
 
-function PreviewBlock({
-  blockId,
-  selectedBlock,
-  onSelectBlock,
-  children,
-  className = "",
-}: {
-  blockId: string;
-  selectedBlock: string | null;
-  onSelectBlock: (blockId: string) => void;
-  children: ReactNode;
-  className?: string;
-}) {
-  const selected = selectedBlock === blockId;
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-label={"Edit " + (fieldDefaults[blockId]?.label ?? blockId) + " block"}
-      onClick={() => onSelectBlock(blockId)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onSelectBlock(blockId);
-        }
-      }}
-      className={"group relative cursor-pointer rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary " + (selected ? "ring-2 ring-primary ring-offset-2 ring-offset-transparent" : "hover:ring-1 hover:ring-primary/50 ") + className}
-    >
-      {children}
-      <span className={"pointer-events-none absolute right-2 top-2 rounded-md bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground opacity-0 transition group-hover:opacity-100 " + (selected ? "opacity-100" : "")}>Edit</span>
-    </div>
-  );
-}
-
 function isLightColor(color: string) {
   const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
   if (!match) return false;
@@ -764,184 +723,4 @@ function isLightColor(color: string) {
   const g = Number.parseInt(match[2], 16);
   const b = Number.parseInt(match[3], 16);
   return (r * 299 + g * 587 + b * 114) / 1000 > 155;
-}
-
-function isWithinSchedule(start: string, end: string) {
-  const now = new Date();
-  const current = now.getHours() * 60 + now.getMinutes();
-  const [startHour, startMinute] = start.split(":").map(Number);
-  const [endHour, endMinute] = end.split(":").map(Number);
-  const startValue = startHour * 60 + startMinute;
-  const endValue = endHour * 60 + endMinute;
-  return startValue <= endValue
-    ? current >= startValue && current <= endValue
-    : current >= startValue || current <= endValue;
-}
-
-function CheckoutPreview({
-  form,
-  previewMode = "desktop",
-  selectedBlock,
-  onSelectBlock,
-}: {
-  form: EditableBuilderForm;
-  previewMode?: "desktop" | "mobile";
-  selectedBlock: string | null;
-  onSelectBlock: (blockId: string) => void;
-}) {
-  const { appearance, builder } = form;
-  const { colors, configs, features, blocks } = builder;
-  const light = isLightColor(colors.websiteBackground);
-  const foreground = light ? "#0f172a" : "#f8fafc";
-  const muted = light ? "#64748b" : "#94a3b8";
-  const border = light ? "#e2e8f0" : "#334155";
-  const buttonRadius = builder.buttonShape === "pill" ? "999px" : builder.buttonShape === "rounded" ? "12px" : "4px";
-  const inputRadius = appearance.radius === "small" ? "8px" : appearance.radius === "large" ? "22px" : "14px";
-  const frameWidth = previewMode === "mobile" ? "390px" : builder.template === "minimal" ? "440px" : builder.template === "classic" ? "600px" : appearance.width === "wide" ? "100%" : "760px";
-  const [amount, setAmount] = useState(configs.presetAmounts[0] ?? 50);
-  const [identifierMode, setIdentifierMode] = useState<"userId" | "email">(configs.playerIdMode === "email" ? "email" : "userId");
-  const identifierBlockId = configs.playerIdMode === "email" || (configs.playerIdMode === "both" && identifierMode === "email") ? "email" : "playerId";
-  const identifierCopy = blocks[identifierBlockId];
-  const scheduled = !configs.scheduleEnabled || isWithinSchedule(configs.scheduleStart, configs.scheduleEnd);
-  const timerMinutes = Math.floor(configs.timerSeconds / 60).toString().padStart(2, "0");
-  const timerRemainder = (configs.timerSeconds % 60).toString().padStart(2, "0");
-
-  useEffect(() => {
-    setAmount(configs.presetAmounts[0] ?? 50);
-  }, [configs.presetAmounts.join(",")]);
-
-  useEffect(() => {
-    if (configs.playerIdMode === "email") setIdentifierMode("email");
-    else if (configs.playerIdMode === "userId") setIdentifierMode("userId");
-  }, [configs.playerIdMode]);
-
-  const fontFamily = builder.fontFamily === "serif"
-    ? 'Georgia, "Times New Roman", serif'
-    : builder.fontFamily === "system"
-      ? "system-ui, sans-serif"
-      : "Inter, ui-sans-serif, system-ui, sans-serif";
-  const baseSurface = colors.checkoutSurface;
-  const buttonText = isLightColor(colors.accent) ? "#0f172a" : "#ffffff";
-
-  return (
-    <div className="mx-auto w-full transition-all duration-200" style={{ maxWidth: frameWidth, fontFamily }}>
-      <div className="overflow-hidden border shadow-xl" style={{ borderRadius: builder.template === "minimal" ? "8px" : builder.template === "classic" ? "4px" : "14px", borderColor: border, backgroundColor: colors.websiteBackground }}>
-        <div className="flex items-center gap-1.5 border-b px-3 py-2.5" style={{ borderColor: border, backgroundColor: light ? "#f8fafc" : "#0b1220" }}>
-          <span className="size-2.5 rounded-full bg-rose-400" />
-          <span className="size-2.5 rounded-full bg-amber-300" />
-          <span className="size-2.5 rounded-full bg-emerald-400" />
-          <div className="mx-auto flex h-6 min-w-0 max-w-[520px] flex-1 items-center justify-center gap-1.5 rounded-md border bg-background px-2 text-[10px] text-muted-foreground" style={{ borderColor: border }}>
-            <Globe2 className="size-3 shrink-0" /><span className="truncate">checkout.local/portal/{form.slug}</span>
-          </div>
-          <span className="w-7" />
-        </div>
-
-        <div style={{ backgroundColor: colors.websiteBackground, color: foreground }}>
-          <div className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-6" style={{ backgroundColor: baseSurface, borderColor: border }}>
-            <div className="flex min-w-0 items-center gap-2.5">
-              {appearance.showLogo ? (
-                appearance.logoUrl
-                  ? <img src={appearance.logoUrl} alt="" className="size-8 shrink-0 rounded-lg object-contain" />
-                  : <span className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold" style={{ backgroundColor: colors.brand, color: isLightColor(colors.brand) ? "#0f172a" : "#fff" }}>{(appearance.brandName || "iP").slice(0, 2).toUpperCase()}</span>
-              ) : null}
-              <div className="min-w-0"><p className="truncate text-xs font-semibold">{appearance.brandName || "Your brand"}</p><p className="mt-0.5 text-[9px]" style={{ color: muted }}>Secure checkout</p></div>
-            </div>
-            <div className="flex items-center gap-1 text-[9px]" style={{ color: colors.accent }}><Check className="size-3" /> Secure</div>
-          </div>
-
-          <div className={"p-4 sm:p-6 " + (builder.template === "minimal" ? "sm:px-10" : "")}>
-            <div className="mx-auto space-y-4" style={{ maxWidth: builder.template === "minimal" ? "390px" : "490px" }}>
-              <PreviewBlock blockId="heading" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
-                <p className="text-base font-semibold">{blocks.heading.label || form.name}</p>
-                <p className="mt-1 text-xs leading-5" style={{ color: muted }}>{blocks.heading.description}</p>
-              </PreviewBlock>
-
-              {configs.scheduleEnabled && !scheduled ? (
-                <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs leading-5 text-amber-700">
-                  This form is outside its active hours ({configs.scheduleStart}–{configs.scheduleEnd}). It will be available during the configured schedule.
-                </div>
-              ) : null}
-
-              <PreviewBlock blockId={identifierBlockId} selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
-                <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-                  <label className="block text-[11px] font-medium">{identifierCopy.label}</label>
-                  {configs.playerIdMode === "both" ? (
-                    <div className="flex items-center gap-1">
-                      <button type="button" title="Player ID" aria-label="Preview Player ID input" onClick={(event) => { event.stopPropagation(); setIdentifierMode("userId"); onSelectBlock("playerId"); }} className={"flex size-7 items-center justify-center rounded-md border " + (identifierMode === "userId" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}><Hash className="size-3.5" /></button>
-                      <button type="button" title="Email" aria-label="Preview email input" onClick={(event) => { event.stopPropagation(); setIdentifierMode("email"); onSelectBlock("email"); }} className={"flex size-7 items-center justify-center rounded-md border " + (identifierMode === "email" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}><Mail className="size-3.5" /></button>
-                    </div>
-                  ) : null}
-                </div>
-                <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius, color: muted }}>{identifierCopy.placeholder || (identifierBlockId === "email" ? "name@example.com" : "Enter your player ID")}</div>
-                {identifierCopy.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{identifierCopy.description}</p> : null}
-              </PreviewBlock>
-
-              <PreviewBlock blockId="amount" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
-                <div className="flex items-center justify-between gap-2"><label className="text-[11px] font-medium">{blocks.amount.label}</label><Badge variant="outline">{form.currency}</Badge></div>
-                <div className="mt-2 border px-3 py-3" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius }}>
-                  <p className="text-2xl font-semibold tabular-nums">{Number(amount).toFixed(2)} <span className="text-xs font-medium" style={{ color: muted }}>{form.currency}</span></p>
-                  {blocks.amount.description ? <p className="mt-1 text-[10px] leading-4" style={{ color: muted }}>{blocks.amount.description}</p> : null}
-                </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {configs.presetAmounts.map((preset) => <button type="button" key={preset} onClick={(event) => { event.stopPropagation(); setAmount(preset); onSelectBlock("amount"); }} className="border px-3 py-1.5 text-[10px] font-semibold tabular-nums transition" style={{ borderColor: preset === amount ? colors.accent : border, backgroundColor: preset === amount ? colors.accent + "20" : baseSurface, borderRadius: buttonRadius }}>{preset} TND</button>)}
-                </div>
-              </PreviewBlock>
-
-              <PreviewBlock blockId="paymentMethods" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
-                <p className="mb-2 text-xs font-medium">{blocks.paymentMethods.label}</p>
-                {configs.methodDisplay === "tabs" ? (
-                  <div className="flex flex-wrap gap-1 border-b pb-2" style={{ borderColor: border }}>
-                    {configs.paymentMethods.map((method, index) => <span key={method} className="border-b-2 px-2 py-1.5 text-[10px] font-medium" style={{ borderBottomColor: index === 0 ? colors.accent : "transparent", color: index === 0 ? colors.accent : muted }}>{method}</span>)}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    {configs.paymentMethods.map((method, index) => <div key={method} className="flex min-w-0 items-center gap-2 border p-2.5 text-[10px]" style={{ borderColor: index === 0 ? colors.accent : border, backgroundColor: baseSurface, borderRadius: inputRadius }}><span className="flex size-6 shrink-0 items-center justify-center rounded-md text-[8px] font-bold" style={{ backgroundColor: colors.accent, color: buttonText }}>{method.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</span><span className="truncate">{method}</span></div>)}
-                  </div>
-                )}
-                {blocks.paymentMethods.description ? <p className="mt-2 text-[10px] leading-4" style={{ color: muted }}>{blocks.paymentMethods.description}</p> : null}
-              </PreviewBlock>
-
-              <PreviewBlock blockId="transferNumber" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
-                <label className="mb-1.5 block text-[11px] font-medium">{blocks.transferNumber.label}</label>
-                <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius, color: muted }}>{blocks.transferNumber.placeholder}</div>
-                {blocks.transferNumber.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.transferNumber.description}</p> : null}
-              </PreviewBlock>
-
-              <PreviewBlock blockId="transactionId" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
-                <label className="mb-1.5 block text-[11px] font-medium">{blocks.transactionId.label}</label>
-                <div className="border px-3 py-2.5 text-[11px]" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius, color: muted }}>{blocks.transactionId.placeholder}</div>
-                {blocks.transactionId.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.transactionId.description}</p> : null}
-              </PreviewBlock>
-
-              <PreviewBlock blockId="evidence" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
-                <label className="mb-1.5 block text-[11px] font-medium">{blocks.evidence.label}</label>
-                <div className="flex items-center gap-3 border border-dashed px-3 py-4" style={{ borderColor: border, backgroundColor: baseSurface, borderRadius: inputRadius }}>
-                  <span className="flex size-8 items-center justify-center rounded-lg" style={{ backgroundColor: colors.accent + "20", color: colors.accent }}><Sparkles className="size-4" /></span>
-                  <span className="text-[11px]" style={{ color: muted }}>{blocks.evidence.placeholder || "Upload transfer screenshot"}</span>
-                </div>
-                {blocks.evidence.description ? <p className="mt-1.5 text-[10px] leading-4" style={{ color: muted }}>{blocks.evidence.description}</p> : null}
-                {features.aiRecognition ? <div className="mt-2 flex items-center gap-2 rounded-lg border border-sky-500/30 bg-sky-500/5 px-2.5 py-2 text-[10px]" style={{ color: muted }}><Sparkles className="size-3.5 text-sky-500" /> AI receipt recognition is enabled.</div> : null}
-                {features.autoConfirm && features.aiRecognition ? <div className="mt-2 flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-[10px] text-amber-700"><AlertTriangle className="size-3.5" /> Automatic confirmation is enabled — high risk.</div> : null}
-              </PreviewBlock>
-
-              <PreviewBlock blockId="continue" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="p-2">
-                <div className="w-full px-4 py-3 text-center text-xs font-semibold" style={{ backgroundColor: colors.accent, color: buttonText, borderRadius: buttonRadius, opacity: scheduled ? 1 : 0.55 }}>{blocks.continue.label || "Continue securely"}</div>
-              </PreviewBlock>
-
-              {features.supervisorRating ? <PreviewBlock blockId="supervisorRating" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="border-t p-3"><p className="text-[11px] font-medium">{blocks.supervisorRating.label}</p><p className="mt-1 text-[10px]" style={{ color: muted }}>{blocks.supervisorRating.description}</p><p className="mt-2 text-sm tracking-[0.18em]" style={{ color: colors.accent }}>★ ★ ★ ★ ★</p></PreviewBlock> : null}
-              {features.playerRating ? <PreviewBlock blockId="playerRating" selectedBlock={selectedBlock} onSelectBlock={onSelectBlock} className="border-t p-3"><p className="text-[11px] font-medium">{blocks.playerRating.label}</p><p className="mt-1 text-[10px]" style={{ color: muted }}>{blocks.playerRating.description}</p><p className="mt-2 text-sm tracking-[0.18em]" style={{ color: colors.accent }}>★ ★ ★ ★ ★</p></PreviewBlock> : null}
-
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-[9px]" style={{ borderColor: border, color: muted }}>
-                <span className="flex items-center gap-1"><Check className="size-3" /> Protected checkout</span>
-                <span>Session timer {timerMinutes}:{timerRemainder}</span>
-                {appearance.showPlatformBranding ? <span>Powered by iPayCash</span> : null}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-start gap-2 rounded-lg border bg-background p-3 text-[10px] leading-4 text-muted-foreground"><Sparkles className="mt-0.5 size-3.5 shrink-0" /> Click a visible block to edit its text in the inspector. Preview and browser-stored settings do not activate or verify real payment-provider transactions.</div>
-    </div>
-  );
 }
