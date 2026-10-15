@@ -17,6 +17,7 @@ import {
   Plus,
   X,
   AlertTriangle,
+  Search,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +37,7 @@ import {
 
 type EditorSection = "appearance" | "features" | "configs" | "blocks";
 type TemplateId = "stripe" | "classic" | "minimal";
-type FontId = "sans" | "system" | "serif";
+type FontId = string;
 type ButtonShape = "pill" | "rounded" | "rectangle";
 type PlayerIdMode = "userId" | "email" | "both";
 type MethodDisplay = "tabs" | "cards";
@@ -67,6 +68,7 @@ type BlockEditorProfile = {
 
 type PortalBuilderSettings = {
   template: TemplateId;
+  customized: boolean;
   layout: {
     version: number;
     order: string[];
@@ -80,6 +82,11 @@ type PortalBuilderSettings = {
     accent: string;
     brand: string;
     checkoutSurface: string;
+    border: string;
+    inputBackground: string;
+    inputText: string;
+    inputPlaceholder: string;
+    inputBorder: string;
   };
   features: {
     supervisorRating: boolean;
@@ -116,21 +123,103 @@ const templatePresets: Record<TemplateId, {
   colors: PortalBuilderSettings["colors"];
 }> = {
   stripe: {
-    fontFamily: "sans",
+    fontFamily: "Inter",
     buttonShape: "rounded",
-    colors: { websiteBackground: "#020617", accent: "#34d399", brand: "#e2e8f0", checkoutSurface: "#0f172a" },
+    colors: {
+      websiteBackground: "#020617",
+      accent: "#34d399",
+      brand: "#e2e8f0",
+      checkoutSurface: "#0f172a",
+      border: "#334155",
+      inputBackground: "#111c31",
+      inputText: "#f8fafc",
+      inputPlaceholder: "#94a3b8",
+      inputBorder: "#334155",
+    },
   },
   classic: {
-    fontFamily: "serif",
+    fontFamily: "Merriweather",
     buttonShape: "rectangle",
-    colors: { websiteBackground: "#f7f3eb", accent: "#315b8a", brand: "#172033", checkoutSurface: "#fffdf7" },
+    colors: {
+      websiteBackground: "#f7f3eb",
+      accent: "#315b8a",
+      brand: "#172033",
+      checkoutSurface: "#fffdf7",
+      border: "#ded7ca",
+      inputBackground: "#ffffff",
+      inputText: "#172033",
+      inputPlaceholder: "#64748b",
+      inputBorder: "#c9c3b6",
+    },
   },
   minimal: {
-    fontFamily: "system",
+    fontFamily: "DM Sans",
     buttonShape: "pill",
-    colors: { websiteBackground: "#ffffff", accent: "#0f766e", brand: "#111827", checkoutSurface: "#f8fafc" },
+    colors: {
+      websiteBackground: "#ffffff",
+      accent: "#0f766e",
+      brand: "#111827",
+      checkoutSurface: "#f8fafc",
+      border: "#e2e8f0",
+      inputBackground: "#ffffff",
+      inputText: "#111827",
+      inputPlaceholder: "#6b7280",
+      inputBorder: "#cbd5e1",
+    },
   },
 };
+
+type GoogleFontOption = {
+  name: string;
+  category: "Sans serif" | "Serif" | "Display" | "Monospace";
+  trending?: boolean;
+};
+
+const googleFontOptions: GoogleFontOption[] = [
+  { name: "Inter", category: "Sans serif", trending: true },
+  { name: "DM Sans", category: "Sans serif", trending: true },
+  { name: "Manrope", category: "Sans serif", trending: true },
+  { name: "Plus Jakarta Sans", category: "Sans serif", trending: true },
+  { name: "Geist", category: "Sans serif", trending: true },
+  { name: "Instrument Sans", category: "Sans serif", trending: true },
+  { name: "Space Grotesk", category: "Sans serif", trending: true },
+  { name: "Figtree", category: "Sans serif", trending: true },
+  { name: "Work Sans", category: "Sans serif" },
+  { name: "Source Sans 3", category: "Sans serif" },
+  { name: "IBM Plex Sans", category: "Sans serif" },
+  { name: "Roboto", category: "Sans serif" },
+  { name: "Open Sans", category: "Sans serif" },
+  { name: "Poppins", category: "Sans serif" },
+  { name: "Outfit", category: "Sans serif" },
+  { name: "Sora", category: "Sans serif" },
+  { name: "Montserrat", category: "Sans serif" },
+  { name: "Lato", category: "Sans serif" },
+  { name: "Noto Sans", category: "Sans serif" },
+  { name: "Merriweather", category: "Serif", trending: true },
+  { name: "Lora", category: "Serif", trending: true },
+  { name: "Source Serif 4", category: "Serif" },
+  { name: "Newsreader", category: "Serif" },
+  { name: "Playfair Display", category: "Display", trending: true },
+  { name: "Fraunces", category: "Display", trending: true },
+  { name: "Instrument Serif", category: "Display" },
+  { name: "JetBrains Mono", category: "Monospace" },
+  { name: "IBM Plex Mono", category: "Monospace" },
+];
+
+function preloadGoogleFont(fontName: string) {
+  if (typeof document === "undefined") return;
+  const id = "ipaycash-google-font-" + fontName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  let link = document.getElementById(id) as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.dataset.ipaycashGoogleFont = "true";
+    document.head.appendChild(link);
+  }
+  const family = fontName.trim().split(/\s+/).map(encodeURIComponent).join("+");
+  link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700&display=swap`;
+}
 
 function ThemeThumbnail({ id }: { id: TemplateId }) {
   return (
@@ -286,19 +375,25 @@ const blockEditorProfiles: Record<string, BlockEditorProfile> = {
 function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
   return {
     template: "stripe",
+    customized: false,
     layout: {
       version: 2,
       order: ["brandHeader", "heading", "paymentMethods", "playerId", "email", "amount", "cardDetails", "transferNumber", "transactionId", "evidence", "continue", "securityNotice", "supportInfo", "playerRating", "supervisorRating", "flowPreview", "verificationPreview", "stepPreview"],
       hidden: [],
       sections: Object.fromEntries(builderBlockCatalog.map((block) => [block.id, block.section])) as Record<string, BuilderSectionId>,
     },
-    fontFamily: form.appearance.fontFamily,
+    fontFamily: form.appearance.fontFamily === "sans" ? "Inter" : form.appearance.fontFamily === "serif" ? "Merriweather" : form.appearance.fontFamily === "system" ? "DM Sans" : form.appearance.fontFamily,
     buttonShape: form.appearance.radius === "small" ? "rectangle" : form.appearance.radius === "large" ? "pill" : "rounded",
     colors: {
       websiteBackground: form.appearance.backgroundColor || "#020617",
       accent: form.appearance.primaryColor || "#34d399",
       brand: form.appearance.theme === "light" ? "#0f172a" : "#e2e8f0",
       checkoutSurface: form.appearance.surfaceColor || "#0f172a",
+      border: form.appearance.theme === "light" ? "#e2e8f0" : "#334155",
+      inputBackground: form.appearance.theme === "light" ? "#ffffff" : "#111c31",
+      inputText: form.appearance.theme === "light" ? "#111827" : "#f8fafc",
+      inputPlaceholder: form.appearance.theme === "light" ? "#6b7280" : "#94a3b8",
+      inputBorder: form.appearance.theme === "light" ? "#cbd5e1" : "#334155",
     },
     features: {
       supervisorRating: true,
@@ -393,7 +488,8 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
     ...defaults,
     ...raw,
     template: raw?.template === "classic" || raw?.template === "minimal" ? raw.template : "stripe",
-    fontFamily: raw?.fontFamily === "system" || raw?.fontFamily === "serif" ? raw.fontFamily : "sans",
+    customized: raw?.customized === true,
+    fontFamily: typeof raw?.fontFamily === "string" && /^[A-Za-z0-9 -]{1,80}$/.test(raw.fontFamily.trim()) ? raw.fontFamily.trim() : defaults.fontFamily,
     buttonShape: raw?.buttonShape === "pill" || raw?.buttonShape === "rectangle" ? raw.buttonShape : "rounded",
     colors: { ...defaults.colors, ...(raw?.colors ?? {}) },
     features: { ...defaults.features, ...(raw?.features ?? {}) },
@@ -466,6 +562,7 @@ export function ClientPortalBuilder({
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const [draggingBlock, setDraggingBlock] = useState<string | null>(null);
   const [blockSearch, setBlockSearch] = useState("");
+  const [fontSearch, setFontSearch] = useState("");
   const [collapsedBlockSections, setCollapsedBlockSections] = useState<Partial<Record<BuilderSectionId, boolean>>>({});
   const [notice, setNotice] = useState("");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
@@ -495,7 +592,12 @@ export function ClientPortalBuilder({
   const updateSelected = (patch: Partial<EditableBuilderForm>) => {
     if (!selected) return;
     setForms((current) => current.map((form) => form.id === selected.id
-      ? { ...form, ...patch, updated: "Unsaved changes" }
+      ? {
+          ...form,
+          ...patch,
+          ...(patch.appearance ? { builder: { ...form.builder, customized: true } } : {}),
+          updated: "Unsaved changes",
+        }
       : form));
     setNotice("");
   };
@@ -505,6 +607,7 @@ export function ClientPortalBuilder({
     const builder: PortalBuilderSettings = {
       ...selected.builder,
       ...patch,
+      customized: patch.customized ?? true,
       colors: { ...selected.builder.colors, ...(patch.colors ?? {}) },
       features: { ...selected.builder.features, ...(patch.features ?? {}) },
       configs: { ...selected.builder.configs, ...(patch.configs ?? {}) },
@@ -527,6 +630,7 @@ export function ClientPortalBuilder({
       fontFamily: preset.fontFamily,
       buttonShape: preset.buttonShape,
       colors: { ...preset.colors },
+      customized: false,
     });
     setThemeDropdownOpen(false);
   };
@@ -615,7 +719,7 @@ export function ClientPortalBuilder({
   const updateConfig = (key: keyof PortalBuilderSettings["configs"], value: PortalBuilderSettings["configs"][typeof key]) => {
     if (!selected) return;
     const configs = { ...selected.builder.configs, [key]: value };
-    const builder = { ...selected.builder, configs };
+    const builder = { ...selected.builder, configs, customized: true };
     const patch: Partial<EditableBuilderForm> = { builder };
     if (key === "paymentMethods") patch.methods = value as string[];
     updateSelected(patch);
@@ -662,7 +766,7 @@ export function ClientPortalBuilder({
     });
     saveClientPortalForms(normalized);
     setForms(normalized);
-    setNotice("Saved in this browser. Connect backend persistence before using this configuration across devices.");
+    setNotice("Custom theme saved with this checkout in this browser. Connect backend persistence before using it across devices.");
   };
 
   const duplicateSelected = () => {
@@ -708,6 +812,16 @@ export function ClientPortalBuilder({
   const selectedCopy = selectedBlock ? selected.builder.blocks[selectedBlock] : null;
   const selectedBlockProfile = selectedBlock ? blockEditorProfiles[selectedBlock] : undefined;
   const selectedTemplate = templateOptions.find((option) => option.id === selected.builder.template) ?? templateOptions[0];
+  const fontQuery = fontSearch.trim().toLowerCase();
+  const matchingFonts = googleFontOptions.filter((font) => font.name.toLowerCase().includes(fontQuery));
+  const fontGroups = fontQuery
+    ? [{ label: "Search results", fonts: matchingFonts }]
+    : [
+        { label: "Trending fonts", fonts: googleFontOptions.filter((font) => font.trending) },
+        { label: "Sans serif", fonts: googleFontOptions.filter((font) => font.category === "Sans serif" && !font.trending) },
+        { label: "Serif & display", fonts: googleFontOptions.filter((font) => font.category === "Serif" || font.category === "Display").filter((font) => !font.trending) },
+        { label: "Monospace", fonts: googleFontOptions.filter((font) => font.category === "Monospace") },
+      ].filter((group) => group.fonts.length > 0);
   const previewForm: EditableBuilderForm = {
     ...selected,
     methods: [...selected.builder.configs.paymentMethods],
@@ -909,7 +1023,7 @@ export function ClientPortalBuilder({
                       <div className="relative">
                         <button type="button" aria-haspopup="listbox" aria-expanded={themeDropdownOpen} onClick={() => setThemeDropdownOpen((open) => !open)} className="flex w-full items-center gap-3 rounded-lg border bg-background p-2.5 text-left transition hover:bg-muted/40">
                           <ThemeThumbnail id={selected.builder.template} />
-                          <span className="min-w-0 flex-1"><span className="block text-sm font-medium">{selectedTemplate.label}</span><span className="mt-0.5 block text-xs text-muted-foreground">{selectedTemplate.caption}</span></span>
+                          <span className="min-w-0 flex-1"><span className="block text-sm font-medium">{selected.builder.customized ? `Custom · ${selectedTemplate.label}` : selectedTemplate.label}</span><span className="mt-0.5 block text-xs text-muted-foreground">{selected.builder.customized ? `Customized version of the ${selectedTemplate.label} layout` : selectedTemplate.caption}</span></span>
                           <ChevronDown className={"size-4 shrink-0 text-muted-foreground transition-transform " + (themeDropdownOpen ? "rotate-180" : "")} />
                         </button>
                         {themeDropdownOpen ? (
@@ -927,11 +1041,39 @@ export function ClientPortalBuilder({
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Typography</Label>
-                      <Select value={selected.builder.fontFamily} onValueChange={(value) => updateBuilder({ fontFamily: value as FontId })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent><SelectItem value="sans">Modern sans-serif</SelectItem><SelectItem value="system">System default</SelectItem><SelectItem value="serif">Serif</SelectItem></SelectContent>
-                      </Select>
+                      <div>
+                        <Label>Typography · Google Fonts</Label>
+                        <p className="mt-1 text-[11px] leading-4 text-muted-foreground">Search a curated library of popular interface and editorial fonts. Selected fonts load in the live preview and saved checkout.</p>
+                      </div>
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input value={fontSearch} onChange={(event) => setFontSearch(event.target.value)} placeholder="Search Google Fonts…" className="pl-9" aria-label="Search Google Fonts" />
+                        {fontSearch ? <button type="button" aria-label="Clear font search" onClick={() => setFontSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted"><X className="size-3.5" /></button> : null}
+                      </div>
+                      <div className="max-h-72 overflow-y-auto rounded-xl border bg-background p-2">
+                        {fontGroups.length ? fontGroups.map((group) => (
+                          <div key={group.label} className="mb-2 last:mb-0">
+                            <p className="sticky top-0 z-10 bg-background px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{group.label}</p>
+                            <div className="grid gap-1">
+                              {group.fonts.map((font) => (
+                                <button key={font.name} type="button" onClick={() => updateBuilder({ fontFamily: font.name })} onMouseEnter={() => preloadGoogleFont(font.name)} onFocus={() => preloadGoogleFont(font.name)} aria-pressed={selected.builder.fontFamily === font.name} className={"flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left transition " + (selected.builder.fontFamily === font.name ? "border-primary bg-primary/5 text-primary" : "border-transparent hover:border-border hover:bg-muted/50")}>
+                                  <span className="min-w-0">
+                                    <span className="block text-sm" style={{ fontFamily: `"${font.name}", ui-sans-serif, sans-serif` }}>{font.name}</span>
+                                    <span className="mt-0.5 block text-[10px] text-muted-foreground">{font.trending ? "Popular in current UI design" : font.category}</span>
+                                  </span>
+                                  <span className="flex shrink-0 items-center gap-2">
+                                    <span className="text-lg leading-none" style={{ fontFamily: `"${font.name}", ui-sans-serif, sans-serif` }}>Aa</span>
+                                    {selected.builder.fontFamily === font.name ? <Check className="size-4" /> : null}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )) : <p className="p-4 text-center text-xs text-muted-foreground">No matching font in this curated list. Try Inter, Manrope, DM Sans or Space Grotesk.</p>}
+                      </div>
+                      {!googleFontOptions.some((font) => font.name === selected.builder.fontFamily) && !["sans", "system", "serif"].includes(selected.builder.fontFamily) ? (
+                        <p className="text-[10px] text-muted-foreground">Current font: {selected.builder.fontFamily}. Search a font above to switch it.</p>
+                      ) : null}
                     </div>
 
                     <div className="space-y-2">
@@ -951,12 +1093,31 @@ export function ClientPortalBuilder({
                     </div>
 
                     <div className="space-y-3">
-                      <div><h3 className="text-sm font-semibold">Colors</h3><p className="mt-1 text-xs text-muted-foreground">Change each layer of the checkout independently.</p></div>
+                      <div><h3 className="text-sm font-semibold">Colors</h3><p className="mt-1 text-xs text-muted-foreground">Set page, checkout, text and border colors independently.</p></div>
                       {([
                         ["websiteBackground", "Website background"],
                         ["accent", "Accent / actions"],
-                        ["brand", "Brand"],
+                        ["brand", "Brand / headings"],
                         ["checkoutSurface", "Checkout surface"],
+                        ["border", "General borders"],
+                      ] as [keyof PortalBuilderSettings["colors"], string][]).map(([key, label]) => (
+                        <label key={key} className="flex items-center justify-between gap-3 rounded-lg border p-2.5">
+                          <span className="text-xs font-medium">{label}</span>
+                          <span className="flex items-center gap-2">
+                            <code className="text-[10px] text-muted-foreground">{selected.builder.colors[key]}</code>
+                            <input aria-label={label} type="color" value={selected.builder.colors[key]} onChange={(event) => updateBuilder({ colors: { [key]: event.target.value } })} className="size-8 cursor-pointer rounded-md border bg-transparent p-0.5" />
+                          </span>
+                        </label>
+                      ))}
+                      <div className="border-t pt-3">
+                        <h4 className="text-xs font-semibold">Inputs & borders</h4>
+                        <p className="mt-1 text-[11px] leading-4 text-muted-foreground">Control the field background, input text, placeholder and field outline.</p>
+                      </div>
+                      {([
+                        ["inputBackground", "Input background"],
+                        ["inputText", "Input text"],
+                        ["inputPlaceholder", "Input placeholder"],
+                        ["inputBorder", "Input border"],
                       ] as [keyof PortalBuilderSettings["colors"], string][]).map(([key, label]) => (
                         <label key={key} className="flex items-center justify-between gap-3 rounded-lg border p-2.5">
                           <span className="text-xs font-medium">{label}</span>
