@@ -485,8 +485,9 @@ function FieldLabel({
   const blockKey =
     text === "Player ID" || text === "Username" ? "playerId"
       : text === "Email" || text === "Email address" ? "email"
-      : text === "Deposit amount" || text === "Payment amount" ? "amount"
-      : text === "Payment evidence" || text === "Payment photo" || text === "Upload transfer screenshot" ? "evidence"
+      : text === "Card numbers" ? "cardDetails"
+      : text === "Deposit amount" || text === "Payment amount" || text === "Total card amount" ? "amount"
+      : text === "Payment evidence" || text === "Payment photo" || text === "Upload transfer screenshot" || text.toLowerCase().startsWith("card photo") ? "evidence"
       : text.toLowerCase().includes("transaction id") ? "transactionId"
       : text.toLowerCase().includes("transfer number") ? "transferNumber"
       : null;
@@ -2246,7 +2247,7 @@ function FlouciStepTwo({
                 <Input
                   value={transactionId}
                   onChange={(event) => setTransactionId(event.target.value)}
-                  placeholder={`Enter your ${method.name} transaction ID`}
+                  placeholder={portalBuilderSettings?.blocks?.transactionId?.placeholder || `Enter your ${method.name} transaction ID`}
                   title="Transaction ID"
                   autoComplete="off"
                   disabled={expired}
@@ -2302,7 +2303,7 @@ function FlouciStepTwo({
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-xs font-medium text-slate-200">
-                    {proofFile ? proofFile.name : "Upload payment photo"}
+                    {proofFile ? proofFile.name : (portalBuilderSettings?.blocks?.evidence?.placeholder || "Upload payment photo")}
                   </span>
                   <span className="mt-0.5 block text-[10px] text-slate-500">
                     JPG, PNG or WEBP · photo of the completed transfer
@@ -2366,8 +2367,6 @@ function FlouciStepTwo({
 
           <Button
             type="button"
-            data-builder-block="continue"
-            style={getPortalBuilderBlockStyle(portalBuilderSettings, "continue")}
             onClick={onConfirm}
             disabled={expired}
             title={`Confirm ${method.name} transfer`}
@@ -3783,7 +3782,7 @@ function CardDepositStepOne({
             inputMode="decimal"
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
-            placeholder="Enter total value of the cards"
+            placeholder={portalBuilderSettings?.blocks?.amount?.placeholder || "Enter total value of the cards"}
             title="Total card amount"
             className="h-12 border-slate-700 bg-slate-700/50 px-3 text-sm text-slate-100 placeholder:text-slate-500"
           />
@@ -4445,7 +4444,7 @@ function CardDepositFlow({
                             <Input
                               value={value}
                               onChange={(event) => updateCard(index, event.target.value)}
-                              placeholder="0000 0000 0000 0000"
+                              placeholder={portalBuilderSettings?.blocks?.cardDetails?.placeholder || "0000 0000 0000 0000"}
                               title={index === 0 ? "First card number" : "Card number " + (index + 1)}
                               autoComplete="off"
                               maxLength={19}
@@ -4487,14 +4486,14 @@ function CardDepositFlow({
                   </div>
 
                   <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
-                    Enter exactly 16 digits. The AI recognizer checks the card against registered cards before submission.
+                    {portalBuilderSettings?.blocks?.cardDetails?.description || "Enter exactly 16 digits. The AI recognizer checks the card against registered cards before submission."}
                   </p>
                 </div>
 
                 <div data-builder-block="evidence" style={getPortalBuilderBlockStyle(portalBuilderSettings, "evidence")}>
                   <FieldLabel>Card photo / OCR</FieldLabel>
                   <label
-                    title="Upload card photo for OCR"
+                    title={portalBuilderSettings?.blocks?.evidence?.placeholder || "Upload card photo for OCR"}
                     className={cn(
                       "flex min-h-48 cursor-pointer flex-col gap-2 rounded-lg border border-dashed border-slate-700 bg-slate-800/50 p-2.5 transition-colors hover:border-slate-600 hover:bg-slate-800",
                       expired && "pointer-events-none opacity-50",
@@ -4506,7 +4505,7 @@ function CardDepositFlow({
                       </span>
                       <span className="min-w-0">
                         <span className="block truncate text-xs font-medium text-slate-200">
-                          {proofFile ? proofFile.name : "Upload card photo"}
+                          {proofFile ? proofFile.name : (portalBuilderSettings?.blocks?.evidence?.placeholder || "Upload card photo")}
                         </span>
                         <span className="mt-0.5 block text-[10px] text-slate-500">
                           Optional · OCR can recognize one or more card numbers from the photo
@@ -5011,7 +5010,7 @@ function EDinarStepTwo({
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-xs font-medium text-slate-200">
-                    {proofFile ? proofFile.name : "Upload payment photo"}
+                    {proofFile ? proofFile.name : (portalBuilderSettings?.blocks?.evidence?.placeholder || "Upload payment photo")}
                   </span>
                   <span className="mt-0.5 block text-[10px] text-slate-500">
                     JPG, PNG or WEBP · photo of the completed E-Dinar payment
@@ -5073,8 +5072,6 @@ function EDinarStepTwo({
 
           <Button
             type="button"
-            data-builder-block="continue"
-            style={getPortalBuilderBlockStyle(portalBuilderSettings, "continue")}
             onClick={onConfirm}
             disabled={expired}
             title="Confirm E-Dinar payment"
