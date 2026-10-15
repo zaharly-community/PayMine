@@ -1750,8 +1750,8 @@ function FlouciStepOne({
   return (
     <>
       <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
-        <form onSubmit={(event) => { event.preventDefault(); onContinue(); }} className="space-y-4">
-          <div>
+        <form data-builder-form="true" onSubmit={(event) => { event.preventDefault(); onContinue(); }} className="flex flex-col gap-4">
+          <div data-builder-block="playerId" style={getPortalBuilderBlockStyle(portalBuilderSettings, "playerId")}>
             <FieldLabel>
               {playerLookupType === "playerId"
                 ? "Player ID"
@@ -1839,7 +1839,7 @@ function FlouciStepOne({
           </div>
 
 
-          <div>
+          <div data-builder-block="amount" style={getPortalBuilderBlockStyle(portalBuilderSettings, "amount")}>
             <FieldLabel>Deposit amount</FieldLabel>
             <Input
               type="text"
@@ -3709,8 +3709,8 @@ function CardDepositStepOne({
   return (
     <>
       <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
-      <form onSubmit={(event) => { event.preventDefault(); onContinue(); }} className="space-y-4">
-        <div>
+      <form data-builder-form="true" onSubmit={(event) => { event.preventDefault(); onContinue(); }} className="flex flex-col gap-4">
+        <div data-builder-block="playerId" style={getPortalBuilderBlockStyle(portalBuilderSettings, "playerId")}>
           <FieldLabel>
             {playerLookupType === "playerId" ? "Player ID" : playerLookupType === "username" ? "Username" : "Email"}
           </FieldLabel>
@@ -3772,7 +3772,7 @@ function CardDepositStepOne({
         </div>
 
 
-        <div>
+        <div data-builder-block="amount" style={getPortalBuilderBlockStyle(portalBuilderSettings, "amount")}>
           <FieldLabel>Total card amount</FieldLabel>
           <Input
             type="text"
@@ -4659,9 +4659,10 @@ function EDinarStepOne({
           event.preventDefault();
           onContinue();
         }}
-        className="space-y-4"
+        data-builder-form="true"
+        className="flex flex-col gap-4"
       >
-        <div>
+        <div data-builder-block="playerId" style={getPortalBuilderBlockStyle(portalBuilderSettings, "playerId")}>
           <FieldLabel>
             {playerLookupType === "playerId"
               ? "Player ID"
@@ -4749,7 +4750,7 @@ function EDinarStepOne({
         </div>
 
 
-        <div>
+        <div data-builder-block="amount" style={getPortalBuilderBlockStyle(portalBuilderSettings, "amount")}>
           <FieldLabel>Deposit amount</FieldLabel>
           <Input
             type="text"
@@ -5609,8 +5610,8 @@ function BinancePayFlow({
                 </span>
               </div>
 
-              <form onSubmit={continueToCheckout} className="space-y-4">
-                <div>
+              <form data-builder-form="true" onSubmit={continueToCheckout} className="flex flex-col gap-4">
+                <div data-builder-block="playerId" style={getPortalBuilderBlockStyle(portalBuilderSettings, "playerId")}>
                   <FieldLabel>
                     {playerLookupType === "playerId"
                       ? "Player ID"
@@ -5700,7 +5701,7 @@ function BinancePayFlow({
                   </div>
                 </div>
 
-                <div>
+                <div data-builder-block="amount" style={getPortalBuilderBlockStyle(portalBuilderSettings, "amount")}>
                   <FieldLabel>Deposit amount</FieldLabel>
                   <div className="rounded-lg bg-slate-700/90 px-3 py-2">
                     <Input
@@ -6422,10 +6423,12 @@ function CustomerPortalExperience({
             />
 
             <form
+              data-builder-form="true"
               onSubmit={submit}
-              className="rounded-xl border border-slate-700 bg-slate-900/90 p-4 sm:p-5"
+              className="flex flex-col gap-4 rounded-xl border border-slate-700 bg-slate-900/90 p-4 sm:p-5"
+              style={{ order: (portalBuilderSettings?.layout?.order?.indexOf("playerId") ?? 2) + 1 }}
             >
-              <div>
+              <div data-builder-block="amount" style={getPortalBuilderBlockStyle(portalBuilderSettings, "amount")}>
                 <FieldLabel>Deposit amount</FieldLabel>
                 <div className="rounded-lg bg-slate-700/90 px-3 py-2">
                   <Input
