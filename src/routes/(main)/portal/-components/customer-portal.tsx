@@ -3213,7 +3213,7 @@ function FlouciDepositFlow({
     setDetectedTransactionId("");
     setCorrectedTransferNumber(recipientNumber);
     setCorrectedAmount(amount);
-    setSecondsLeft(15 * 60);
+    setSecondsLeft(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
     setStep(2);
   };
 
@@ -3696,10 +3696,10 @@ function CardDepositStepOne({
                 onChange={(event) => setPlayerId(event.target.value)}
                 placeholder={
                   playerLookupType === "playerId"
-                    ? "Enter your player ID"
+                    ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your player ID")
                     : playerLookupType === "username"
-                      ? "Enter your username"
-                      : "Enter your email address"
+                      ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your username")
+                      : (portalBuilderSettings?.blocks?.email?.placeholder || "Enter your email address")
                 }
                 title={playerLookupType === "playerId" ? "Player ID" : playerLookupType === "username" ? "Username" : "Email"}
                 autoComplete={playerLookupType === "email" ? "email" : "off"}
@@ -4063,7 +4063,8 @@ function CardDepositFlow({
   const recognitionTimers = React.useRef<Record<number, number>>({});
   const recognitionKeys = React.useRef<Record<number, string>>({});
   const [cardReviewStatus, setCardReviewStatus] = React.useState<"reviewing" | "completed">("reviewing");
-  const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+  const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
+  const [secondsLeft, setSecondsLeft] = React.useState(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
 
   const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
@@ -4093,7 +4094,7 @@ function CardDepositFlow({
     setDetectedCards([]);
     setCardRecognition({});
     setCardReviewStatus("reviewing");
-    setSecondsLeft(15 * 60);
+    setSecondsLeft(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
 
     return () => {
       Object.values(recognitionTimers.current).forEach((timer) => window.clearTimeout(timer));
@@ -4257,7 +4258,7 @@ function CardDepositFlow({
     setOcrStatus("idle");
     setDetectedCards([]);
     setCardReviewStatus("reviewing");
-    setSecondsLeft(15 * 60);
+    setSecondsLeft(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
     setStep(2);
   };
 
@@ -4620,7 +4621,8 @@ function EDinarStepOne({
   onContinue: () => void;
 }) {
   const portalButtonLabel = React.useContext(PortalButtonLabelContext);
-  const presets = [20, 50, 100, 200, 500, 1000];
+  const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
+  const presets = portalBuilderSettings?.configs?.presetAmounts?.length ? portalBuilderSettings.configs.presetAmounts : [20, 50, 100, 200, 500, 1000];
 
   return (
     <section className="w-full rounded-xl border border-slate-700/70 bg-slate-900/80 p-4 shadow-2xl sm:p-5">
@@ -4648,10 +4650,10 @@ function EDinarStepOne({
                 onChange={(event) => setPlayerId(event.target.value)}
                 placeholder={
                   playerLookupType === "playerId"
-                    ? "Enter your player ID"
+                    ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your player ID")
                     : playerLookupType === "username"
-                      ? "Enter your username"
-                      : "Enter your email address"
+                      ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your username")
+                      : (portalBuilderSettings?.blocks?.email?.placeholder || "Enter your email address")
                 }
                 title={
                   playerLookupType === "playerId"
@@ -5220,7 +5222,8 @@ function EDinarDepositFlow({
   const [proofFile, setProofFile] = React.useState<File | null>(null);
   const [aiStatus, setAiStatus] = React.useState<FlouciAiStatus>("idle");
   const [detectedTransactionId, setDetectedTransactionId] = React.useState("");
-  const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+  const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
+  const [secondsLeft, setSecondsLeft] = React.useState(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
 
   const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
   const seconds = (secondsLeft % 60).toString().padStart(2, "0");
@@ -5233,7 +5236,7 @@ function EDinarDepositFlow({
     setProofFile(null);
     setAiStatus("idle");
     setDetectedTransactionId("");
-    setSecondsLeft(15 * 60);
+    setSecondsLeft(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
   }, [method.id]);
 
   React.useEffect(() => {
@@ -5303,7 +5306,7 @@ function EDinarDepositFlow({
     onRequestCreated();
     setAiStatus("idle");
     setDetectedTransactionId("");
-    setSecondsLeft(15 * 60);
+    setSecondsLeft(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
     setStep(2);
   };
 
@@ -5488,7 +5491,8 @@ function BinancePayFlow({
 }) {
   const [step, setStep] = React.useState<1 | 2>(1);
   const [error, setError] = React.useState("");
-  const presets = [10, 20, 50, 100, 200, 500];
+  const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
+  const presets = portalBuilderSettings?.configs?.presetAmounts?.length ? portalBuilderSettings.configs.presetAmounts : [10, 20, 50, 100, 200, 500];
 
   React.useEffect(() => {
     setStep(1);
@@ -5597,10 +5601,10 @@ function BinancePayFlow({
                         }}
                         placeholder={
                           playerLookupType === "playerId"
-                            ? "Enter your player ID"
+                            ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your player ID")
                             : playerLookupType === "username"
-                              ? "Enter your username"
-                              : "Enter your email address"
+                              ? (portalBuilderSettings?.blocks?.playerId?.placeholder || "Enter your username")
+                              : (portalBuilderSettings?.blocks?.email?.placeholder || "Enter your email address")
                         }
                         title={
                           playerLookupType === "playerId"
@@ -5875,7 +5879,8 @@ function GenericDepositSummary({
   amount: string;
   onBack: () => void;
 }) {
-  const [secondsLeft, setSecondsLeft] = React.useState(15 * 60);
+  const portalBuilderSettings = React.useContext(PortalBuilderSettingsContext);
+  const [secondsLeft, setSecondsLeft] = React.useState(portalBuilderSettings?.configs?.timerSeconds ?? 15 * 60);
 
   React.useEffect(() => {
     const timer = window.setInterval(() => {
