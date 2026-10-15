@@ -626,6 +626,11 @@ export function ClientPortalBuilder({
   const [activeBuilderStep, setActiveBuilderStep] = useState("shared");
 
   useEffect(() => {
+    setActiveBuilderStep("shared");
+    setSelectedBlock(null);
+  }, [selectedId]);
+
+  useEffect(() => {
     const refresh = () => {
       const latest = getClientPortalForms().map(hydrateBuilderForm);
       setForms(latest);
@@ -756,6 +761,20 @@ export function ClientPortalBuilder({
 
   const updateBlock = (key: string, patch: Partial<BlockCopy>) => {
     if (!selected) return;
+    const activeMethodKey = activeBuilderStep.startsWith("method:") ? activeBuilderStep.slice("method:".length) : null;
+    if (activeMethodKey && methodScopedBlockIds.includes(key)) {
+      const overrides = selected.builder.methodBlocks[activeMethodKey] ?? {};
+      updateBuilder({
+        methodBlocks: {
+          ...selected.builder.methodBlocks,
+          [activeMethodKey]: {
+            ...overrides,
+            [key]: { ...(overrides[key] ?? selected.builder.blocks[key]), ...patch },
+          },
+        },
+      });
+      return;
+    }
     updateBuilder({
       blocks: {
         ...selected.builder.blocks,
@@ -868,7 +887,15 @@ export function ClientPortalBuilder({
     return <div className="flex min-h-dvh items-center justify-center text-sm text-muted-foreground">No checkout form exists yet.</div>;
   }
 
-  const selectedCopy = selectedBlock ? selected.builder.blocks[selectedBlock] : null;
+  const activeStepMethod = activeBuilderStep.startsWith("method:")
+    ? selected.builder.configs.paymentMethods.find((method) => portalStepMethodKey(method) === activeBuilderStep.slice("method:".length)) ?? null
+    : null;
+  const activeStepMethodKey = activeStepMethod ? portalStepMethodKey(activeStepMethod) : null;
+  const selectedCopy = selectedBlock
+    ? (activeStepMethodKey && methodScopedBlockIds.includes(selectedBlock)
+      ? selected.builder.methodBlocks[activeStepMethodKey]?.[selectedBlock] ?? selected.builder.blocks[selectedBlock]
+      : selected.builder.blocks[selectedBlock])
+    : null;
   const selectedBlockProfile = selectedBlock ? blockEditorProfiles[selectedBlock] : undefined;
   const selectedTemplate = templateOptions.find((option) => option.id === selected.builder.template) ?? templateOptions[0];
   const fontQuery = fontSearch.trim().toLowerCase();
