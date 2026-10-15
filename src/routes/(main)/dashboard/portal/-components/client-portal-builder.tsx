@@ -7,7 +7,6 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
-  GripVertical,
   LockKeyhole,
   Monitor,
   Save,
@@ -261,6 +260,12 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
   const allowedMethods = Array.isArray(raw?.configs?.paymentMethods)
     ? raw.configs.paymentMethods.filter((method): method is string => typeof method === "string" && clientPortalMethodOptions.includes(method as (typeof clientPortalMethodOptions)[number]))
     : defaults.configs.paymentMethods;
+  const normalizedBlockOrder = Array.isArray(raw?.layout?.order)
+    ? [...new Set(raw.layout.order.filter((id): id is string => typeof id === "string" && id in fieldDefaults && builderBlockCatalog.some((block) => block.id === id)))]
+    : [...defaults.layout.order];
+  for (const block of builderBlockCatalog) {
+    if (block.required && !normalizedBlockOrder.includes(block.id)) normalizedBlockOrder.push(block.id);
+  }
   const settings: PortalBuilderSettings = {
     ...defaults,
     ...raw,
@@ -270,9 +275,7 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
     colors: { ...defaults.colors, ...(raw?.colors ?? {}) },
     features: { ...defaults.features, ...(raw?.features ?? {}) },
     layout: {
-      order: Array.isArray(raw?.layout?.order)
-        ? [...new Set(raw.layout.order.filter((id): id is string => typeof id === "string" && id in fieldDefaults && builderBlockCatalog.some((block) => block.id === id)))]
-        : [...defaults.layout.order],
+      order: normalizedBlockOrder,
       hidden: Array.isArray(raw?.layout?.hidden)
         ? [...new Set(raw.layout.hidden.filter((id): id is string => typeof id === "string" && builderBlockCatalog.some((block) => block.id === id) && !builderBlockCatalog.find((block) => block.id === id)?.required))]
         : [],
