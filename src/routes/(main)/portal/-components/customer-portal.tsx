@@ -214,6 +214,7 @@ function PaymentMethodSelector({
   onToggle: () => void;
   onSelect: (method: PaymentMethod) => void;
 }) {
+  const availableMethods = React.useContext(PortalPaymentMethodsContext);
   const sliderRef = React.useRef<HTMLDivElement>(null);
   const dragRef = React.useRef({
     pointerId: -1,
@@ -318,7 +319,7 @@ function PaymentMethodSelector({
           aria-label="Payment methods. Drag or swipe horizontally to browse."
         >
           <div className="flex min-w-max items-stretch gap-2 px-1 py-2">
-            {paymentMethods.map((item) => {
+            {availableMethods.map((item) => {
               const selected = item.id === method.id;
 
               return (
@@ -373,7 +374,7 @@ function PaymentMethodSelector({
       {open ? (
         <div className="absolute inset-x-0 top-full z-20 mt-2 rounded-xl border border-white/10 bg-slate-900 p-2 shadow-2xl">
           <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-            {paymentMethods.map((item) => (
+            {availableMethods.map((item) => (
               <Link
                 key={item.id + "-menu"}
                 to="/portal/$method"
@@ -5961,6 +5962,24 @@ function CustomerPortalExperience({
   );
   const minLabel = method.min.toLocaleString("en-US");
   const maxLabel = method.max.toLocaleString("en-US");
+  const availableMethodIds = availableMethods.map((item) => item.id).join("|");
+
+  React.useEffect(() => {
+    const routeMethod = availableMethods.find((item) => item.id === initialMethodId);
+    if (routeMethod && routeMethod.id !== method.id) {
+      setMethod(routeMethod);
+      setAmount(String(routeMethod.min));
+      setError("");
+      setDepositStarted(false);
+      return;
+    }
+    if (!availableMethods.some((item) => item.id === method.id) && availableMethods[0]) {
+      setMethod(availableMethods[0]);
+      setAmount(String(availableMethods[0].min));
+      setError("");
+      setDepositStarted(false);
+    }
+  }, [initialMethodId, availableMethodIds, method.id]);
 
   const openTrackingPage = (request: DepositRequest) => {
     void navigate({
