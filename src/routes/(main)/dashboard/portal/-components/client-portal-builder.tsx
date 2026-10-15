@@ -420,6 +420,21 @@ export function ClientPortalBuilder({
 
   const selectedCopy = selectedBlock ? selected.builder.blocks[selectedBlock] : null;
   const selectedTemplate = templateOptions.find((option) => option.id === selected.builder.template) ?? templateOptions[0];
+  const previewForm: EditableBuilderForm = {
+    ...selected,
+    methods: [...selected.builder.configs.paymentMethods],
+    appearance: {
+      ...selected.appearance,
+      backgroundColor: selected.builder.colors.websiteBackground,
+      primaryColor: selected.builder.colors.accent,
+      surfaceColor: selected.builder.colors.checkoutSurface,
+      fontFamily: selected.builder.fontFamily,
+      theme: isLightColor(selected.builder.colors.websiteBackground) ? "light" : "dark",
+      title: selected.builder.blocks.heading?.label ?? selected.appearance.title,
+      description: selected.builder.blocks.heading?.description ?? selected.appearance.description,
+      buttonLabel: selected.builder.blocks.continue?.label ?? selected.appearance.buttonLabel,
+    },
+  };
 
   return (
     <main className="min-h-dvh w-full bg-muted/30 text-foreground">
@@ -445,7 +460,7 @@ export function ClientPortalBuilder({
             </SelectContent>
           </Select>
           <Badge variant="outline" className={selected.status === "Published" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-amber-300/30 bg-amber-300/10 text-amber-200"}>{selected.status === "Published" ? "● LIVE" : "DRAFT"}</Badge>
-          <Button variant="ghost" size="icon" className="size-8 text-blue-100 hover:bg-white/10 hover:text-white" aria-label="Appearance mode" title="Appearance mode" onClick={() => updateAppearance({ theme: selected.appearance.theme === "dark" ? "light" : "dark" })}><Moon className="size-4" /></Button>
+          <Button variant="ghost" size="icon" className="size-8 text-blue-100 hover:bg-white/10 hover:text-white" aria-label="Appearance mode" title="Appearance mode" onClick={() => updateBuilder({ colors: { websiteBackground: isLightColor(selected.builder.colors.websiteBackground) ? "#020617" : "#f8fafc" } })}><Moon className="size-4" /></Button>
           <div className="flex items-center rounded-lg border border-white/20 bg-white/10 p-0.5">
             <Button variant={previewMode === "desktop" ? "secondary" : "ghost"} size="icon" className="size-7" aria-label="Desktop preview" title="Desktop preview" onClick={() => setPreviewMode("desktop")}><Monitor className="size-3.5" /></Button>
             <Button variant={previewMode === "mobile" ? "secondary" : "ghost"} size="icon" className="size-7" aria-label="Mobile preview" title="Mobile preview" onClick={() => setPreviewMode("mobile")}><Smartphone className="size-3.5" /></Button>
@@ -694,7 +709,7 @@ export function ClientPortalBuilder({
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white">
                 <CustomerPortal
-                  formOverride={selected}
+                  formOverride={previewForm}
                   preview
                   builderEditMode
                   onSelectBlock={setSelectedBlock}
