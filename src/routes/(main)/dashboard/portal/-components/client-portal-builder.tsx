@@ -53,6 +53,7 @@ type PortalBuilderSettings = {
     version: number;
     order: string[];
     hidden: string[];
+    sections: Record<string, BuilderSectionId>;
   };
   fontFamily: FontId;
   buttonShape: ButtonShape;
@@ -89,6 +90,28 @@ const templateOptions: { id: TemplateId; label: string; caption: string }[] = [
   { id: "classic", label: "Classic", caption: "Traditional form layout" },
   { id: "minimal", label: "Minimal", caption: "Compact and focused" },
 ];
+
+const templatePresets: Record<TemplateId, {
+  fontFamily: FontId;
+  buttonShape: ButtonShape;
+  colors: PortalBuilderSettings["colors"];
+}> = {
+  stripe: {
+    fontFamily: "sans",
+    buttonShape: "rounded",
+    colors: { websiteBackground: "#020617", accent: "#34d399", brand: "#e2e8f0", checkoutSurface: "#0f172a" },
+  },
+  classic: {
+    fontFamily: "serif",
+    buttonShape: "rectangle",
+    colors: { websiteBackground: "#f7f3eb", accent: "#315b8a", brand: "#172033", checkoutSurface: "#fffdf7" },
+  },
+  minimal: {
+    fontFamily: "system",
+    buttonShape: "pill",
+    colors: { websiteBackground: "#ffffff", accent: "#0f766e", brand: "#111827", checkoutSurface: "#f8fafc" },
+  },
+};
 
 function ThemeThumbnail({ id }: { id: TemplateId }) {
   return (
@@ -227,13 +250,14 @@ function makeDefaultSettings(form: ClientPortalForm): PortalBuilderSettings {
       version: 2,
       order: ["brandHeader", "heading", "paymentMethods", "playerId", "email", "amount", "cardDetails", "transferNumber", "transactionId", "evidence", "continue", "securityNotice", "supportInfo", "playerRating", "supervisorRating", "flowPreview", "verificationPreview", "stepPreview"],
       hidden: [],
+      sections: Object.fromEntries(builderBlockCatalog.map((block) => [block.id, block.section])) as Record<string, BuilderSectionId>,
     },
     fontFamily: form.appearance.fontFamily,
     buttonShape: form.appearance.radius === "small" ? "rectangle" : form.appearance.radius === "large" ? "pill" : "rounded",
     colors: {
       websiteBackground: form.appearance.backgroundColor || "#020617",
       accent: form.appearance.primaryColor || "#34d399",
-      brand: "#e2e8f0",
+      brand: form.appearance.theme === "light" ? "#0f172a" : "#e2e8f0",
       checkoutSurface: form.appearance.surfaceColor || "#0f172a",
     },
     features: {
@@ -272,7 +296,7 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
         features?: Partial<PortalBuilderSettings["features"]>;
         configs?: Partial<PortalBuilderSettings["configs"]>;
         blocks?: Record<string, Partial<BlockCopy> | undefined>;
-        layout?: { version?: number; order?: string[]; hidden?: string[] };
+        layout?: { version?: number; order?: string[]; hidden?: string[]; sections?: Record<string, string> };
       })
     | undefined;
   const defaults = makeDefaultSettings(form);
@@ -301,6 +325,15 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
   for (const block of builderBlockCatalog) {
     if (block.required && !normalizedBlockOrder.includes(block.id)) normalizedBlockOrder.push(block.id);
   }
+  const validSectionIds = new Set(builderBlockSections.map((section) => section.id));
+  const normalizedBlockSections = Object.fromEntries(
+    builderBlockCatalog.map((block) => {
+      const candidate = raw?.layout?.sections?.[block.id];
+      return [block.id, typeof candidate === "string" && validSectionIds.has(candidate as BuilderSectionId)
+        ? candidate as BuilderSectionId
+        : block.section];
+    }),
+  ) as Record<string, BuilderSectionId>;
   const settings: PortalBuilderSettings = {
     ...defaults,
     ...raw,
@@ -315,6 +348,7 @@ function hydrateBuilderForm(form: ClientPortalForm): EditableBuilderForm {
       hidden: Array.isArray(raw?.layout?.hidden)
         ? [...new Set(raw.layout.hidden.filter((id): id is string => typeof id === "string" && builderBlockCatalog.some((block) => block.id === id) && !builderBlockCatalog.find((block) => block.id === id)?.required))]
         : [],
+      sections: normalizedBlockSections,
     },
     configs: {
       ...defaults.configs,
@@ -423,9 +457,21 @@ export function ClientPortalBuilder({
         version: 2,
         order: patch.layout?.order ?? selected.builder.layout.order,
         hidden: patch.layout?.hidden ?? selected.builder.layout.hidden,
+        sections: patch.layout?.sections ?? selected.builder.layout.sections,
       },
     };
     updateSelected({ builder });
+  };
+
+  const applyTemplate = (template: TemplateId) => {
+    const preset = templatePresets[template];
+    updateBuilder({
+      template,
+      fontFamily: preset.fontFamily,
+      buttonShape: preset.buttonShape,
+      colors: { ...preset.colors },
+    });
+    setThemeDropdownOpen(false);
   };
 
   const updateBlockLayout = (patch: Partial<PortalBuilderSettings["layout"]>) => {
@@ -435,6 +481,7 @@ export function ClientPortalBuilder({
         version: 2,
         order: patch.order ?? selected.builder.layout.order,
         hidden: patch.hidden ?? selected.builder.layout.hidden,
+        sections: patch.sections ?? selected.builder.layout.sections,
       },
     });
   };
@@ -445,13 +492,13 @@ export function ClientPortalBuilder({
     const fromIndex = current.indexOf(fromId);
     const toIndex = current.indexOf(toId);
     if (fromIndex < 0 || toIndex < 0) return;
-    const fromSection = builderBlockCatalog.find((block) => block.id === fromId)?.section;
-    const toSection = builderBlockCatalog.find((block) => block.id === toId)?.section;
-    if (fromSection !== toSection) return;
     const next = [...current];
     const [item] = next.splice(fromIndex, 1);
     next.splice(toIndex, 0, item);
-    updateBlockLayout({ order: next });
+    const targetSection = selected.builder.layout.sections[toId] ?? builderBlockCatalog.find((block) => block.id === toId)?.section;
+    const sections = { ...selected.builder.layout.sections };
+    if (targetSection) sections[fromId] = targetSection;
+    updateBlockLayout({ order: next, sections });
   };
 
   const toggleBlockHidden = (id: string) => {
@@ -571,7 +618,12 @@ export function ClientPortalBuilder({
         features: { ...selected.builder.features },
         configs: { ...selected.builder.configs, paymentMethods: [...selected.builder.configs.paymentMethods], presetAmounts: [...selected.builder.configs.presetAmounts] },
         blocks: Object.fromEntries(Object.entries(selected.builder.blocks).map(([key, value]) => [key, { ...value }])),
-        layout: { version: 2, order: [...selected.builder.layout.order], hidden: [...selected.builder.layout.hidden] },
+        layout: {
+          version: 2,
+          order: [...selected.builder.layout.order],
+          hidden: [...selected.builder.layout.hidden],
+          sections: { ...selected.builder.layout.sections },
+        },
       },
     };
     const updated = [copy, ...forms];
@@ -654,7 +706,21 @@ export function ClientPortalBuilder({
             <div className="space-y-5 p-4">
               <div className="rounded-lg border bg-muted/20 p-3">
                 <p className="text-xs font-medium">Content block</p>
-                <p className="mt-1 text-xs text-muted-foreground">Text settings only. Layout and field behavior stay controlled by the global settings.</p>
+                <p className="mt-1 text-xs text-muted-foreground">Edit text and move this block to another area. Required blocks remain visible but can be rearranged.</p>
+              </div>
+              <div className="grid gap-2">
+                <Label>Block area</Label>
+                <Select
+                  value={selected.builder.layout.sections[selectedBlock] ?? builderBlockCatalog.find((block) => block.id === selectedBlock)?.section ?? "checkout"}
+                  onValueChange={(value) => updateBlockLayout({
+                    sections: { ...selected.builder.layout.sections, [selectedBlock]: value as BuilderSectionId },
+                  })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {builderBlockSections.map((area) => <SelectItem key={area.id} value={area.id}>{area.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="block-label">Label / title</Label>
@@ -702,7 +768,7 @@ export function ClientPortalBuilder({
                         {themeDropdownOpen ? (
                           <div role="listbox" aria-label="Theme layout" className="absolute left-0 right-0 top-full z-30 mt-2 rounded-xl border bg-background p-2 shadow-xl">
                             {templateOptions.map((option) => (
-                              <button key={option.id} type="button" role="option" aria-selected={selected.builder.template === option.id} onClick={() => { updateBuilder({ template: option.id }); setThemeDropdownOpen(false); }} className={"flex w-full items-center gap-3 rounded-lg p-2 text-left transition " + (selected.builder.template === option.id ? "bg-primary/5 text-foreground" : "hover:bg-muted/40")}>
+                              <button key={option.id} type="button" role="option" aria-selected={selected.builder.template === option.id} onClick={() => applyTemplate(option.id)} className={"flex w-full items-center gap-3 rounded-lg p-2 text-left transition " + (selected.builder.template === option.id ? "bg-primary/5 text-foreground" : "hover:bg-muted/40")}>
                                 <ThemeThumbnail id={option.id} />
                                 <span className="min-w-0 flex-1"><span className="block text-sm font-medium">{option.label}</span><span className="mt-0.5 block text-xs text-muted-foreground">{option.caption}</span></span>
                                 {selected.builder.template === option.id ? <Check className="size-4 text-primary" /> : <span className="size-4 rounded-full border" />}
@@ -782,13 +848,13 @@ export function ClientPortalBuilder({
                         <h3 className="text-sm font-semibold">Page sections</h3>
                         <Badge variant="outline">{selected.builder.layout.order.length} active</Badge>
                       </div>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">Each page section contains its own blocks. Drag to reorder within a section, or select a block to edit its settings. Required blocks can move but cannot be hidden or removed.</p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">Drag blocks to reorder them or drop them into another area. Select any block to edit its content and placement. Required blocks can move but cannot be hidden or removed.</p>
                     </div>
 
                     <div className="space-y-2">
                       {builderBlockSections.map((sectionDefinition) => {
                         const sectionBlocks = selected.builder.layout.order.filter((id) =>
-                          builderBlockCatalog.find((block) => block.id === id)?.section === sectionDefinition.id
+                          (selected.builder.layout.sections[id] ?? builderBlockCatalog.find((block) => block.id === id)?.section) === sectionDefinition.id
                         );
                         const collapsed = collapsedBlockSections[sectionDefinition.id] === true;
                         return (
@@ -826,17 +892,15 @@ export function ClientPortalBuilder({
                                           if (selected.builder.layout.order.includes(sourceId)) {
                                             moveBlock(sourceId, id);
                                           } else if (builderBlockCatalog.some((block) => block.id === sourceId)) {
-                                            const sourceDefinition = builderBlockCatalog.find((block) => block.id === sourceId);
-                                            if (sourceDefinition?.section === definition.section) {
-                                              const order = selected.builder.layout.order.filter((item) => item !== sourceId);
-                                              const targetIndex = order.indexOf(id);
-                                              order.splice(targetIndex < 0 ? order.length : targetIndex, 0, sourceId);
-                                              updateBlockLayout({
-                                                order,
-                                                hidden: selected.builder.layout.hidden.filter((item) => item !== sourceId),
-                                              });
-                                              setSelectedBlock(sourceId);
-                                            }
+                                            const order = selected.builder.layout.order.filter((item) => item !== sourceId);
+                                            const targetIndex = order.indexOf(id);
+                                            order.splice(targetIndex < 0 ? order.length : targetIndex, 0, sourceId);
+                                            updateBlockLayout({
+                                              order,
+                                              hidden: selected.builder.layout.hidden.filter((item) => item !== sourceId),
+                                              sections: { ...selected.builder.layout.sections, [sourceId]: sectionDefinition.id },
+                                            });
+                                            setSelectedBlock(sourceId);
                                           }
                                         }
                                         setDraggingBlock(null);
@@ -895,7 +959,7 @@ export function ClientPortalBuilder({
                             className={"flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-blue-300 hover:bg-blue-50" + (draggingBlock === block.id ? " opacity-40" : "")}
                           >
                             <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500"><Plus className="size-3.5" /></span>
-                            <span className="min-w-0 flex-1"><span className="block text-xs font-medium text-slate-800">{block.label}</span><span className="block text-[10px] text-slate-500">{block.description}</span><span className="mt-1 block text-[9px] font-medium uppercase tracking-wide text-blue-700">{builderBlockSections.find((section) => section.id === block.section)?.label}</span></span>
+                            <span className="min-w-0 flex-1"><span className="block text-xs font-medium text-slate-800">{block.label}</span><span className="block text-[10px] text-slate-500">{block.description}</span><span className="mt-1 block text-[9px] font-medium uppercase tracking-wide text-blue-700">{builderBlockSections.find((section) => section.id === (selected.builder.layout.sections[block.id] ?? block.section))?.label}</span></span>
                           </button>
                         ))}
                         {builderBlockCatalog.every((block) => selected.builder.layout.order.includes(block.id)) ? <p className="py-2 text-center text-[11px] text-muted-foreground">All blocks are already on this page.</p> : null}
