@@ -31,6 +31,7 @@ import { Route as mainDashboardSettingsTeamAccessRouteRouteImport } from './rout
 
 import { Route as mainDashboardIntegrationsRouteRouteImport } from './routes/(main)/dashboard/integrations/route'
 import { Route as mainDashboardPortalRouteRouteImport } from './routes/(main)/dashboard/portal/route'
+import { Route as mainDashboardClientPortalRouteImport } from './routes/(main)/dashboard/client-portal'
 import { Route as mainDashboardDepositsRouteRouteImport } from './routes/(main)/dashboard/deposits/route'
 import { Route as mainDashboardDepositsDepoistDetailsRouteRouteImport } from './routes/(main)/dashboard/deposits/depoist-details/route'
 import { Route as mainDashboardDepositsDepoistDetailsIndexRouteImport } from './routes/(main)/dashboard/deposits/depoist-details/index'
@@ -157,6 +158,11 @@ const mainDashboardIntegrationsRouteRoute = mainDashboardIntegrationsRouteRouteI
 const mainDashboardPortalRouteRoute = mainDashboardPortalRouteRouteImport.update({
   id: '/portal',
   path: '/portal',
+  getParentRoute: () => mainDashboardRouteRoute,
+} as any)
+const mainDashboardClientPortalRoute = mainDashboardClientPortalRouteImport.update({
+  id: '/client-portal',
+  path: '/client-portal',
   getParentRoute: () => mainDashboardRouteRoute,
 } as any)
 
@@ -288,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/team-access': typeof mainDashboardSettingsTeamAccessRouteRoute
   '/dashboard/integrations': typeof mainDashboardIntegrationsRouteRoute
   '/dashboard/portal': typeof mainDashboardPortalRouteRoute
+  '/dashboard/client-portal': typeof mainDashboardClientPortalRoute
   '/dashboard/settings': typeof mainDashboardSettingsRouteRoute
   '/dashboard/settings/general': typeof mainDashboardSettingsGeneralRouteRoute
   '/dashboard/settings/languages': typeof mainDashboardSettingsLanguagesRouteRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/features': typeof mainDashboardSettingsFeaturesRouteRoute
   '/dashboard/integrations': typeof mainDashboardIntegrationsRouteRoute
   '/dashboard/portal': typeof mainDashboardPortalRouteRoute
+  '/dashboard/client-portal': typeof mainDashboardClientPortalRoute
   '/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
   '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
@@ -334,6 +342,7 @@ export interface FileRoutesByTo {
   '/': typeof externalIndexRoute
   '/auth/v2': typeof mainAuthV2RouteRouteWithChildren
   '/dashboard/analytics': typeof mainDashboardAnalyticsRouteRoute
+  '/dashboard/client-portal': typeof mainDashboardClientPortalRoute
   '/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
   '/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
@@ -378,6 +387,7 @@ export interface FileRoutesById {
   '/(main)/dashboard/settings/team-access': typeof mainDashboardSettingsTeamAccessRouteRoute
   '/(main)/dashboard/integrations': typeof mainDashboardIntegrationsRouteRoute
   '/(main)/dashboard/portal': typeof mainDashboardPortalRouteRoute
+  '/(main)/dashboard/client-portal': typeof mainDashboardClientPortalRoute
   '/(main)/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/(main)/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
   '/(main)/dashboard/deposits/depoist-details': typeof mainDashboardDepositsDepoistDetailsRouteRoute
@@ -424,6 +434,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/team-access'
     | '/dashboard/integrations'
     | '/dashboard/portal'
+    | '/dashboard/client-portal'
     | '/dashboard/settings'
     | '/dashboard/settings/general'
     | '/dashboard/settings/languages'
@@ -434,6 +445,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/features'
     | '/dashboard/integrations'
     | '/dashboard/portal'
+    | '/dashboard/client-portal'
     | '/dashboard/deposits'
     | '/dashboard/deposits/'
     | '/dashboard/deposits/depoist-details'
@@ -474,6 +486,8 @@ export interface FileRouteTypes {
     | '/portal/$method'
     | '/portal/tracking-depoist'
     | '/dashboard'
+    | '/dashboard/client-portal'
+    | '/dashboard/portal'
     | '/auth/v1/login'
     | '/auth/v1/register'
     | '/auth/v2/login'
@@ -499,6 +513,7 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/settings/team-access'
     | '/(main)/dashboard/integrations'
     | '/(main)/dashboard/portal'
+    | '/(main)/dashboard/client-portal'
     | '/(main)/dashboard/deposits'
     | '/(main)/dashboard/withdrawls'
     | '/(main)/dashboard/withdrawls_/analytics'
@@ -750,6 +765,13 @@ declare module '@tanstack/react-router' {
       path: '/portal'
       fullPath: '/dashboard/portal'
       preLoaderRoute: typeof mainDashboardPortalRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
+    '/(main)/dashboard/client-portal': {
+      id: '/(main)/dashboard/client-portal'
+      path: '/client-portal'
+      fullPath: '/dashboard/client-portal'
+      preLoaderRoute: typeof mainDashboardClientPortalRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
       path: '/profile'
@@ -1010,6 +1032,8 @@ const mainPortalRouteRouteWithChildren =
 
 interface mainDashboardRouteRouteChildren {
   mainDashboardAnalyticsRouteRoute: typeof mainDashboardAnalyticsRouteRoute
+  mainDashboardPortalRouteRoute: typeof mainDashboardPortalRouteRoute
+  mainDashboardClientPortalRoute: typeof mainDashboardClientPortalRoute
   mainDashboardDepositsRouteRoute: typeof mainDashboardDepositsRouteRoute
   mainDashboardWithdrawlsRouteRoute: typeof mainDashboardWithdrawlsRouteRoute
   mainDashboardPlayersRouteRoute: typeof mainDashboardPlayersRouteRoute
@@ -1019,6 +1043,8 @@ interface mainDashboardRouteRouteChildren {
 
 const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardAnalyticsRouteRoute: mainDashboardAnalyticsRouteRoute,
+  mainDashboardPortalRouteRoute: mainDashboardPortalRouteRoute,
+  mainDashboardClientPortalRoute: mainDashboardClientPortalRoute,
   mainDashboardDepositsRouteRoute: mainDashboardDepositsRouteRouteWithChildren,
   mainDashboardWithdrawlsRouteRoute: mainDashboardWithdrawlsRouteRoute,
   mainDashboardPlayersRouteRoute: mainDashboardPlayersRouteRoute,
