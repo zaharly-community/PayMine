@@ -33,6 +33,11 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Input } from "@/components/ui/input";
 import { cn } from "cn";
 import { createDistributorReport } from "@/lib/distributor-reports";
+import {
+  CLIENT_PORTAL_FORMS_CHANGE_EVENT,
+  getClientPortalFormForSlug,
+  type ClientPortalForm,
+} from "@/lib/client-portal-config";
 
 import { distributors } from "@/routes/(main)/dashboard/distributors/-components/data";
 
@@ -132,6 +137,46 @@ const paymentMethods: PaymentMethod[] = [
     note: "Complete the payment using the Tunisie Telecom channel. Your deposit is credited after confirmation.",
   },
 ];
+
+const PortalPaymentMethodsContext = React.createContext<PaymentMethod[]>(paymentMethods);
+
+function normalizePortalMethodName(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function getMethodsForClientForm(form: ClientPortalForm) {
+  const methods = paymentMethods.filter((method) =>
+    form.methods.some((name) =>
+      normalizePortalMethodName(name) === normalizePortalMethodName(method.name)
+      || normalizePortalMethodName(name) === normalizePortalMethodName(method.id),
+    ),
+  );
+  return methods.length ? methods : paymentMethods;
+}
+
+function PortalBrandHeader({ form }: { form: ClientPortalForm }) {
+  const { appearance } = form;
+  return (
+    <div className="mx-auto flex w-full items-center justify-between gap-3 border-b px-4 py-3 sm:px-6" style={{ maxWidth: appearance.width === "wide" ? "72rem" : "48rem", color: appearance.theme === "dark" ? "#f8fafc" : "#0f172a", borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0" }}>
+      <div className="flex min-w-0 items-center gap-3">
+        {appearance.showLogo ? (
+          appearance.logoUrl ? (
+            <img src={appearance.logoUrl} alt={appearance.brandName + " logo"} className="size-9 shrink-0 rounded-lg object-contain" />
+          ) : (
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold" style={{ backgroundColor: appearance.primaryColor, color: appearance.theme === "dark" ? "#052e22" : "#ffffff" }}>{(appearance.brandName || "iP").slice(0, 2).toUpperCase()}</span>
+          )
+        ) : null}
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{appearance.brandName || "Your brand"}</p>
+          <p className="text-[10px]" style={{ color: appearance.theme === "dark" ? "#94a3b8" : "#64748b" }}>Secure checkout</p>
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px]" style={{ borderColor: appearance.theme === "dark" ? "#334155" : "#e2e8f0", color: appearance.primaryColor }}>
+        <ShieldCheck className="size-3.5" /> Protected payment
+      </div>
+    </div>
+  );
+}
 
 function PaymentMethodMark({ method }: { method: PaymentMethod }) {
   return (
