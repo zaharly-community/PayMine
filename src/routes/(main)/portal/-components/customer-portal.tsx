@@ -660,6 +660,12 @@ type DepositRequest = {
   currency: string;
   createdAt: string;
   status: DepositRequestStatus;
+  assignedSupervisorId?: string;
+  assignedSupervisorName?: string;
+  assignedSupervisorAvatarUrl?: string;
+  assignedSupervisorEmail?: string;
+  assignedAt?: string;
+  assignmentStatus?: "assigned" | "accepted";
 };
 
 type PlayerRequestLookupStatus = "idle" | "checking" | "available" | "open";
@@ -700,6 +706,50 @@ function updateDepositRequestStatus(requestId: string, status: DepositRequestSta
   const requests = readOpenDepositRequests();
   const next = requests.map((request) => request.id === requestId ? { ...request, status } : request);
   writeOpenDepositRequests(next);
+}
+
+function getNextSupervisorAssignment(): Pick<
+  DepositRequest,
+  | "assignedSupervisorId"
+  | "assignedSupervisorName"
+  | "assignedSupervisorAvatarUrl"
+  | "assignedSupervisorEmail"
+  | "assignedAt"
+  | "assignmentStatus"
+> {
+  const supervisors = distributors.filter((distributor) => distributor.type === "Supervisor");
+  if (!supervisors.length) return {};
+
+  // Prototype routing: balance locally stored open requests between known supervisors.
+  // Production routing must use shared server-side availability and acceptance state.
+  const activeRequests = readOpenDepositRequests().filter(
+    (request) => !["received", "expired"].includes(request.status),
+  );
+  const loads = new Map<string, number>();
+  for (const supervisor of supervisors) loads.set(String(supervisor.id), 0);
+  for (const request of activeRequests) {
+    if (request.assignedSupervisorId) {
+      loads.set(
+        request.assignedSupervisorId,
+        (loads.get(request.assignedSupervisorId) ?? 0) + 1,
+      );
+    }
+  }
+
+  const supervisor = [...supervisors].sort(
+    (left, right) =>
+      (loads.get(String(left.id)) ?? 0) - (loads.get(String(right.id)) ?? 0),
+  )[0];
+
+  if (!supervisor) return {};
+  return {
+    assignedSupervisorId: String(supervisor.id),
+    assignedSupervisorName: supervisor.name,
+    assignedSupervisorAvatarUrl: supervisor.avatarUrl,
+    assignedSupervisorEmail: supervisor.email,
+    assignedAt: new Date().toISOString(),
+    assignmentStatus: "assigned",
+  };
 }
 
 const trackingDemoRequests: Record<string, DepositRequest> = {
@@ -783,6 +833,7 @@ function createOpenDepositRequest({
     currency: method.currency,
     createdAt: new Date().toISOString(),
     status: "open",
+    ...getNextSupervisorAssignment(),
   };
 
   writeOpenDepositRequests([request, ...readOpenDepositRequests()]);
@@ -907,6 +958,13 @@ export function DepositRequestTrackingPage({
       logoClass: "bg-white",
       note: "",
     } satisfies PaymentMethod);
+
+  const assignedSupervisor =
+    distributors.find((distributor) => String(distributor.id) === request.assignedSupervisorId) ??
+    distributors.find((distributor) => distributor.type === "Supervisor") ??
+    distributors[0];
+  const trackingSupervisorScore = getSupervisorVerificationScore(assignedSupervisor?.email ?? "");
+  const trackingSupervisorVerified = Boolean(assignedSupervisor?.verified);
 
   const isCardMethod = isCardDepositMethod(method);
   const isEDinar = isEDinarMethod(method);
@@ -1137,6 +1195,48 @@ export function DepositRequestTrackingPage({
             </div>
           </div>
 
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800/50 px-3 py-3">
+            <div className="relative shrink-0">
+              {assignedSupervisor?.avatarUrl ? (
+                <img
+                  src={request.assignedSupervisorAvatarUrl || assignedSupervisor.avatarUrl}
+                  alt=""
+                  className="size-10 rounded-full object-cover ring-1 ring-white/10"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="flex size-10 items-center justify-center rounded-full bg-slate-700 text-sm font-semibold text-slate-200">
+                  {(request.assignedSupervisorName || assignedSupervisor?.name || "S").slice(0, 1)}
+                </div>
+              )}
+              <span
+                className={cn(
+                  "absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full border-2 border-slate-900 text-[9px] text-white",
+                  trackingSupervisorVerified ? "bg-blue-600" : "bg-slate-600",
+                )}
+                title={trackingSupervisorVerified ? "Supervisor profile verified" : "Supervisor profile not verified"}
+              >
+                {trackingSupervisorVerified ? <Check className="size-2.5" /> : "!"}
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Assigned supervisor</p>
+              <p className="truncate text-xs font-medium text-slate-100">
+                {request.assignedSupervisorName || assignedSupervisor?.name || "Payment team"}
+              </p>
+              <p className="mt-0.5 text-[10px] text-slate-500">
+                {request.assignmentStatus === "accepted" ? "Accepted this request" : "Assigned to your request"}
+              </p>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Verification score</p>
+              <p className="text-xs font-semibold tabular-nums text-slate-100">{trackingSupervisorScore.toFixed(1)}/10</p>
+              <p className={cn("text-[10px]", trackingSupervisorVerified ? "text-emerald-300" : "text-slate-500")}>
+                {trackingSupervisorVerified ? "Verified" : "Profile pending"}
+              </p>
+            </div>
+          </div>
+
           {isEDinar ? (
             <div className="mb-5 rounded-lg border border-amber-300/20 bg-amber-300/5 px-3 py-2.5">
               <div className="flex items-center gap-2 text-amber-100">
@@ -1342,14 +1442,14 @@ export function DepositRequestTrackingPage({
                 <>
                   <div className="flex items-center gap-3">
                     <img
-                      src={flouciSupervisor?.avatarUrl || ""}
+                      src={assignedSupervisor?.avatarUrl || ""}
                       alt=""
                       className="size-9 rounded-full object-cover ring-1 ring-white/10"
                       referrerPolicy="no-referrer"
                     />
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Supervisor</p>
-                      <p className="truncate text-xs font-medium text-slate-100">{flouciSupervisor?.name ?? "Supervisor"}</p>
+                      <p className="truncate text-xs font-medium text-slate-100">{assignedSupervisor?.name ?? "Supervisor"}</p>
                     </div>
                     <span className="text-[10px] text-emerald-300">Transfer completed</span>
                   </div>
@@ -1399,7 +1499,7 @@ export function DepositRequestTrackingPage({
                     <div>
                       <p className="text-sm font-semibold text-white">{trackingBuilderSettings?.blocks?.supervisorRating?.label || "Review Supervisor"}</p>
                       <p className="mt-1 text-xs text-slate-400">
-                        How was your experience with {flouciSupervisor?.name ?? "the supervisor"}?
+                        How was your experience with {assignedSupervisor?.name ?? "the supervisor"}?
                       </p>
                     </div>
                     <Button
@@ -1515,10 +1615,10 @@ export function DepositRequestTrackingPage({
                     disabled={!reportReason}
                     onClick={() => {
                       const report = createDistributorReport({
-                        distributorId: flouciSupervisor?.id ?? "unknown",
-                        distributorName: flouciSupervisor?.name ?? "Supervisor",
-                        distributorEmail: flouciSupervisor?.email ?? "",
-                        distributorAvatarUrl: flouciSupervisor?.avatarUrl,
+                        distributorId: assignedSupervisor?.id ?? "unknown",
+                        distributorName: assignedSupervisor?.name ?? "Supervisor",
+                        distributorEmail: assignedSupervisor?.email ?? "",
+                        distributorAvatarUrl: assignedSupervisor?.avatarUrl,
                         reporterReference: request.playerId,
                         reporterLookupType: request.playerLookupType,
                         depositRequestId: request.id,
@@ -2232,8 +2332,6 @@ function FlouciStepTwo({
   aiStatus,
   detectedTransactionId,
   onUseDetectedTransactionId,
-  supervisorVerified,
-  verificationScore,
   error,
   onRequestChange,
   onConfirm,
@@ -2251,8 +2349,6 @@ function FlouciStepTwo({
   aiStatus: FlouciAiStatus;
   detectedTransactionId: string;
   onUseDetectedTransactionId: () => void;
-  supervisorVerified: boolean;
-  verificationScore: number;
   error: string;
   onRequestChange: () => void;
   onConfirm: () => void;
@@ -2334,36 +2430,6 @@ function FlouciStepTwo({
             </span>
           </div>
 
-          <div className="mt-2.5 flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2.5">
-            <div className="relative shrink-0">
-              <img
-                src={flouciSupervisor?.avatarUrl || ""}
-                alt=""
-                className="size-9 rounded-full object-cover ring-1 ring-white/10"
-                referrerPolicy="no-referrer"
-              />
-              <span
-                className={cn(
-                  "absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full border-2 border-slate-900 text-[9px] text-white",
-                  supervisorVerified ? "bg-blue-600" : "bg-slate-600",
-                )}
-                title={supervisorVerified ? "Supervisor verified" : "Supervisor not verified"}
-              >
-                {supervisorVerified ? <Check className="size-2.5" /> : "!"}
-              </span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Supervisor</p>
-              <p className="truncate text-xs font-medium text-slate-100">{flouciSupervisor?.name ?? "Supervisor"}</p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Verification score</p>
-              <p className="text-xs font-semibold tabular-nums text-slate-100">{verificationScore.toFixed(1)}/10</p>
-              <p className={cn("text-[10px]", supervisorVerified ? "text-emerald-300" : "text-slate-500")}>
-                {supervisorVerified ? "Verified" : "Not verified"}
-              </p>
-            </div>
-          </div>
         </div>
 
           <div>
@@ -3309,7 +3375,6 @@ function FlouciDepositFlow({
   const [aiStatus, setAiStatus] = React.useState<FlouciAiStatus>("idle");
   const [detectedTransactionId, setDetectedTransactionId] = React.useState("");
   const [supervisorVerified, setSupervisorVerified] = React.useState(Boolean(flouciSupervisor?.verified));
-  const verificationScore = getSupervisorVerificationScore(flouciSupervisor?.email ?? "");
   const [recipientNumber, setRecipientNumber] = React.useState(walletRecipientNumbers[0]);
   const [changeRequested, setChangeRequested] = React.useState(false);
   const [correctedTransferNumber, setCorrectedTransferNumber] = React.useState(walletRecipientNumbers[0]);
@@ -3580,8 +3645,6 @@ function FlouciDepositFlow({
               aiStatus={aiStatus}
               detectedTransactionId={detectedTransactionId}
               onUseDetectedTransactionId={() => setTransactionId(detectedTransactionId)}
-              supervisorVerified={supervisorVerified}
-              verificationScore={verificationScore}
               error={error}
               onRequestChange={requestChange}
               onConfirm={confirmTransfer}
