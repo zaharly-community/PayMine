@@ -14,13 +14,17 @@ import {
   CircleAlert,
   CreditCard,
   FileText,
+  Globe,
   Gauge,
   LogIn,
   LogOut,
+  Layers,
   Mail,
   MapPin,
   Pencil,
+  Phone,
   Save,
+  Send,
   Settings2,
   ShieldCheck,
   Star,
@@ -69,7 +73,7 @@ export const Route = createFileRoute("/(main)/dashboard/distributors_/account")(
   component: Page,
 });
 
-type LeftTab = "Details" | "Contacts" | "Notes";
+type LeftTab = "Details" | "Informations" | "Notes";
 type MainTab = "Transactions" | "Analytics" | "Reviews" | "Score" | "Activity" | "Complaints" | "Settings";
 
 const billedMonths = [
@@ -86,12 +90,6 @@ const billedMonths = [
   { month: "Jun", paid: 94000, open: 18000, overdue: 72000 },
   { month: "Jul", paid: 82000, open: 18000, overdue: 66000 },
 ];
-
-const contacts = [
-  ["IS", "Ingrid Sandoval", "Account manager", "ingrid@paymine.tn", true],
-  ["MP", "Maya Patel", "Head of Product", "maya@paymine.tn", false],
-  ["SM", "Sofia Martins", "Finance lead", "finance@paymine.tn", false],
-] as const;
 
 const notes = [
   ["12 Jun 2026", "Quarterly settlement review completed. Distributor volume is tracking above plan and no unreconciled balance remains."],
@@ -120,14 +118,13 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 type DistributorAccountProfile = {
-  legalName: string;
+  name: string;
   email: string;
-  location: string;
-  customerSince: string;
-  accountManager: string;
-  taxId: string;
-  paymentTerms: string;
-  licensedPlayers: string;
+  phoneNumber: string;
+  program: string;
+  country: string;
+  city: string;
+  telegram: string;
   avatarUrl: string;
 };
 
@@ -136,14 +133,13 @@ function Page() {
   const profileStorageKey = `ipaycash-distributor-account-profile-v1:${distributor.id}`;
   const statusStorageKey = `ipaycash-distributor-account-status-v1:${distributor.id}`;
   const createInitialProfile = React.useCallback<() => DistributorAccountProfile>(() => ({
-    legalName: distributor.name,
+    name: distributor.name,
     email: distributor.email,
-    location: "Tunis, Tunisia",
-    customerSince: distributor.joinedDate,
-    accountManager: "Ingrid Sandoval",
-    taxId: "TN 74 612 893 204",
-    paymentTerms: "Net 30",
-    licensedPlayers: String(distributor.players),
+    phoneNumber: "+216 22 456 789",
+    program: distributor.configuration?.programName ?? "Supervisor Standard",
+    country: "Tunisia",
+    city: "Tunis",
+    telegram: "@ahmed.bensalem",
     avatarUrl: distributor.avatarUrl ?? "",
   }), [distributor]);
 
@@ -157,16 +153,32 @@ function Page() {
   const [isDeleted, setIsDeleted] = React.useState(false);
   const [avatarError, setAvatarError] = React.useState("");
   const [saveError, setSaveError] = React.useState("");
+  const [browserInfo, setBrowserInfo] = React.useState("Detecting browser…");
 
   React.useEffect(() => {
     try {
       const storedProfile = window.localStorage.getItem(profileStorageKey);
       if (storedProfile) {
-        const parsed = JSON.parse(storedProfile) as Partial<DistributorAccountProfile>;
-        const merged = { ...createInitialProfile(), ...parsed };
+        const parsed = JSON.parse(storedProfile) as Partial<DistributorAccountProfile> & {
+          legalName?: string;
+          location?: string;
+        };
+        const base = createInitialProfile();
+        const merged: DistributorAccountProfile = {
+          ...base,
+          name: parsed.name ?? parsed.legalName ?? base.name,
+          email: parsed.email ?? base.email,
+          phoneNumber: parsed.phoneNumber ?? base.phoneNumber,
+          program: parsed.program ?? base.program,
+          country: parsed.country ?? base.country,
+          city: parsed.city ?? parsed.location?.split(",")[0]?.trim() ?? base.city,
+          telegram: parsed.telegram ?? base.telegram,
+          avatarUrl: parsed.avatarUrl ?? base.avatarUrl,
+        };
         setProfile(merged);
         savedProfileRef.current = merged;
       }
+      setBrowserInfo(getBrowserLabel(window.navigator.userAgent));
       const storedStatus = window.localStorage.getItem(statusStorageKey);
       if (storedStatus) {
         const parsedStatus = JSON.parse(storedStatus) as { isBlocked?: boolean; isDeleted?: boolean };
@@ -374,7 +386,7 @@ function Page() {
           </div>
 
           <div className="flex border-y">
-            {(["Details", "Contacts", "Notes"] as LeftTab[]).map((tab) => (
+            {(["Details", "Informations", "Notes"] as LeftTab[]).map((tab) => (
               <button
                 key={tab}
                 type="button"
@@ -387,8 +399,8 @@ function Page() {
               >
                 {tab === "Details" ? (
                   <FileText className="size-4" />
-                ) : tab === "Contacts" ? (
-                  <Users className="size-4" />
+                ) : tab === "Informations" ? (
+                  <ShieldCheck className="size-4" />
                 ) : (
                   <Pencil className="size-4" />
                 )}
@@ -399,107 +411,86 @@ function Page() {
 
           <div className="p-5">
             {leftTab === "Details" ? (
-              <>
-                <div className="space-y-5">
-                  <DetailRow
-                    icon={Building2}
-                    label="Legal name"
-                    value={profile.legalName}
-                    editing={isEditing}
-                    onChange={(value) => updateProfile("legalName", value)}
-                  />
-                  <DetailRow
-                    icon={Mail}
-                    label="Billing email"
-                    value={profile.email}
-                    type="email"
-                    editing={isEditing}
-                    onChange={(value) => updateProfile("email", value)}
-                  />
-                  <DetailRow
-                    icon={MapPin}
-                    label="Location"
-                    value={profile.location}
-                    editing={isEditing}
-                    onChange={(value) => updateProfile("location", value)}
-                  />
-                  <DetailRow
-                    icon={CalendarDays}
-                    label="Customer since"
-                    value={profile.customerSince}
-                    editing={isEditing}
-                    onChange={(value) => updateProfile("customerSince", value)}
-                  />
-                  <DetailRow
-                    icon={UserRound}
-                    label="Account manager"
-                    value={profile.accountManager}
-                    editing={isEditing}
-                    onChange={(value) => updateProfile("accountManager", value)}
-                  />
-                  <DetailRow
-                    icon={CreditCard}
-                    label="Tax ID"
-                    value={profile.taxId}
-                    editing={isEditing}
-                    onChange={(value) => updateProfile("taxId", value)}
-                  />
-                  <DetailRow
-                    icon={CreditCard}
-                    label="Payment terms"
-                    value={profile.paymentTerms}
-                    editing={isEditing}
-                    onChange={(value) => updateProfile("paymentTerms", value)}
-                  />
-                  <DetailRow
-                    icon={Users}
-                    label="Licensed players"
-                    value={profile.licensedPlayers + " active"}
-                    inputValue={profile.licensedPlayers}
-                    type="number"
-                    editing={isEditing}
-                    onChange={(value) => updateProfile("licensedPlayers", value)}
-                  />
-                </div>
-
-                <div className="mt-7 border-t pt-5">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="size-4 text-muted-foreground" />
-                    <p className="text-sm font-semibold">About the account</p>
-                  </div>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    {profile.legalName} uses the full PayMine distribution workspace across
-                    settlement, payment routing, player operations, and account controls.
-                    This enterprise-style account currently tracks {profile.licensedPlayers} linked players.
-                  </p>
-                </div>
-              </>
+              <div className="space-y-5">
+                <DetailRow
+                  icon={UserRound}
+                  label="Name"
+                  value={profile.name}
+                  editing={isEditing}
+                  onChange={(value) => updateProfile("name", value)}
+                />
+                <DetailRow
+                  icon={Mail}
+                  label="Email"
+                  value={profile.email}
+                  type="email"
+                  editing={isEditing}
+                  onChange={(value) => updateProfile("email", value)}
+                />
+                <DetailRow
+                  icon={Phone}
+                  label="Phone Number"
+                  value={profile.phoneNumber}
+                  type="tel"
+                  editing={isEditing}
+                  onChange={(value) => updateProfile("phoneNumber", value)}
+                />
+                <DetailRow
+                  icon={Layers}
+                  label="Program"
+                  value={profile.program}
+                  editing={isEditing}
+                  onChange={(value) => updateProfile("program", value)}
+                />
+                <DetailRow
+                  icon={Globe}
+                  label="Country"
+                  value={profile.country}
+                  editing={isEditing}
+                  onChange={(value) => updateProfile("country", value)}
+                />
+                <DetailRow
+                  icon={MapPin}
+                  label="City"
+                  value={profile.city}
+                  editing={isEditing}
+                  onChange={(value) => updateProfile("city", value)}
+                />
+                <DetailRow
+                  icon={Send}
+                  label="Telegram"
+                  value={profile.telegram}
+                  editing={isEditing}
+                  onChange={(value) => updateProfile("telegram", value)}
+                />
+              </div>
             ) : null}
 
-            {leftTab === "Contacts" ? (
-              <div className="space-y-0">
-                {contacts.map(([initials, name, role, email, primary]) => (
-                  <div
-                    key={name}
-                    className="flex items-start gap-3 border-b py-4 first:pt-0"
-                  >
-                    <Avatar size="sm" className="shrink-0">
-                      <AvatarFallback>{initials}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">{name}</p>
-                        {primary ? (
-                          <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-                            Primary
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{role}</p>
-                      <p className="mt-1 truncate text-xs text-muted-foreground">{email}</p>
-                    </div>
-                  </div>
-                ))}
+            {leftTab === "Informations" ? (
+              <div className="space-y-5">
+                <DetailRow
+                  icon={ShieldCheck}
+                  label="IP Address"
+                  value="192.0.2.24 (demo)"
+                />
+                <DetailRow
+                  icon={CalendarDays}
+                  label="Join Date"
+                  value={distributor.joinedDate}
+                />
+                <DetailRow
+                  icon={Settings2}
+                  label="Browser"
+                  value={browserInfo}
+                />
+                <DetailRow
+                  icon={Activity}
+                  label="Last Activity"
+                  value={formatLastActivity(distributor.lastActive)}
+                />
+                <p className="border-t pt-4 text-xs leading-5 text-muted-foreground">
+                  These fields are read-only. The IP shown is a demo placeholder; a real IP address and audit activity must be supplied by the server.
+                </p>
               </div>
             ) : null}
 
@@ -1676,6 +1667,27 @@ function SettingAction({
       </div>
     </button>
   );
+}
+
+function getBrowserLabel(userAgent: string) {
+  const browserVersion = (pattern: RegExp) => userAgent.match(pattern)?.[1] ?? "";
+  if (/Edg\//.test(userAgent)) return `Microsoft Edge ${browserVersion(/Edg\/([\d.]+)/)}`;
+  if (/Firefox\//.test(userAgent)) return `Firefox ${browserVersion(/Firefox\/([\d.]+)/)}`;
+  if (/Chrome\//.test(userAgent) && !/Chromium\//.test(userAgent)) {
+    return `Chrome ${browserVersion(/Chrome\/([\d.]+)/)}`;
+  }
+  if (/Safari\//.test(userAgent) && !/Chrome\//.test(userAgent)) {
+    return `Safari ${browserVersion(/Version\/([\d.]+)/)}`;
+  }
+  return "Other browser";
+}
+
+function formatLastActivity(minutes: number) {
+  if (minutes <= 0) return "Just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 1440) return `${Math.floor(minutes / 60)} hr ago`;
+  const days = Math.floor(minutes / 1440);
+  return `${days} ${days === 1 ? "day" : "days"} ago`;
 }
 
 function formatCurrency(value: number) {
