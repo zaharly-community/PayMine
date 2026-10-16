@@ -7,11 +7,11 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     packages: true,
     subscriptions: true,
     reports: true,
-    treasury: true,
     settings: true,
     "client-portal": true,
   },
   "Brand Admin": {
+    treasury: true,
     dashboard: true,
     players: true,
     distributors: true,
