@@ -254,7 +254,7 @@ function SaasOwnerDashboard() {
               <BarChart data={platformTrend} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} width={48} tickFormatter={(value) => "$" + Math.round(Number(value) / 1000) + "k"} />
+                <YAxis axisLine={false} tickLine={false} width={48} tickFormatter={(value) => "$" + Number(value).toLocaleString("en-US")} />
                 <ChartTooltip content={<ChartTooltipContent formatter={(value) => "$" + Number(value).toLocaleString()} />} />
                 <Bar dataKey="volume" fill="var(--color-volume)" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="commission" fill="var(--color-commission)" radius={[4, 4, 0, 0]} />
