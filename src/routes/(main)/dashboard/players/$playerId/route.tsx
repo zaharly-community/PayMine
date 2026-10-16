@@ -76,7 +76,21 @@ const chartConfig = {
 
 function Page() {
   const { playerId } = Route.useParams();
-  const player = players.find((item) => getPlayerId(item) === playerId) ?? players[0];
+  const [storedPlayers, setStoredPlayers] = React.useState<PlayerRow[]>([]);
+
+  React.useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("ipaycash-player-registry-v1");
+      if (!raw) return;
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed)) setStoredPlayers(parsed as PlayerRow[]);
+    } catch {
+      // Static demo players remain available if browser storage is disabled.
+    }
+  }, []);
+
+  const allPlayers = [...storedPlayers, ...players];
+  const player = allPlayers.find((item) => getPlayerId(item) === playerId) ?? players[0];
   const meta = getPlayerMeta(player);
   const [leftTab, setLeftTab] = React.useState<LeftTab>("Details");
   const [mainTab, setMainTab] = React.useState<MainTab>("Transactions");
@@ -87,7 +101,11 @@ function Page() {
     return null;
   }
 
-  const monthlyActivity = buildMonthlyActivity(meta.deposits, meta.withdrawals, player.email);
+  const monthlyActivity = buildMonthlyActivity(
+    meta.deposits,
+    meta.withdrawals,
+    player.email || player.phoneNumber || meta.playerId,
+  );
   const netVolume = meta.deposits - meta.withdrawals;
 
   return (
@@ -126,7 +144,7 @@ function Page() {
 
               <div className="min-w-0">
                 <h1 className="truncate text-xl font-semibold tracking-tight">{player.name}</h1>
-                <p className="mt-0.5 truncate text-sm text-muted-foreground">{player.email}</p>
+                <p className="mt-0.5 truncate text-sm text-muted-foreground">{player.email || player.phoneNumber || "Email not provided"}</p>
                 <div className="mt-2 flex items-center gap-2">
                   <StatusBadge status={status} />
                   <span className="text-xs text-muted-foreground">{player.role}</span>
@@ -185,7 +203,8 @@ function Page() {
                 <div className="space-y-5">
                   <DetailRow icon={UserRound} label="Player ID" value={meta.playerId} mono />
                   <DetailRow icon={Gamepad2} label="Identifier" value={meta.identifier} mono />
-                  <DetailRow icon={Mail} label="Email" value={player.email} />
+                  <DetailRow icon={Mail} label="Email" value={player.email || "Not provided"} />
+                  <DetailRow icon={UserRound} label="Phone Number" value={player.phoneNumber || "Not provided"} />
                   <DetailRow icon={Globe2} label="Location" value={meta.location} />
                   <DetailRow icon={CalendarDays} label="Joined" value={player.joinedDate} />
                   <DetailRow icon={Activity} label="Last active" value={formatLastActive(player.lastActive)} />
@@ -633,22 +652,31 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function getPlayerId(player: PlayerRow) {
-  return "PLR" + player.email.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase();
+  if (player.playerId?.trim()) return player.playerId.trim().replace(/\s+/g, "").toUpperCase();
+  const source = player.email || player.phoneNumber || player.id || player.name;
+  return "PLR" + source.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase();
 }
 
 function getPlayerMeta(player: PlayerRow): PlayerMeta {
+  const seedSource = player.email || player.phoneNumber || player.playerId || player.id || player.name;
   let seed = 0;
 
-  for (const char of player.email) {
+  for (const char of seedSource) {
     seed += char.charCodeAt(0);
   }
+
+  const generatedId = player.email
+    ? "PLR" + player.email.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase()
+    : "PLR" + seedSource.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase();
 
   return {
     playerId: getPlayerId(player),
     identifier:
-      seed % 2 === 0
-        ? getPlayerId(player)
-        : player.name.toLowerCase().replace(/[^a-z0-9]+/g, ".") + "-" + String(seed % 90 + 10),
+      player.playerId || player.phoneNumber || (player.email && player.id
+        ? player.email
+        : seed % 2 === 0
+          ? generatedId
+          : player.name.toLowerCase().replace(/[^a-z0-9]+/g, ".") + "-" + String(seed % 90 + 10)),
     score: Number(((seed % 101) / 10).toFixed(1)),
     deposits: 250 + (seed % 18500),
     withdrawals: 120 + (seed % 9200),
