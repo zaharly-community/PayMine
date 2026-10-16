@@ -383,12 +383,6 @@ function BrandAdminDashboard() {
     { id: "PLR-18324011", transactions: 11, volume: 1950, lastActivity: "15 min ago" },
   ];
 
-  const queueItems = [
-    { label: "Pending review", count: 12, detail: "Oldest pending · 18 min", tone: "bg-amber-500" },
-    { label: "Processing", count: 7, detail: "Oldest in progress · 11 min", tone: "bg-sky-500" },
-    { label: "Waiting correction", count: 4, detail: "Oldest correction · 32 min", tone: "bg-destructive" },
-  ];
-
   const completedTransactions = 318;
   const successfulTransactions = 350;
   const successRate = (successfulTransactions / 364) * 100;
@@ -428,7 +422,7 @@ function BrandAdminDashboard() {
               Settlement card is close to its daily limit. Review its capacity to avoid declined payments.
             </p>
           </div>
-          <a href="/dashboard/payment-methods" className="shrink-0 pt-1 text-xs font-medium hover:underline">Review</a>
+          <a href="/dashboard/deposits" className="shrink-0 pt-1 text-xs font-medium hover:underline">Review</a>
         </div>
         <div className="flex min-w-0 items-start gap-3 rounded-xl border px-3 py-3 sm:px-4">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
