@@ -2,9 +2,8 @@ import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   ArrowLeftRight, BadgeCheck, Banknote, Building2, Check, CheckCircle2,
-  ChevronDown, CircleAlert, ClipboardList, Coins, CreditCard, Globe2,
-  Landmark, MapPin, Pencil, Plus, Search, ShieldCheck, Smartphone,
-  Wallet, WalletCards, X,
+  CircleAlert, ClipboardList, Coins, CreditCard, Globe2, MapPin, Pencil,
+  Plus, Search, ShieldCheck, Smartphone, WalletCards,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -159,7 +158,6 @@ const initialCorridors: Corridor[] = [
 ];
 
 const countryFor = (code: string) => countries.find((country) => country.code === code);
-const currencyFor = (code: string) => currencies.find((currency) => currency.code === code);
 const corridorLabel = (corridor: Corridor) =>
   (countryFor(corridor.sourceCountry)?.flag || "") + " " + corridor.sourceCurrency + " → " +
   (countryFor(corridor.destinationCountry)?.flag || "") + " " + corridor.destinationCurrency;
