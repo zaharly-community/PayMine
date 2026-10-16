@@ -9,6 +9,10 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     reports: true,
     settings: true,
     "client-portal": true,
+    "hr-programs": true,
+    "hr-shift-time": true,
+    "hr-attendance": true,
+    "hr-payroll": true,
   },
   "Brand Admin": {
     remittance: true,
@@ -26,6 +30,10 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     "financial-reports": true,
     settings: true,
     "client-portal": true,
+    "hr-programs": true,
+    "hr-shift-time": true,
+    "hr-attendance": true,
+    "hr-payroll": true,
   },
   Supervisor: {
     dashboard: true,
@@ -60,6 +68,10 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
 };
 
 const routeKeys: Array<{ prefix: string; id: string }> = [
+  { prefix: "/dashboard/hr/programs", id: "hr-programs" },
+  { prefix: "/dashboard/hr/shift-time", id: "hr-shift-time" },
+  { prefix: "/dashboard/hr/attendance", id: "hr-attendance" },
+  { prefix: "/dashboard/hr/payroll", id: "hr-payroll" },
   { prefix: "/dashboard/users", id: "users" },
   { prefix: "/dashboard/packages", id: "packages" },
   { prefix: "/dashboard/subscriptions", id: "subscriptions" },
