@@ -18,6 +18,7 @@ import { Route as mainAuthV2RouteRouteImport } from './routes/(main)/auth/v2/rou
 import { Route as mainDashboardIndexRouteImport } from './routes/(main)/dashboard/index'
 import { Route as mainDashboardSplatRouteImport } from './routes/(main)/dashboard/$'
 import { Route as mainDashboardAnalyticsRouteRouteImport } from './routes/(main)/dashboard/analytics/route'
+import { Route as mainDashboardAccountSectionRouteImport } from './routes/(main)/dashboard/account/$section'
 import { Route as mainDashboardSettingsRouteRouteImport } from './routes/(main)/dashboard/settings/route'
 import { Route as mainDashboardSettingsGeneralRouteRouteImport } from './routes/(main)/dashboard/settings/general/route'
 import { Route as mainDashboardSettingsLanguagesRouteRouteImport } from './routes/(main)/dashboard/settings/languages/route'
@@ -101,6 +102,11 @@ const mainDashboardAnalyticsRouteRoute =
     path: '/analytics',
     getParentRoute: () => mainDashboardRouteRoute,
   } as any)
+const mainDashboardAccountSectionRoute = mainDashboardAccountSectionRouteImport.update({
+  id: '/account/$section',
+  path: '/account/$section',
+  getParentRoute: () => mainDashboardRouteRoute,
+} as any)
 const mainDashboardSettingsRouteRoute = mainDashboardSettingsRouteRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -294,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/': typeof externalIndexRoute
   '/auth/v2': typeof mainAuthV2RouteRouteWithChildren
   '/dashboard/analytics': typeof mainDashboardAnalyticsRouteRoute
+  '/dashboard/account/$section': typeof mainDashboardAccountSectionRoute
   '/dashboard/settings': typeof mainDashboardSettingsRouteRouteWithChildren
   '/dashboard/settings/general': typeof mainDashboardSettingsGeneralRouteRoute
   '/dashboard/settings/languages': typeof mainDashboardSettingsLanguagesRouteRoute
@@ -356,6 +363,7 @@ export interface FileRoutesByTo {
   '/': typeof externalIndexRoute
   '/auth/v2': typeof mainAuthV2RouteRouteWithChildren
   '/dashboard/analytics': typeof mainDashboardAnalyticsRouteRoute
+  '/dashboard/account/$section': typeof mainDashboardAccountSectionRoute
   '/dashboard/client-portal': typeof mainDashboardClientPortalRoute
   '/dashboard/deposits': typeof mainDashboardDepositsRouteRoute
   '/dashboard/deposits/': typeof mainDashboardDepositsIndexRoute
@@ -391,6 +399,7 @@ export interface FileRoutesById {
   '/(external)/': typeof externalIndexRoute
   '/(main)/auth/v2': typeof mainAuthV2RouteRouteWithChildren
   '/(main)/dashboard/analytics': typeof mainDashboardAnalyticsRouteRoute
+  '/(main)/dashboard/account/$section': typeof mainDashboardAccountSectionRoute
   '/(main)/dashboard/settings': typeof mainDashboardSettingsRouteRouteWithChildren
   '/(main)/dashboard/settings/general': typeof mainDashboardSettingsGeneralRouteRoute
   '/(main)/dashboard/settings/languages': typeof mainDashboardSettingsLanguagesRouteRoute
@@ -438,6 +447,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth/v2'
     | '/dashboard/analytics'
+    | '/dashboard/account/$section'
     | '/dashboard/settings'
     | '/dashboard/settings/general'
     | '/dashboard/settings/languages'
@@ -523,6 +533,7 @@ export interface FileRouteTypes {
     | '/(external)/'
     | '/(main)/auth/v2'
     | '/(main)/dashboard/analytics'
+    | '/(main)/dashboard/account/$section'
     | '/(main)/dashboard/settings'
     | '/(main)/dashboard/settings/general'
     | '/(main)/dashboard/settings/languages'
@@ -664,6 +675,13 @@ declare module '@tanstack/react-router' {
       path: '/analytics'
       fullPath: '/dashboard/analytics'
       preLoaderRoute: typeof mainDashboardAnalyticsRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
+    '/(main)/dashboard/account/$section': {
+      id: '/(main)/dashboard/account/$section'
+      path: '/account/$section'
+      fullPath: '/dashboard/account/$section'
+      preLoaderRoute: typeof mainDashboardAccountSectionRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
       path: '/calendar'
@@ -1060,6 +1078,7 @@ const mainPortalRouteRouteWithChildren =
 
 interface mainDashboardRouteRouteChildren {
   mainDashboardAnalyticsRouteRoute: typeof mainDashboardAnalyticsRouteRoute
+  mainDashboardAccountSectionRoute: typeof mainDashboardAccountSectionRoute
   mainDashboardPortalRouteRoute: typeof mainDashboardPortalRouteRoute
   mainDashboardClientPortalRoute: typeof mainDashboardClientPortalRoute
   mainDashboardDepositsRouteRoute: typeof mainDashboardDepositsRouteRoute
@@ -1071,6 +1090,7 @@ interface mainDashboardRouteRouteChildren {
 
 const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardAnalyticsRouteRoute: mainDashboardAnalyticsRouteRoute,
+  mainDashboardAccountSectionRoute: mainDashboardAccountSectionRoute,
   mainDashboardPortalRouteRoute: mainDashboardPortalRouteRoute,
   mainDashboardClientPortalRoute: mainDashboardClientPortalRoute,
   mainDashboardDepositsRouteRoute: mainDashboardDepositsRouteRouteWithChildren,
