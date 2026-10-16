@@ -6,17 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { distributors } from "../../distributors/-components/data";
-
-type Program = {
-  id: string;
-  name: string;
-  audience: string;
-  depositRate: number;
-  withdrawalRate: number;
-  handling: string;
-  status: "Active" | "Draft";
-};
+import { defaultProgramTemplates, type ProgramTemplate } from "../../distributors/-components/program-templates";
 
 type Shift = {
   id: string;
@@ -31,7 +21,7 @@ type Shift = {
 
 type AttendanceStatus = "present" | "late" | "half" | "absent" | "leave" | "off" | "holiday" | "blank";
 
-const PROGRAM_STORAGE = "ipaycash-hr-programs-v1";
+const PROGRAM_STORAGE = "ipaycash-distributor-program-templates-v1";
 const SHIFT_STORAGE = "ipaycash-hr-shifts-v1";
 const ATTENDANCE_STORAGE = "ipaycash-hr-attendance-v1";
 const PAYROLL_STORAGE = "ipaycash-hr-payroll-v1";
@@ -62,12 +52,6 @@ function useSavedState<T,>(key: string, fallback: T) {
 
   return [value, setValue] as const;
 }
-
-const initialPrograms: Program[] = [
-  { id: "PRG-001", name: "Standard Distributor", audience: "All distributors", depositRate: 1, withdrawalRate: 0.5, handling: "Manual review · standard priority", status: "Active" },
-  { id: "PRG-002", name: "High Volume", audience: "Selected distributors", depositRate: 1.25, withdrawalRate: 0.75, handling: "Fast lane · priority queue", status: "Active" },
-  { id: "PRG-003", name: "New Distributor Trial", audience: "New distributors", depositRate: 0.5, withdrawalRate: 0.25, handling: "Extra verification · supervisor approval", status: "Draft" },
-];
 
 const teamMembers = [
   { name: "Amira Haddad", role: "Supervisor" },
@@ -113,78 +97,146 @@ function Stat({ label, value, note, icon: Icon }: { label: string; value: string
 }
 
 export function ProgramsPage() {
-  const [programs, setPrograms] = useSavedState<Program[]>(PROGRAM_STORAGE, initialPrograms);
-  const [assignments, setAssignments] = useSavedState<Record<string, string[]>>("ipaycash-hr-program-assignments-v1", {});
-  const [assigningProgramId, setAssigningProgramId] = useState<string | null>(null);
-  const [selectedDistributorId, setSelectedDistributorId] = useState("");
+  const [programs, setPrograms] = useSavedState<ProgramTemplate[]>(PROGRAM_STORAGE, defaultProgramTemplates);
   const [query, setQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [name, setName] = useState("");
-  const [audience, setAudience] = useState("All distributors");
-  const [depositRate, setDepositRate] = useState("1");
-  const [withdrawalRate, setWithdrawalRate] = useState("0.5");
-  const [handling, setHandling] = useState("Manual review · standard priority");
+  const [description, setDescription] = useState("");
+  const [role, setRole] = useState<ProgramTemplate["role"]>("Agent");
+  const [scope, setScope] = useState<ProgramTemplate["processingScope"]>("Deposits & Withdrawals");
+  const [feeMode, setFeeMode] = useState<ProgramTemplate["feeMode"]>("Commission");
+  const [depositRate, setDepositRate] = useState("5");
+  const [withdrawalRate, setWithdrawalRate] = useState("3");
+  const [requestLimit, setRequestLimit] = useState("50");
+  const [amountLimit, setAmountLimit] = useState("10000");
+  const [feeAmount, setFeeAmount] = useState("25");
 
-  const filtered = programs.filter((item) => [item.name, item.audience, item.handling].join(" ").toLowerCase().includes(query.toLowerCase()));
-  const activeDistributors = distributors.filter((item) => item.status === "Active");
-  const assigningProgram = programs.find((item) => item.id === assigningProgramId);
-  const applyProgram = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!assigningProgramId || !selectedDistributorId) return;
-    setAssignments((current) => ({
-      ...current,
-      [assigningProgramId]: Array.from(new Set([...(current[assigningProgramId] ?? []), selectedDistributorId])),
-    }));
-    setAssigningProgramId(null);
-  };
+  const filtered = programs.filter((item) => [item.name, item.description, item.role, item.processingScope, item.feeSummary].join(" ").toLowerCase().includes(query.toLowerCase()));
 
   const beginCreate = () => {
-    setEditing(null); setName(""); setAudience("All distributors"); setDepositRate("1"); setWithdrawalRate("0.5"); setHandling("Manual review · standard priority"); setShowForm(true);
+    setEditing(null);
+    setName("");
+    setDescription("");
+    setRole("Agent");
+    setScope("Deposits & Withdrawals");
+    setFeeMode("Commission");
+    setDepositRate("5");
+    setWithdrawalRate("3");
+    setRequestLimit("50");
+    setAmountLimit("10000");
+    setFeeAmount("25");
+    setShowForm(true);
   };
-  const beginEdit = (item: Program) => {
-    setEditing(item.id); setName(item.name); setAudience(item.audience); setDepositRate(String(item.depositRate)); setWithdrawalRate(String(item.withdrawalRate)); setHandling(item.handling); setShowForm(true);
+
+  const beginEdit = (item: ProgramTemplate) => {
+    const config = item.configuration;
+    setEditing(item.id);
+    setName(item.name);
+    setDescription(item.description);
+    setRole(item.role);
+    setScope(item.processingScope);
+    setFeeMode(item.feeMode);
+    setDepositRate(String(config.defaultDepositCommissionRate ?? config.paymentMethods?.[0]?.depositCommissionRate ?? 0));
+    setWithdrawalRate(String(config.defaultWithdrawalCommissionRate ?? config.paymentMethods?.[0]?.withdrawalCommissionRate ?? 0));
+    setRequestLimit(String(config.defaultRequestLimit ?? config.paymentMethods?.[0]?.requestLimit ?? 50));
+    setAmountLimit(String(config.defaultAmountLimit ?? config.paymentMethods?.[0]?.amountLimit ?? 10000));
+    setFeeAmount(String(config.fixedFeeAmount ?? config.perCompletedOperationFee ?? 25));
+    setShowForm(true);
   };
+
   const saveProgram = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const next: Program = { id: editing ?? `PRG-${Date.now().toString().slice(-6)}`, name: name.trim(), audience, depositRate: Math.max(0, Number(depositRate) || 0), withdrawalRate: Math.max(0, Number(withdrawalRate) || 0), handling: handling.trim(), status: "Active" };
+    const base = defaultProgramTemplates.find((item) => item.role === role && item.processingScope === scope)
+      ?? defaultProgramTemplates.find((item) => item.role === role)
+      ?? defaultProgramTemplates[0];
+    const depositApplies = scope !== "Withdrawals";
+    const withdrawalApplies = scope !== "Deposits";
+    const depositCommission = feeMode === "Commission" && depositApplies ? Math.max(0, Number(depositRate) || 0) : 0;
+    const withdrawalCommission = feeMode === "Commission" && withdrawalApplies ? Math.max(0, Number(withdrawalRate) || 0) : 0;
+    const amount = Math.max(0, Number(feeAmount) || 0);
+    const commissionTransactions = scope === "Deposits" ? "Deposits" : scope === "Withdrawals" ? "Withdrawals" : "Deposits & Withdrawals";
+    const configuration: ProgramTemplate["configuration"] = {
+      ...base.configuration,
+      processingScope: scope,
+      feeMode,
+      commissionTransactions,
+      defaultRequestLimit: role === "Agent" ? Math.max(1, Number(requestLimit) || 50) : base.configuration.defaultRequestLimit,
+      defaultAmountLimit: role === "Agent" ? Math.max(1, Number(amountLimit) || 10000) : base.configuration.defaultAmountLimit,
+      defaultAmountLimitPeriod: "Daily",
+      defaultDepositCommissionRate: depositCommission,
+      defaultWithdrawalCommissionRate: withdrawalCommission,
+      fixedFeeAmount: feeMode === "Fixed" ? amount : undefined,
+      fixedFeePeriod: feeMode === "Fixed" ? "Monthly" : undefined,
+      perCompletedOperationFee: feeMode === "Per completed operation" ? amount : undefined,
+    };
+    if (role === "Supervisor") {
+      configuration.paymentMethods = (base.configuration.paymentMethods ?? []).map((method) => ({
+        ...method,
+        requestLimit: Math.max(1, Number(requestLimit) || method.requestLimit || 50),
+        amountLimit: Math.max(1, Number(amountLimit) || method.amountLimit || 10000),
+        depositCommissionRate: depositCommission,
+        withdrawalCommissionRate: withdrawalCommission,
+      }));
+    }
+    const feeSummary = feeMode === "Commission"
+      ? `${depositApplies ? `${depositCommission}% deposit` : "Deposits disabled"} · ${withdrawalApplies ? `${withdrawalCommission}% withdrawal` : "Withdrawals disabled"}`
+      : feeMode === "Fixed" ? `$${amount.toFixed(2)} monthly` : `$${amount.toFixed(2)} per completed operation`;
+    const next: ProgramTemplate = {
+      id: editing ?? `custom-${Date.now().toString().slice(-7)}`,
+      name: name.trim(),
+      description: description.trim() || "Reusable distributor processing and compensation setup.",
+      role,
+      processingScope: scope,
+      feeMode,
+      feeSummary,
+      configuration,
+    };
     setPrograms((current) => editing ? current.map((item) => item.id === editing ? next : item) : [next, ...current]);
     setShowForm(false);
   };
-  const duplicateProgram = (item: Program) => setPrograms((current) => [{ ...item, id: `PRG-${Date.now().toString().slice(-6)}`, name: `${item.name} copy`, status: "Draft" }, ...current]);
+
+  const duplicateProgram = (item: ProgramTemplate) => setPrograms((current) => [
+    { ...item, id: `custom-${Date.now().toString().slice(-7)}`, name: `${item.name} copy`, description: item.description + " (duplicated)" },
+    ...current,
+  ]);
 
   return (
     <section className="space-y-6">
-      <PageHeading title="Programs" description="Reusable commission and processing templates. Configure a policy once, then apply it to the relevant distributors instead of repeating the same setup." action={<Button onClick={beginCreate}><Plus className="mr-2 size-4" /> Create program</Button>} />
+      <PageHeading title="Programs" description="Manage the same commission and processing templates used when creating distributors. Define a policy once and reuse it instead of repeating setup on each account." action={<Button onClick={beginCreate}><Plus className="mr-2 size-4" /> Create program</Button>} />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Total programs" value={String(programs.length)} note="Saved templates" icon={FileText} />
-        <Stat label="Active programs" value={String(programs.filter((p) => p.status === "Active").length)} note="Available to assign" icon={CheckCircle2} />
-        <Stat label="Commission models" value={String(new Set(programs.map((p) => `${p.depositRate}/${p.withdrawalRate}`)).size)} note="Distinct rate combinations" icon={Wallet} />
-        <Stat label="Handling policies" value={String(new Set(programs.map((p) => p.handling)).size)} note="Reusable workflows" icon={CalendarClock} />
+        <Stat label="Total programs" value={String(programs.length)} note="Reusable templates" icon={FileText} />
+        <Stat label="Agent programs" value={String(programs.filter((p) => p.role === "Agent").length)} note="For agent accounts" icon={Users} />
+        <Stat label="Supervisor programs" value={String(programs.filter((p) => p.role === "Supervisor").length)} note="For supervisor accounts" icon={CheckCircle2} />
+        <Stat label="Compensation models" value={String(new Set(programs.map((p) => p.feeMode)).size)} note="Commission, fixed, or per operation" icon={Wallet} />
       </div>
       {showForm && (
         <Card className="shadow-none">
-          <CardHeader><div><h2 className="text-sm font-semibold">{editing ? "Edit program" : "Create program"}</h2><p className="mt-1 text-xs text-muted-foreground">Set the default commission and the handling approach for this template.</p></div></CardHeader>
+          <CardHeader><div><h2 className="text-sm font-semibold">{editing ? "Edit program" : "Create program"}</h2><p className="mt-1 text-xs text-muted-foreground">The saved template will be available in the Program selector on the Add Distributor form.</p></div></CardHeader>
           <CardContent>
             <form onSubmit={saveProgram} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <div className="grid gap-2"><Label>Program name</Label><Input value={name} onChange={(e) => setName(e.target.value)} required placeholder="e.g. Preferred distributor" /></div>
-              <div className="grid gap-2"><Label>Applies to</Label><select className="h-9 rounded-md border bg-background px-3 text-sm" value={audience} onChange={(e) => setAudience(e.target.value)}><option>All distributors</option><option>Selected distributors</option><option>New distributors</option><option>High-volume distributors</option></select></div>
-              <div className="grid gap-2"><Label>Processing policy</Label><select className="h-9 rounded-md border bg-background px-3 text-sm" value={handling} onChange={(e) => setHandling(e.target.value)}><option>Manual review · standard priority</option><option>Fast lane · priority queue</option><option>Extra verification · supervisor approval</option><option>Trusted distributor · simplified review</option></select></div>
-              <div className="grid gap-2"><Label>Deposit commission (%)</Label><Input type="number" min="0" step="0.01" value={depositRate} onChange={(e) => setDepositRate(e.target.value)} required /></div>
-              <div className="grid gap-2"><Label>Withdrawal commission (%)</Label><Input type="number" min="0" step="0.01" value={withdrawalRate} onChange={(e) => setWithdrawalRate(e.target.value)} required /></div>
+              <div className="grid gap-2"><Label>Program name</Label><Input value={name} onChange={(e) => setName(e.target.value)} required placeholder="e.g. Weekend supervisor" /></div>
+              <div className="grid gap-2"><Label>Distributor type</Label><select className="h-9 rounded-md border bg-background px-3 text-sm" value={role} onChange={(e) => setRole(e.target.value as ProgramTemplate["role"])}><option value="Agent">Agent</option><option value="Supervisor">Supervisor</option></select></div>
+              <div className="grid gap-2"><Label>Processing scope</Label><select className="h-9 rounded-md border bg-background px-3 text-sm" value={scope} onChange={(e) => setScope(e.target.value as ProgramTemplate["processingScope"])}><option value="Deposits & Withdrawals">Deposits & Withdrawals</option><option value="Deposits">Deposits only</option><option value="Withdrawals">Withdrawals only</option></select></div>
+              <div className="grid gap-2"><Label>Compensation model</Label><select className="h-9 rounded-md border bg-background px-3 text-sm" value={feeMode} onChange={(e) => setFeeMode(e.target.value as ProgramTemplate["feeMode"])}><option value="Commission">Commission (%)</option><option value="Fixed">Fixed monthly fee</option><option value="Per completed operation">Per completed operation</option></select></div>
+              <div className="grid gap-2"><Label>Deposit commission (%)</Label><Input type="number" min="0" step="0.01" value={depositRate} onChange={(e) => setDepositRate(e.target.value)} disabled={feeMode !== "Commission" || scope === "Withdrawals"} required /></div>
+              <div className="grid gap-2"><Label>Withdrawal commission (%)</Label><Input type="number" min="0" step="0.01" value={withdrawalRate} onChange={(e) => setWithdrawalRate(e.target.value)} disabled={feeMode !== "Commission" || scope === "Deposits"} required /></div>
+              <div className="grid gap-2"><Label>Request limit per period</Label><Input type="number" min="1" value={requestLimit} onChange={(e) => setRequestLimit(e.target.value)} required /></div>
+              <div className="grid gap-2"><Label>Amount limit (USD)</Label><Input type="number" min="1" value={amountLimit} onChange={(e) => setAmountLimit(e.target.value)} required /></div>
+              {feeMode !== "Commission" && <div className="grid gap-2"><Label>{feeMode === "Fixed" ? "Fixed monthly fee (USD)" : "Fee per completed operation (USD)"}</Label><Input type="number" min="0" step="0.01" value={feeAmount} onChange={(e) => setFeeAmount(e.target.value)} required /></div>}
+              <div className="grid gap-2 sm:col-span-2 xl:col-span-3"><Label>Description</Label><Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the processing and compensation rules" /></div>
               <div className="flex items-end gap-2"><Button type="submit">{editing ? "Save changes" : "Save program"}</Button><Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button></div>
             </form>
           </CardContent>
         </Card>
       )}
-      {assigningProgram && <Card className="shadow-none"><CardHeader><div><h2 className="text-sm font-semibold">Assign “{assigningProgram.name}”</h2><p className="mt-1 text-xs text-muted-foreground">Choose an active distributor for this reusable commission and processing template.</p></div></CardHeader><CardContent><form onSubmit={applyProgram} className="flex flex-col gap-3 sm:flex-row sm:items-end"><div className="grid flex-1 gap-2"><Label>Distributor</Label><select className="h-9 rounded-md border bg-background px-3 text-sm" value={selectedDistributorId} onChange={(e) => setSelectedDistributorId(e.target.value)} required><option value="">Select a distributor</option>{activeDistributors.map((item) => <option key={item.id} value={item.id} disabled={(assignments[assigningProgram.id] ?? []).includes(item.id)}>{item.name} · {item.id} · {item.type}</option>)}</select></div><Button type="submit">Apply template</Button><Button type="button" variant="outline" onClick={() => setAssigningProgramId(null)}>Cancel</Button></form><p className="mt-3 text-xs text-muted-foreground">Assignments are saved in this browser prototype; they are not yet written into the distributor account configuration.</p></CardContent></Card>}
       <Card className="shadow-none">
-        <CardHeader><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-sm font-semibold">Program templates</h2><p className="mt-1 text-xs text-muted-foreground">Edit, duplicate, or remove reusable distributor policies.</p></div><div className="relative w-full sm:w-64"><Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" /><Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search programs…" className="pl-9" /></div></div></CardHeader>
+        <CardHeader><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-sm font-semibold">Reusable program templates</h2><p className="mt-1 text-xs text-muted-foreground">These templates are also exposed to distributor creation.</p></div><div className="relative w-full sm:w-64"><Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" /><Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search programs…" className="pl-9" /></div></div></CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead><tr className="border-y bg-muted/30 text-left text-xs text-muted-foreground"><th className="px-4 py-3 font-medium">Program</th><th className="px-4 py-3 font-medium">Audience</th><th className="px-4 py-3 font-medium">Deposit</th><th className="px-4 py-3 font-medium">Withdrawal</th><th className="px-4 py-3 font-medium">Handling policy</th><th className="px-4 py-3 font-medium">Assigned</th><th className="px-4 py-3 font-medium">Status</th><th className="px-4 py-3 text-right font-medium">Actions</th></tr></thead>
-              <tbody>{filtered.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="px-4 py-3"><div className="font-medium">{item.name}</div><div className="mt-0.5 text-xs text-muted-foreground">{item.id}</div></td><td className="px-4 py-3 text-muted-foreground">{item.audience}</td><td className="px-4 py-3 tabular-nums">{item.depositRate}%</td><td className="px-4 py-3 tabular-nums">{item.withdrawalRate}%</td><td className="px-4 py-3"><span className="text-xs">{item.handling}</span></td><td className="px-4 py-3"><span className="font-medium">{(assignments[item.id] ?? []).length}</span><div className="text-xs text-muted-foreground">distributors</div></td><td className="px-4 py-3"><Badge variant={item.status === "Active" ? "default" : "outline"}>{item.status}</Badge></td><td className="px-4 py-3"><div className="flex justify-end gap-1"><Button size="sm" variant="outline" onClick={() => { setAssigningProgramId(item.id); setSelectedDistributorId(activeDistributors.find((d) => !(assignments[item.id] ?? []).includes(d.id))?.id ?? ""); }}>Assign</Button><Button size="sm" variant="outline" onClick={() => beginEdit(item)}>Edit</Button><Button size="sm" variant="ghost" onClick={() => duplicateProgram(item)} title="Duplicate"><Copy className="size-4" /></Button><Button size="sm" variant="ghost" onClick={() => setPrograms((current) => current.filter((p) => p.id !== item.id))} className="text-destructive">Delete</Button></div></td></tr>)}</tbody>
+              <thead><tr className="border-y bg-muted/30 text-left text-xs text-muted-foreground"><th className="px-4 py-3 font-medium">Program</th><th className="px-4 py-3 font-medium">Role</th><th className="px-4 py-3 font-medium">Processing</th><th className="px-4 py-3 font-medium">Compensation</th><th className="px-4 py-3 font-medium">Fee summary</th><th className="px-4 py-3 text-right font-medium">Actions</th></tr></thead>
+              <tbody>{filtered.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="px-4 py-3"><div className="font-medium">{item.name}</div><div className="mt-0.5 text-xs text-muted-foreground">{item.id}</div></td><td className="px-4 py-3"><Badge variant="outline">{item.role}</Badge></td><td className="px-4 py-3">{item.processingScope}</td><td className="px-4 py-3">{item.feeMode}</td><td className="px-4 py-3 text-xs">{item.feeSummary}</td><td className="px-4 py-3"><div className="flex justify-end gap-1"><Button size="sm" variant="outline" onClick={() => beginEdit(item)}>Edit</Button><Button size="sm" variant="ghost" onClick={() => duplicateProgram(item)} title="Duplicate"><Copy className="size-4" /></Button><Button size="sm" variant="ghost" onClick={() => setPrograms((current) => current.filter((p) => p.id !== item.id))} className="text-destructive">Delete</Button></div></td></tr>)}</tbody>
             </table>
           </div>
           {filtered.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">No programs match this search.</p>}
