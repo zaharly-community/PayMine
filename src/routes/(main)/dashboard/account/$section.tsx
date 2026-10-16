@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useShallow } from "zustand/react/shallow";
@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Sun,
   UserRound,
+  type LucideIcon,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,7 +21,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -264,7 +264,7 @@ function AppearancePanel() {
   );
 }
 
-function SettingsPanel({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+function SettingsPanel({ title, description, children }: { title: string; description: string; children: ReactNode }) {
   return (
     <section className="rounded-2xl border bg-card p-4 sm:p-6">
       <div><h1 className="text-base font-semibold tracking-tight">{title}</h1><p className="mt-1 text-sm text-muted-foreground">{description}</p></div>
@@ -273,7 +273,7 @@ function SettingsPanel({ title, description, children }: { title: string; descri
   );
 }
 
-function SettingRow({ icon: Icon, title, description, defaultChecked = false }: { icon: typeof Bell; title: string; description: string; defaultChecked?: boolean }) {
+function SettingRow({ icon: Icon, title, description, defaultChecked = false }: { icon: LucideIcon; title: string; description: string; defaultChecked?: boolean }) {
   return (
     <div className="flex items-center gap-3 py-4 first:pt-0 last:pb-0">
       <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"><Icon className="size-4" /></span>
