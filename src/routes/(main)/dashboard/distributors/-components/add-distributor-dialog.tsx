@@ -323,14 +323,19 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
     if (!open) return;
     try {
       const raw = window.localStorage.getItem("ipaycash-distributor-program-templates-v1");
-      if (raw) {
-        const parsed: unknown = JSON.parse(raw);
-        if (Array.isArray(parsed)) setProgramTemplates(parsed as ProgramTemplate[]);
-      } else {
-        setProgramTemplates(defaultProgramTemplates);
-      }
+      const raw = window.localStorage.getItem("ipaycash-distributor-program-templates-v1");
+      const parsed: unknown = raw ? JSON.parse(raw) : defaultProgramTemplates;
+      const nextTemplates = Array.isArray(parsed) ? (parsed as ProgramTemplate[]) : defaultProgramTemplates;
+      setProgramTemplates(nextTemplates);
+      setForm((current) => {
+        const rolePrograms = nextTemplates.filter((program) => program.role === current.role);
+        return rolePrograms.some((program) => program.id === current.programId)
+          ? current
+          : { ...current, programId: rolePrograms[0]?.id ?? "" };
+      });
     } catch {
       setProgramTemplates(defaultProgramTemplates);
+      setForm((current) => ({ ...current, programId: defaultProgramTemplates.find((program) => program.role === current.role)?.id ?? "" }));
     }
   }, [open]);
 
