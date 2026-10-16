@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { CalendarClock, CheckCircle2, Clock3, Copy, FileText, Plus, Printer, Search, Users, Wallet } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -46,14 +46,29 @@ function readSaved<T,>(key: string, fallback: T): T {
 }
 
 function useSavedState<T,>(key: string, fallback: T) {
-  const [value, setValue] = useState<T>(() => readSaved(key, fallback));
+  const [value, setValue] = useState<T>(fallback);
+  const [hydrated, setHydrated] = useState(false);
+
   useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (raw) setValue(JSON.parse(raw) as T);
+    } catch {
+      // Keep the fallback when stored data is unavailable or invalid.
+    } finally {
+      setHydrated(true);
+    }
+  }, [key]);
+
+  useEffect(() => {
+    if (!hydrated) return;
     try {
       window.localStorage.setItem(key, JSON.stringify(value));
     } catch {
       // Storage may be disabled; the page remains usable for this session.
     }
-  }, [key, value]);
+  }, [key, value, hydrated]);
+
   return [value, setValue] as const;
 }
 
@@ -78,7 +93,7 @@ const initialShifts: Shift[] = [
   { id: "SH-03", name: "Night", start: "23:00", end: "07:00", days: "Daily", supervisor: "Hana Suzuki", assistant: "Noah Patel", responseTarget: 15 },
 ];
 
-function PageHeading({ eyebrow = "Human Resources", title, description, action }: { eyebrow?: string; title: string; description: string; action?: React.ReactNode }) {
+function PageHeading({ eyebrow = "Human Resources", title, description, action }: { eyebrow?: string; title: string; description: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
