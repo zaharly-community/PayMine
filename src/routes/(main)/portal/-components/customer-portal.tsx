@@ -752,6 +752,19 @@ function getNextSupervisorAssignment(): Pick<
   };
 }
 
+function assignSupervisorToDepositRequest(request: DepositRequest): DepositRequest {
+  if (request.assignedSupervisorId) return request;
+
+  const assignedRequest = { ...request, ...getNextSupervisorAssignment() };
+  const requests = readOpenDepositRequests();
+  if (requests.some((item) => item.id === request.id)) {
+    writeOpenDepositRequests(
+      requests.map((item) => item.id === request.id ? assignedRequest : item),
+    );
+  }
+  return assignedRequest;
+}
+
 const trackingDemoRequests: Record<string, DepositRequest> = {
   "DEP-DEMO-0000000": {
     id: "DEP-DEMO-0000000",
@@ -833,7 +846,6 @@ function createOpenDepositRequest({
     currency: method.currency,
     createdAt: new Date().toISOString(),
     status: "open",
-    ...getNextSupervisorAssignment(),
   };
 
   writeOpenDepositRequests([request, ...readOpenDepositRequests()]);
@@ -1696,7 +1708,8 @@ export function DepositRequestTrackingRoute() {
         return;
       }
 
-      const stored = readOpenDepositRequests().find((item) => item.id === requestId) ?? null;
+      const storedRequest = readOpenDepositRequests().find((item) => item.id === requestId) ?? null;
+      const stored = storedRequest ? assignSupervisorToDepositRequest(storedRequest) : null;
       const demo = getTrackingDemoDepositRequest(requestId);
 
       // Tracking is one shared page for every deposit method.
@@ -6609,9 +6622,10 @@ function CustomerPortalExperience({
   }, [initialMethodId, availableMethodIds, method.id]);
 
   const openTrackingPage = (request: DepositRequest) => {
+    const assignedRequest = assignSupervisorToDepositRequest(request);
     void navigate({
       to: "/portal/tracking-depoist",
-      search: { request: request.id },
+      search: { request: assignedRequest.id },
     });
   };
 
