@@ -332,7 +332,7 @@ export const depositsColumns: ColumnDef<DataTableFeatures, DepositRow>[] = [
   {
     id: "search",
     accessorFn: (row) =>
-      `${row.name} ${row.email} ${row.id} ${row.paymentMethod}`,
+      `${row.name} ${row.email} ${row.id} ${row.paymentMethod} ${row.source ?? ""}`,
     filterFn: "includesString",
     enableHiding: true,
   },
@@ -377,6 +377,22 @@ export const depositsColumns: ColumnDef<DataTableFeatures, DepositRow>[] = [
         {row.original.date}
       </div>
     ),
+  },
+  {
+    accessorKey: "source",
+    header: "Source",
+    cell: ({ row }) => {
+      const source = row.original.source
+        ?? (row.original.id.startsWith("DEP-LINK-")
+          ? `LinkID=${Number(row.original.id.slice("DEP-LINK-".length)) || row.original.id.slice("DEP-LINK-".length)}`
+          : "Manual");
+      const isLink = source.startsWith("LinkID=");
+      return (
+        <span className={`inline-flex whitespace-nowrap items-center rounded-md border px-2 py-1 text-xs font-medium ${isLink ? "border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-300" : source === "Manual" ? "border-border bg-muted text-muted-foreground" : "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>
+          {source}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "verificationStatus",
