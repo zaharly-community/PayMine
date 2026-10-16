@@ -10,6 +10,7 @@ import {
   Clock3,
   CreditCard,
   DollarSign,
+  Ellipsis,
   LifeBuoy,
   ShieldCheck,
   UserCheck,
@@ -17,7 +18,7 @@ import {
   WalletCards,
   Zap,
 } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Funnel, FunnelChart, LabelList, PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, XAxis, YAxis } from "recharts";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,8 +35,8 @@ import { useBrand } from "@/stores/brands/brand-provider";
 
 const chartConfig = {
   volume: { label: "Volume", color: "var(--foreground)" },
-  deposits: { label: "Deposits", color: "var(--foreground)" },
-  withdrawals: { label: "Withdrawals", color: "var(--muted-foreground)" },
+  deposits: { label: "Deposits", color: "var(--primary)" },
+  withdrawals: { label: "Withdrawals", color: "color-mix(in oklch, var(--primary) 75%, var(--background))" },
 } satisfies ChartConfig;
 
 export function RoleDashboard({ role }: { role: UserRole }) {
@@ -388,32 +389,87 @@ function BrandAdminDashboard() {
     { label: "Waiting correction", count: 4, detail: "Oldest correction · 32 min", tone: "bg-destructive" },
   ];
 
+  const completedTransactions = 318;
+  const successfulTransactions = 350;
+  const successRate = (successfulTransactions / 364) * 100;
+
+  const queueFunnel = [
+    { name: "Transactions received", value: 364 },
+    { name: "Details verified", value: 352 },
+    { name: "Approved for processing", value: 341 },
+    { name: "Completed", value: completedTransactions },
+  ];
+
+  const cardPressure = [
+    { metric: "Capacity", value: 92 },
+    { metric: "Queue", value: 74 },
+    { metric: "Latency", value: 61 },
+    { metric: "Failures", value: 28 },
+    { metric: "Reports", value: 42 },
+  ];
+
   return (
     <DashboardShell
       eyebrow={"Brand Admin · " + todayLabel}
       title={activeBrand.name + " — Today's performance"}
-      description="A daily snapshot of payment volume, net cashflow, estimated platform earnings, and transactions that need attention."
+      description="Monitor today's payment volume, card capacity, transaction flow and issues that need attention."
     >
-      <StatGrid
-        items={[
-          { label: "Deposits today", value: money(totals.deposits), note: "246 deposit transactions · 97.1% success", icon: ArrowDownToLine },
-          { label: "Withdrawals today", value: money(totals.withdrawals), note: "118 withdrawal transactions · 94.2% success", icon: ArrowUpFromLine },
-          { label: "Net cashflow", value: money(cashflow), note: "Deposits minus withdrawals", icon: WalletCards },
-          { label: "Profit today", value: money(estimatedProfit), note: "Estimated platform fees", icon: DollarSign },
-        ]}
-      />
+      <div className="grid gap-2 lg:grid-cols-2">
+        <div className="flex min-w-0 items-start gap-3 rounded-xl border px-3 py-3 sm:px-4">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <AlertTriangle className="size-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-semibold">Payment card nearing capacity</p>
+              <Badge variant="outline" className="border-amber-500/40 text-amber-700 dark:text-amber-400">92% used</Badge>
+            </div>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Settlement card is close to its daily limit. Review its capacity to avoid declined payments.
+            </p>
+          </div>
+          <a href="/dashboard/payment-methods" className="shrink-0 pt-1 text-xs font-medium hover:underline">Review</a>
+        </div>
+        <div className="flex min-w-0 items-start gap-3 rounded-xl border px-3 py-3 sm:px-4">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <LifeBuoy className="size-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-semibold">New player report</p>
+              <Badge variant="destructive">New</Badge>
+            </div>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              PLRBSSTUDIO reported a deposit not received. The case is waiting for review.
+            </p>
+          </div>
+          <a href="/dashboard/players/PLRBSSTUDIO" className="shrink-0 pt-1 text-xs font-medium hover:underline">Open</a>
+        </div>
+      </div>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.65fr)]">
-        <Card className="shadow-none">
-          <CardHeader>
-            <SectionTitle
-              icon={Activity}
-              title="Payment activity"
-              description="Hourly deposit and withdrawal volume · 00:00–23:00 today"
-            />
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[290px] w-full">
+      <div className="flex flex-col gap-4 xl:flex-row">
+        <div className="bg-card flex min-w-0 flex-1 flex-col gap-4 rounded-xl border p-4 sm:gap-6 sm:p-6">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <p className="text-xl leading-tight font-semibold tracking-tight sm:text-2xl">
+                {money(totals.deposits + totals.withdrawals)}
+              </p>
+              <p className="text-xs text-muted-foreground">Total Payment Volume (Today)</p>
+            </div>
+            <div className="hidden items-center gap-3 sm:flex sm:gap-5">
+              <div className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded-full bg-primary sm:size-3" />
+                <span className="text-xs text-muted-foreground">Deposits</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded-full bg-muted-foreground sm:size-3" />
+                <span className="text-xs text-muted-foreground">Withdrawals</span>
+              </div>
+            </div>
+            <span className="rounded-md border px-2 py-1 text-[10px] text-muted-foreground sm:text-xs">Today · 24 hours</span>
+          </div>
+          <div className="h-[200px] w-full min-w-0 sm:h-[240px] lg:h-[280px]">
+            <ChartContainer config={chartConfig} className="h-full w-full">
               <BarChart data={hourlyActivity} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
                 <CartesianGrid vertical={false} />
                 <XAxis
@@ -426,8 +482,8 @@ function BrandAdminDashboard() {
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  width={48}
-                  tickFormatter={(value) => "$" + Math.round(Number(value) / 1000) + "k"}
+                  width={44}
+                  tickFormatter={(value) => Number(value) === 0 ? "$0" : "$" + (Number(value) / 1000).toLocaleString("en-US") + "k"}
                 />
                 <ChartTooltip
                   content={
@@ -440,61 +496,124 @@ function BrandAdminDashboard() {
                     />
                   }
                 />
-                <Bar dataKey="deposits" fill="var(--color-deposits)" radius={[3, 3, 0, 0]} maxBarSize={12} />
-                <Bar dataKey="withdrawals" fill="var(--color-withdrawals)" radius={[3, 3, 0, 0]} maxBarSize={12} />
+                <Bar dataKey="deposits" fill="var(--color-deposits)" radius={[4, 4, 0, 0]} maxBarSize={15} />
+                <Bar dataKey="withdrawals" fill="var(--color-withdrawals)" radius={[4, 4, 0, 0]} maxBarSize={15} />
               </BarChart>
             </ChartContainer>
-            <div className="mt-3 flex flex-wrap items-center gap-4 border-t pt-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-2">
-                <span className="size-2 rounded-sm bg-foreground" />
-                Deposits
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="size-2 rounded-sm bg-muted-foreground" />
-                Withdrawals
-              </span>
-              <span className="ml-auto">Today · Demo data</span>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-xs text-muted-foreground">
+            <span>Hourly deposit and withdrawal activity</span>
+            <span>Illustrative data · refreshes when connected to live payments</span>
+          </div>
+        </div>
 
-        <Card className="shadow-none">
-          <CardHeader>
-            <div className="flex items-start justify-between gap-3">
-              <SectionTitle
-                icon={Clock3}
-                title="Payment queue"
-                description="Current transaction states"
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:w-[420px] xl:shrink-0 xl:grid-cols-2">
+          {[
+            { label: "Deposits today", value: money(totals.deposits), trend: "246 transactions", tone: "text-muted-foreground" },
+            { label: "Withdrawals today", value: money(totals.withdrawals), trend: "118 transactions", tone: "text-muted-foreground" },
+            { label: "Net cashflow", value: money(cashflow), trend: "Deposits minus withdrawals", tone: "text-muted-foreground" },
+            { label: "Estimated profit", value: money(estimatedProfit), trend: "Estimated payment fees", tone: "text-muted-foreground" },
+            { label: "Completed", value: completedTransactions.toLocaleString("en-US"), trend: "Today · all methods", tone: "text-emerald-600 dark:text-emerald-400" },
+            { label: "Success rate", value: successRate.toFixed(1) + "%", trend: "Across today's attempts", tone: "text-emerald-600 dark:text-emerald-400" },
+          ].map((metric) => (
+            <div key={metric.label} className="bg-card flex min-w-0 flex-col rounded-xl border p-3 sm:p-4">
+              <div className="flex items-start justify-between gap-1">
+                <span className="text-xs text-muted-foreground sm:text-sm">{metric.label}</span>
+                <Ellipsis className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              </div>
+              <span className="mt-3 break-words text-lg font-semibold tracking-tight sm:text-xl">{metric.value}</span>
+              <p className={"mt-1 text-[10px] leading-4 sm:text-xs " + metric.tone}>{metric.trend}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <div className="bg-card min-w-0 rounded-xl border p-4 sm:p-6">
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <SectionTitle
+              icon={Clock3}
+              title="Payment queue"
+              description="Payment flow from initiation to completion"
+            />
+            <a href="/dashboard/deposits" className="shrink-0 pt-1 text-xs font-medium hover:underline">Open queue</a>
+          </div>
+          <ChartContainer
+            config={{
+              value: { label: "Transactions", color: "var(--primary)" },
+            }}
+            className="h-[220px] w-full"
+          >
+            <FunnelChart margin={{ top: 8, right: 12, bottom: 8, left: 12 }}>
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value) => [Number(value).toLocaleString("en-US"), "Transactions"]}
+                  />
+                }
               />
-              <a href="/dashboard/deposits" className="shrink-0 pt-1 text-xs font-medium hover:underline">
-                Open queue
-              </a>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-0">
-              {queueItems.map((item) => (
-                <div key={item.label} className="flex items-center gap-3 border-b py-3 last:border-0">
-                  <span className={"size-2 shrink-0 rounded-full " + item.tone} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium">{item.label}</p>
-                      <Badge variant="outline" className="tabular-nums">{item.count}</Badge>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">{item.detail}</p>
-                  </div>
+              <Funnel dataKey="value" data={queueFunnel} isAnimationActive fill="var(--color-value)" stroke="var(--background)" strokeWidth={2}>
+                <LabelList dataKey="name" position="inside" fill="var(--primary-foreground)" fontSize={10} />
+              </Funnel>
+            </FunnelChart>
+          </ChartContainer>
+          <div className="mt-3 grid grid-cols-3 gap-2 border-t pt-3">
+            {[
+              { label: "Pending review", value: "12", color: "bg-amber-500" },
+              { label: "Processing", value: "7", color: "bg-sky-500" },
+              { label: "Correction", value: "4", color: "bg-destructive" },
+            ].map((item) => (
+              <div key={item.label} className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className={"size-2 shrink-0 rounded-full " + item.color} />
+                  <span className="truncate text-[10px] text-muted-foreground sm:text-xs">{item.label}</span>
                 </div>
-              ))}
-            </div>
-            <div className="mt-3 flex items-center justify-between rounded-md bg-muted/50 px-3 py-2.5">
-              <span className="text-xs text-muted-foreground">Completed today</span>
-              <span className="text-sm font-semibold tabular-nums">318</span>
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              23 payments currently need review or processing.
-            </p>
-          </CardContent>
-        </Card>
+                <p className="mt-1 pl-3.5 text-sm font-semibold tabular-nums">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-card min-w-0 rounded-xl border p-4 sm:p-6">
+          <div className="mb-1 flex items-start justify-between gap-3">
+            <SectionTitle
+              icon={CreditCard}
+              title="Card pressure monitor"
+              description="Normalized pressure across key payment signals"
+            />
+            <Badge variant="outline" className="shrink-0 border-amber-500/40 text-amber-700 dark:text-amber-400">High load</Badge>
+          </div>
+          <ChartContainer
+            config={{
+              pressure: { label: "Pressure", color: "var(--primary)" },
+            }}
+            className="mx-auto h-[255px] w-full max-w-[440px]"
+          >
+            <RadarChart data={cardPressure} outerRadius="68%">
+              <PolarGrid />
+              <PolarAngleAxis dataKey="metric" tick={{ fontSize: 10 }} />
+              <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value) => [Number(value) + "%", "Pressure"]}
+                  />
+                }
+              />
+              <Radar
+                name="Pressure"
+                dataKey="value"
+                stroke="var(--color-pressure)"
+                fill="var(--color-pressure)"
+                fillOpacity={0.25}
+              />
+            </RadarChart>
+          </ChartContainer>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-xs text-muted-foreground">
+            <span>Higher values indicate increased operational pressure.</span>
+            <span>Capacity: 92%</span>
+          </div>
+        </div>
       </div>
 
       <Card className="shadow-none">
