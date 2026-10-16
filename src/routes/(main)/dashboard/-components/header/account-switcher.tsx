@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 
 import { cn } from "cn";
-import { BadgeCheck, Bell, Check, CreditCard, LogOut, UserRoundCog } from "lucide-react";
+import { BadgeCheck, Bell, Check, CreditCard, LogOut, Palette, UserRoundCog } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -71,17 +71,21 @@ export function AccountSwitcher() {
 
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate({ to: "/dashboard/account/profile" as any })}>
             <BadgeCheck />
             Account
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate({ to: "/dashboard/account/billing" as any })}>
             <CreditCard />
             Billing
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate({ to: "/dashboard/account/notifications" as any })}>
             <Bell />
             Notifications
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate({ to: "/dashboard/account/apperance" as any })}>
+            <Palette />
+            Appearance
           </DropdownMenuItem>
         </DropdownMenuGroup>
 
