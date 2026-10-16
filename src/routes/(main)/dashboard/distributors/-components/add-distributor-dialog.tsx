@@ -363,7 +363,7 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
 
   const availablePrograms = React.useMemo(
     () => programTemplates.filter((program) => program.role === form.role),
-    [form.role],
+    [form.role, programTemplates],
   );
   const selectedProgram = availablePrograms.find((program) => program.id === form.programId) ?? availablePrograms[0];
   const filteredPrograms = React.useMemo(() => {
