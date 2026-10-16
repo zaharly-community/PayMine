@@ -37,9 +37,12 @@ const statusStyles: Record<Status, string> = {
   Completed: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
   "Limit reached": "border-destructive/25 bg-destructive/10 text-destructive",
 };
-const money = (amount: number, currency: string) => currency === "USDT"
-  ? `${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`
-  : new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(amount);
+const money = (amount: number, currency: string) => {
+  const value = amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (["USDT", "USDC", "BTC", "ETH", "TRX"].includes(currency)) return `${value} ${currency}`;
+  try { return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(amount); }
+  catch { return `${value} ${currency}`; }
+};
 
 export const Route = createFileRoute("/(main)/dashboard/treasury")({ component: TreasuryManagementPage });
 
