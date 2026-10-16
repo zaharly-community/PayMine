@@ -904,7 +904,7 @@ function ActivityPanel({ distributor }: { distributor: (typeof distributors)[num
 function AnalyticsPanel() {
   const metrics = [
     ["Processed volume", "$2.41M"],
-    ["Success rate", "96.4%"],
+    ["Success rate", `${successRate}%`],
     ["Avg. processing", "3m 18s"],
     ["Transactions", "12,842"],
   ];
