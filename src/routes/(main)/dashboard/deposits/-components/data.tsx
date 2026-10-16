@@ -13,6 +13,7 @@ export type DepositRow = {
   name: string;
   email: string;
   date: string;
+  source?: string;
   paymentMethod: PaymentMethod;
   paymentMethodImage: string;
   verificationStatus: VerificationStatus;
