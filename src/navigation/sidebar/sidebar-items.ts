@@ -148,6 +148,12 @@ export const sidebarItems: NavGroup[] = [
     label: "Finance",
     items: [
       {
+        id: "treasury",
+        title: "Treasury Management",
+        url: "/dashboard/treasury" as AppPath,
+        icon: Landmark,
+      },
+      {
         id: "transactions",
         title: "Transactions",
         url: "/dashboard/transactions",
