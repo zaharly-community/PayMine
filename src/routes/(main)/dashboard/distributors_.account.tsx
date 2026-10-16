@@ -18,7 +18,6 @@ import {
   LogOut,
   Mail,
   MapPin,
-  MessageSquare,
   Pencil,
   Settings2,
   ShieldCheck,
@@ -95,6 +94,17 @@ const notes = [
   ["15 Feb 2026", "Adjusted the commission plan after a duplicate payout was identified and corrected."],
 ] as const;
 
+// Sample ratings for the account UI. A rating of 4 or 5 stars is a positive experience.
+const playerExperienceRatings = [
+  5, 5, 4, 5, 4, 5, 5, 3, 4, 5,
+  5, 4, 5, 5, 5, 4, 5, 5, 2, 5,
+] as const;
+const successRate = Math.round(
+  (playerExperienceRatings.filter((rating) => rating >= 4).length /
+    playerExperienceRatings.length) *
+    100,
+);
+
 const chartConfig = {
   paid: { label: "Paid", color: "var(--foreground)" },
   open: { label: "Open", color: "var(--muted-foreground)" },
@@ -144,26 +154,18 @@ function Page() {
               </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Button size="sm">
-                <FileText />
-                New invoice
-              </Button>
-              <Button size="sm" variant="outline">
-                <Mail />
-                Email
-              </Button>
-              <Button size="sm" variant="outline">
-                <MessageSquare />
-                Add note
-              </Button>
-            </div>
-
             <div className="mt-6 grid grid-cols-3 gap-3">
-              <Metric label="Lifetime volume" value="$2.41M" />
-              <Metric label="On-time rate" value="96%" />
-              <Metric label="Avg days to pay" value="18 days" />
+              <Metric label="Process Time" value="3m 18s" />
+              <Metric label="Score" value="80 / 100 points" />
+              <div className="min-w-0" title="Ratings of 4 or 5 stars count as positive player experiences">
+                <p className="truncate text-[11px] text-muted-foreground">Success Rate</p>
+                <p className="mt-1 truncate text-sm font-medium tabular-nums">{successRate}%</p>
+              </div>
             </div>
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              Positive experience = a player rating of 4 or 5 stars.
+            </p>
+
           </div>
 
           <div className="flex border-y">
