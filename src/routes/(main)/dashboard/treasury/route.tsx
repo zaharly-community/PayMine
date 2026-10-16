@@ -37,71 +37,18 @@ type CorridorDraft = {
 };
 type Corridor = CorridorDraft & { id: string; updatedAt: string };
 
-const countries: Country[] = [
-  { code: "US", name: "United States", flag: "🇺🇸" },
-  { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
-  { code: "AE", name: "United Arab Emirates", flag: "🇦🇪" },
-  { code: "BD", name: "Bangladesh", flag: "🇧🇩" },
-  { code: "TN", name: "Tunisia", flag: "🇹🇳" },
-  { code: "TZ", name: "Tanzania", flag: "🇹🇿" },
-  { code: "KE", name: "Kenya", flag: "🇰🇪" },
-  { code: "NG", name: "Nigeria", flag: "🇳🇬" },
-  { code: "GH", name: "Ghana", flag: "🇬🇭" },
-  { code: "ZA", name: "South Africa", flag: "🇿🇦" },
-  { code: "EG", name: "Egypt", flag: "🇪🇬" },
-  { code: "MA", name: "Morocco", flag: "🇲🇦" },
-  { code: "DZ", name: "Algeria", flag: "🇩🇿" },
-  { code: "SA", name: "Saudi Arabia", flag: "🇸🇦" },
-  { code: "QA", name: "Qatar", flag: "🇶🇦" },
-  { code: "KW", name: "Kuwait", flag: "🇰🇼" },
-  { code: "BH", name: "Bahrain", flag: "🇧🇭" },
-  { code: "OM", name: "Oman", flag: "🇴🇲" },
-  { code: "IN", name: "India", flag: "🇮🇳" },
-  { code: "PK", name: "Pakistan", flag: "🇵🇰" },
-  { code: "LK", name: "Sri Lanka", flag: "🇱🇰" },
-  { code: "NP", name: "Nepal", flag: "🇳🇵" },
-  { code: "PH", name: "Philippines", flag: "🇵🇭" },
-  { code: "ID", name: "Indonesia", flag: "🇮🇩" },
-  { code: "MY", name: "Malaysia", flag: "🇲🇾" },
-  { code: "SG", name: "Singapore", flag: "🇸🇬" },
-  { code: "TH", name: "Thailand", flag: "🇹🇭" },
-  { code: "VN", name: "Vietnam", flag: "🇻🇳" },
-  { code: "CN", name: "China", flag: "🇨🇳" },
-  { code: "JP", name: "Japan", flag: "🇯🇵" },
-  { code: "KR", name: "South Korea", flag: "🇰🇷" },
-  { code: "AU", name: "Australia", flag: "🇦🇺" },
-  { code: "NZ", name: "New Zealand", flag: "🇳🇿" },
-  { code: "CA", name: "Canada", flag: "🇨🇦" },
-  { code: "MX", name: "Mexico", flag: "🇲🇽" },
-  { code: "BR", name: "Brazil", flag: "🇧🇷" },
-  { code: "AR", name: "Argentina", flag: "🇦🇷" },
-  { code: "TR", name: "Türkiye", flag: "🇹🇷" },
-  { code: "FR", name: "France", flag: "🇫🇷" },
-  { code: "DE", name: "Germany", flag: "🇩🇪" },
-  { code: "IT", name: "Italy", flag: "🇮🇹" },
-  { code: "ES", name: "Spain", flag: "🇪🇸" },
-  { code: "NL", name: "Netherlands", flag: "🇳🇱" },
-  { code: "BE", name: "Belgium", flag: "🇧🇪" },
-  { code: "CH", name: "Switzerland", flag: "🇨🇭" },
-  { code: "SE", name: "Sweden", flag: "🇸🇪" },
-  { code: "NO", name: "Norway", flag: "🇳🇴" },
-  { code: "PL", name: "Poland", flag: "🇵🇱" },
-  { code: "PT", name: "Portugal", flag: "🇵🇹" },
-  { code: "IE", name: "Ireland", flag: "🇮🇪" },
-  { code: "ET", name: "Ethiopia", flag: "🇪🇹" },
-  { code: "UG", name: "Uganda", flag: "🇺🇬" },
-  { code: "RW", name: "Rwanda", flag: "🇷🇼" },
-  { code: "SN", name: "Senegal", flag: "🇸🇳" },
-  { code: "CI", name: "Côte d’Ivoire", flag: "🇨🇮" },
-  { code: "CM", name: "Cameroon", flag: "🇨🇲" },
-  { code: "ZM", name: "Zambia", flag: "🇿🇲" },
-  { code: "ZW", name: "Zimbabwe", flag: "🇿🇼" },
-  { code: "MU", name: "Mauritius", flag: "🇲🇺" },
-  { code: "SC", name: "Seychelles", flag: "🇸🇨" },
-  { code: "US", name: "United States", flag: "🇺🇸" },
-].filter((country, index, list) => list.findIndex((item) => item.code === country.code) === index)
+const countryCodes = `
+AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SL SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS XK YE YT ZA ZM ZW`
+  .trim()
+  .split(/\\s+/);
+const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
+const countries: Country[] = countryCodes
+  .map((code) => ({
+    code,
+    name: countryNames.of(code) || code,
+    flag: Array.from(code).map((letter) => String.fromCodePoint(letter.charCodeAt(0) + 127397)).join(""),
+  }))
   .sort((a, b) => a.name.localeCompare(b.name));
-
 const currencies: Currency[] = [
   { code: "USD", symbol: "$" }, { code: "EUR", symbol: "€" }, { code: "GBP", symbol: "£" },
   { code: "TND", symbol: "د.ت" }, { code: "BDT", symbol: "৳" }, { code: "TZS", symbol: "TSh" },
@@ -158,9 +105,6 @@ const initialCorridors: Corridor[] = [
 ];
 
 const countryFor = (code: string) => countries.find((country) => country.code === code);
-const corridorLabel = (corridor: Corridor) =>
-  (countryFor(corridor.sourceCountry)?.flag || "") + " " + corridor.sourceCurrency + " → " +
-  (countryFor(corridor.destinationCountry)?.flag || "") + " " + corridor.destinationCurrency;
 
 export const Route = createFileRoute("/(main)/dashboard/treasury")({ component: RemittancePage });
 
