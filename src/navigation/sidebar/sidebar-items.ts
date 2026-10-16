@@ -150,7 +150,7 @@ export const sidebarItems: NavGroup[] = [
       {
         id: "remittance",
         title: "Remittance",
-        url: "/dashboard/treasury" as AppPath,
+        url: "/dashboard/remittance" as AppPath,
         icon: Landmark,
       },
       {
