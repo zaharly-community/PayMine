@@ -319,8 +319,8 @@ function Page() {
                     title="Upload profile image"
                   >
                     <Avatar size="lg" className="size-14 shrink-0">
-                      <AvatarImage src={profile.avatarUrl || undefined} alt={profile.legalName} />
-                      <AvatarFallback className="text-base">{getInitials(profile.legalName)}</AvatarFallback>
+                      <AvatarImage src={profile.avatarUrl || undefined} alt={profile.name} />
+                      <AvatarFallback className="text-base">{getInitials(profile.name)}</AvatarFallback>
                     </Avatar>
                     <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/55 text-white opacity-0 transition-opacity group-hover/avatar-upload:opacity-100 group-focus-within/avatar-upload:opacity-100">
                       <Upload className="size-4" />
@@ -328,8 +328,8 @@ function Page() {
                   </label>
                 ) : (
                   <Avatar size="lg" className="size-14 shrink-0">
-                    <AvatarImage src={profile.avatarUrl || undefined} alt={profile.legalName} />
-                    <AvatarFallback className="text-base">{getInitials(profile.legalName)}</AvatarFallback>
+                    <AvatarImage src={profile.avatarUrl || undefined} alt={profile.name} />
+                    <AvatarFallback className="text-base">{getInitials(profile.name)}</AvatarFallback>
                   </Avatar>
                 )}
                 <input
@@ -347,8 +347,8 @@ function Page() {
                   <>
                     <Input
                       aria-label="Account name"
-                      value={profile.legalName}
-                      onChange={(event) => updateProfile("legalName", event.target.value)}
+                      value={profile.name}
+                      onChange={(event) => updateProfile("name", event.target.value)}
                       className="h-8 text-base font-semibold"
                     />
                     <Input
@@ -361,7 +361,7 @@ function Page() {
                   </>
                 ) : (
                   <>
-                    <h1 className="truncate text-xl font-semibold tracking-tight">{profile.legalName}</h1>
+                    <h1 className="truncate text-xl font-semibold tracking-tight">{profile.name}</h1>
                     <p className="mt-0.5 truncate text-sm text-muted-foreground">{profile.email}</p>
                   </>
                 )}
@@ -1704,9 +1704,11 @@ function formatCompactCurrency(value: number) {
   return formatCurrency(value);
 }
 
-function getInitials(value: string) {
-  return value
+function getInitials(value: string | null | undefined) {
+  return (value ?? "")
+    .trim()
     .split(/\s+/)
+    .filter(Boolean)
     .map((part) => part[0])
     .join("")
     .slice(0, 2)
