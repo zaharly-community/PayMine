@@ -11,7 +11,7 @@ export const roleNavigation: Record<UserRole, Record<string, boolean>> = {
     "client-portal": true,
   },
   "Brand Admin": {
-    treasury: true,
+    remittance: true,
     dashboard: true,
     players: true,
     distributors: true,
@@ -64,7 +64,7 @@ const routeKeys: Array<{ prefix: string; id: string }> = [
   { prefix: "/dashboard/packages", id: "packages" },
   { prefix: "/dashboard/subscriptions", id: "subscriptions" },
   { prefix: "/dashboard/reports", id: "reports" },
-  { prefix: "/dashboard/treasury", id: "treasury" },
+  { prefix: "/dashboard/treasury", id: "remittance" },
   { prefix: "/dashboard/players", id: "players" },
   { prefix: "/dashboard/distributors", id: "distributors" },
   { prefix: "/dashboard/deposits", id: "deposits" },
