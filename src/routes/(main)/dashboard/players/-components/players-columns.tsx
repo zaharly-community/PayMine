@@ -20,10 +20,15 @@ type PlayerMeta = { playerId: string; identifier: string; joined: string; score:
 export type PlayerColumnActions = { statusById: Record<string, PlayerStatus>; onSuspend: (playerId: string) => void; onDelete: (playerId: string) => void; };
 
 function getPlayerMeta(player: PlayerRow): PlayerMeta {
+  const seedSource = player.email || player.phoneNumber || player.playerId || player.id || player.name;
   let seed = 0;
-  for (const char of player.email) seed += char.charCodeAt(0);
-  const playerId = "PLR" + player.email.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase();
-  const identifier = seed % 2 === 0 ? playerId : player.name.toLowerCase().replace(/[^a-z0-9]+/g, ".") + "-" + String(seed % 90 + 10);
+  for (const char of seedSource) seed += char.charCodeAt(0);
+  const generatedPlayerId = player.email
+    ? "PLR" + player.email.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase()
+    : "PLR" + seedSource.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase();
+  const playerId = player.playerId?.trim() || generatedPlayerId;
+  const legacyIdentifier = seed % 2 === 0 ? generatedPlayerId : player.name.toLowerCase().replace(/[^a-z0-9]+/g, ".") + "-" + String(seed % 90 + 10);
+  const identifier = player.playerId || player.phoneNumber || (player.email && player.id ? player.email : legacyIdentifier);
   return { playerId, identifier, joined: player.joinedDate, score: Number(((seed % 101) / 10).toFixed(1)), deposits: 250 + (seed % 18500), withdrawals: 120 + (seed % 9200), location: locations[seed % locations.length] ?? locations[0] };
 }
 
@@ -73,7 +78,7 @@ function PlayerActions({ player, meta, status, onSuspend, onDelete }: { player: 
 }
 
 export const createPlayersColumns = (actions: PlayerColumnActions): ColumnDef<DataTableFeatures, PlayerRow>[] => [
-  { id: "search", accessorFn: (row) => row.name + " " + row.email + " " + getPlayerMeta(row).identifier + " " + getPlayerMeta(row).playerId, filterFn: "includesString", enableHiding: true },
+  { id: "search", accessorFn: (row) => [row.name, row.email, row.phoneNumber, getPlayerMeta(row).identifier, getPlayerMeta(row).playerId].filter(Boolean).join(" "), filterFn: "includesString", enableHiding: true },
   { id: "playerId", accessorFn: (row) => getPlayerMeta(row).playerId, header: "Player ID", cell: ({ row }) => <span className="font-mono text-xs tracking-wide text-foreground">{getPlayerMeta(row.original).playerId}</span> },
   { id: "identifier", accessorFn: (row) => getPlayerMeta(row).identifier, header: "Identifier", cell: ({ row }) => <span className="max-w-44 truncate text-sm">{getPlayerMeta(row.original).identifier}</span> },
   { id: "joined", accessorFn: (row) => new Date(row.joinedDate).getTime(), header: "Joined", cell: ({ row }) => <span className="whitespace-nowrap text-sm tabular-nums">{getPlayerMeta(row.original).joined}</span> },
