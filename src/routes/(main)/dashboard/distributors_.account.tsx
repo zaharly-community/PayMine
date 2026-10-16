@@ -5,6 +5,7 @@ import {
   Activity,
   ArrowDownToLine,
   ArrowUpFromLine,
+  Ban,
   BarChart3,
   Building2,
   CalendarDays,
@@ -19,9 +20,12 @@ import {
   Mail,
   MapPin,
   Pencil,
+  Save,
   Settings2,
   ShieldCheck,
   Star,
+  Trash2,
+  Upload,
   UserRound,
   Users,
   WalletCards,
@@ -30,6 +34,7 @@ import { parse } from "date-fns";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -114,15 +119,176 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+type DistributorAccountProfile = {
+  legalName: string;
+  email: string;
+  location: string;
+  customerSince: string;
+  accountManager: string;
+  taxId: string;
+  paymentTerms: string;
+  licensedPlayers: string;
+  avatarUrl: string;
+};
+
 function Page() {
   const distributor = distributors[0];
+  const profileStorageKey = `ipaycash-distributor-account-profile-v1:${distributor.id}`;
+  const statusStorageKey = `ipaycash-distributor-account-status-v1:${distributor.id}`;
+  const createInitialProfile = React.useCallback<() => DistributorAccountProfile>(() => ({
+    legalName: distributor.name,
+    email: distributor.email,
+    location: "Tunis, Tunisia",
+    customerSince: distributor.joinedDate,
+    accountManager: "Ingrid Sandoval",
+    taxId: "TN 74 612 893 204",
+    paymentTerms: "Net 30",
+    licensedPlayers: String(distributor.players),
+    avatarUrl: distributor.avatarUrl ?? "",
+  }), [distributor]);
+
+  const [profile, setProfile] = React.useState<DistributorAccountProfile>(() => createInitialProfile());
+  const savedProfileRef = React.useRef<DistributorAccountProfile>(profile);
   const [leftTab, setLeftTab] = React.useState<LeftTab>("Details");
   const [mainTab, setMainTab] = React.useState<MainTab>("Transactions");
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [isDirty, setIsDirty] = React.useState(false);
+  const [isBlocked, setIsBlocked] = React.useState(false);
+  const [isDeleted, setIsDeleted] = React.useState(false);
+  const [avatarError, setAvatarError] = React.useState("");
+  const [saveError, setSaveError] = React.useState("");
+
+  React.useEffect(() => {
+    try {
+      const storedProfile = window.localStorage.getItem(profileStorageKey);
+      if (storedProfile) {
+        const parsed = JSON.parse(storedProfile) as Partial<DistributorAccountProfile>;
+        const merged = { ...createInitialProfile(), ...parsed };
+        setProfile(merged);
+        savedProfileRef.current = merged;
+      }
+      const storedStatus = window.localStorage.getItem(statusStorageKey);
+      if (storedStatus) {
+        const parsedStatus = JSON.parse(storedStatus) as { isBlocked?: boolean; isDeleted?: boolean };
+        setIsBlocked(Boolean(parsedStatus.isBlocked));
+        setIsDeleted(Boolean(parsedStatus.isDeleted));
+      }
+    } catch {
+      // Keep the default demo account if browser storage is unavailable or invalid.
+    }
+  }, [createInitialProfile, profileStorageKey, statusStorageKey]);
+
+  const updateProfile = (field: keyof DistributorAccountProfile, value: string) => {
+    setProfile((current) => ({ ...current, [field]: value }));
+    setIsDirty(true);
+    setSaveError("");
+    if (field === "avatarUrl") setAvatarError("");
+  };
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Choose an image file.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError("Please choose an image smaller than 2 MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") updateProfile("avatarUrl", reader.result);
+    };
+    reader.onerror = () => setAvatarError("The image could not be loaded.");
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
+  const handleEditSave = () => {
+    if (!isEditing) {
+      setProfile(savedProfileRef.current);
+      setIsEditing(true);
+      setIsDirty(false);
+      setSaveError("");
+      setAvatarError("");
+      return;
+    }
+    if (!isDirty) {
+      setProfile(savedProfileRef.current);
+      setIsEditing(false);
+      setAvatarError("");
+      setSaveError("");
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(profileStorageKey, JSON.stringify(profile));
+      savedProfileRef.current = profile;
+      setIsDirty(false);
+      setIsEditing(false);
+      setAvatarError("");
+      setSaveError("");
+    } catch {
+      setSaveError("Could not save in this browser. Try a smaller profile image.");
+    }
+  };
+
+  const handleAccountAction = () => {
+    if (isBlocked) {
+      if (!window.confirm("Delete this account from the current demo view?")) return;
+      setIsDeleted(true);
+      try {
+        window.localStorage.setItem(statusStorageKey, JSON.stringify({ isBlocked: true, isDeleted: true }));
+      } catch {
+        // UI state still updates for this session if local storage is unavailable.
+      }
+      return;
+    }
+
+    if (!window.confirm("Block this account? You can delete it afterward.")) return;
+    setIsBlocked(true);
+    try {
+      window.localStorage.setItem(statusStorageKey, JSON.stringify({ isBlocked: true, isDeleted: false }));
+    } catch {
+      // UI state still updates for this session if local storage is unavailable.
+    }
+  };
 
   const totalBilled = billedMonths.reduce(
     (total, item) => total + item.paid + item.open + item.overdue,
     0,
   );
+
+  if (isDeleted) {
+    return (
+      <section className="flex min-h-[60vh] flex-col items-center justify-center gap-3 p-8 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+          <Trash2 className="size-5" />
+        </div>
+        <h1 className="text-lg font-semibold">Account marked as deleted</h1>
+        <p className="max-w-md text-sm text-muted-foreground">
+          This is a local demo action only. The distributor record has not been removed from a server.
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setIsDeleted(false);
+            setIsBlocked(false);
+            try {
+              window.localStorage.setItem(statusStorageKey, JSON.stringify({ isBlocked: false, isDeleted: false }));
+            } catch {
+              // Keep the screen usable if storage is disabled.
+            }
+          }}
+        >
+          Return to account
+        </Button>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -133,26 +299,65 @@ function Page() {
         <aside className="border-b xl:border-b-0 xl:border-r">
           <div className="p-5">
             <div className="flex items-center gap-4">
-              <Avatar size="lg" className="size-14 shrink-0">
-                <AvatarImage
-                  src={distributor.avatarUrl || undefined}
-                  alt=""
-                  referrerPolicy="no-referrer"
+              <div className="relative shrink-0">
+                {isEditing ? (
+                  <label
+                    htmlFor="distributor-account-avatar-upload"
+                    className="group/avatar-upload relative block cursor-pointer rounded-full outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+                    title="Upload profile image"
+                  >
+                    <Avatar size="lg" className="size-14 shrink-0">
+                      <AvatarImage src={profile.avatarUrl || undefined} alt={profile.legalName} />
+                      <AvatarFallback className="text-base">{getInitials(profile.legalName)}</AvatarFallback>
+                    </Avatar>
+                    <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/55 text-white opacity-0 transition-opacity group-hover/avatar-upload:opacity-100 group-focus-within/avatar-upload:opacity-100">
+                      <Upload className="size-4" />
+                    </span>
+                  </label>
+                ) : (
+                  <Avatar size="lg" className="size-14 shrink-0">
+                    <AvatarImage src={profile.avatarUrl || undefined} alt={profile.legalName} />
+                    <AvatarFallback className="text-base">{getInitials(profile.legalName)}</AvatarFallback>
+                  </Avatar>
+                )}
+                <input
+                  id="distributor-account-avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  disabled={!isEditing}
+                  onChange={handleAvatarChange}
                 />
-                <AvatarFallback className="text-base">
-                  {getInitials(distributor.name)}
-                </AvatarFallback>
-              </Avatar>
+              </div>
 
-              <div className="min-w-0">
-                <h1 className="truncate text-xl font-semibold tracking-tight">
-                  {distributor.name}
-                </h1>
-                <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                  {distributor.email}
-                </p>
+              <div className="min-w-0 flex-1">
+                {isEditing ? (
+                  <>
+                    <Input
+                      aria-label="Account name"
+                      value={profile.legalName}
+                      onChange={(event) => updateProfile("legalName", event.target.value)}
+                      className="h-8 text-base font-semibold"
+                    />
+                    <Input
+                      aria-label="Account email"
+                      type="email"
+                      value={profile.email}
+                      onChange={(event) => updateProfile("email", event.target.value)}
+                      className="mt-1 h-8 text-sm"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <h1 className="truncate text-xl font-semibold tracking-tight">{profile.legalName}</h1>
+                    <p className="mt-0.5 truncate text-sm text-muted-foreground">{profile.email}</p>
+                  </>
+                )}
               </div>
             </div>
+            {isEditing && avatarError ? (
+              <p className="mt-2 text-xs text-destructive">{avatarError}</p>
+            ) : null}
 
             <div className="mt-6 grid grid-cols-3 gap-3">
               <Metric label="Process Time" value="3m 18s" />
@@ -173,6 +378,7 @@ function Page() {
               <button
                 key={tab}
                 type="button"
+                disabled={isEditing && tab !== "Details"}
                 onClick={() => setLeftTab(tab)}
                 className={cn(
                   "flex h-11 items-center gap-2 border-b-2 border-transparent px-5 text-sm font-medium text-muted-foreground transition-colors",
@@ -195,21 +401,64 @@ function Page() {
             {leftTab === "Details" ? (
               <>
                 <div className="space-y-5">
-                  <DetailRow icon={Building2} label="Legal name" value={distributor.name} />
-                  <DetailRow icon={Mail} label="Billing email" value={distributor.email} />
-                  <DetailRow icon={MapPin} label="Location" value="Tunis, Tunisia" />
-                  <DetailRow icon={CalendarDays} label="Customer since" value={distributor.joinedDate} />
-                  <DetailRow icon={UserRound} label="Account manager" value="Ingrid Sandoval" />
-                  <DetailRow icon={CreditCard} label="Tax ID" value="TN 74 612 893 204" />
+                  <DetailRow
+                    icon={Building2}
+                    label="Legal name"
+                    value={profile.legalName}
+                    editing={isEditing}
+                    onChange={(value) => updateProfile("legalName", value)}
+                  />
+                  <DetailRow
+                    icon={Mail}
+                    label="Billing email"
+                    value={profile.email}
+                    type="email"
+                    editing={isEditing}
+                    onChange={(value) => updateProfile("email", value)}
+                  />
+                  <DetailRow
+                    icon={MapPin}
+                    label="Location"
+                    value={profile.location}
+                    editing={isEditing}
+                    onChange={(value) => updateProfile("location", value)}
+                  />
+                  <DetailRow
+                    icon={CalendarDays}
+                    label="Customer since"
+                    value={profile.customerSince}
+                    editing={isEditing}
+                    onChange={(value) => updateProfile("customerSince", value)}
+                  />
+                  <DetailRow
+                    icon={UserRound}
+                    label="Account manager"
+                    value={profile.accountManager}
+                    editing={isEditing}
+                    onChange={(value) => updateProfile("accountManager", value)}
+                  />
+                  <DetailRow
+                    icon={CreditCard}
+                    label="Tax ID"
+                    value={profile.taxId}
+                    editing={isEditing}
+                    onChange={(value) => updateProfile("taxId", value)}
+                  />
                   <DetailRow
                     icon={CreditCard}
                     label="Payment terms"
-                    value="Net 30"
+                    value={profile.paymentTerms}
+                    editing={isEditing}
+                    onChange={(value) => updateProfile("paymentTerms", value)}
                   />
                   <DetailRow
                     icon={Users}
                     label="Licensed players"
-                    value={String(distributor.players) + " active"}
+                    value={profile.licensedPlayers + " active"}
+                    inputValue={profile.licensedPlayers}
+                    type="number"
+                    editing={isEditing}
+                    onChange={(value) => updateProfile("licensedPlayers", value)}
                   />
                 </div>
 
@@ -219,9 +468,9 @@ function Page() {
                     <p className="text-sm font-semibold">About the account</p>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    {distributor.name} uses the full PayMine distribution workspace across
+                    {profile.legalName} uses the full PayMine distribution workspace across
                     settlement, payment routing, player operations, and account controls.
-                    This enterprise-style account currently tracks {distributor.players} linked players.
+                    This enterprise-style account currently tracks {profile.licensedPlayers} linked players.
                   </p>
                 </div>
               </>
@@ -267,6 +516,37 @@ function Page() {
                 ))}
               </div>
             ) : null}
+          </div>
+
+          <div className="border-t p-5">
+            {isEditing && saveError ? (
+              <p className="mb-3 text-xs text-destructive">{saveError}</p>
+            ) : null}
+            {isBlocked ? (
+              <p className="mb-3 flex items-center gap-2 text-xs font-medium text-destructive">
+                <Ban className="size-3.5" />
+                This account is blocked.
+              </p>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={handleAccountAction}
+              >
+                {isBlocked ? <Trash2 className="size-4" /> : <Ban className="size-4" />}
+                {isBlocked ? "Delete account" : "Block account"}
+              </Button>
+              <Button
+                type="button"
+                variant={isDirty ? "default" : "outline"}
+                onClick={handleEditSave}
+              >
+                {isDirty ? <Save className="size-4" /> : <Pencil className="size-4" />}
+                {isDirty ? "Save" : isEditing ? "Cancel" : "Edit"}
+              </Button>
+            </div>
           </div>
         </aside>
 
@@ -1294,10 +1574,18 @@ function DetailRow({
   icon: Icon,
   label,
   value,
+  inputValue,
+  type = "text",
+  editing = false,
+  onChange,
 }: {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   label: string;
   value: string;
+  inputValue?: string;
+  type?: string;
+  editing?: boolean;
+  onChange?: (value: string) => void;
 }) {
   return (
     <div className="grid grid-cols-[150px_minmax(0,1fr)] items-start gap-3">
@@ -1305,7 +1593,17 @@ function DetailRow({
         <Icon className="size-4 shrink-0" />
         <span className="truncate">{label}</span>
       </div>
-      <span className="min-w-0 text-sm font-medium">{value}</span>
+      {editing && onChange ? (
+        <Input
+          type={type}
+          value={inputValue ?? value}
+          aria-label={label}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-8 min-w-0 px-2 text-sm font-medium"
+        />
+      ) : (
+        <span className="min-w-0 text-sm font-medium">{value}</span>
+      )}
     </div>
   );
 }
