@@ -14,6 +14,12 @@ const teamValues = [
 export type PlayerTeam = (typeof teamValues)[number];
 
 export type PlayerRow = {
+  /** Stable internal registry key for records created in the Players UI. */
+  id?: string;
+  /** Canonical gaming-platform player identifier; older demo rows derive one from email. */
+  playerId?: string;
+  /** Optional international phone number in E.164 format. */
+  phoneNumber?: string;
   email: string;
   joinedDate: string;
   lastActive: number;
