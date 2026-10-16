@@ -19,7 +19,7 @@ function makeMethodId(name: string) {
   return "method-" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
 
-function createSupervisorMethods(enabledNames: string[] = []): DistributorPaymentMethod[] {
+export function createSupervisorMethods(enabledNames: string[] = []): DistributorPaymentMethod[] {
   return ownerPaymentMethods.map((method) => ({
     id: makeMethodId(method.name),
     name: method.name,
