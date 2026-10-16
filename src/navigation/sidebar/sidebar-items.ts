@@ -3,7 +3,11 @@ import {
   ArrowUpFromLine,
   BarChart3,
   CircleDollarSign,
+  Clock3,
   CreditCard,
+  CalendarDays,
+  ClipboardCheck,
+  FileText,
   Landmark,
   Layers3,
   Network,
@@ -12,6 +16,7 @@ import {
   Scale,
   Settings2,
   Users,
+  Wallet,
   WalletCards,
   type LucideIcon,
 } from "lucide-react";
@@ -201,6 +206,16 @@ export const sidebarItems: NavGroup[] = [
         url: "/dashboard/client-portal" as AppPath,
         icon: PanelsTopLeft,
       },
+    ],
+  },
+  {
+    id: 5,
+    label: "HR",
+    items: [
+      { id: "hr-programs", title: "Programs", url: "/dashboard/hr/programs" as AppPath, icon: FileText },
+      { id: "hr-shift-time", title: "Shift Time", url: "/dashboard/hr/shift-time" as AppPath, icon: Clock3 },
+      { id: "hr-attendance", title: "Attendance", url: "/dashboard/hr/attendance" as AppPath, icon: CalendarDays },
+      { id: "hr-payroll", title: "Payroll", url: "/dashboard/hr/payroll" as AppPath, icon: Wallet },
     ],
   },
 ];
