@@ -1,8 +1,11 @@
 import * as React from "react";
 
 import { type ColumnFiltersState, type ColumnVisibilityState, type PaginationState, type SortingState, useTable } from "@tanstack/react-table";
-import { Check, Cog, Download, GripVertical, Plus, Search } from "lucide-react";
+import { AlertTriangle, Check, Cog, Download, GripVertical, Plus, Search, ShieldCheck } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Kbd } from "@/components/ui/kbd";
 import { dataTableFeatures } from "@/lib/data-table-features";
@@ -10,8 +13,96 @@ import type { PlayerRow } from "./data";
 import { createPlayersColumns } from "./players-columns";
 import { PlayersTable } from "./players-table";
 
+const playerRegistryStorageKey = "ipaycash-player-registry-v1";
+
+type PlayerIdentityDraft = {
+  name: string;
+  playerId: string;
+  email: string;
+  phoneNumber: string;
+};
+
+type PlayerIdentityMatch = {
+  player: PlayerRow;
+  matchedBy: string[];
+};
+
+const emptyIdentityDraft = (): PlayerIdentityDraft => ({
+  name: "",
+  playerId: "",
+  email: "",
+  phoneNumber: "",
+});
+
+function normalizePlayerId(value: string) {
+  return value.trim().replace(/\s+/g, "").toUpperCase();
+}
+
+function normalizePlayerEmail(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function normalizePlayerPhone(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+function getDashboardPlayerId(player: PlayerRow) {
+  if (player.playerId?.trim()) return normalizePlayerId(player.playerId);
+  if (player.email.trim()) {
+    return "PLR" + player.email.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase();
+  }
+  const source = player.phoneNumber || player.id || player.name;
+  return "PLR" + source.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase();
+}
+
+function getPlayerRowKey(player: PlayerRow) {
+  return player.id || player.playerId || player.email || player.phoneNumber || player.name;
+}
+
+function getPlayerMatches(playerRows: PlayerRow[], draft: PlayerIdentityDraft): PlayerIdentityMatch[] {
+  const wantedId = normalizePlayerId(draft.playerId);
+  const wantedEmail = normalizePlayerEmail(draft.email);
+  const wantedPhone = normalizePlayerPhone(draft.phoneNumber);
+
+  return playerRows.flatMap((player) => {
+    const matchedBy: string[] = [];
+    const existingId = getDashboardPlayerId(player);
+    if (wantedId && normalizePlayerId(existingId) === wantedId) matchedBy.push("Player ID");
+    if (wantedEmail && player.email && normalizePlayerEmail(player.email) === wantedEmail) matchedBy.push("Email");
+    if (wantedPhone && player.phoneNumber && normalizePlayerPhone(player.phoneNumber) === wantedPhone) matchedBy.push("Phone Number");
+    return matchedBy.length ? [{ player, matchedBy }] : [];
+  });
+}
+
+function readSavedPlayerRegistry(): PlayerRow[] {
+  try {
+    const raw = window.localStorage.getItem(playerRegistryStorageKey);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed as PlayerRow[] : [];
+  } catch {
+    return [];
+  }
+}
+
 export function Players({ players }: { players: PlayerRow[] }) {
   const [playerRows, setPlayerRows] = React.useState<PlayerRow[]>(players);
+  const [addPlayerOpen, setAddPlayerOpen] = React.useState(false);
+  const [identityDraft, setIdentityDraft] = React.useState<PlayerIdentityDraft>(emptyIdentityDraft);
+  const [identityError, setIdentityError] = React.useState("");
+  const [identityMatches, setIdentityMatches] = React.useState<PlayerIdentityMatch[]>([]);
+
+  React.useEffect(() => {
+    try {
+      const saved = readSavedPlayerRegistry();
+      setPlayerRows((current) => {
+        const knownKeys = new Set(current.map(getPlayerRowKey));
+        return [...current, ...saved.filter((player) => !knownKeys.has(getPlayerRowKey(player)))];
+      });
+    } catch {
+      // The Players table remains available when browser storage is disabled.
+    }
+  }, []);
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "joined", desc: true }]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -36,11 +127,105 @@ export function Players({ players }: { players: PlayerRow[] }) {
   }, []);
 
   const handleDelete = React.useCallback((playerId: string) => {
-    setPlayerRows((current) => current.filter((player) => {
-      const id = "PLR" + player.email.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase();
-      return id !== playerId;
-    }));
+    setPlayerRows((current) => current.filter((player) => getDashboardPlayerId(player) !== playerId));
+    try {
+      const saved = readSavedPlayerRegistry().filter((player) => getDashboardPlayerId(player) !== playerId);
+      window.localStorage.setItem(playerRegistryStorageKey, JSON.stringify(saved));
+    } catch {
+      // Deleting from the current table still works if browser storage is unavailable.
+    }
   }, []);
+
+  const createPlayer = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIdentityError("");
+    setIdentityMatches([]);
+
+    const name = identityDraft.name.trim();
+    const playerId = normalizePlayerId(identityDraft.playerId);
+    const email = normalizePlayerEmail(identityDraft.email);
+    const phoneInput = identityDraft.phoneNumber.trim();
+    const phoneDigits = normalizePlayerPhone(phoneInput);
+
+    if (!name) {
+      setIdentityError("Enter the player name.");
+      return;
+    }
+    if (!playerId && !email && !phoneInput) {
+      setIdentityError("Enter at least one unique identifier: Player ID, Email, or Phone Number.");
+      return;
+    }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setIdentityError("Enter a valid email address.");
+      return;
+    }
+    if (phoneInput && !/^\+[1-9]\d{7,14}$/.test(phoneInput.replace(/[\s().-]/g, ""))) {
+      setIdentityError("Use an international phone number, for example +216 20 123 456.");
+      return;
+    }
+
+    const matches = getPlayerMatches(playerRows, {
+      ...identityDraft,
+      name,
+      playerId,
+      email,
+      phoneNumber: phoneInput,
+    });
+    if (matches.length) {
+      setIdentityMatches(matches);
+      setIdentityError(
+        matches.length === 1
+          ? "This identifier already belongs to an existing player. A duplicate record was not created."
+          : "These identifiers match different existing player records. Creation is blocked until the identity conflict is reviewed.",
+      );
+      return;
+    }
+
+    const generatedId = "PLR" + Date.now().toString(36).toUpperCase().slice(-8);
+    const finalPlayerId = playerId || generatedId;
+    const normalizedPhone = phoneInput ? "+" + phoneDigits : undefined;
+    const created: PlayerRow = {
+      id: "local-player-" + Date.now().toString(36),
+      playerId: finalPlayerId,
+      name,
+      email,
+      phoneNumber: normalizedPhone,
+      role: "Player",
+      status: "Active",
+      team: "Customer Ops",
+      workspace: ["iPayCash"],
+      joinedDate: new Date().toLocaleString("en-US", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }),
+      lastActive: 0,
+    };
+
+    const nextRows = [created, ...playerRows];
+    setPlayerRows(nextRows);
+    try {
+      const saved = readSavedPlayerRegistry();
+      window.localStorage.setItem(playerRegistryStorageKey, JSON.stringify([created, ...saved]));
+    } catch {
+      // The newly created row remains visible for this session even if storage is unavailable.
+    }
+    setIdentityDraft(emptyIdentityDraft());
+    setIdentityMatches([]);
+    setIdentityError("");
+    setAddPlayerOpen(false);
+  };
+
+  const closeAddPlayer = (open: boolean) => {
+    setAddPlayerOpen(open);
+    if (!open) {
+      setIdentityDraft(emptyIdentityDraft());
+      setIdentityMatches([]);
+      setIdentityError("");
+    }
+  };
 
   const columns = React.useMemo(() => createPlayersColumns({ statusById, onSuspend: handleSuspend, onDelete: handleDelete }), [statusById, handleSuspend, handleDelete]);
 
@@ -49,7 +234,7 @@ export function Players({ players }: { players: PlayerRow[] }) {
     data: playerRows,
     columns,
     state: { rowSelection, sorting, columnFilters, columnVisibility, columnOrder, pagination },
-    getRowId: (row) => row.email,
+    getRowId: (row) => getPlayerRowKey(row),
     autoResetPageIndex: false,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
@@ -177,10 +362,77 @@ export function Players({ players }: { players: PlayerRow[] }) {
             ) : null}
           </div>
           <Button variant="outline" size="sm"><Download /> Export</Button>
-          <Button size="sm"><Plus /> Add Player</Button>
+          <Button size="sm" onClick={() => setAddPlayerOpen(true)}><Plus /> Add Player</Button>
         </div>
       </div>
       <div className="min-w-0 flex-1"><PlayersTable table={table} /></div>
+
+      <Dialog open={addPlayerOpen} onOpenChange={closeAddPlayer}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Add player</DialogTitle>
+            <DialogDescription>
+              A player may have a Player ID, email address, phone number, or a combination. iPayCash checks all identifiers before creating a new record.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={createPlayer} className="space-y-4">
+            <div className="space-y-1.5">
+              <label htmlFor="new-player-name" className="text-sm font-medium">Player name <span className="text-destructive">*</span></label>
+              <Input id="new-player-name" autoFocus value={identityDraft.name} onChange={(event) => { setIdentityDraft((draft) => ({ ...draft, name: event.target.value })); setIdentityError(""); setIdentityMatches([]); }} placeholder="Enter player's name" />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label htmlFor="new-player-id" className="text-sm font-medium">Player ID</label>
+                <Input id="new-player-id" value={identityDraft.playerId} onChange={(event) => { setIdentityDraft((draft) => ({ ...draft, playerId: event.target.value })); setIdentityError(""); setIdentityMatches([]); }} placeholder="e.g. PLR12345678" autoComplete="off" />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="new-player-email" className="text-sm font-medium">Email</label>
+                <Input id="new-player-email" type="email" value={identityDraft.email} onChange={(event) => { setIdentityDraft((draft) => ({ ...draft, email: event.target.value })); setIdentityError(""); setIdentityMatches([]); }} placeholder="player@example.com" autoComplete="email" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="new-player-phone" className="text-sm font-medium">Phone number</label>
+              <Input id="new-player-phone" type="tel" value={identityDraft.phoneNumber} onChange={(event) => { setIdentityDraft((draft) => ({ ...draft, phoneNumber: event.target.value })); setIdentityError(""); setIdentityMatches([]); }} placeholder="+216 20 123 456" autoComplete="tel" />
+              <p className="text-xs text-muted-foreground">Use the international format with country code. At least one of the three identifiers is required.</p>
+            </div>
+
+            {identityError ? (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
+                  <p className="text-sm text-foreground">{identityError}</p>
+                </div>
+                {identityMatches.length ? (
+                  <div className="mt-3 space-y-2">
+                    {identityMatches.map(({ player, matchedBy }) => {
+                      const matchedId = getDashboardPlayerId(player);
+                      return (
+                        <div key={getPlayerRowKey(player)} className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-background px-3 py-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{player.name}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">{matchedId} · Matched by {matchedBy.join(", ")}</p>
+                          </div>
+                          <Link to="/dashboard/players/$playerId" params={{ playerId: matchedId }} className="shrink-0 text-xs font-medium text-primary hover:underline">
+                            Open player
+                          </Link>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => closeAddPlayer(false)}>Cancel</Button>
+              <Button type="submit"><ShieldCheck /> Check & create player</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
