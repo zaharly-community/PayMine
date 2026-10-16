@@ -33,7 +33,18 @@ function useSavedState<T,>(key: string, fallback: T) {
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(key);
-      if (raw) setValue(JSON.parse(raw) as T);
+      if (raw) {
+        const parsed: unknown = JSON.parse(raw);
+        if (
+          key === PROGRAM_STORAGE &&
+          (!Array.isArray(parsed) ||
+            parsed.some((item) => !item || typeof item !== "object" || !("configuration" in item) || !("role" in item)))
+        ) {
+          setValue(fallback);
+        } else {
+          setValue(parsed as T);
+        }
+      }
     } catch {
       // Keep the fallback when stored data is unavailable or invalid.
     } finally {
