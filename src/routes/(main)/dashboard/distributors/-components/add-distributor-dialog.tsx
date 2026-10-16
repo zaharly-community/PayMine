@@ -323,7 +323,6 @@ export function AddDistributorDialog({ open, onOpenChange, onCreate }: AddDistri
     if (!open) return;
     try {
       const raw = window.localStorage.getItem("ipaycash-distributor-program-templates-v1");
-      const raw = window.localStorage.getItem("ipaycash-distributor-program-templates-v1");
       const parsed: unknown = raw ? JSON.parse(raw) : defaultProgramTemplates;
       const nextTemplates = Array.isArray(parsed) ? (parsed as ProgramTemplate[]) : defaultProgramTemplates;
       setProgramTemplates(nextTemplates);
