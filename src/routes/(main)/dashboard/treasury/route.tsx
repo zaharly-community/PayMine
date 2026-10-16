@@ -150,12 +150,12 @@ function TreasuryManagementPage() {
       </div>
 
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-h-[92vh] w-[min(96vw,1040px)] max-w-[1040px] overflow-y-auto p-0">
-          <DialogHeader className="sticky top-0 z-10 border-b bg-background/95 px-5 py-4 text-left backdrop-blur sm:px-6">
+        <DialogContent className="flex h-[min(92dvh,980px)] w-[min(96vw,1280px)] max-w-[1280px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(96vw,1280px)] xl:max-w-[1280px]">
+          <DialogHeader className="sticky top-0 z-20 shrink-0 border-b bg-background/95 px-6 py-5 text-left backdrop-blur sm:px-8">
             <DialogTitle className="text-lg">Record owner withdrawal</DialogTitle>
             <DialogDescription>Record the transaction details and evidence. This form does not send funds or connect to an exchange.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={createCollection} className="space-y-6 px-5 pb-5 pt-1 sm:px-6 sm:pb-6">
+          <form onSubmit={createCollection} className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 pb-0 pt-5 sm:px-8">
             <div>
               <SectionTitle icon={<Wallet className="size-4" />} title="1. Source wallet & limit" description="Where the funds are coming from." />
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -222,9 +222,10 @@ function TreasuryManagementPage() {
               </div>
             </div>}
 
-            <div>
+            <div className="grid gap-5 xl:grid-cols-2">
+            <div className="rounded-xl border p-4">
               <SectionTitle icon={<Coins className="size-4" />} title="4. Fees & settlement estimate" description="Enter actual fees from the provider or exchange." />
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <Field label={`Owner / platform fee (${sourceCurrency})`}><Input type="number" min="0" step="0.01" value={platformFee} onChange={(e) => setPlatformFee(e.target.value)} className="h-10" /></Field>
                 <Field label={`Provider / network fee (${sourceCurrency})`}><Input type="number" min="0" step="0.01" value={providerFee} onChange={(e) => setProviderFee(e.target.value)} className="h-10" /></Field>
                 <Field label={`P2P / exchange fee (${sourceCurrency})`}><Input type="number" min="0" step="0.01" value={p2pFee} onChange={(e) => setP2pFee(e.target.value)} className="h-10" /></Field>
@@ -232,7 +233,7 @@ function TreasuryManagementPage() {
               </div>
             </div>
 
-            <div>
+            <div className="rounded-xl border p-4">
               <SectionTitle icon={<FileUp className="size-4" />} title="5. Transaction record & proof" description="Keep the reference and evidence attached to this withdrawal transaction." />
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Provider reference (optional if TXID / order ID supplied)"><Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Provider transfer reference" className="h-10" /></Field>
@@ -240,8 +241,9 @@ function TreasuryManagementPage() {
                 <div className="sm:col-span-2"><Field label="Notes"><textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="w-full rounded-md border bg-background px-3 py-2 text-sm" placeholder="Purpose, exchange rate source, exceptions or reconciliation notes…" /></Field></div>
               </div>
             </div>
+            </div>
 
-            <div className="flex flex-col gap-3 rounded-xl border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="sticky bottom-0 z-10 -mx-6 flex flex-col gap-3 rounded-none border-x-0 border-b-0 bg-background/95 px-6 py-4 shadow-[0_-10px_18px_-18px_rgba(0,0,0,0.45)] backdrop-blur sm:-mx-8 sm:flex-row sm:items-center sm:justify-between sm:px-8">
               <div className="flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="mt-0.5 size-4 shrink-0" /><span>This creates a transaction record only. {sourceValue > remainingLimit ? <span className="font-semibold text-destructive">Amount exceeds the entered daily limit.</span> : "Check the provider limit and destination before transferring."}</span></div>
               <div className="flex shrink-0 justify-end gap-2"><Button type="button" variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button><Button type="submit"><Plus className="mr-1 size-4" /> Save transaction</Button></div>
             </div>
