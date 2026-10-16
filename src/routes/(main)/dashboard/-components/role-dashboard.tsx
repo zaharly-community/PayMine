@@ -17,7 +17,7 @@ import {
   WalletCards,
   Zap,
 } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,15 +31,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "cn";
 import type { UserRole } from "@/stores/auth/auth-provider";
 import { useBrand } from "@/stores/brands/brand-provider";
-
-const brandVolume = [
-  { label: "Apr", deposits: 195000, withdrawals: 74000 },
-  { label: "May", deposits: 224000, withdrawals: 82000 },
-  { label: "Jun", deposits: 248000, withdrawals: 97000 },
-  { label: "Jul", deposits: 272000, withdrawals: 105000 },
-  { label: "Aug", deposits: 301000, withdrawals: 118000 },
-  { label: "Sep", deposits: 326000, withdrawals: 126000 },
-];
 
 const chartConfig = {
   volume: { label: "Volume", color: "var(--foreground)" },
@@ -339,86 +330,212 @@ function DashboardLink({ title, detail, to }: { title: string; detail: string; t
 
 function BrandAdminDashboard() {
   const { activeBrand } = useBrand();
+  const todayLabel = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date());
+
+  const hourlyActivity = [
+    { hour: "00", deposits: 120, withdrawals: 35 },
+    { hour: "01", deposits: 85, withdrawals: 25 },
+    { hour: "02", deposits: 60, withdrawals: 20 },
+    { hour: "03", deposits: 45, withdrawals: 15 },
+    { hour: "04", deposits: 55, withdrawals: 20 },
+    { hour: "05", deposits: 120, withdrawals: 45 },
+    { hour: "06", deposits: 220, withdrawals: 90 },
+    { hour: "07", deposits: 480, withdrawals: 160 },
+    { hour: "08", deposits: 810, withdrawals: 280 },
+    { hour: "09", deposits: 1250, withdrawals: 400 },
+    { hour: "10", deposits: 1720, withdrawals: 590 },
+    { hour: "11", deposits: 1950, withdrawals: 710 },
+    { hour: "12", deposits: 2280, withdrawals: 840 },
+    { hour: "13", deposits: 2410, withdrawals: 920 },
+    { hour: "14", deposits: 2250, withdrawals: 870 },
+    { hour: "15", deposits: 2120, withdrawals: 810 },
+    { hour: "16", deposits: 2330, withdrawals: 860 },
+    { hour: "17", deposits: 2510, withdrawals: 930 },
+    { hour: "18", deposits: 2390, withdrawals: 840 },
+    { hour: "19", deposits: 2130, withdrawals: 790 },
+    { hour: "20", deposits: 1970, withdrawals: 680 },
+    { hour: "21", deposits: 1680, withdrawals: 550 },
+    { hour: "22", deposits: 1320, withdrawals: 420 },
+    { hour: "23", deposits: 980, withdrawals: 320 },
+  ];
+
+  const totals = hourlyActivity.reduce(
+    (result, hour) => ({
+      deposits: result.deposits + hour.deposits,
+      withdrawals: result.withdrawals + hour.withdrawals,
+    }),
+    { deposits: 0, withdrawals: 0 },
+  );
+  const cashflow = totals.deposits - totals.withdrawals;
+  const estimatedProfit = Math.round(totals.deposits * 0.025 + totals.withdrawals * 0.032);
+  const money = (value: number) => "$" + Math.round(value).toLocaleString("en-US");
+
+  const topPlayers = [
+    { id: "PLRBSSTUDIO", transactions: 24, volume: 4820, lastActivity: "2 min ago" },
+    { id: "PLR-29011458", transactions: 19, volume: 3640, lastActivity: "4 min ago" },
+    { id: "PLR-61592013", transactions: 16, volume: 2910, lastActivity: "8 min ago" },
+    { id: "PLR-99184720", transactions: 13, volume: 2480, lastActivity: "11 min ago" },
+    { id: "PLR-18324011", transactions: 11, volume: 1950, lastActivity: "15 min ago" },
+  ];
+
+  const queueItems = [
+    { label: "Pending review", count: 12, detail: "Oldest pending · 18 min", tone: "bg-amber-500" },
+    { label: "Processing", count: 7, detail: "Oldest in progress · 11 min", tone: "bg-sky-500" },
+    { label: "Waiting correction", count: 4, detail: "Oldest correction · 32 min", tone: "bg-destructive" },
+  ];
 
   return (
     <DashboardShell
-      eyebrow="Brand Admin"
-      title={activeBrand.name + " overview"}
-      description="Manage your brand's payment activity, players, distributors, finance, and operational exceptions from one place."
+      eyebrow={"Brand Admin · " + todayLabel}
+      title={activeBrand.name + " — Today's performance"}
+      description="A daily snapshot of payment volume, net cashflow, estimated platform earnings, and transactions that need attention."
     >
       <StatGrid
         items={[
-          { label: "Players", value: "14,286", note: "12,904 active", icon: Users },
-          { label: "Deposits", value: "$326K", note: "97.1% successful", icon: ArrowDownToLine },
-          { label: "Withdrawals", value: "$126K", note: "94.2% successful", icon: ArrowUpFromLine },
-          { label: "Net movement", value: "$200K", note: "Last 24 hours", icon: WalletCards },
+          { label: "Deposits today", value: money(totals.deposits), note: "246 deposit transactions · 97.1% success", icon: ArrowDownToLine },
+          { label: "Withdrawals today", value: money(totals.withdrawals), note: "118 withdrawal transactions · 94.2% success", icon: ArrowUpFromLine },
+          { label: "Net cashflow", value: money(cashflow), note: "Deposits minus withdrawals", icon: WalletCards },
+          { label: "Profit today", value: money(estimatedProfit), note: "Estimated platform fees", icon: DollarSign },
         ]}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.7fr)]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.65fr)]">
         <Card className="shadow-none">
           <CardHeader>
             <SectionTitle
-              icon={BarChart3}
+              icon={Activity}
               title="Payment activity"
-              description="Deposits and withdrawals over the last six months"
+              description="Hourly deposit and withdrawal volume · 00:00–23:00 today"
             />
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="h-[260px] w-full">
-              <BarChart data={brandVolume} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
+            <ChartContainer config={chartConfig} className="h-[290px] w-full">
+              <BarChart data={hourlyActivity} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
                 <CartesianGrid vertical={false} />
-                <XAxis dataKey="label" axisLine={false} tickLine={false} />
+                <XAxis
+                  dataKey="hour"
+                  axisLine={false}
+                  tickLine={false}
+                  interval={3}
+                  tickFormatter={(value) => value + ":00"}
+                />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  width={46}
+                  width={48}
                   tickFormatter={(value) => "$" + Math.round(Number(value) / 1000) + "k"}
                 />
                 <ChartTooltip
                   content={
                     <ChartTooltipContent
-                      formatter={(value, name) => ["$" + Number(value).toLocaleString(), name === "deposits" ? "Deposits" : "Withdrawals"]}
+                      labelFormatter={(value) => value + ":00"}
+                      formatter={(value, name) => [
+                        "$" + Number(value).toLocaleString("en-US"),
+                        name === "deposits" ? "Deposits" : "Withdrawals",
+                      ]}
                     />
                   }
                 />
-                <Bar dataKey="withdrawals" fill="var(--color-withdrawals)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="deposits" fill="var(--color-deposits)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="deposits" fill="var(--color-deposits)" radius={[3, 3, 0, 0]} maxBarSize={12} />
+                <Bar dataKey="withdrawals" fill="var(--color-withdrawals)" radius={[3, 3, 0, 0]} maxBarSize={12} />
               </BarChart>
             </ChartContainer>
+            <div className="mt-3 flex flex-wrap items-center gap-4 border-t pt-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-2">
+                <span className="size-2 rounded-sm bg-foreground" />
+                Deposits
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="size-2 rounded-sm bg-muted-foreground" />
+                Withdrawals
+              </span>
+              <span className="ml-auto">Today · Demo data</span>
+            </div>
           </CardContent>
         </Card>
 
         <Card className="shadow-none">
           <CardHeader>
-            <SectionTitle
-              icon={Clock3}
-              title="Payment queue"
-              description="Work items that need attention"
-            />
+            <div className="flex items-start justify-between gap-3">
+              <SectionTitle
+                icon={Clock3}
+                title="Payment queue"
+                description="Current transaction states"
+              />
+              <a href="/dashboard/deposits" className="shrink-0 pt-1 text-xs font-medium hover:underline">
+                Open queue
+              </a>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <QueueCard label="Pending deposits" value="28" note="Oldest 18 min" />
-            <QueueCard label="Pending withdrawals" value="11" note="Oldest 27 min" />
-            <QueueCard label="Unmatched transactions" value="4" note="2 need review" />
-            <QueueCard label="Open disagreements" value="3" note="1 high priority" />
+          <CardContent>
+            <div className="space-y-0">
+              {queueItems.map((item) => (
+                <div key={item.label} className="flex items-center gap-3 border-b py-3 last:border-0">
+                  <span className={"size-2 shrink-0 rounded-full " + item.tone} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium">{item.label}</p>
+                      <Badge variant="outline" className="tabular-nums">{item.count}</Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">{item.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center justify-between rounded-md bg-muted/50 px-3 py-2.5">
+              <span className="text-xs text-muted-foreground">Completed today</span>
+              <span className="text-sm font-semibold tabular-nums">318</span>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              23 payments currently need review or processing.
+            </p>
           </CardContent>
         </Card>
       </div>
 
       <Card className="shadow-none">
         <CardHeader>
-          <SectionTitle
-            icon={Users}
-            title="Top distributors"
-            description="Highest active payment volume for this brand"
-            action="View all"
-          />
+          <div className="flex items-start justify-between gap-3">
+            <SectionTitle
+              icon={Users}
+              title="Top players"
+              description="Highest payment volume recorded today"
+            />
+            <a href="/dashboard/players" className="shrink-0 pt-1 text-xs font-medium hover:underline">
+              View players
+            </a>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-0">
-          <HealthRow name="Atlas Payments" detail="312 players · 128 transactions today" value="$82K" status="healthy" />
-          <HealthRow name="Northline Network" detail="286 players · 117 transactions today" value="$64K" status="healthy" />
-          <HealthRow name="Delta Commerce" detail="191 players · 74 transactions today" value="$41K" status="attention" />
+        <CardContent>
+          <div className="grid grid-cols-[minmax(0,1fr)_72px_100px] gap-3 border-b pb-2 text-xs font-medium text-muted-foreground sm:grid-cols-[minmax(0,1fr)_110px_140px]">
+            <span>Player</span>
+            <span className="text-right">Tx today</span>
+            <span className="text-right">Payment volume</span>
+          </div>
+          <div>
+            {topPlayers.map((player, index) => (
+              <div
+                key={player.id}
+                className="grid grid-cols-[minmax(0,1fr)_72px_100px] items-center gap-3 border-b py-3 last:border-0 sm:grid-cols-[minmax(0,1fr)_110px_140px]"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium tabular-nums">
+                    {index + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{player.id}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Last activity · {player.lastActivity}</p>
+                  </div>
+                </div>
+                <span className="text-right text-sm tabular-nums">{player.transactions}</span>
+                <span className="text-right text-sm font-medium tabular-nums">{money(player.volume)}</span>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </DashboardShell>
