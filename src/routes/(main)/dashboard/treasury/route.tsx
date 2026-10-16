@@ -1,7 +1,6 @@
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  ArrowDownToLine,
   ArrowLeftRight,
   BadgeCheck,
   Banknote,
@@ -41,6 +40,8 @@ type Collection = {
   status: Status;
   date: string;
   receipt?: string;
+  reference?: string;
+  notes?: string;
 };
 
 const initialCollections: Collection[] = [
@@ -58,8 +59,12 @@ const statusStyles: Record<Status, string> = {
   "Limit reached": "border-destructive/25 bg-destructive/10 text-destructive",
 };
 
-const money = (amount: number, currency: string) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(amount);
+const money = (amount: number, currency: string) => {
+  if (currency === "USDT") {
+    return `${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
+  }
+  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(amount);
+};
 
 export const Route = createFileRoute("/(main)/dashboard/treasury")({
   component: TreasuryManagementPage,
@@ -129,6 +134,8 @@ function TreasuryManagementPage() {
       status: overLimit ? "Limit reached" : receiptName ? "Under review" : "Awaiting receipt",
       date: new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
       receipt: receiptName || undefined,
+      reference: reference.trim(),
+      notes: notes.trim() || undefined,
     };
     setCollections((current) => [row, ...current]);
     setShowCreate(false);
