@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { distributors } from "../../distributors/-components/data";
 
 type Program = {
   id: string;
@@ -34,16 +35,6 @@ const PROGRAM_STORAGE = "ipaycash-hr-programs-v1";
 const SHIFT_STORAGE = "ipaycash-hr-shifts-v1";
 const ATTENDANCE_STORAGE = "ipaycash-hr-attendance-v1";
 const PAYROLL_STORAGE = "ipaycash-hr-payroll-v1";
-
-function readSaved<T,>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
 
 function useSavedState<T,>(key: string, fallback: T) {
   const [value, setValue] = useState<T>(fallback);
@@ -123,6 +114,9 @@ function Stat({ label, value, note, icon: Icon }: { label: string; value: string
 
 export function ProgramsPage() {
   const [programs, setPrograms] = useSavedState<Program[]>(PROGRAM_STORAGE, initialPrograms);
+  const [assignments, setAssignments] = useSavedState<Record<string, string[]>>("ipaycash-hr-program-assignments-v1", {});
+  const [assigningProgramId, setAssigningProgramId] = useState<string | null>(null);
+  const [selectedDistributorId, setSelectedDistributorId] = useState("");
   const [query, setQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
@@ -133,6 +127,17 @@ export function ProgramsPage() {
   const [handling, setHandling] = useState("Manual review · standard priority");
 
   const filtered = programs.filter((item) => [item.name, item.audience, item.handling].join(" ").toLowerCase().includes(query.toLowerCase()));
+  const activeDistributors = distributors.filter((item) => item.status === "Active");
+  const assigningProgram = programs.find((item) => item.id === assigningProgramId);
+  const applyProgram = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!assigningProgramId || !selectedDistributorId) return;
+    setAssignments((current) => ({
+      ...current,
+      [assigningProgramId]: Array.from(new Set([...(current[assigningProgramId] ?? []), selectedDistributorId])),
+    }));
+    setAssigningProgramId(null);
+  };
 
   const beginCreate = () => {
     setEditing(null); setName(""); setAudience("All distributors"); setDepositRate("1"); setWithdrawalRate("0.5"); setHandling("Manual review · standard priority"); setShowForm(true);
@@ -172,13 +177,14 @@ export function ProgramsPage() {
           </CardContent>
         </Card>
       )}
+      {assigningProgram && <Card className="shadow-none"><CardHeader><div><h2 className="text-sm font-semibold">Assign “{assigningProgram.name}”</h2><p className="mt-1 text-xs text-muted-foreground">Choose an active distributor for this reusable commission and processing template.</p></div></CardHeader><CardContent><form onSubmit={applyProgram} className="flex flex-col gap-3 sm:flex-row sm:items-end"><div className="grid flex-1 gap-2"><Label>Distributor</Label><select className="h-9 rounded-md border bg-background px-3 text-sm" value={selectedDistributorId} onChange={(e) => setSelectedDistributorId(e.target.value)} required><option value="">Select a distributor</option>{activeDistributors.map((item) => <option key={item.id} value={item.id} disabled={(assignments[assigningProgram.id] ?? []).includes(item.id)}>{item.name} · {item.id} · {item.type}</option>)}</select></div><Button type="submit">Apply template</Button><Button type="button" variant="outline" onClick={() => setAssigningProgramId(null)}>Cancel</Button></form><p className="mt-3 text-xs text-muted-foreground">Assignments are saved in this browser prototype; they are not yet written into the distributor account configuration.</p></CardContent></Card>}
       <Card className="shadow-none">
         <CardHeader><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-sm font-semibold">Program templates</h2><p className="mt-1 text-xs text-muted-foreground">Edit, duplicate, or remove reusable distributor policies.</p></div><div className="relative w-full sm:w-64"><Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" /><Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search programs…" className="pl-9" /></div></div></CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead><tr className="border-y bg-muted/30 text-left text-xs text-muted-foreground"><th className="px-4 py-3 font-medium">Program</th><th className="px-4 py-3 font-medium">Audience</th><th className="px-4 py-3 font-medium">Deposit</th><th className="px-4 py-3 font-medium">Withdrawal</th><th className="px-4 py-3 font-medium">Handling policy</th><th className="px-4 py-3 font-medium">Status</th><th className="px-4 py-3 text-right font-medium">Actions</th></tr></thead>
-              <tbody>{filtered.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="px-4 py-3"><div className="font-medium">{item.name}</div><div className="mt-0.5 text-xs text-muted-foreground">{item.id}</div></td><td className="px-4 py-3 text-muted-foreground">{item.audience}</td><td className="px-4 py-3 tabular-nums">{item.depositRate}%</td><td className="px-4 py-3 tabular-nums">{item.withdrawalRate}%</td><td className="px-4 py-3"><span className="text-xs">{item.handling}</span></td><td className="px-4 py-3"><Badge variant={item.status === "Active" ? "default" : "outline"}>{item.status}</Badge></td><td className="px-4 py-3"><div className="flex justify-end gap-1"><Button size="sm" variant="outline" onClick={() => beginEdit(item)}>Edit</Button><Button size="sm" variant="ghost" onClick={() => duplicateProgram(item)} title="Duplicate"><Copy className="size-4" /></Button><Button size="sm" variant="ghost" onClick={() => setPrograms((current) => current.filter((p) => p.id !== item.id))} className="text-destructive">Delete</Button></div></td></tr>)}</tbody>
+              <thead><tr className="border-y bg-muted/30 text-left text-xs text-muted-foreground"><th className="px-4 py-3 font-medium">Program</th><th className="px-4 py-3 font-medium">Audience</th><th className="px-4 py-3 font-medium">Deposit</th><th className="px-4 py-3 font-medium">Withdrawal</th><th className="px-4 py-3 font-medium">Handling policy</th><th className="px-4 py-3 font-medium">Assigned</th><th className="px-4 py-3 font-medium">Status</th><th className="px-4 py-3 text-right font-medium">Actions</th></tr></thead>
+              <tbody>{filtered.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="px-4 py-3"><div className="font-medium">{item.name}</div><div className="mt-0.5 text-xs text-muted-foreground">{item.id}</div></td><td className="px-4 py-3 text-muted-foreground">{item.audience}</td><td className="px-4 py-3 tabular-nums">{item.depositRate}%</td><td className="px-4 py-3 tabular-nums">{item.withdrawalRate}%</td><td className="px-4 py-3"><span className="text-xs">{item.handling}</span></td><td className="px-4 py-3"><span className="font-medium">{(assignments[item.id] ?? []).length}</span><div className="text-xs text-muted-foreground">distributors</div></td><td className="px-4 py-3"><Badge variant={item.status === "Active" ? "default" : "outline"}>{item.status}</Badge></td><td className="px-4 py-3"><div className="flex justify-end gap-1"><Button size="sm" variant="outline" onClick={() => { setAssigningProgramId(item.id); setSelectedDistributorId(activeDistributors.find((d) => !(assignments[item.id] ?? []).includes(d.id))?.id ?? ""); }}>Assign</Button><Button size="sm" variant="outline" onClick={() => beginEdit(item)}>Edit</Button><Button size="sm" variant="ghost" onClick={() => duplicateProgram(item)} title="Duplicate"><Copy className="size-4" /></Button><Button size="sm" variant="ghost" onClick={() => setPrograms((current) => current.filter((p) => p.id !== item.id))} className="text-destructive">Delete</Button></div></td></tr>)}</tbody>
             </table>
           </div>
           {filtered.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">No programs match this search.</p>}
@@ -344,7 +350,6 @@ export function PayrollPage() {
   const payable = (invoice: Invoice) => totalCommission(invoice) + (invoice.salary ?? 0);
   const filtered = invoices.filter((invoice) => `${invoice.person} ${invoice.id} ${invoice.role}`.toLowerCase().includes(query.toLowerCase()));
   const totalReady = invoices.filter((invoice) => invoice.status === "Ready").reduce((sum, invoice) => sum + payable(invoice), 0);
-  const totalPaid = invoices.filter((invoice) => invoice.status === "Paid").reduce((sum, invoice) => sum + payable(invoice), 0);
   const totalRequests = invoices.reduce((sum, invoice) => sum + invoice.requests.filter((request) => request.status === "Completed").length, 0);
 
   return (
