@@ -12,7 +12,6 @@ import { useAuth } from "@/stores/auth/auth-provider";
 import { BrandProvider } from "@/stores/brands/brand-provider";
 
 import { AccountSwitcher } from "./-components/header/account-switcher";
-import { LayoutControls } from "./-components/header/layout-controls";
 import { NotificationsMenu } from "./-components/header/notifications-menu";
 import { SearchDialog } from "./-components/header/search-dialog";
 import { ThemeSwitcher } from "./-components/header/theme-switcher";
@@ -96,7 +95,6 @@ function DashboardLayout() {
                 <SearchDialog />
               </div>
               <div className="flex items-center gap-2">
-                <LayoutControls />
                 <ThemeSwitcher />
                 <NotificationsMenu />
                 <WalletMenu />
