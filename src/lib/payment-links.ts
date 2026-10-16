@@ -21,6 +21,7 @@ export type PaymentLinkDeposit = {
   name: string;
   email: string;
   date: string;
+  source?: string;
   paymentMethod: string;
   paymentMethodImage: string;
   verificationStatus: string;
