@@ -134,7 +134,7 @@ function getMissingFields(draft: RemittanceDraft): string[] {
   requireText(draft.destinationCurrency, "Destination currency");
 
   if (draft.destinationKind === "exchange" && !draft.destinationAccount.trim()) {
-    missing.push("Destination exchange account / UID");
+    missing.push("Destination exchange account / UID / wallet address");
   }
 
   if (draft.destinationKind === "exchange" && draft.transferMode === "p2p") {
@@ -149,7 +149,6 @@ function getMissingFields(draft: RemittanceDraft): string[] {
     requireText(draft.chainTxId, "TRX ID");
     requireText(draft.txHash, "Transaction hash");
     requireText(draft.txLink, "TRX explorer link");
-    requireText(draft.destinationAccount, "Destination wallet address");
     requireNonNegative(draft.sourceFee, "Source wallet commission");
     requireNonNegative(draft.networkFee, "Blockchain network fee");
     requirePositive(draft.receivedAmount, "Amount received");
@@ -498,7 +497,7 @@ function RemittancePage() {
                             <select value={draft.destinationCurrency} onChange={(event) => patchDraft({ destinationCurrency: event.target.value })} className="h-10 w-full rounded-md border bg-background px-3 text-sm">{currencyOptions()}</select>
                           </Field>
                           {draft.destinationKind === "exchange" && (
-                            <Field label="Destination account / UID / address">
+                            <Field label="Destination exchange account / UID / wallet address">
                               <Input value={draft.destinationAccount} onChange={(event) => patchDraft({ destinationAccount: event.target.value })} placeholder="Exchange UID or receiving address" className="h-10" />
                             </Field>
                           )}
@@ -576,9 +575,6 @@ function RemittancePage() {
                         </Field>
                         <Field label="TRX link / blockchain explorer URL">
                           <Input type="url" value={draft.txLink} onChange={(event) => patchDraft({ txLink: event.target.value })} placeholder="https://tronscan.org/#/transaction/..." className="h-10" />
-                        </Field>
-                        <Field label="Receiving wallet address">
-                          <Input value={draft.destinationAccount} onChange={(event) => patchDraft({ destinationAccount: event.target.value })} placeholder="Destination address" className="h-10" />
                         </Field>
                         <Field label="Screenshot / additional proof (optional)" hint={draft.proofName || "TX link is required; supporting proof is optional."}>
                           <Input type="file" accept="image/*,.pdf" onChange={(event) => handleProofFile(event.target.files?.[0])} className="h-10 file:mr-3 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs" />
