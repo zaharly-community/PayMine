@@ -6,7 +6,6 @@ import {
   Clock3,
   CreditCard,
   CalendarDays,
-  ClipboardCheck,
   FileText,
   Landmark,
   Layers3,
