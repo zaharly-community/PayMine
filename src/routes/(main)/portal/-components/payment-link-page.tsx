@@ -99,6 +99,7 @@ export function PaymentLinkPage({ linkId }: { linkId: string }) {
         minute: "2-digit",
         hour12: true,
       }).format(new Date(createdAt)).replace(",", ""),
+      source: `LinkID=${link.id}`,
       paymentMethod: link.paymentMethod,
       paymentMethodImage: link.paymentMethodImage,
       verificationStatus: "Pending",
