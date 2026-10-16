@@ -30,6 +30,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Switch } from "@/components/ui/switch";
 
 import {
+  ownerPaymentMethods,
   type CompensationMode,
   type DistributorConfiguration,
   type DistributorProgramMode,
@@ -40,7 +41,7 @@ import {
   type MethodLimitMode,
   type ProcessingScope,
 } from "./data";
-import { defaultProgramTemplates, systemDefaults, type ProgramTemplate } from "./program-templates";
+import { createSupervisorMethods, defaultProgramTemplates, systemDefaults, type ProgramTemplate } from "./program-templates";
 
 type CommissionTransactions = "Deposits" | "Withdrawals" | "Deposits & Withdrawals";
 
